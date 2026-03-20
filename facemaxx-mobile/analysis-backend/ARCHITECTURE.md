@@ -22,7 +22,7 @@
   "landmarks": {},
   "measurements": {},
   "confidence": {},
-  "facemaxx": {
+  "looksmaxxing": {
     "score": 0,
     "tier": "",
     "archetype": "",

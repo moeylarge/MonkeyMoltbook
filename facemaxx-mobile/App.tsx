@@ -735,7 +735,7 @@ async function buildScanFromBackend(image: AnalysisImage | undefined, photoLabel
     }
 
     const payload = await response.json();
-    const facemaxx = payload?.facemaxx ?? {};
+    const looksmaxxing = payload?.looksmaxxing ?? payload?.facemaxx ?? {};
     const quality = payload?.quality ?? {};
     const detection = payload?.detection ?? {};
     const landmarks = payload?.landmarks ?? {};
@@ -754,13 +754,13 @@ async function buildScanFromBackend(image: AnalysisImage | undefined, photoLabel
     const landmarkConfidence = landmarkCount > 0 ? clamp(landmarkCount / 478, 0, 1) : 0;
     const poseConfidence = detection?.primaryFace ? 1 : 0;
     const occlusionRisk = landmarkCount > 0 ? clamp(1 - landmarkConfidence, 0, 1) : 1;
-    const warnings = Array.isArray(facemaxx?.warnings) ? facemaxx.warnings : [];
+    const warnings = Array.isArray(looksmaxxing?.warnings) ? looksmaxxing.warnings : [];
 
-    const breakdownSource = facemaxx.breakdown ?? {};
-    const score = clamp(Number(facemaxx.score ?? 0), 0, 100);
-    const confidence = clamp(Number(facemaxx.confidence ?? 0), 0, 100);
+    const breakdownSource = looksmaxxing.breakdown ?? {};
+    const score = clamp(Number(looksmaxxing.score ?? 0), 0, 100);
+    const confidence = clamp(Number(looksmaxxing.confidence ?? 0), 0, 100);
 
-    const backendMeasurements = facemaxx?.measurements ?? {};
+    const backendMeasurements = looksmaxxing?.measurements ?? {};
     const qualityRead = brightness < 70 ? 'lighting is suppressing detail' : contrast < 30 ? 'contrast is muting structure' : blurScore < 40 ? 'image softness is limiting sharpness' : 'input quality is strong enough for a cleaner read';
     const geometryRead = landmarkCount > 0 ? `${landmarkCount} landmarks were mapped through the backend stack.` : 'landmark coverage is weak, so structure read is less reliable.';
     const detectionRead = faceCount > 1 ? 'Multiple faces are in frame, which weakens confidence.' : faceCount === 1 ? 'A single aligned face was detected cleanly.' : 'No stable face alignment was found.';
@@ -854,7 +854,7 @@ async function buildScanFromBackend(image: AnalysisImage | undefined, photoLabel
       },
       derivedOutputs: {
         confidence,
-        rejectionReason: facemaxx.rejectionReason ?? null,
+        rejectionReason: looksmaxxing.rejectionReason ?? null,
         warnings,
       },
     };
@@ -866,13 +866,13 @@ async function buildScanFromBackend(image: AnalysisImage | undefined, photoLabel
       imageUri: image.uri,
       score,
       potential,
-      tier: facemaxx.tier ?? 'Above Average',
-      rank: `${facemaxx.tier ?? 'Above Average'} Signal`,
-      archetype: facemaxx.archetype ?? 'Model Type A',
+      tier: looksmaxxing.tier ?? 'Above Average',
+      rank: `${looksmaxxing.tier ?? 'Above Average'} Signal`,
+      archetype: looksmaxxing.archetype ?? 'Model Type A',
       breakdown,
       measurement,
       confidence,
-      rejectionReason: facemaxx.rejectionReason ?? null,
+      rejectionReason: looksmaxxing.rejectionReason ?? null,
       warnings,
     };
   } catch {

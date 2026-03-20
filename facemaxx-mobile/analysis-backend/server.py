@@ -38,7 +38,7 @@ async def analyze(image: UploadFile = File(...)):
     pre = run_preprocess(image_bytes)
     det = run_detection(image_bytes, pre)
     lm = run_landmarks(image_bytes, det)
-    facemaxx = run_calibration(pre, det, lm)
+    looksmaxxing = run_calibration(pre, det, lm)
 
     logger.info(
         "/analyze processed debug: width=%s height=%s faceCount=%s landmarks=%s score=%s confidence=%s",
@@ -46,8 +46,8 @@ async def analyze(image: UploadFile = File(...)):
         pre.get("height"),
         det.get("faceCount"),
         lm.get("landmarkCount"),
-        facemaxx.get("score"),
-        facemaxx.get("confidence"),
+        looksmaxxing.get("score"),
+        looksmaxxing.get("confidence"),
     )
 
     return JSONResponse(
@@ -56,6 +56,6 @@ async def analyze(image: UploadFile = File(...)):
             "quality": pre,
             "detection": det,
             "landmarks": lm,
-            "facemaxx": facemaxx,
+            "looksmaxxing": looksmaxxing,
         }
     )
