@@ -1963,7 +1963,7 @@ export default function App() {
         </View>
 
         <View style={styles.shareCard}>
-          <Text style={styles.shareTitle}>LooksMaxxing preview</Text>
+          <Text style={styles.shareTitle}>Clavicular preview</Text>
           <Text style={styles.shareHeadline}>From {activeScan.score} to a possible {potentialDisplay}</Text>
           <Text style={styles.shareCaption}>The question is not whether the face changes — it is how much stronger the presentation can get.</Text>
         </View>
@@ -1977,14 +1977,14 @@ export default function App() {
 
   const renderHistory = () => (
     <View style={styles.screenBlock}>
-      <Text style={styles.sectionKick}>Glow-up tracker</Text>
-      <Text style={styles.sectionTitle}>Face optimization progress over time, not a one-off judgment.</Text>
+      <Text style={styles.sectionKick}>Clavicular standard</Text>
+      <Text style={styles.sectionTitle}>Track how close your read is getting to the LooksMaxxing standard over time.</Text>
 
       {!!history.length && (
         <>
         <View style={styles.retentionSummaryCard}>
           <View style={styles.retentionSummaryTop}>
-            <Text style={styles.retentionTitle}>Glow-up tracker</Text>
+            <Text style={styles.retentionTitle}>Clavicular tracker</Text>
             <Text style={styles.streakBadge}>{retentionStats.streakDays}-day streak</Text>
           </View>
           {!!retentionStats.provisionalCount && (
@@ -2020,14 +2020,14 @@ export default function App() {
         </View>
 
         <View style={styles.bestVersionCard}>
-          <Text style={styles.retentionTitle}>Best version of you</Text>
+          <Text style={styles.retentionTitle}>Closest to the standard</Text>
           <Text style={styles.bestVersionScore}>{retentionStats.bestScan?.score ?? 0}</Text>
           <Text style={styles.bestVersionMeta}>{retentionStats.bestScan?.archetype ?? 'No archetype yet'} • {retentionStats.bestScan?.tier ?? 'No tier yet'}</Text>
           <Text style={styles.retentionCopy}>Peak read captured on {retentionStats.bestScan ? formatTime(retentionStats.bestScan.createdAt) : '-'}.</Text>
         </View>
 
         <View style={styles.timelineCard}>
-          <Text style={styles.retentionTitle}>Timeline graph</Text>
+          <Text style={styles.retentionTitle}>Standard chase timeline</Text>
           <View style={styles.timelineBars}>
             {history.slice().reverse().map((item) => {
               const isCleanTimelineScan = isReliableScan(item);
@@ -2109,17 +2109,17 @@ export default function App() {
 
   const renderPaywall = () => (
     <View style={styles.screenBlock}>
-      <Text style={styles.sectionKick}>Upgrade</Text>
-      <Text style={styles.sectionTitle}>Unlock the deeper read, the full plan, and better ways to track progress over time.</Text>
+      <Text style={styles.sectionKick}>LooksMaxxing pro</Text>
+      <Text style={styles.sectionTitle}>Unlock the deeper read, the Clavicular-standard plan, and a sharper way to track your climb.</Text>
       <Animated.View
         style={[
           styles.paywallCard,
           { shadowOpacity: paywallGlow.interpolate({ inputRange: [0.25, 1], outputRange: [0.12, 0.42] }) },
         ]}
       >
-        <Text style={styles.paywallTier}>PRO SCAN</Text>
+        <Text style={styles.paywallTier}>CLAVICULAR ACCESS</Text>
         <Text style={styles.paywallPrice}>$7.99</Text>
-        <Text style={styles.paywallCopy}>Unlock your full breakdown, projected ceiling, saved share cards, battle insights, and a sharper plan for what to improve next.</Text>
+        <Text style={styles.paywallCopy}>Unlock your full breakdown, projected ceiling, Clavicular-standard share cards, battle insights, and a sharper plan for what to improve next.</Text>
         {['Full improvement plan', 'Projected max score', 'Weekly progress check-ins', 'Battle insights'].map((item, index) => (
           <View key={item} style={[styles.lockedRow, lockedIndex === index && styles.lockedRowActive]}>
             <Text style={styles.lockedRowText}>{item}</Text>
@@ -2162,7 +2162,7 @@ export default function App() {
       </View>
 
       <Pressable style={styles.primaryButton} onPress={() => setScreen('plan')}>
-        <Text style={styles.primaryButtonText}>See Full Improvement Plan</Text>
+        <Text style={styles.primaryButtonText}>Unlock the Standard Plan</Text>
       </Pressable>
     </View>
   );
@@ -2171,11 +2171,11 @@ export default function App() {
     if (!activeScan) return null;
     return (
       <View style={styles.screenBlock}>
-        <Text style={styles.sectionKick}>Upgrade plan</Text>
-        <Text style={styles.sectionTitle}>The clearest moves between your current read and your best version.</Text>
+        <Text style={styles.sectionKick}>Clavicular blueprint</Text>
+        <Text style={styles.sectionTitle}>The clearest moves between your current read and the LooksMaxxing standard.</Text>
 
         <View style={styles.retentionCard}>
-          <Text style={styles.retentionTitle}>Projected ceiling</Text>
+          <Text style={styles.retentionTitle}>Your Clavicular ceiling</Text>
           <Text style={styles.potentialHero}>{activeScan.potential}</Text>
           <Text style={styles.retentionCopy}>{identityTagline}</Text>
         </View>
@@ -2204,7 +2204,7 @@ export default function App() {
         </View>
 
         <Pressable style={styles.primaryButton} onPress={() => setScreen('share')}>
-          <Text style={styles.primaryButtonText}>Continue to Share Card</Text>
+          <Text style={styles.primaryButtonText}>Continue to Standard Card</Text>
         </Pressable>
       </View>
     );
@@ -2238,13 +2238,13 @@ export default function App() {
         </View>
 
         <View style={styles.shareCard}>
-          <Text style={styles.shareTitle}>Caption style</Text>
+          <Text style={styles.shareTitle}>Clavicular caption style</Text>
           <Text style={styles.shareHeadline}>{shareCaption}</Text>
           <Text style={styles.shareCaption}>Built for screenshots, stories, X posts, TikToks, and whatever else you want to throw it into.</Text>
         </View>
 
         <Pressable style={styles.primaryButton} onPress={() => setScreen('battle')}>
-          <Text style={styles.primaryButtonText}>Open Battle Mode</Text>
+          <Text style={styles.primaryButtonText}>Open Standard Clash</Text>
         </Pressable>
       </View>
     );
@@ -2255,11 +2255,11 @@ export default function App() {
     const activeOpponent = activeOpponentProfile;
     return (
       <View style={styles.screenBlock}>
-        <Text style={styles.sectionKick}>Battle mode</Text>
-        <Text style={styles.sectionTitle}>Put two reads side by side and see who owns the stronger photo right now.</Text>
+        <Text style={styles.sectionKick}>Standard clash</Text>
+        <Text style={styles.sectionTitle}>Put two reads side by side and see who is landing closer to the LooksMaxxing standard right now.</Text>
 
         <View style={styles.retentionCard}>
-          <Text style={styles.retentionTitle}>Choose an opponent</Text>
+          <Text style={styles.retentionTitle}>Choose a challenger</Text>
           <View style={styles.optionRow}>
             {battleProfiles.map((profile) => (
               <Pressable
