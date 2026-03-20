@@ -1191,7 +1191,7 @@ export default function App() {
     : Platform.OS === 'web'
       ? (mobileWeb
           ? 'Take a straight-on photo or choose one from your phone, then run the scan.'
-          : 'On desktop, the camera button may open a file chooser instead of a live camera. A clear solo photo still works best.')
+          : 'Use the best solo photo you have, or capture one from your computer if available. Clean framing and one clear face will give the strongest read.')
       : 'Start with a clear front-facing photo so the first read feels intentional, not noisy.';
 
   const activeScan = currentScan ?? history[0] ?? null;
