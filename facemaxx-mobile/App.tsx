@@ -66,6 +66,14 @@ type ImprovementItem = {
   scoreLift: number;
 };
 
+type AffiliateItem = {
+  id: string;
+  category: 'skincare' | 'grooming' | 'hair products' | 'fitness items';
+  name: string;
+  reason: string;
+  cta: string;
+};
+
 type BattleProfile = {
   id: string;
   name: string;
@@ -141,6 +149,43 @@ function getIdentityTagline(scan: ScanRecord) {
   const best = [...scan.breakdown].sort((a, b) => b.target - b.score - (a.target - a.score))[0];
   const upside = Math.max(0, scan.potential - scan.score);
   return `You are a ${scan.archetype} with ${upside >= 12 ? 'high' : upside >= 8 ? 'real' : 'measured'} upside. Improving ${best.label.toLowerCase()} can push you toward ${scan.potential >= 82 ? 'Elite' : scan.potential >= 72 ? 'Attractive' : 'Above Average'}.`;
+}
+
+function buildAffiliateItems(scan: ScanRecord): AffiliateItem[] {
+  const skin = scan.breakdown.find((item) => item.key === 'skin');
+  const hair = scan.breakdown.find((item) => item.key === 'hair');
+  const jaw = scan.breakdown.find((item) => item.key === 'jawline');
+
+  return [
+    {
+      id: 'affiliate-skin',
+      category: 'skincare',
+      name: 'Barrier Repair Kit',
+      reason: `${skin?.label ?? 'Skin quality'} is suppressing first impression. A simple routine is the fastest visible reset.`,
+      cta: 'View skincare picks',
+    },
+    {
+      id: 'affiliate-groom',
+      category: 'grooming',
+      name: 'Precision Beard + Brow Kit',
+      reason: 'Sharper edges make the same face read more intentional immediately.',
+      cta: 'View grooming tools',
+    },
+    {
+      id: 'affiliate-hair',
+      category: 'hair products',
+      name: 'Texture + Hold Stack',
+      reason: `${hair?.label ?? 'Hair framing'} can add perceived structure before any long-term changes kick in.`,
+      cta: 'View hair products',
+    },
+    {
+      id: 'affiliate-fitness',
+      category: 'fitness items',
+      name: 'Lean-Down Essentials',
+      reason: `${jaw?.label ?? 'Jawline definition'} responds best when body-fat and posture stop working against you.`,
+      cta: 'View fitness items',
+    },
+  ];
 }
 
 function buildShareCaption(scan: ScanRecord) {
@@ -408,6 +453,7 @@ export default function App() {
   const tierProgress = useMemo(() => (activeScan ? getTierProgress(activeScan.score) : null), [activeScan]);
   const tierProgressPercent = useMemo(() => (activeScan ? getProgressPercent(activeScan.score) : 0), [activeScan]);
   const shareCaption = useMemo(() => (activeScan ? buildShareCaption(activeScan) : ''), [activeScan]);
+  const affiliateItems = useMemo(() => (activeScan ? buildAffiliateItems(activeScan) : []), [activeScan]);
   const selectedBattleProfile = useMemo(
     () => battleProfiles.find((item) => item.id === selectedBattleId) ?? battleProfiles[0],
     [selectedBattleId],
@@ -1048,7 +1094,7 @@ export default function App() {
   const renderPaywall = () => (
     <View style={styles.screenBlock}>
       <Text style={styles.sectionKick}>Monetization layer</Text>
-      <Text style={styles.sectionTitle}>The app now feels real; this is the upgrade spine.</Text>
+      <Text style={styles.sectionTitle}>The revenue spine: free hook, paid unlocks, recurring tracking, affiliate attach.</Text>
       <Animated.View
         style={[
           styles.paywallCard,
@@ -1057,16 +1103,50 @@ export default function App() {
       >
         <Text style={styles.paywallTier}>PRO SCAN</Text>
         <Text style={styles.paywallPrice}>$7.99</Text>
-        <Text style={styles.paywallCopy}>Full breakdown, exportable score card, weekly rerating loop, premium glow-up plan.</Text>
-        {['Asymmetry map', 'Hairline recommendation', 'Weekly rerating', 'Glow-up tracker'].map((item, index) => (
+        <Text style={styles.paywallCopy}>Unlock full breakdown, max potential score, weekly rerating loop, export cards, battle mode insights, and premium glow-up plan.</Text>
+        {['Full improvement plan', 'Max potential score', 'Weekly rerating reports', 'Battle mode insights'].map((item, index) => (
           <View key={item} style={[styles.lockedRow, lockedIndex === index && styles.lockedRowActive]}>
             <Text style={styles.lockedRowText}>{item}</Text>
-            <Text style={styles.lockedRowTag}>LOCKED</Text>
+            <Text style={styles.lockedRowTag}>PAID</Text>
           </View>
         ))}
       </Animated.View>
+
+      <View style={styles.pricingGrid}>
+        <View style={styles.pricingCardMuted}>
+          <Text style={styles.pricingTier}>FREE</Text>
+          <Text style={styles.pricingHeadline}>Hook + limited analysis</Text>
+          <Text style={styles.pricingCopy}>Score, limited breakdown, teaser simulation, light history.</Text>
+        </View>
+        <View style={styles.pricingCardAccent}>
+          <Text style={styles.pricingTier}>PRO</Text>
+          <Text style={styles.pricingHeadline}>Full transformation loop</Text>
+          <Text style={styles.pricingCopy}>Improvement engine, retention analytics, share cards, battle mode, premium unlocks.</Text>
+        </View>
+        <View style={styles.pricingCardMuted}>
+          <Text style={styles.pricingTier}>SUBSCRIPTION</Text>
+          <Text style={styles.pricingHeadline}>Ongoing rerating</Text>
+          <Text style={styles.pricingCopy}>Weekly progress reports, recurring re-analysis, and streak-based retention.</Text>
+        </View>
+      </View>
+
+      <View style={styles.retentionCard}>
+        <Text style={styles.retentionTitle}>Affiliate engine</Text>
+        <Text style={styles.retentionCopy}>Attach monetizable products directly to the user’s improvement path.</Text>
+        {affiliateItems.map((item) => (
+          <View key={item.id} style={styles.affiliateRow}>
+            <View style={styles.affiliateMeta}>
+              <Text style={styles.affiliateCategory}>{item.category}</Text>
+              <Text style={styles.affiliateName}>{item.name}</Text>
+              <Text style={styles.affiliateReason}>{item.reason}</Text>
+            </View>
+            <Text style={styles.affiliateCta}>{item.cta}</Text>
+          </View>
+        ))}
+      </View>
+
       <Pressable style={styles.primaryButton} onPress={() => setScreen('plan')}>
-        <Text style={styles.primaryButtonText}>See Improvement Plan</Text>
+        <Text style={styles.primaryButtonText}>See Paid Improvement Flow</Text>
       </Pressable>
     </View>
   );
@@ -1395,6 +1475,18 @@ const styles = StyleSheet.create({
   lockedRowActive: { borderColor: '#7C5CFF', backgroundColor: '#1A1730' },
   lockedRowText: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
   lockedRowTag: { color: '#14E38B', fontSize: 11, fontWeight: '800' },
+  pricingGrid: { gap: 10 },
+  pricingCardMuted: { padding: 18, borderRadius: 22, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#272A3C' },
+  pricingCardAccent: { padding: 18, borderRadius: 22, backgroundColor: '#171227', borderWidth: 1, borderColor: '#3B296A' },
+  pricingTier: { color: '#FF4FD8', fontSize: 12, fontWeight: '800', letterSpacing: 1.2 },
+  pricingHeadline: { color: '#FFFFFF', fontSize: 20, lineHeight: 24, fontWeight: '900', marginTop: 8 },
+  pricingCopy: { color: '#B7BBD0', fontSize: 14, lineHeight: 20, marginTop: 8 },
+  affiliateRow: { paddingVertical: 14, borderTopWidth: 1, borderTopColor: '#262A39', flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
+  affiliateMeta: { flex: 1 },
+  affiliateCategory: { color: '#FF4FD8', fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
+  affiliateName: { color: '#FFFFFF', fontSize: 16, fontWeight: '800', marginTop: 6 },
+  affiliateReason: { color: '#AAB0C5', fontSize: 13, lineHeight: 18, marginTop: 6 },
+  affiliateCta: { color: '#14E38B', fontSize: 12, fontWeight: '800', alignSelf: 'center' },
   planCard: { padding: 20, borderRadius: 24, backgroundColor: '#11121A', borderWidth: 1, borderColor: '#232535', gap: 8 },
   planCardAccent: { padding: 20, borderRadius: 24, backgroundColor: '#151225', borderWidth: 1, borderColor: '#32255F', gap: 8 },
   planTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

@@ -43,11 +43,10 @@ Current next steps:
    - actionable recommendations by category
    - impact / difficulty / time-to-result metadata
    - identity tagline + uncertainty loop copy
-3. Phase 6 viral systems are now implemented in `facemaxx-mobile/App.tsx`:
-   - export-style share card screen
-   - auto-generated social caption
-   - battle mode with selectable opponent
-   - declared winner / draw summary
+3. Phase 7 monetization is now implemented in `facemaxx-mobile/App.tsx`:
+   - refined paywall with free / pro / subscription framing
+   - paid unlock positioning
+   - affiliate recommendation layer attached to improvement path
 4. Later polish: screenshots / motion / spacing refinement
 
 ## UFC note

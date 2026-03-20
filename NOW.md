@@ -70,16 +70,16 @@ Phase 4 progress so far:
 - identity tagline added to result flow
 - uncertainty-loop copy added to encourage re-uploads
 
-Phase 6 progress so far:
-- share card system added with export-style layout
-- social caption generator added
-- battle mode added with selectable opponents
-- winner / draw outcome summary added
+Phase 7 progress so far:
+- paywall expanded into clear free / pro / subscription tiers
+- paid unlock framing refined
+- affiliate product recommendation layer added
+- monetization now maps directly onto improvement flow
 
 Still pending:
 - screenshots / visual proof capture
 - polish pass on motion and spacing
-- Phase 7 monetization refinement
+- final product review / cleanup
 
 ## Guardrails
 
