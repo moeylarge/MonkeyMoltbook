@@ -22,10 +22,10 @@ Updated: 2026-03-20 12:51 AM America/Los_Angeles
 ## Current truth
 
 - Primary active project: **FACEMAXX**
-- Intended next phase: **Phase 3**
-- FACEMAXX app folder was not found in the active workspace snapshot
-- FACEMAXX was found here instead:
-  - `/Users/moey/.openclaw_old/workspace/facemaxx-mobile`
+- Intended next phase: **finish Phase 3, then move to Phase 4**
+- FACEMAXX has been restored into the active workspace at:
+  - `/Users/moey/.openclaw/workspace/facemaxx-mobile`
+- Moey ended the night to sleep and wants to resume tomorrow from FACEMAXX, not restart context discovery
 
 ## What to do next for FACEMAXX
 
