@@ -604,16 +604,37 @@ async function buildScanFromBackend(image: AnalysisImage | undefined, photoLabel
     const detection = payload?.detection ?? {};
     const landmarks = payload?.landmarks ?? {};
 
+    const brightness = Number(quality?.brightness ?? 0);
+    const contrast = Number(quality?.contrast ?? 0);
+    const blurScore = Number(quality?.blurScore ?? 0);
+    const faceCount = Number(detection?.faceCount ?? 0);
+    const bbox = detection?.primaryFace?.bbox ?? [0, 0, 0, 0];
+    const imageWidth = Number(quality?.width ?? 1);
+    const imageHeight = Number(quality?.height ?? 1);
+    const faceWidth = Math.max(0, Number(bbox?.[2] ?? 0) - Number(bbox?.[0] ?? 0));
+    const faceHeight = Math.max(0, Number(bbox?.[3] ?? 0) - Number(bbox?.[1] ?? 0));
+    const faceSizeRatio = (faceWidth * faceHeight) / Math.max(1, imageWidth * imageHeight);
+    const landmarkCount = Number(landmarks?.landmarkCount ?? 0);
+    const landmarkConfidence = landmarkCount > 0 ? clamp(landmarkCount / 478, 0, 1) : 0;
+    const poseConfidence = detection?.primaryFace ? 1 : 0;
+    const occlusionRisk = landmarkCount > 0 ? clamp(1 - landmarkConfidence, 0, 1) : 1;
+    const warnings = Array.isArray(facemaxx?.warnings) ? facemaxx.warnings : [];
+
     const breakdownSource = facemaxx.breakdown ?? {};
     const score = clamp(Number(facemaxx.score ?? 0), 0, 100);
     const confidence = clamp(Number(facemaxx.confidence ?? 0), 0, 100);
+
+    const qualityRead = brightness < 70 ? 'lighting is suppressing detail' : contrast < 30 ? 'contrast is muting structure' : blurScore < 40 ? 'image softness is limiting sharpness' : 'input quality is strong enough for a cleaner read';
+    const geometryRead = landmarkCount > 0 ? `${landmarkCount} landmarks were mapped through the backend stack.` : 'landmark coverage is weak, so structure read is less reliable.';
+    const detectionRead = faceCount > 1 ? 'Multiple faces are in frame, which weakens confidence.' : faceCount === 1 ? 'A single aligned face was detected cleanly.' : 'No stable face alignment was found.';
+
     const breakdown: BreakdownItem[] = [
       {
         key: 'jawline',
         label: 'Jawline',
         score: clamp(Number(breakdownSource.jawline ?? 0), 0, 100),
         target: clamp(Number(breakdownSource.jawline ?? 0) + 8, 0, 100),
-        why: 'Backend structural analysis is informing lower-face scoring.',
+        why: `${geometryRead} Lower-face structure is now coming from backend face geometry instead of app-only heuristics.`,
         color: '#7C5CFF',
       },
       {
@@ -621,7 +642,7 @@ async function buildScanFromBackend(image: AnalysisImage | undefined, photoLabel
         label: 'Eye area',
         score: clamp(Number(breakdownSource.eyes ?? 0), 0, 100),
         target: clamp(Number(breakdownSource.eyes ?? 0) + 7, 0, 100),
-        why: 'Backend landmark analysis is informing eye-area scoring.',
+        why: `${detectionRead} Eye-area scoring is being grounded in aligned face analysis.`,
         color: '#FF4FD8',
       },
       {
@@ -629,7 +650,7 @@ async function buildScanFromBackend(image: AnalysisImage | undefined, photoLabel
         label: 'Skin quality',
         score: clamp(Number(breakdownSource.skin ?? 0), 0, 100),
         target: clamp(Number(breakdownSource.skin ?? 0) + 7, 0, 100),
-        why: 'Preprocessing quality metrics are informing visible skin read.',
+        why: `OpenCV preprocessing says ${qualityRead}, and that now feeds the visible skin read.`,
         color: '#14E38B',
       },
       {
@@ -637,7 +658,7 @@ async function buildScanFromBackend(image: AnalysisImage | undefined, photoLabel
         label: 'Symmetry',
         score: clamp(Number(breakdownSource.symmetry ?? 0), 0, 100),
         target: clamp(Number(breakdownSource.symmetry ?? 0) + 6, 0, 100),
-        why: 'Backend geometry and landmark alignment are informing symmetry scoring.',
+        why: landmarkCount > 0 ? 'Symmetry now benefits from backend landmark alignment and face normalization.' : 'Symmetry read is limited because landmark coverage was weak.',
         color: '#4DA3FF',
       },
       {
@@ -645,7 +666,7 @@ async function buildScanFromBackend(image: AnalysisImage | undefined, photoLabel
         label: 'Hair / framing',
         score: clamp(Number(breakdownSource.hairFraming ?? 0), 0, 100),
         target: clamp(Number(breakdownSource.hairFraming ?? 0) + 7, 0, 100),
-        why: 'Face crop quality and framing cues are informing presentation scoring.',
+        why: `Face framing is being read through backend crop quality and face-box positioning.`,
         color: '#FF8A3D',
       },
       {
@@ -653,7 +674,7 @@ async function buildScanFromBackend(image: AnalysisImage | undefined, photoLabel
         label: 'Facial harmony',
         score: clamp(Number(breakdownSource.facialHarmony ?? 0), 0, 100),
         target: clamp(Number(breakdownSource.facialHarmony ?? 0) + 6, 0, 100),
-        why: 'Backend facial geometry is informing harmony scoring.',
+        why: landmarkCount > 0 ? 'Harmony is now tied to backend geometry rather than front-end-only proxy scoring.' : 'Harmony remains less certain until stronger landmark coverage is available.',
         color: '#FFD24D',
       },
     ];
@@ -662,14 +683,14 @@ async function buildScanFromBackend(image: AnalysisImage | undefined, photoLabel
     const measurement: MeasurementVector = {
       landmarks: {
         faceBounds: {
-          x: Number(detection?.primaryFace?.bbox?.[0] ?? 0),
-          y: Number(detection?.primaryFace?.bbox?.[1] ?? 0),
-          width: Math.max(0, Number(detection?.primaryFace?.bbox?.[2] ?? 0) - Number(detection?.primaryFace?.bbox?.[0] ?? 0)),
-          height: Math.max(0, Number(detection?.primaryFace?.bbox?.[3] ?? 0) - Number(detection?.primaryFace?.bbox?.[1] ?? 0)),
+          x: Number(bbox?.[0] ?? 0),
+          y: Number(bbox?.[1] ?? 0),
+          width: faceWidth,
+          height: faceHeight,
         },
       },
       ratios: {
-        faceWidthHeight: 0,
+        faceWidthHeight: faceHeight > 0 ? Number((faceWidth / faceHeight).toFixed(4)) : 0,
         interocularRatio: 0,
         jawWidthRatio: 0,
         upperThirdRatio: 0,
@@ -685,19 +706,19 @@ async function buildScanFromBackend(image: AnalysisImage | undefined, photoLabel
         leftRightDistanceDelta: 0,
       },
       quality: {
-        faceCount: Number(detection?.faceCount ?? 0),
-        faceSizeRatio: 0,
-        blurProxy: Number(quality?.blurScore ?? 0),
-        lightingQuality: Number(quality?.brightness ?? 0),
-        contrastQuality: Number(quality?.contrast ?? 0),
-        occlusionRisk: 0,
-        poseConfidence: landmarks?.available ? 1 : 0,
-        landmarkConfidence: landmarks?.landmarkCount ? 1 : 0,
+        faceCount,
+        faceSizeRatio: Number(faceSizeRatio.toFixed(4)),
+        blurProxy: Number(blurScore.toFixed(2)),
+        lightingQuality: Number(brightness.toFixed(2)),
+        contrastQuality: Number(contrast.toFixed(2)),
+        occlusionRisk: Number(occlusionRisk.toFixed(4)),
+        poseConfidence: Number(poseConfidence.toFixed(4)),
+        landmarkConfidence: Number(landmarkConfidence.toFixed(4)),
       },
       derivedOutputs: {
         confidence,
         rejectionReason: facemaxx.rejectionReason ?? null,
-        warnings: facemaxx.warnings ?? [],
+        warnings,
       },
     };
 
@@ -715,7 +736,7 @@ async function buildScanFromBackend(image: AnalysisImage | undefined, photoLabel
       measurement,
       confidence,
       rejectionReason: facemaxx.rejectionReason ?? null,
-      warnings: facemaxx.warnings ?? [],
+      warnings,
     };
   } catch {
     return null;

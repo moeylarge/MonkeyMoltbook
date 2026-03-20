@@ -86,7 +86,8 @@ Still pending:
 - Python environment installed successfully and backend health check now passes at `http://127.0.0.1:8089/health`
 - `/analyze` now succeeds end-to-end on a real face test image: OpenCV preprocessing works, InsightFace detection works, MediaPipe landmark extraction works via the Tasks API, and calibration returns a structured FACEMAXX payload
 - FACEMAXX app now prefers the local backend (`http://127.0.0.1:8089/analyze`) for scans and battle analysis, with heuristic fallback if the backend is unavailable
-- next backend/app step: deepen the response mapping so more measurement fields and backend reasoning feed directly into the UI
+- response mapping has been deepened so backend quality/detection/landmark signals feed more directly into UI explanations and stored measurement quality fields
+- next backend/app step: expose even richer backend measurements (ratios/symmetry fields) and expand recommendation logic around them
 - collect the first 25 real labeled samples and run the merge flow on actual data
 - real monetization plumbing only if Moey wants to move beyond prototype framing
 
