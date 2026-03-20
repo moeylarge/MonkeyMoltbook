@@ -656,17 +656,26 @@ async function detectFaceMetrics(image?: AnalysisImage) {
   }
 }
 
+function isReliableScan(scan: ScanRecord) {
+  return !scan.rejectionReason && (scan.confidence ?? 0) >= 55;
+}
+
 function buildRetentionStats(history: ScanRecord[]) {
   const ordered = [...history].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-  const bestScore = ordered.reduce((max, item) => Math.max(max, item.score), 0);
-  const bestScan = ordered.reduce<ScanRecord | null>((best, item) => (!best || item.score >= best.score ? item : best), null);
+  const reliable = ordered.filter(isReliableScan);
+  const baseline = reliable.length ? reliable : ordered;
+  const bestScore = baseline.reduce((max, item) => Math.max(max, item.score), 0);
+  const bestScan = baseline.reduce<ScanRecord | null>((best, item) => (!best || item.score >= best.score ? item : best), null);
   const latest = ordered[ordered.length - 1] ?? null;
-  const previous = ordered[ordered.length - 2] ?? null;
-  const scoreDelta = latest && previous ? latest.score - previous.score : 0;
+  const latestReliable = reliable[reliable.length - 1] ?? null;
+  const previousReliable = reliable[reliable.length - 2] ?? null;
+  const scoreDelta = latestReliable && previousReliable ? latestReliable.score - previousReliable.score : 0;
+  const provisionalCount = ordered.length - reliable.length;
 
-  let streakDays = ordered.length ? 1 : 0;
-  for (let i = ordered.length - 1; i > 0; i -= 1) {
-    const diff = getDayDiff(ordered[i].createdAt, ordered[i - 1].createdAt);
+  let streakDays = reliable.length ? 1 : ordered.length ? 1 : 0;
+  const streakSource = reliable.length ? reliable : ordered;
+  for (let i = streakSource.length - 1; i > 0; i -= 1) {
+    const diff = getDayDiff(streakSource[i].createdAt, streakSource[i - 1].createdAt);
     if (diff === 0) continue;
     if (diff === 1) {
       streakDays += 1;
@@ -679,9 +688,12 @@ function buildRetentionStats(history: ScanRecord[]) {
     bestScore,
     bestScan,
     latest,
-    previous,
+    latestReliable,
+    previousReliable,
     scoreDelta,
     streakDays,
+    provisionalCount,
+    usingReliableBaseline: reliable.length >= 2,
   };
 }
 
@@ -1955,6 +1967,9 @@ export default function App() {
             <Text style={styles.retentionTitle}>Glow-up tracker</Text>
             <Text style={styles.streakBadge}>{retentionStats.streakDays}-day streak</Text>
           </View>
+          {!!retentionStats.provisionalCount && (
+            <Text style={styles.retentionSubnote}>{retentionStats.provisionalCount} provisional scan{retentionStats.provisionalCount === 1 ? '' : 's'} excluded from progress trend.</Text>
+          )}
           <View style={styles.retentionSummaryRow}>
             <View style={styles.retentionStatBox}>
               <Text style={styles.retentionStatValue}>{retentionStats.bestScore}</Text>
@@ -1970,11 +1985,15 @@ export default function App() {
             </View>
           </View>
           <Text style={styles.retentionCopy}>
-            {retentionStats.scoreDelta > 0
-              ? `${retentionStats.scoreDelta > 1 ? `+${retentionStats.scoreDelta} improvement detected` : '+1 improvement detected'} from your last scan.`
-              : retentionStats.scoreDelta < 0
-                ? `Current optimization read is ${Math.abs(retentionStats.scoreDelta)} lower than your last scan. Lighting or angle may be suppressing the optimization score.`
-                : 'No score change detected on the last scan. Try angle, lighting, hair control, or skin-day timing.'}
+            {retentionStats.usingReliableBaseline
+              ? retentionStats.scoreDelta > 0
+                ? `${retentionStats.scoreDelta > 1 ? `+${retentionStats.scoreDelta} improvement detected` : '+1 improvement detected'} across your last clean scans.`
+                : retentionStats.scoreDelta < 0
+                  ? `Your last clean scan reads ${Math.abs(retentionStats.scoreDelta)} lower than the one before it. Provisional inputs are being ignored so weak photos do not fake a regression.`
+                  : 'Your last two clean scans are flat. Try angle, lighting, hair control, or skin-day timing for a better next read.'
+              : retentionStats.provisionalCount > 0
+                ? 'Recent shaky scans are being logged, but progress trend is waiting for cleaner inputs before calling movement.'
+                : 'Not enough clean scan history yet to call a real trend.'}
           </Text>
           <Text style={styles.retentionDatasetText}>{exportCount} training-ready samples logged locally so far.</Text>
           {!!lastExportPath && <Text style={styles.retentionDatasetPath}>Last sample file: {lastExportPath}</Text>}
@@ -2478,6 +2497,7 @@ const styles = StyleSheet.create({
   retentionSummaryCard: { padding: 20, borderRadius: 24, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#2A2D3F', gap: 14 },
   retentionSummaryTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   streakBadge: { color: '#14E38B', fontSize: 12, fontWeight: '800', backgroundColor: '#12261C', paddingHorizontal: 10, paddingVertical: 7, borderRadius: 999, overflow: 'hidden' },
+  retentionSubnote: { color: '#9FA6BD', fontSize: 12, lineHeight: 18, marginTop: 2 },
   retentionSummaryRow: { flexDirection: 'row', gap: 10, flexWrap: 'wrap' },
   retentionStatBox: { flex: 1, padding: 14, borderRadius: 18, backgroundColor: '#171922', borderWidth: 1, borderColor: '#282B3D' },
   retentionStatValue: { color: '#FFFFFF', fontSize: 24, fontWeight: '900' },
