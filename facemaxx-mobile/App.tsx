@@ -1885,14 +1885,14 @@ export default function App() {
         <Text style={styles.eyebrow}>THE {BRAND_NAME.toUpperCase()} STANDARD</Text>
         <View style={styles.liveDot} />
       </View>
-      <Text style={styles.brandIntro}>{BRAND_FACE_NAME} is the face, the benchmark, and the tone of the app.</Text>
+      <Text style={styles.brandIntro}>Get a sharper read on how your current presentation lands — and where the biggest gains are hiding.</Text>
       <Animated.View style={[styles.brandHeroFrame, { transform: [{ scale: pulse }] }]}>
         <Image source={BRAND_FACE_IMAGE} style={styles.brandHeroImage} resizeMode="cover" />
         <View style={styles.brandHeroShadeTop} />
         <View style={styles.brandHeroShadeBottom} />
         <View style={styles.brandHeroOverlay}>
-          <Text style={styles.brandHeroName}>{BRAND_FACE_NAME}</Text>
-          <Text style={styles.brandHeroRole}>The face of {BRAND_NAME}</Text>
+          <Text style={styles.brandHeroName}>{BRAND_NAME}</Text>
+          <Text style={styles.brandHeroRole}>Read the look. Find the upside.</Text>
         </View>
       </Animated.View>
       <Animated.View style={[styles.heroOrb, { transform: [{ scale: pulse }] }]}>
@@ -1902,7 +1902,7 @@ export default function App() {
         </View>
       </Animated.View>
       <Text style={styles.heroTitle}>Measure yourself against the {BRAND_NAME} standard.</Text>
-      <Text style={styles.heroSub}>{BRAND_FACE_NAME} defines the mood. Bring in one photo, get your current read, and see how much stronger your look can land.</Text>
+      <Text style={styles.heroSub}>Bring in one photo, get your current read, and see how much stronger your look can land with cleaner presentation, structure, and consistency.</Text>
 
       <View style={styles.statRail}>
         <View style={styles.statChip}>
