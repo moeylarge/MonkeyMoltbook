@@ -8,8 +8,8 @@
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/clavicular-splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#0B0B0F"
+      "resizeMode": "cover",
+      "backgroundColor": "#07070A"
     },
     "ios": {
       "supportsTablet": true
