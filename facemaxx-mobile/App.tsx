@@ -1628,7 +1628,7 @@ export default function App() {
       </Pressable>
       {!!history.length && (
         <Pressable style={styles.secondaryButton} onPress={() => setScreen('history')}>
-          <Text style={styles.secondaryButtonText}>Open Saved Scans</Text>
+          <Text style={styles.secondaryButtonText}>Open Standard History</Text>
         </Pressable>
       )}
     </View>
@@ -1636,8 +1636,8 @@ export default function App() {
 
   const renderUpload = () => (
     <View style={styles.screenBlock}>
-      <Text style={styles.sectionKick}>Photo entry</Text>
-      <Text style={styles.sectionTitle}>Choose a photo and get a fast read on how your face is presenting right now.</Text>
+      <Text style={styles.sectionKick}>Enter the standard</Text>
+      <Text style={styles.sectionTitle}>Choose a photo and see how your current presentation stacks up against the LooksMaxxing standard.</Text>
 
       <View style={styles.uploadCard}>
         <Text style={styles.uploadTag}>PHOTO READY</Text>
@@ -1665,7 +1665,7 @@ export default function App() {
         </View>
         <View style={styles.infoCard}>
           <Text style={styles.infoValue}>{history.length}</Text>
-          <Text style={styles.infoLabel}>saved scans</Text>
+          <Text style={styles.infoLabel}>standard checks</Text>
         </View>
         <View style={styles.infoCard}>
           <Text style={styles.infoValue}>{exportCount}</Text>
@@ -1691,8 +1691,8 @@ export default function App() {
 
   const renderCamera = () => (
     <View style={styles.screenBlock}>
-      <Text style={styles.sectionKick}>Direct capture</Text>
-      <Text style={styles.sectionTitle}>Take a photo directly in the app for a cleaner, faster scan.</Text>
+      <Text style={styles.sectionKick}>Capture for the standard</Text>
+      <Text style={styles.sectionTitle}>Take a photo directly in the app for the cleanest possible read against the LooksMaxxing standard.</Text>
       <View style={styles.cameraShell}>
         {cameraPermission?.granted ? (
           <CameraView ref={cameraRef} facing="front" style={styles.cameraView} />
@@ -1750,13 +1750,13 @@ export default function App() {
     const resultLabel = isProvisionalResult ? 'Provisional Read' : 'Optimization Score';
     const resultProgressCopy = isProvisionalResult
       ? `This read is being held loosely until ${BRAND_NAME} gets a cleaner scan.`
-      : `You are ${eliteDistance}% away from 100-signal ceiling`;
+      : `You are ${eliteDistance}% away from the LooksMaxxing ceiling`;
     return (
       <View style={styles.screenBlock}>
         <Text style={styles.sectionKick}>Your read</Text>
         <View style={[styles.resultCard, isProvisionalResult && styles.resultCardMuted]}>
           <Text style={[styles.rankBadge, isProvisionalResult && styles.rankBadgeMuted]}>{isProvisionalResult ? 'PROVISIONAL' : activeScan.rank}</Text>
-          <Text style={styles.resultLabel}>{resultLabel}</Text>
+          <Text style={styles.resultLabel}>{isProvisionalResult ? resultLabel : 'LooksMaxxing Read'}</Text>
           <Text style={[styles.resultScore, isProvisionalResult && styles.resultScoreMuted]}>{scoreDisplay}</Text>
           <Text style={[styles.resultTier, isProvisionalResult && styles.resultTierMuted]}>{isProvisionalResult ? 'Needs Better Scan' : activeScan.tier}</Text>
           <Text style={styles.resultArchetype}>{isProvisionalResult ? `${activeScan.archetype} • held loosely` : activeScan.archetype}</Text>
@@ -1844,12 +1844,12 @@ export default function App() {
               <View style={styles.metricChip}><Text style={styles.metricKey}>Interocular</Text><Text style={styles.metricValue}>{backendMeasurements.ratios.interocularRatio.toFixed(2)}</Text></View>
               <View style={styles.metricChip}><Text style={styles.metricKey}>Face count</Text><Text style={styles.metricValue}>{backendMeasurements.quality.faceCount}</Text></View>
             </View>
-            <Text style={styles.metricPanelCopy}>Current visual archetype read: {inferredArchetype}</Text>
+            <Text style={styles.metricPanelCopy}>Current Clavicular-side archetype read: {inferredArchetype}</Text>
           </View>
         )}
 
         <Pressable style={styles.primaryButton} onPress={() => setScreen('breakdown')}>
-          <Text style={styles.primaryButtonText}>See Breakdown</Text>
+          <Text style={styles.primaryButtonText}>Open Score Breakdown</Text>
         </Pressable>
       </View>
     );
@@ -1889,7 +1889,7 @@ export default function App() {
             <View style={styles.breakTopRow}>
               <Text style={styles.breakLabel}>{item.label}</Text>
               <View style={[styles.deltaPill, { backgroundColor: `${item.color}22` }]}>
-                <Text style={[styles.deltaText, { color: item.color }]}>+{item.target - item.score} available</Text>
+                <Text style={[styles.deltaText, { color: item.color }]}>+{item.target - item.score} toward standard</Text>
               </View>
             </View>
 
@@ -1969,7 +1969,7 @@ export default function App() {
         </View>
 
         <Pressable style={styles.primaryButton} onPress={() => setScreen('share')}>
-          <Text style={styles.primaryButtonText}>Open Share Card</Text>
+          <Text style={styles.primaryButtonText}>Open Standard Card</Text>
         </Pressable>
       </View>
     );
@@ -2102,7 +2102,7 @@ export default function App() {
         </View>
       )}
       <Pressable style={styles.primaryButton} onPress={() => setScreen('paywall')}>
-        <Text style={styles.primaryButtonText}>Continue</Text>
+        <Text style={styles.primaryButtonText}>Continue to Clavicular Access</Text>
       </Pressable>
     </View>
   );
@@ -2119,8 +2119,8 @@ export default function App() {
       >
         <Text style={styles.paywallTier}>CLAVICULAR ACCESS</Text>
         <Text style={styles.paywallPrice}>$7.99</Text>
-        <Text style={styles.paywallCopy}>Unlock your full breakdown, projected ceiling, Clavicular-standard share cards, battle insights, and a sharper plan for what to improve next.</Text>
-        {['Full improvement plan', 'Projected max score', 'Weekly progress check-ins', 'Battle insights'].map((item, index) => (
+        <Text style={styles.paywallCopy}>Unlock your full breakdown, projected ceiling, Clavicular-standard cards, clash insights, and a sharper plan for what to improve next.</Text>
+        {['Full standard plan', 'Projected max score', 'Weekly standard check-ins', 'Clash insights'].map((item, index) => (
           <View key={item} style={[styles.lockedRow, lockedIndex === index && styles.lockedRowActive]}>
             <Text style={styles.lockedRowText}>{item}</Text>
             <Text style={styles.lockedRowTag}>PAID</Text>
@@ -2137,7 +2137,7 @@ export default function App() {
         <View style={styles.pricingCardAccent}>
           <Text style={styles.pricingTier}>PRO</Text>
           <Text style={styles.pricingHeadline}>Full improvement plan</Text>
-          <Text style={styles.pricingCopy}>Detailed upgrades, progress tracking, share cards, and battle insights.</Text>
+          <Text style={styles.pricingCopy}>Detailed upgrades, progress tracking, standard cards, and clash insights.</Text>
         </View>
         <View style={styles.pricingCardMuted}>
           <Text style={styles.pricingTier}>SUBSCRIPTION</Text>
