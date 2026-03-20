@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as FaceDetector from 'expo-face-detector';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -178,6 +179,7 @@ type DatasetExportRecord = {
 
 const STORAGE_KEY = 'facemaxx.scanHistory.v1';
 const DATASET_EXPORT_KEY = 'facemaxx.datasetExports.v1';
+const DATASET_EXPORT_DIR = `${FileSystem.documentDirectory ?? ''}facemaxx-dataset`;
 const screens: ScreenKey[] = ['hook', 'upload', 'camera', 'scan', 'result', 'breakdown', 'simulate', 'history', 'paywall', 'plan', 'share', 'battle'];
 const battleProfiles: BattleProfile[] = [
   { id: '1', name: 'Damon', archetype: 'Pretty Boy', tier: 'Attractive', score: 74, vibe: 'cleaner eye area, softer jaw' },
@@ -782,6 +784,7 @@ export default function App() {
   const [battleBusy, setBattleBusy] = useState(false);
   const [shareTone, setShareTone] = useState<ShareTone>('neutral');
   const [exportCount, setExportCount] = useState(0);
+  const [lastExportPath, setLastExportPath] = useState<string | null>(null);
 
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const cameraRef = useRef<any>(null);
@@ -1081,11 +1084,40 @@ export default function App() {
     try {
       const raw = await AsyncStorage.getItem(DATASET_EXPORT_KEY);
       const parsed = raw ? (JSON.parse(raw) as DatasetExportRecord[]) : [];
-      const next = [buildDatasetExport(scan), ...parsed].slice(0, 250);
+      const nextRecord = buildDatasetExport(scan);
+      const next = [nextRecord, ...parsed].slice(0, 250);
       await AsyncStorage.setItem(DATASET_EXPORT_KEY, JSON.stringify(next));
       setExportCount(next.length);
+      return nextRecord;
     } catch {
       // local convenience only
+      return null;
+    }
+  };
+
+  const ensureDatasetExportDir = async () => {
+    if (!DATASET_EXPORT_DIR) return null;
+    try {
+      const info = await FileSystem.getInfoAsync(DATASET_EXPORT_DIR);
+      if (!info.exists) {
+        await FileSystem.makeDirectoryAsync(DATASET_EXPORT_DIR, { intermediates: true });
+      }
+      return DATASET_EXPORT_DIR;
+    } catch {
+      return null;
+    }
+  };
+
+  const writeDatasetSampleFile = async (record: DatasetExportRecord) => {
+    const dir = await ensureDatasetExportDir();
+    if (!dir) return null;
+    const path = `${dir}/${record.sampleId}.json`;
+    try {
+      await FileSystem.writeAsStringAsync(path, JSON.stringify(record, null, 2));
+      setLastExportPath(path);
+      return path;
+    } catch {
+      return null;
     }
   };
 
@@ -1175,7 +1207,8 @@ export default function App() {
         setBattleScan(analyzed);
         setBattleArchetype(analyzed.archetype);
         setBattleScoreInput(String(analyzed.score));
-        await appendDatasetExport(analyzed);
+        const datasetRecord = await appendDatasetExport(analyzed);
+        if (datasetRecord) await writeDatasetSampleFile(datasetRecord);
       }
     } finally {
       setBattleBusy(false);
@@ -1207,7 +1240,8 @@ export default function App() {
     setCurrentScan(scan);
     const nextHistory = [scan, ...history].slice(0, 12);
     await persistHistory(nextHistory);
-    await appendDatasetExport(scan);
+    const datasetRecord = await appendDatasetExport(scan);
+    if (datasetRecord) await writeDatasetSampleFile(datasetRecord);
     setScreen('scan');
   };
 
@@ -1596,6 +1630,7 @@ export default function App() {
                 : 'No score change detected on the last scan. Try angle, lighting, hair control, or skin-day timing.'}
           </Text>
           <Text style={styles.retentionDatasetText}>{exportCount} training-ready samples logged locally so far.</Text>
+          {!!lastExportPath && <Text style={styles.retentionDatasetPath}>Last sample file: {lastExportPath}</Text>}
         </View>
 
         <View style={styles.bestVersionCard}>
@@ -2153,4 +2188,5 @@ const styles = StyleSheet.create({
   retentionTitle: { color: '#FFFFFF', fontSize: 18, fontWeight: '800' },
   retentionCopy: { color: '#AAB0C5', fontSize: 14, lineHeight: 20, marginTop: 8 },
   retentionDatasetText: { color: '#14E38B', fontSize: 12, fontWeight: '700', marginTop: 10 },
+  retentionDatasetPath: { color: '#98A0B8', fontSize: 11, lineHeight: 16, marginTop: 6 },
 });

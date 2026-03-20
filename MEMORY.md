@@ -25,6 +25,7 @@ Important upgrades completed on 2026-03-20:
 - battle mode now supports a real second uploaded image and second analysis pass
 - structured measurement vectors now exist in app scan records, including landmarks/ratios/symmetry/quality/confidence/rejection outputs
 - scans now create local training-style dataset export records for future model work
+- scans now also write file-based JSON sample exports through Expo file system
 - v2 docs now include roadmap, measurement schema, dataset schema, rating rubric, model plan, and training scaffold
 
 Current recommendation:

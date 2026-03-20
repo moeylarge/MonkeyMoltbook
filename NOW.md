@@ -90,6 +90,7 @@ Latest major upgrade:
 - manual battle entry remains as fallback when no second image is provided
 - structured measurement vectors now exist in app scan records (landmarks, ratios, symmetry, quality/confidence, rejection/warning outputs)
 - scans now also create local training-style dataset export records
+- scans now write file-based JSON sample exports via Expo file system, not just app storage
 - first dataset/training scaffold docs added (`RATING_RUBRIC.md`, `training/README.md`)
 
 Latest polish pass:
