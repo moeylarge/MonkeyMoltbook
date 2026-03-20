@@ -324,10 +324,10 @@ function getIdentityTagline(scan: ScanRecord) {
     ? Math.max(0, 1 - scan.measurement.symmetry.noseCenterOffset * 6 - scan.measurement.symmetry.eyeHeightDelta * 8)
     : null;
   const structureNote = symmetryScore !== null && symmetryScore > 0.72
-    ? 'Backend symmetry and landmark balance are reinforcing the read.'
+    ? 'Your structure is reading balanced and controlled in this shot.'
     : symmetryScore !== null
-      ? 'Backend geometry suggests the biggest gains come from cleaner structure presentation.'
-      : 'Backend quality signals are still building the structural read.';
+      ? 'The biggest gains here likely come from cleaner structure presentation.'
+      : 'This read still looks somewhat dependent on photo quality and presentation.';
   return `You are a ${scan.archetype} with ${upside >= 12 ? 'high' : upside >= 8 ? 'real' : 'measured'} upside. Improving ${best.label.toLowerCase()} can push you toward ${scan.potential >= 82 ? 'Elite' : scan.potential >= 72 ? 'Attractive' : 'Above Average'}. ${structureNote}`;
 }
 
@@ -507,10 +507,10 @@ function buildAffiliateItems(scan: ScanRecord): AffiliateItem[] {
 
 function buildShareCaptions(scan: ScanRecord): Record<ShareTone, string> {
   return {
-    neutral: `${BRAND_NAME} scored me ${scan.score} as ${scan.archetype}. Fair read or not?`,
-    confident: `${scan.score} now and ${scan.potential} potential. Strong base or overhyped?`,
-    humble: `Trying to level this up. ${BRAND_NAME} says ${scan.archetype} with room to improve - accurate?`,
-    provocative: `${BRAND_NAME} says I'm a ${scan.archetype} at ${scan.score}. Honest takes only - fair or inflated?`,
+    neutral: `${BRAND_NAME} gave me a ${scan.score} and tagged me ${scan.archetype}. Fair read or nah?`,
+    confident: `${scan.score} now, ${scan.potential} ceiling. Strong base or am I gassing it?`,
+    humble: `Trying to improve this honestly. ${BRAND_NAME} read me as ${scan.archetype} with room to grow — fair?`,
+    provocative: `${BRAND_NAME} says ${scan.score} and ${scan.archetype}. Be real — accurate or inflated?`,
   };
 }
 
@@ -2310,8 +2310,7 @@ export default function App() {
                 ? 'Recent shaky scans are being logged, but progress trend is waiting for cleaner inputs before calling movement.'
                 : 'Not enough clean scan history yet to call a real trend.'}
           </Text>
-          <Text style={styles.retentionDatasetText}>{exportCount} scan samples saved locally so far.</Text>
-          {!!lastExportPath && <Text style={styles.retentionDatasetPath}>Last sample file: {lastExportPath}</Text>}
+          <Text style={styles.retentionDatasetText}>{exportCount} scans saved privately on this device so far.</Text>
         </View>
 
         <View style={styles.bestVersionCard}>
@@ -2338,7 +2337,7 @@ export default function App() {
               );
             })}
           </View>
-          <Text style={styles.timelineLegend}>Solid = current score · Outline = potential · Purple = clean scan · Rose = provisional scan</Text>
+          <Text style={styles.timelineLegend}>Solid bar = current score · Outline = upside · Purple = clean scan · Rose = provisional scan</Text>
         </View>
         </>
       )}
@@ -2549,7 +2548,7 @@ export default function App() {
         <View style={styles.shareCard}>
           <Text style={styles.shareTitle}>Clavicular caption style</Text>
           <Text style={styles.shareHeadline}>{shareCaption}</Text>
-          <Text style={styles.shareCaption}>Built for screenshots, stories, X posts, TikToks, and whatever else you want to throw it into.</Text>
+          <Text style={styles.shareCaption}>Made to be screenshot-ready, story-ready, and clean enough to post without extra explaining.</Text>
         </View>
 
         <Pressable style={styles.primaryButton} onPress={() => setScreen('battle')}>
