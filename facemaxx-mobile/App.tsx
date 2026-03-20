@@ -702,6 +702,36 @@ function buildRetentionStats(history: ScanRecord[]) {
   };
 }
 
+async function rasterizeWebImageToJpeg(uri: string, filename: string) {
+  return await new Promise<File>((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = image.naturalWidth || image.width;
+        canvas.height = image.naturalHeight || image.height;
+        const context = canvas.getContext('2d');
+        if (!context) {
+          reject(new Error('Could not create canvas context for web image conversion'));
+          return;
+        }
+        context.drawImage(image, 0, 0);
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            reject(new Error('Web image conversion produced no blob'));
+            return;
+          }
+          resolve(new File([blob], filename.replace(/\.[a-z0-9]+$/i, '.jpg'), { type: 'image/jpeg' }));
+        }, 'image/jpeg', 0.92);
+      } catch (error) {
+        reject(error instanceof Error ? error : new Error('Unknown rasterization error'));
+      }
+    };
+    image.onerror = () => reject(new Error('Could not load selected web image into rasterizer'));
+    image.src = uri;
+  });
+}
+
 async function buildScanFromBackend(image: AnalysisImage | undefined, photoLabel: string): Promise<ScanRecord | null> {
   if (!image?.uri) return null;
 
@@ -711,32 +741,13 @@ async function buildScanFromBackend(image: AnalysisImage | undefined, photoLabel
     const filename = image.uri.split('/').pop() || 'scan-image.jpg';
 
     if (Platform.OS === 'web') {
-      const imageResponse = await fetch(image.uri);
-      const sourceBlob = await imageResponse.blob();
-      let uploadBlob = sourceBlob;
-      let uploadType = sourceBlob.type || mimeType;
-      let uploadName = filename;
-
-      if (uploadType === 'image/heic' || uploadType === 'image/heif' || /\.hei(c|f)$/i.test(filename)) {
-        const bitmap = await createImageBitmap(sourceBlob);
-        const canvas = document.createElement('canvas');
-        canvas.width = bitmap.width;
-        canvas.height = bitmap.height;
-        const context = canvas.getContext('2d');
-        if (!context) throw new Error('Could not create canvas context for HEIC conversion');
-        context.drawImage(bitmap, 0, 0);
-        uploadBlob = await new Promise<Blob>((resolve, reject) => {
-          canvas.toBlob((blob) => {
-            if (blob) resolve(blob);
-            else reject(new Error('HEIC conversion produced no blob'));
-          }, 'image/jpeg', 0.92);
-        });
-        uploadType = 'image/jpeg';
-        uploadName = filename.replace(/\.hei(c|f)$/i, '.jpg');
-      }
-
-      const upload = new File([uploadBlob], uploadName, {
-        type: uploadType,
+      const upload = await rasterizeWebImageToJpeg(image.uri, filename);
+      console.log('LooksMaxxing web upload debug', {
+        originalMimeType: mimeType,
+        originalFilename: filename,
+        uploadName: upload.name,
+        uploadType: upload.type,
+        uploadSize: upload.size,
       });
       form.append('image', upload);
     } else {
