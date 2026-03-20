@@ -712,9 +712,31 @@ async function buildScanFromBackend(image: AnalysisImage | undefined, photoLabel
 
     if (Platform.OS === 'web') {
       const imageResponse = await fetch(image.uri);
-      const blob = await imageResponse.blob();
-      const upload = new File([blob], filename, {
-        type: blob.type || mimeType,
+      const sourceBlob = await imageResponse.blob();
+      let uploadBlob = sourceBlob;
+      let uploadType = sourceBlob.type || mimeType;
+      let uploadName = filename;
+
+      if (uploadType === 'image/heic' || uploadType === 'image/heif' || /\.hei(c|f)$/i.test(filename)) {
+        const bitmap = await createImageBitmap(sourceBlob);
+        const canvas = document.createElement('canvas');
+        canvas.width = bitmap.width;
+        canvas.height = bitmap.height;
+        const context = canvas.getContext('2d');
+        if (!context) throw new Error('Could not create canvas context for HEIC conversion');
+        context.drawImage(bitmap, 0, 0);
+        uploadBlob = await new Promise<Blob>((resolve, reject) => {
+          canvas.toBlob((blob) => {
+            if (blob) resolve(blob);
+            else reject(new Error('HEIC conversion produced no blob'));
+          }, 'image/jpeg', 0.92);
+        });
+        uploadType = 'image/jpeg';
+        uploadName = filename.replace(/\.hei(c|f)$/i, '.jpg');
+      }
+
+      const upload = new File([uploadBlob], uploadName, {
+        type: uploadType,
       });
       form.append('image', upload);
     } else {

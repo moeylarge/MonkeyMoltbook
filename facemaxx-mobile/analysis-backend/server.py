@@ -2,6 +2,7 @@ import hashlib
 import logging
 
 from fastapi import FastAPI, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from preprocess import run_preprocess
@@ -13,6 +14,13 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("looksmaxxing.analysis")
 
 app = FastAPI(title="LooksMaxxing Analysis Backend", version="0.1.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 def detect_image_format(image_bytes: bytes):
