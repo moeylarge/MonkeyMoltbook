@@ -2089,8 +2089,8 @@ export default function App() {
 
   const renderPaywall = () => (
     <View style={styles.screenBlock}>
-      <Text style={styles.sectionKick}>Monetization layer</Text>
-      <Text style={styles.sectionTitle}>The revenue spine: free hook, paid unlocks, recurring tracking, affiliate attach.</Text>
+      <Text style={styles.sectionKick}>Upgrade</Text>
+      <Text style={styles.sectionTitle}>Unlock the deeper read, the full plan, and better ways to track progress over time.</Text>
       <Animated.View
         style={[
           styles.paywallCard,
@@ -2099,8 +2099,8 @@ export default function App() {
       >
         <Text style={styles.paywallTier}>PRO SCAN</Text>
         <Text style={styles.paywallPrice}>$7.99</Text>
-        <Text style={styles.paywallCopy}>Unlock full breakdown, max potential score, weekly rerating loop, export cards, battle mode insights, and premium glow-up plan.</Text>
-        {['Full improvement plan', 'Max potential score', 'Weekly rerating reports', 'Battle mode insights'].map((item, index) => (
+        <Text style={styles.paywallCopy}>Unlock your full breakdown, projected ceiling, saved share cards, battle insights, and a sharper plan for what to improve next.</Text>
+        {['Full improvement plan', 'Projected max score', 'Weekly progress check-ins', 'Battle insights'].map((item, index) => (
           <View key={item} style={[styles.lockedRow, lockedIndex === index && styles.lockedRowActive]}>
             <Text style={styles.lockedRowText}>{item}</Text>
             <Text style={styles.lockedRowTag}>PAID</Text>
@@ -2111,24 +2111,24 @@ export default function App() {
       <View style={styles.pricingGrid}>
         <View style={styles.pricingCardMuted}>
           <Text style={styles.pricingTier}>FREE</Text>
-          <Text style={styles.pricingHeadline}>Hook + limited analysis</Text>
-          <Text style={styles.pricingCopy}>Score, limited breakdown, teaser simulation, light history.</Text>
+          <Text style={styles.pricingHeadline}>Quick read</Text>
+          <Text style={styles.pricingCopy}>Score, light breakdown, preview, and recent history.</Text>
         </View>
         <View style={styles.pricingCardAccent}>
           <Text style={styles.pricingTier}>PRO</Text>
-          <Text style={styles.pricingHeadline}>Full transformation loop</Text>
-          <Text style={styles.pricingCopy}>Improvement engine, retention analytics, share cards, battle mode, premium unlocks.</Text>
+          <Text style={styles.pricingHeadline}>Full improvement plan</Text>
+          <Text style={styles.pricingCopy}>Detailed upgrades, progress tracking, share cards, and battle insights.</Text>
         </View>
         <View style={styles.pricingCardMuted}>
           <Text style={styles.pricingTier}>SUBSCRIPTION</Text>
-          <Text style={styles.pricingHeadline}>Ongoing rerating</Text>
-          <Text style={styles.pricingCopy}>Weekly progress reports, recurring re-analysis, and streak-based retention.</Text>
+          <Text style={styles.pricingHeadline}>Ongoing tracking</Text>
+          <Text style={styles.pricingCopy}>Weekly progress reports, repeat scans, and a clearer view of what is actually changing.</Text>
         </View>
       </View>
 
       <View style={styles.retentionCard}>
-        <Text style={styles.retentionTitle}>Affiliate engine</Text>
-        <Text style={styles.retentionCopy}>Attach monetizable products directly to the user’s improvement path.</Text>
+        <Text style={styles.retentionTitle}>Recommended add-ons</Text>
+        <Text style={styles.retentionCopy}>Products and routines that match the areas most worth improving first.</Text>
         {affiliateItems.map((item) => (
           <View key={item.id} style={styles.affiliateRow}>
             <View style={styles.affiliateMeta}>
@@ -2142,7 +2142,7 @@ export default function App() {
       </View>
 
       <Pressable style={styles.primaryButton} onPress={() => setScreen('plan')}>
-        <Text style={styles.primaryButtonText}>See Paid Improvement Flow</Text>
+        <Text style={styles.primaryButtonText}>See Full Improvement Plan</Text>
       </Pressable>
     </View>
   );
