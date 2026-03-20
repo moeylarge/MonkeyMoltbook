@@ -429,22 +429,22 @@ function buildShareCaptions(scan: ScanRecord): Record<ShareTone, string> {
 
 function buildBattleOutcome(scan: ScanRecord, opponent: BattleProfile) {
   const delta = scan.score - opponent.score;
-  const confidenceNote = scan.confidence && scan.confidence < 70 ? ' Your read is still somewhat suppressed by backend confidence limits.' : '';
+  const confidenceNote = scan.confidence && scan.confidence < 70 ? ' Your side is still being read a little cautiously because scan confidence is not fully locked.' : '';
   if (delta >= 3) {
     return {
       winner: 'you',
-      summary: `You win on overall signal. Your ${scan.archetype.toLowerCase()} read edges out ${opponent.name}'s ${opponent.archetype.toLowerCase()} profile.${confidenceNote}`,
+      summary: `You take this round on current presentation. Your ${scan.archetype.toLowerCase()} read edges past ${opponent.name}'s ${opponent.archetype.toLowerCase()} look.${confidenceNote}`,
     };
   }
   if (delta <= -3) {
     return {
       winner: 'opponent',
-      summary: `${opponent.name} wins on current signal. Their profile reads stronger right now, but your ceiling is still competitive.${confidenceNote}`,
+      summary: `${opponent.name} takes this round on current presentation. Their photo is reading stronger right now, but your upside is still competitive.${confidenceNote}`,
     };
   }
   return {
     winner: 'draw',
-    summary: `Near draw. This comes down to backend geometry confidence, grooming, and who presents their strongest frame better.${confidenceNote}`,
+    summary: `This one is close. It likely comes down to photo quality, grooming, angles, and who is getting the cleaner read.${confidenceNote}`,
   };
 }
 
@@ -2236,10 +2236,10 @@ export default function App() {
     return (
       <View style={styles.screenBlock}>
         <Text style={styles.sectionKick}>Battle mode</Text>
-        <Text style={styles.sectionTitle}>Compare your read against a second photo and see who wins the current frame.</Text>
+        <Text style={styles.sectionTitle}>Put two reads side by side and see who owns the stronger photo right now.</Text>
 
         <View style={styles.retentionCard}>
-          <Text style={styles.retentionTitle}>Opponent setup</Text>
+          <Text style={styles.retentionTitle}>Choose an opponent</Text>
           <View style={styles.optionRow}>
             {battleProfiles.map((profile) => (
               <Pressable
@@ -2259,20 +2259,20 @@ export default function App() {
               </Pressable>
             ))}
           </View>
-          <Text style={styles.battleInputLabel}>Friend name</Text>
-          <TextInput value={battleName} onChangeText={setBattleName} style={styles.battleInput} placeholder="Friend name" placeholderTextColor="#6F7690" />
+          <Text style={styles.battleInputLabel}>Opponent name</Text>
+          <TextInput value={battleName} onChangeText={setBattleName} style={styles.battleInput} placeholder="Opponent name" placeholderTextColor="#6F7690" />
           <Pressable style={styles.secondaryButton} onPress={pickBattleImage}>
-            <Text style={styles.secondaryButtonText}>{battleBusy ? 'Analyzing second face…' : battleImageUri ? 'Change Friend Photo' : 'Upload Friend Photo'}</Text>
+            <Text style={styles.secondaryButtonText}>{battleBusy ? 'Reading opponent photo…' : battleImageUri ? 'Change Opponent Photo' : 'Upload Opponent Photo'}</Text>
           </Pressable>
           {!battleImageUri && (
             <>
-              <Text style={styles.battleInputLabel}>Fallback score</Text>
+              <Text style={styles.battleInputLabel}>Manual score</Text>
               <TextInput value={battleScoreInput} onChangeText={setBattleScoreInput} style={styles.battleInput} keyboardType="numeric" placeholder="0-100" placeholderTextColor="#6F7690" />
-              <Text style={styles.battleInputLabel}>Fallback archetype</Text>
+              <Text style={styles.battleInputLabel}>Manual archetype</Text>
               <TextInput value={battleArchetype} onChangeText={setBattleArchetype} style={styles.battleInput} placeholder="Archetype" placeholderTextColor="#6F7690" />
             </>
           )}
-          <Text style={styles.battleFootnote}>{battleImageUri ? 'Second image uploaded. Opponent score is coming from a real second analysis pass.' : 'No second photo yet — manual fallback stays available.'}</Text>
+          <Text style={styles.battleFootnote}>{battleImageUri ? 'Opponent photo loaded. This result is using a real second scan.' : 'No opponent photo yet. You can still compare using a manual score and archetype.'}</Text>
         </View>
 
         <View style={styles.battleArena}>
@@ -2293,14 +2293,14 @@ export default function App() {
 
         <View style={styles.retentionCard}>
           <Text style={styles.retentionTitle}>
-            {battleOutcome?.winner === 'you' ? 'Winner: You' : battleOutcome?.winner === 'opponent' ? `Winner: ${activeOpponent.name}` : 'Result: Draw'}
+            {battleOutcome?.winner === 'you' ? 'Current edge: You' : battleOutcome?.winner === 'opponent' ? `Current edge: ${activeOpponent.name}` : 'Current edge: Too close to call'}
           </Text>
           <Text style={styles.retentionCopy}>{battleOutcome?.summary}</Text>
-          <Text style={styles.battleFootnote}>Opponent profile: {activeOpponent.vibe}</Text>
+          <Text style={styles.battleFootnote}>Opponent read source: {activeOpponent.vibe}</Text>
         </View>
 
         <Pressable style={styles.primaryButton} onPress={resetFlow}>
-          <Text style={styles.primaryButtonText}>Restart Experience</Text>
+          <Text style={styles.primaryButtonText}>Start a New Scan</Text>
         </Pressable>
       </View>
     );
