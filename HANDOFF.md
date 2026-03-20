@@ -61,6 +61,28 @@ Caveat:
 - **No autonomous loops**
 - If periodic automation is ever proposed again, ask first
 
+## When the chat freezes
+
+Use this checklist in order:
+
+1. **Do not assume the project is lost**
+   - first assume the UI/session may be broken before assuming the work is gone
+2. **Check the gateway**
+   - `openclaw gateway status`
+   - if needed: `openclaw gateway start`
+3. **Check the main session state**
+   - `openclaw status`
+4. **Reopen the local dashboard**
+   - `http://127.0.0.1:18789/`
+5. **Read continuity files before resuming work**
+   - `PROJECTS.md`
+   - `NOW.md`
+   - `HANDOFF.md`
+6. **If the session was extremely long or near context limits**
+   - prefer a fresh `/new` after reading the continuity files
+7. **Before major phase completion, update continuity files first**
+   - especially before refreshing, restarting, or switching chats
+
 ## Why these files exist
 
 The point is simple:

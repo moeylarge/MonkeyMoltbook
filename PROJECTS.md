@@ -32,9 +32,10 @@ This is the canonical project list for fast recovery after resets, daemon issues
 - **Caveat:** the main refresh job still references `.env.local`, so cadence is fixed but the refresh itself may still fail until the project/env is restored
 
 ### 3) Kids gaming skill app
-- **Status:** PAUSED
+- **Status:** PAUSED / CONTINUITY LOST
 - **Type:** Mobile/web game app
-- **Last known state:** earlier project; Phase 1 UI-shell work existed, but continuity was weak and exact current files are not visible in this workspace snapshot
+- **Last known state:** the project had progressed much further than early Phase 1, but the final completion-stage state was not preserved before a long-session freeze/reset
+- **Recovery note:** treat the previously completed state as unreliable unless the project files/proof are rediscovered; if resumed later, be ready to restart cleanly
 - **Rule:** do not resume automatically unless Moey asks
 
 ### 4) KickChampz
