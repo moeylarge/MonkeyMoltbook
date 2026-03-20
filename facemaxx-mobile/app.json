@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "facemaxx-mobile",
-    "slug": "facemaxx-mobile",
+    "name": "LooksMaxxing",
+    "slug": "looksmaxxing",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/clavicular-splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#0B0B0F"
     },
     "ios": {
       "supportsTablet": true

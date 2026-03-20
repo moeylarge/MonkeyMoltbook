@@ -11,6 +11,7 @@ import {
   Animated,
   Easing,
   Image,
+  ImageSourcePropType,
   Platform,
   Pressable,
   SafeAreaView,
@@ -181,6 +182,9 @@ type DatasetExportRecord = {
 const STORAGE_KEY = 'facemaxx.scanHistory.v1';
 const DATASET_EXPORT_KEY = 'facemaxx.datasetExports.v1';
 const DATASET_EXPORT_DIR = `${FileSystem.documentDirectory ?? ''}facemaxx-dataset`;
+const BRAND_NAME = 'LooksMaxxing';
+const BRAND_FACE_NAME = 'Clavicular';
+const BRAND_FACE_IMAGE: ImageSourcePropType = require('./assets/clavicular-brand.png');
 const ANALYSIS_BACKEND_URL = 'http://127.0.0.1:8089';
 const screens: ScreenKey[] = ['hook', 'upload', 'camera', 'scan', 'result', 'breakdown', 'simulate', 'history', 'paywall', 'plan', 'share', 'battle'];
 const battleProfiles: BattleProfile[] = [
@@ -325,7 +329,7 @@ function getRecoveryGuidance(scan: ScanRecord) {
   if (reason === 'Multiple faces detected') {
     return {
       title: 'More than one face is confusing the read',
-      body: 'FACEMAXX needs a single subject to map structure cleanly. Group photos and reflections can tank confidence fast.',
+      body: `${BRAND_NAME} needs a single subject to map structure cleanly. Group photos and reflections can tank confidence fast.`,
       tips: [
         'Upload a solo photo only.',
         'Crop out friends, mirrors, posters, or background faces.',
@@ -361,11 +365,11 @@ function getRecoveryGuidance(scan: ScanRecord) {
   if (reason === 'Landmarks too weak for confident analysis') {
     return {
       title: 'The structure read is too soft right now',
-      body: 'FACEMAXX found a face, but landmark detail is too weak for a confident geometry pass.',
+      body: `${BRAND_NAME} found a face, but landmark detail is too weak for a confident geometry pass.`,
       tips: [
         'Use a sharper photo with less motion blur.',
         'Remove sunglasses, heavy shadow, or anything covering key features.',
-        `Try better lighting and contrast — current landmark confidence is ${Math.round((quality?.landmarkConfidence ?? 0) * 100)}%.`,
+        `Try better lighting and contrast - current landmark confidence is ${Math.round((quality?.landmarkConfidence ?? 0) * 100)}%.`,
       ],
     };
   }
@@ -420,10 +424,10 @@ function buildAffiliateItems(scan: ScanRecord): AffiliateItem[] {
 
 function buildShareCaptions(scan: ScanRecord): Record<ShareTone, string> {
   return {
-    neutral: `FACEMAXX scored me ${scan.score} as ${scan.archetype}. Fair read or not?`,
+    neutral: `${BRAND_NAME} scored me ${scan.score} as ${scan.archetype}. Fair read or not?`,
     confident: `${scan.score} now and ${scan.potential} potential. Strong base or overhyped?`,
-    humble: `Trying to level this up. FACEMAXX says ${scan.archetype} with room to improve — accurate?`,
-    provocative: `FACEMAXX says I’m a ${scan.archetype} at ${scan.score}. Honest takes only — fair or inflated?`,
+    humble: `Trying to level this up. ${BRAND_NAME} says ${scan.archetype} with room to improve - accurate?`,
+    provocative: `${BRAND_NAME} says I'm a ${scan.archetype} at ${scan.score}. Honest takes only - fair or inflated?`,
   };
 }
 
@@ -1433,7 +1437,7 @@ export default function App() {
       setBusyPicking(true);
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
-        Alert.alert('Permission needed', 'Allow photo access so FACEMAXX can load an image.');
+        Alert.alert('Permission needed', `Allow photo access so ${BRAND_NAME} can load an image.`);
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -1461,7 +1465,7 @@ export default function App() {
   const openCamera = async () => {
     const permission = cameraPermission?.granted ? cameraPermission : await requestCameraPermission();
     if (!permission?.granted) {
-      Alert.alert('Camera needed', 'Allow camera access so FACEMAXX can capture a face directly in-app.');
+      Alert.alert('Camera needed', `Allow camera access so ${BRAND_NAME} can capture a face directly in-app.`);
       return;
     }
     setScreen('camera');
@@ -1481,7 +1485,7 @@ export default function App() {
         setScreen('upload');
       }
     } catch {
-      Alert.alert('Capture failed', 'FACEMAXX could not capture the photo. Try again.');
+      Alert.alert('Capture failed', `${BRAND_NAME} could not capture the photo. Try again.`);
     }
   };
 
@@ -1490,7 +1494,7 @@ export default function App() {
       setBattleBusy(true);
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
-        Alert.alert('Permission needed', 'Allow photo access so FACEMAXX can load a second face for battle mode.');
+        Alert.alert('Permission needed', `Allow photo access so ${BRAND_NAME} can load a second face for battle mode.`);
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -1586,17 +1590,25 @@ export default function App() {
   const renderHook = () => (
     <View style={styles.heroWrap}>
       <View style={styles.eyebrowRow}>
-        <Text style={styles.eyebrow}>LIVE FACE ANALYSIS</Text>
+        <Text style={styles.eyebrow}>{BRAND_NAME.toUpperCase()}</Text>
         <View style={styles.liveDot} />
       </View>
+      <Text style={styles.brandIntro}>Built around the read of {BRAND_FACE_NAME}.</Text>
+      <Animated.View style={[styles.brandHeroFrame, { transform: [{ scale: pulse }] }]}>
+        <Image source={BRAND_FACE_IMAGE} style={styles.brandHeroImage} resizeMode="cover" />
+        <View style={styles.brandHeroOverlay}>
+          <Text style={styles.brandHeroName}>{BRAND_FACE_NAME}</Text>
+          <Text style={styles.brandHeroRole}>Face of {BRAND_NAME}</Text>
+        </View>
+      </Animated.View>
       <Animated.View style={[styles.heroOrb, { transform: [{ scale: pulse }] }]}>
         <View style={styles.heroOrbCore}>
           <Text style={styles.heroOrbScore}>{history[0]?.potential ?? 91}</Text>
-          <Text style={styles.heroOrbLabel}>Potential cap</Text>
+          <Text style={styles.heroOrbLabel}>Looks ceiling</Text>
         </View>
       </Animated.View>
-      <Text style={styles.heroTitle}>How much can you optimize your face signal?</Text>
-      <Text style={styles.heroSub}>One photo. One optimization score. One clear path from current signal to stronger signal.</Text>
+      <Text style={styles.heroTitle}>{BRAND_NAME} starts with the standard.</Text>
+      <Text style={styles.heroSub}>{BRAND_FACE_NAME} sets the tone. Upload one photo, get your current read, and see how far you can push it.</Text>
 
       <View style={styles.statRail}>
         <View style={styles.statChip}>
@@ -1610,7 +1622,7 @@ export default function App() {
       </View>
 
       <Pressable style={styles.primaryButton} onPress={() => setScreen('upload')}>
-        <Text style={styles.primaryButtonText}>Start Face Scan</Text>
+        <Text style={styles.primaryButtonText}>Enter {BRAND_NAME}</Text>
       </Pressable>
       {!!history.length && (
         <Pressable style={styles.secondaryButton} onPress={() => setScreen('history')}>
@@ -1697,8 +1709,8 @@ export default function App() {
 
   const renderScan = () => (
     <View style={styles.screenBlock}>
-      <Text style={styles.sectionKick}>Scanning</Text>
-      <Text style={styles.sectionTitle}>Reading framing, structure, balance, and presentation.</Text>
+      <Text style={styles.sectionKick}>{BRAND_NAME} loading</Text>
+      <Text style={styles.sectionTitle}>{BRAND_FACE_NAME} is setting the standard while we read framing, structure, balance, and presentation.</Text>
       <View style={styles.scanCore}>
         <Animated.View style={[styles.scanHalo, { transform: [{ scale: pulse }] }]} />
         <View style={styles.scanFrame}>{renderPreview('large')}</View>
@@ -1729,7 +1741,7 @@ export default function App() {
     const isProvisionalResult = !!activeScan.rejectionReason || (activeScan.confidence ?? 0) < 55;
     const resultLabel = isProvisionalResult ? 'Provisional Read' : 'Optimization Score';
     const resultProgressCopy = isProvisionalResult
-      ? 'This read is being held loosely until FACEMAXX gets a cleaner scan.'
+      ? `This read is being held loosely until ${BRAND_NAME} gets a cleaner scan.`
       : `You are ${eliteDistance}% away from 100-signal ceiling`;
     return (
       <View style={styles.screenBlock}>
@@ -2003,7 +2015,7 @@ export default function App() {
           <Text style={styles.retentionTitle}>Best version of you</Text>
           <Text style={styles.bestVersionScore}>{retentionStats.bestScan?.score ?? 0}</Text>
           <Text style={styles.bestVersionMeta}>{retentionStats.bestScan?.archetype ?? 'No archetype yet'} • {retentionStats.bestScan?.tier ?? 'No tier yet'}</Text>
-          <Text style={styles.retentionCopy}>Peak read captured on {retentionStats.bestScan ? formatTime(retentionStats.bestScan.createdAt) : '—'}.</Text>
+          <Text style={styles.retentionCopy}>Peak read captured on {retentionStats.bestScan ? formatTime(retentionStats.bestScan.createdAt) : '-'}.</Text>
         </View>
 
         <View style={styles.timelineCard}>
@@ -2179,7 +2191,7 @@ export default function App() {
         <View style={styles.retentionCard}>
           <Text style={styles.retentionTitle}>Uncertainty loop</Text>
           <Text style={styles.retentionCopy}>
-            Lighting may affect this read. Try a cleaner angle, tighter hair control, or better skin-day conditions — that alone could add +2 to +4.
+            Lighting may affect this read. Try a cleaner angle, tighter hair control, or better skin-day conditions - that alone could add +2 to +4.
           </Text>
         </View>
 
@@ -2198,7 +2210,7 @@ export default function App() {
         <Text style={styles.sectionTitle}>Export-ready optimization framing built around score, archetype, tier, and upside.</Text>
 
         <View style={styles.shareExportCard}>
-          <Text style={styles.shareExportBrand}>FACEMAXX</Text>
+          <Text style={styles.shareExportBrand}>{BRAND_NAME}</Text>
           <Text style={styles.shareExportScore}>{activeScan.score}</Text>
           <Text style={styles.shareExportTier}>{activeScan.tier}</Text>
           <Text style={styles.shareExportArchetype}>{activeScan.archetype}</Text>
@@ -2368,6 +2380,12 @@ const styles = StyleSheet.create({
   eyebrowRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   eyebrow: { color: '#A0A5BC', fontSize: 12, fontWeight: '700', letterSpacing: 1.7 },
   liveDot: { width: 8, height: 8, borderRadius: 999, backgroundColor: '#14E38B' },
+  brandIntro: { color: '#D6DAE9', fontSize: 14, fontWeight: '700', textAlign: 'center' },
+  brandHeroFrame: { width: '100%', maxWidth: 340, height: 390, borderRadius: 32, overflow: 'hidden', borderWidth: 1, borderColor: '#2A2D3F', backgroundColor: '#12131A', shadowColor: '#7C5CFF', shadowOpacity: 0.32, shadowRadius: 28, shadowOffset: { width: 0, height: 14 } },
+  brandHeroImage: { width: '100%', height: '100%' },
+  brandHeroOverlay: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 22, paddingVertical: 18, backgroundColor: 'rgba(11,11,15,0.58)' },
+  brandHeroName: { color: '#FFFFFF', fontSize: 28, fontWeight: '900' },
+  brandHeroRole: { color: '#D9CFFF', fontSize: 13, fontWeight: '700', marginTop: 4 },
   heroOrb: { width: 232, height: 232, borderRadius: 999, backgroundColor: '#14151F', borderWidth: 1, borderColor: '#2D3041', shadowColor: '#7C5CFF', shadowOpacity: 0.35, shadowRadius: 40, shadowOffset: { width: 0, height: 0 }, alignItems: 'center', justifyContent: 'center' },
   heroOrbCore: { width: 156, height: 156, borderRadius: 999, backgroundColor: '#0E0F16', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#26293C' },
   heroOrbScore: { color: '#FFFFFF', fontSize: 52, fontWeight: '900' },
