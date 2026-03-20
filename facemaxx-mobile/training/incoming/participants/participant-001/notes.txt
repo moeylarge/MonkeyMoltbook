@@ -1,0 +1,5 @@
+Use this file for optional notes about the participant's submitted photos.
+Examples:
+- preferred selfie
+- mirror shot
+- bad lighting on second image
