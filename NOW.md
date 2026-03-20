@@ -88,7 +88,8 @@ Still pending:
 - FACEMAXX app now prefers the local backend (`http://127.0.0.1:8089/analyze`) for scans and battle analysis, with heuristic fallback if the backend is unavailable
 - response mapping has been deepened so backend quality/detection/landmark signals feed more directly into UI explanations and stored measurement quality fields
 - backend now emits richer measurement fields (ratios/symmetry-style metrics), and the app now threads more of those into stored measurements, identity copy, battle copy, and recommendation detail
-- next backend/app step: expose these richer measurements visually in the UI and tune archetype/recommendation logic more directly around them
+- richer backend measurements are now also exposed visually in the UI via a backend measurement panel and geometry readout
+- next backend/app step: tune archetype/recommendation logic even more directly around those measurement fields and, later, move toward stronger learned calibration
 - collect the first 25 real labeled samples and run the merge flow on actual data
 - real monetization plumbing only if Moey wants to move beyond prototype framing
 

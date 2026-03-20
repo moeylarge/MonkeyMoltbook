@@ -1594,6 +1594,7 @@ export default function App() {
 
   const renderResult = () => {
     if (!activeScan) return null;
+    const backendMeasurements = activeScan.measurement;
     return (
       <View style={styles.screenBlock}>
         <Text style={styles.sectionKick}>Result impact</Text>
@@ -1660,6 +1661,20 @@ export default function App() {
           )}
         </View>
 
+        {!!backendMeasurements && (
+          <View style={styles.metricPanel}>
+            <Text style={styles.metricPanelTitle}>Backend measurement panel</Text>
+            <View style={styles.metricGrid}>
+              <View style={styles.metricChip}><Text style={styles.metricKey}>Symmetry</Text><Text style={styles.metricValue}>{Math.round((1 - backendMeasurements.symmetry.noseCenterOffset) * 100)}</Text></View>
+              <View style={styles.metricChip}><Text style={styles.metricKey}>Landmark confidence</Text><Text style={styles.metricValue}>{Math.round((backendMeasurements.quality.landmarkConfidence ?? 0) * 100)}</Text></View>
+              <View style={styles.metricChip}><Text style={styles.metricKey}>Face ratio</Text><Text style={styles.metricValue}>{backendMeasurements.ratios.faceWidthHeight.toFixed(2)}</Text></View>
+              <View style={styles.metricChip}><Text style={styles.metricKey}>Jaw ratio</Text><Text style={styles.metricValue}>{backendMeasurements.ratios.jawWidthRatio.toFixed(2)}</Text></View>
+              <View style={styles.metricChip}><Text style={styles.metricKey}>Interocular</Text><Text style={styles.metricValue}>{backendMeasurements.ratios.interocularRatio.toFixed(2)}</Text></View>
+              <View style={styles.metricChip}><Text style={styles.metricKey}>Face count</Text><Text style={styles.metricValue}>{backendMeasurements.quality.faceCount}</Text></View>
+            </View>
+          </View>
+        )}
+
         <Pressable style={styles.primaryButton} onPress={() => setScreen('breakdown')}>
           <Text style={styles.primaryButtonText}>See Breakdown</Text>
         </Pressable>
@@ -1673,6 +1688,18 @@ export default function App() {
       <View style={styles.screenBlock}>
         <Text style={styles.sectionKick}>Structured breakdown</Text>
         <Text style={styles.sectionTitle}>Current optimization score versus reachable score.</Text>
+        {!!activeScan.measurement && (
+          <View style={styles.metricPanelMuted}>
+            <Text style={styles.metricPanelTitle}>Geometry reads behind the score</Text>
+            <Text style={styles.metricPanelCopy}>
+              Upper / mid / lower thirds: {activeScan.measurement.ratios.upperThirdRatio.toFixed(2)} / {activeScan.measurement.ratios.midThirdRatio.toFixed(2)} / {activeScan.measurement.ratios.lowerThirdRatio.toFixed(2)}
+            </Text>
+            <Text style={styles.metricPanelCopy}>
+              Nose center offset: {activeScan.measurement.ratios.noseCenterOffsetRatio.toFixed(2)} · Eye height delta: {activeScan.measurement.symmetry.eyeHeightDelta.toFixed(2)}
+            </Text>
+          </View>
+        )}
+
         {activeBreakdown.map((item, index) => (
           <Animated.View
             key={item.key}
@@ -2236,6 +2263,14 @@ const styles = StyleSheet.create({
   warningCardMuted: { padding: 18, borderRadius: 20, backgroundColor: '#141820', borderWidth: 1, borderColor: '#2C3447' },
   warningTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
   warningText: { color: '#D2D6E5', fontSize: 13, lineHeight: 19, marginTop: 8 },
+  metricPanel: { padding: 18, borderRadius: 22, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#232535', gap: 12 },
+  metricPanelMuted: { padding: 18, borderRadius: 22, backgroundColor: '#151621', borderWidth: 1, borderColor: '#2C3145', gap: 8 },
+  metricPanelTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
+  metricPanelCopy: { color: '#B7BBD0', fontSize: 13, lineHeight: 18 },
+  metricGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, rowGap: 10 },
+  metricChip: { minWidth: 96, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 16, backgroundColor: '#191B25', borderWidth: 1, borderColor: '#2A2D3F' },
+  metricKey: { color: '#98A0B8', fontSize: 11, fontWeight: '700' },
+  metricValue: { color: '#FFFFFF', fontSize: 18, fontWeight: '900', marginTop: 6 },
   identityLine: { padding: 18, borderRadius: 22, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#232535' },
   identityLineTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
   identityLineText: { color: '#AAB0C5', fontSize: 14, lineHeight: 20, marginTop: 6 },
