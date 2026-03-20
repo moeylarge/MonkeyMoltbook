@@ -1,4 +1,4 @@
-Participant ID: participant-001
+Participant ID: REPLACE_ME
 Date: 2026-03-20
 
 I agree that my submitted photos may be used internally for FACEMAXX testing, analysis, labeling, and model development.
@@ -6,4 +6,3 @@ I agree that my submitted photos may be used internally for FACEMAXX testing, an
 Name: 
 Contact: 
 Consent given via: 
-Consent text source: FACEMAXX Consent Template
