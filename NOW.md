@@ -70,16 +70,17 @@ Phase 4 progress so far:
 - identity tagline added to result flow
 - uncertainty-loop copy added to encourage re-uploads
 
-Phase 7 progress so far:
-- paywall expanded into clear free / pro / subscription tiers
-- paid unlock framing refined
-- affiliate product recommendation layer added
-- monetization now maps directly onto improvement flow
+Post-phase refinement progress so far:
+- glow-up tracker now includes timeline graph + best-version card
+- wording shifted further toward face optimization / potential framing
+- battle mode upgraded toward a true two-face compare via manual friend entry
+- share system now supports multiple caption tones
 
 Still pending:
 - screenshots / visual proof capture
 - polish pass on motion and spacing
 - final product review / cleanup
+- real monetization plumbing only if Moey wants to move beyond prototype framing
 
 ## Guardrails
 

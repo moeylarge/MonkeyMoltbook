@@ -43,11 +43,12 @@ Current next steps:
    - actionable recommendations by category
    - impact / difficulty / time-to-result metadata
    - identity tagline + uncertainty loop copy
-3. Phase 7 monetization is now implemented in `facemaxx-mobile/App.tsx`:
-   - refined paywall with free / pro / subscription framing
-   - paid unlock positioning
-   - affiliate recommendation layer attached to improvement path
-4. Later polish: screenshots / motion / spacing refinement
+3. Post-phase refinement is now underway in `facemaxx-mobile/App.tsx`:
+   - timeline graph + best-version card added
+   - copy shifted further toward optimization framing
+   - battle mode upgraded to manual two-face compare flow
+   - caption/share variations added by tone
+4. Later work: screenshots / motion / spacing refinement, then real monetization plumbing if desired
 
 ## UFC note
 

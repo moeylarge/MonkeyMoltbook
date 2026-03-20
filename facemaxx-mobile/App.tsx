@@ -13,6 +13,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 
@@ -82,6 +83,8 @@ type BattleProfile = {
   score: number;
   vibe: string;
 };
+
+type ShareTone = 'neutral' | 'cocky' | 'humble' | 'ragebait';
 
 const STORAGE_KEY = 'facemaxx.scanHistory.v1';
 const screens: ScreenKey[] = ['hook', 'upload', 'scan', 'result', 'breakdown', 'simulate', 'history', 'paywall', 'plan', 'share', 'battle'];
@@ -188,13 +191,13 @@ function buildAffiliateItems(scan: ScanRecord): AffiliateItem[] {
   ];
 }
 
-function buildShareCaption(scan: ScanRecord) {
-  const variants = [
-    `AI says I'm a ${scan.archetype} at ${scan.score}. Accurate or delusional?`,
-    `${scan.score} now, ${scan.potential} potential. Be honest — valid glow-up or cope?`,
-    `FACEMAXX gave me ${scan.tier}. Fair read or absolute cap?`,
-  ];
-  return variants[scan.score % variants.length];
+function buildShareCaptions(scan: ScanRecord): Record<ShareTone, string> {
+  return {
+    neutral: `FACEMAXX scored me ${scan.score} as ${scan.archetype}. Fair read or not?`,
+    cocky: `${scan.score} now and ${scan.potential} potential. Tell me I’m wrong.`,
+    humble: `Trying to level this up. FACEMAXX says ${scan.archetype} with room to improve — accurate?`,
+    ragebait: `AI says I’m a ${scan.archetype} at ${scan.score}. Be brutally honest — valid or delusional?`,
+  };
 }
 
 function buildBattleOutcome(scan: ScanRecord, opponent: BattleProfile) {
@@ -285,6 +288,7 @@ function buildImprovementPlan(scan: ScanRecord): ImprovementItem[] {
 function buildRetentionStats(history: ScanRecord[]) {
   const ordered = [...history].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   const bestScore = ordered.reduce((max, item) => Math.max(max, item.score), 0);
+  const bestScan = ordered.reduce<ScanRecord | null>((best, item) => (!best || item.score >= best.score ? item : best), null);
   const latest = ordered[ordered.length - 1] ?? null;
   const previous = ordered[ordered.length - 2] ?? null;
   const scoreDelta = latest && previous ? latest.score - previous.score : 0;
@@ -302,6 +306,7 @@ function buildRetentionStats(history: ScanRecord[]) {
 
   return {
     bestScore,
+    bestScan,
     latest,
     previous,
     scoreDelta,
@@ -425,6 +430,10 @@ export default function App() {
   const [compareDisplay, setCompareDisplay] = useState(0);
   const [lockedIndex, setLockedIndex] = useState(0);
   const [selectedBattleId, setSelectedBattleId] = useState<string>(battleProfiles[0].id);
+  const [battleName, setBattleName] = useState('Friend');
+  const [battleScoreInput, setBattleScoreInput] = useState('71');
+  const [battleArchetype, setBattleArchetype] = useState('Pretty Boy');
+  const [shareTone, setShareTone] = useState<ShareTone>('neutral');
 
   const fade = useRef(new Animated.Value(0)).current;
   const slide = useRef(new Animated.Value(18)).current;
@@ -452,15 +461,27 @@ export default function App() {
   const identityTagline = useMemo(() => (activeScan ? getIdentityTagline(activeScan) : ''), [activeScan]);
   const tierProgress = useMemo(() => (activeScan ? getTierProgress(activeScan.score) : null), [activeScan]);
   const tierProgressPercent = useMemo(() => (activeScan ? getProgressPercent(activeScan.score) : 0), [activeScan]);
-  const shareCaption = useMemo(() => (activeScan ? buildShareCaption(activeScan) : ''), [activeScan]);
+  const shareCaptions = useMemo(() => (activeScan ? buildShareCaptions(activeScan) : null), [activeScan]);
+  const shareCaption = shareCaptions?.[shareTone] ?? '';
   const affiliateItems = useMemo(() => (activeScan ? buildAffiliateItems(activeScan) : []), [activeScan]);
   const selectedBattleProfile = useMemo(
     () => battleProfiles.find((item) => item.id === selectedBattleId) ?? battleProfiles[0],
     [selectedBattleId],
   );
+  const customBattleProfile = useMemo(
+    () => ({
+      id: 'custom',
+      name: battleName || 'Friend',
+      archetype: battleArchetype || 'Unknown',
+      tier: getTierProgress(clamp(Number(battleScoreInput) || 0, 0, 100)).currentTier,
+      score: clamp(Number(battleScoreInput) || 0, 0, 100),
+      vibe: 'manual two-face compare entry',
+    }),
+    [battleName, battleArchetype, battleScoreInput],
+  );
   const battleOutcome = useMemo(
-    () => (activeScan ? buildBattleOutcome(activeScan, selectedBattleProfile) : null),
-    [activeScan, selectedBattleProfile],
+    () => (activeScan ? buildBattleOutcome(activeScan, customBattleProfile.score ? customBattleProfile : selectedBattleProfile) : null),
+    [activeScan, selectedBattleProfile, customBattleProfile],
   );
 
   useEffect(() => {
@@ -745,8 +766,8 @@ export default function App() {
           <Text style={styles.heroOrbLabel}>Potential cap</Text>
         </View>
       </Animated.View>
-      <Text style={styles.heroTitle}>How do you actually look?</Text>
-      <Text style={styles.heroSub}>One photo. One score. One brutally clear path from current signal to stronger signal.</Text>
+      <Text style={styles.heroTitle}>How much can you optimize your face signal?</Text>
+      <Text style={styles.heroSub}>One photo. One optimization score. One clear path from current signal to stronger signal.</Text>
 
       <View style={styles.statRail}>
         <View style={styles.statChip}>
@@ -773,7 +794,7 @@ export default function App() {
   const renderUpload = () => (
     <View style={styles.screenBlock}>
       <Text style={styles.sectionKick}>Photo entry</Text>
-      <Text style={styles.sectionTitle}>Load a real image, then let the local engine score it.</Text>
+      <Text style={styles.sectionTitle}>Load a real image, then let the local optimization engine analyze it.</Text>
 
       <View style={styles.uploadCard}>
         <Text style={styles.uploadTag}>PHASE 3 LIVE INPUT</Text>
@@ -852,7 +873,7 @@ export default function App() {
         <Text style={styles.sectionKick}>Result impact</Text>
         <View style={styles.resultCard}>
           <Text style={styles.rankBadge}>{activeScan.rank}</Text>
-          <Text style={styles.resultLabel}>Face Score</Text>
+          <Text style={styles.resultLabel}>Optimization Score</Text>
           <Text style={styles.resultScore}>{scoreDisplay}</Text>
           <Text style={styles.resultTier}>{activeScan.tier}</Text>
           <Text style={styles.resultArchetype}>{activeScan.archetype}</Text>
@@ -905,7 +926,7 @@ export default function App() {
     return (
       <View style={styles.screenBlock}>
         <Text style={styles.sectionKick}>Structured breakdown</Text>
-        <Text style={styles.sectionTitle}>Current score versus reachable score.</Text>
+        <Text style={styles.sectionTitle}>Current optimization score versus reachable score.</Text>
         {activeBreakdown.map((item, index) => (
           <Animated.View
             key={item.key}
@@ -1010,10 +1031,11 @@ export default function App() {
 
   const renderHistory = () => (
     <View style={styles.screenBlock}>
-      <Text style={styles.sectionKick}>Saved history</Text>
-      <Text style={styles.sectionTitle}>Local scan records for rerating and progress tracking.</Text>
+      <Text style={styles.sectionKick}>Glow-up tracker</Text>
+      <Text style={styles.sectionTitle}>Face optimization progress over time, not a one-off judgment.</Text>
 
       {!!history.length && (
+        <>
         <View style={styles.retentionSummaryCard}>
           <View style={styles.retentionSummaryTop}>
             <Text style={styles.retentionTitle}>Glow-up tracker</Text>
@@ -1037,10 +1059,34 @@ export default function App() {
             {retentionStats.scoreDelta > 0
               ? `${retentionStats.scoreDelta > 1 ? `+${retentionStats.scoreDelta} improvement detected` : '+1 improvement detected'} from your last scan.`
               : retentionStats.scoreDelta < 0
-                ? `Current read is ${Math.abs(retentionStats.scoreDelta)} lower than your last scan. Lighting or angle may be suppressing the score.`
+                ? `Current optimization read is ${Math.abs(retentionStats.scoreDelta)} lower than your last scan. Lighting or angle may be suppressing the optimization score.`
                 : 'No score change detected on the last scan. Try angle, lighting, hair control, or skin-day timing.'}
           </Text>
         </View>
+
+        <View style={styles.bestVersionCard}>
+          <Text style={styles.retentionTitle}>Best version of you</Text>
+          <Text style={styles.bestVersionScore}>{retentionStats.bestScan?.score ?? 0}</Text>
+          <Text style={styles.bestVersionMeta}>{retentionStats.bestScan?.archetype ?? 'No archetype yet'} • {retentionStats.bestScan?.tier ?? 'No tier yet'}</Text>
+          <Text style={styles.retentionCopy}>Peak read captured on {retentionStats.bestScan ? formatTime(retentionStats.bestScan.createdAt) : '—'}.</Text>
+        </View>
+
+        <View style={styles.timelineCard}>
+          <Text style={styles.retentionTitle}>Timeline graph</Text>
+          <View style={styles.timelineBars}>
+            {history.slice().reverse().map((item) => (
+              <View key={item.id} style={styles.timelineBarWrap}>
+                <View style={styles.timelineTrack}>
+                  <View style={[styles.timelineBar, { height: `${Math.max(12, item.score)}%` }]} />
+                  <View style={[styles.timelinePotentialBar, { height: `${Math.max(item.score, item.potential)}%` }]} />
+                </View>
+                <Text style={styles.timelineScore}>{item.score}</Text>
+              </View>
+            ))}
+          </View>
+          <Text style={styles.timelineLegend}>Solid = current optimization score · Outline = max potential analysis</Text>
+        </View>
+        </>
       )}
 
       {loadingHistory ? (
@@ -1199,7 +1245,7 @@ export default function App() {
     return (
       <View style={styles.screenBlock}>
         <Text style={styles.sectionKick}>Share card system</Text>
-        <Text style={styles.sectionTitle}>Export-ready social framing built around score, archetype, tier, and tagline.</Text>
+        <Text style={styles.sectionTitle}>Export-ready optimization framing built around score, archetype, tier, and upside.</Text>
 
         <View style={styles.shareExportCard}>
           <Text style={styles.shareExportBrand}>FACEMAXX</Text>
@@ -1209,8 +1255,16 @@ export default function App() {
           <Text style={styles.shareExportTagline}>{identityTagline}</Text>
           <View style={styles.shareMetaRow}>
             <View style={styles.shareMetaPill}><Text style={styles.shareMetaText}>Potential {activeScan.potential}</Text></View>
-            <View style={styles.shareMetaPill}><Text style={styles.shareMetaText}>Tier {activeScan.tier}</Text></View>
+            <View style={styles.shareMetaPill}><Text style={styles.shareMetaText}>Optimization score</Text></View>
           </View>
+        </View>
+
+        <View style={styles.optionRow}>
+          {(['neutral', 'cocky', 'humble', 'ragebait'] as ShareTone[]).map((tone) => (
+            <Pressable key={tone} style={[styles.optionChip, shareTone === tone && styles.optionChipActive]} onPress={() => setShareTone(tone)}>
+              <Text style={[styles.optionText, shareTone === tone && styles.optionTextActive]}>{tone}</Text>
+            </Pressable>
+          ))}
         </View>
 
         <View style={styles.shareCard}>
@@ -1228,21 +1282,36 @@ export default function App() {
 
   const renderBattle = () => {
     if (!activeScan) return null;
+    const activeOpponent = customBattleProfile.score ? customBattleProfile : selectedBattleProfile;
     return (
       <View style={styles.screenBlock}>
         <Text style={styles.sectionKick}>Battle mode</Text>
-        <Text style={styles.sectionTitle}>Side-by-side comparison with a declared winner.</Text>
+        <Text style={styles.sectionTitle}>True two-face compare flow with manual friend entry and a declared winner.</Text>
 
-        <View style={styles.optionRow}>
-          {battleProfiles.map((profile) => (
-            <Pressable
-              key={profile.id}
-              style={[styles.optionChip, selectedBattleId === profile.id && styles.optionChipActive]}
-              onPress={() => setSelectedBattleId(profile.id)}
-            >
-              <Text style={[styles.optionText, selectedBattleId === profile.id && styles.optionTextActive]}>{profile.name}</Text>
-            </Pressable>
-          ))}
+        <View style={styles.retentionCard}>
+          <Text style={styles.retentionTitle}>Quick opponent presets</Text>
+          <View style={styles.optionRow}>
+            {battleProfiles.map((profile) => (
+              <Pressable
+                key={profile.id}
+                style={[styles.optionChip, selectedBattleId === profile.id && styles.optionChipActive]}
+                onPress={() => {
+                  setSelectedBattleId(profile.id);
+                  setBattleName(profile.name);
+                  setBattleScoreInput(String(profile.score));
+                  setBattleArchetype(profile.archetype);
+                }}
+              >
+                <Text style={[styles.optionText, selectedBattleId === profile.id && styles.optionTextActive]}>{profile.name}</Text>
+              </Pressable>
+            ))}
+          </View>
+          <Text style={styles.battleInputLabel}>Friend name</Text>
+          <TextInput value={battleName} onChangeText={setBattleName} style={styles.battleInput} placeholder="Friend name" placeholderTextColor="#6F7690" />
+          <Text style={styles.battleInputLabel}>Friend score</Text>
+          <TextInput value={battleScoreInput} onChangeText={setBattleScoreInput} style={styles.battleInput} keyboardType="numeric" placeholder="0-100" placeholderTextColor="#6F7690" />
+          <Text style={styles.battleInputLabel}>Friend archetype</Text>
+          <TextInput value={battleArchetype} onChangeText={setBattleArchetype} style={styles.battleInput} placeholder="Archetype" placeholderTextColor="#6F7690" />
         </View>
 
         <View style={styles.battleArena}>
@@ -1254,19 +1323,19 @@ export default function App() {
           </View>
           <View style={styles.battleVersus}><Text style={styles.battleVersusText}>VS</Text></View>
           <View style={styles.battleCardOpponent}>
-            <Text style={styles.battleName}>{selectedBattleProfile.name}</Text>
-            <Text style={styles.battleScore}>{selectedBattleProfile.score}</Text>
-            <Text style={styles.battleSub}>{selectedBattleProfile.archetype}</Text>
-            <Text style={styles.battleMeta}>{selectedBattleProfile.tier}</Text>
+            <Text style={styles.battleName}>{activeOpponent.name}</Text>
+            <Text style={styles.battleScore}>{activeOpponent.score}</Text>
+            <Text style={styles.battleSub}>{activeOpponent.archetype}</Text>
+            <Text style={styles.battleMeta}>{activeOpponent.tier}</Text>
           </View>
         </View>
 
         <View style={styles.retentionCard}>
           <Text style={styles.retentionTitle}>
-            {battleOutcome?.winner === 'you' ? 'Winner: You' : battleOutcome?.winner === 'opponent' ? `Winner: ${selectedBattleProfile.name}` : 'Result: Draw'}
+            {battleOutcome?.winner === 'you' ? 'Winner: You' : battleOutcome?.winner === 'opponent' ? `Winner: ${activeOpponent.name}` : 'Result: Draw'}
           </Text>
           <Text style={styles.retentionCopy}>{battleOutcome?.summary}</Text>
-          <Text style={styles.battleFootnote}>Opponent profile: {selectedBattleProfile.vibe}</Text>
+          <Text style={styles.battleFootnote}>Opponent profile: {activeOpponent.vibe}</Text>
         </View>
 
         <Pressable style={styles.primaryButton} onPress={resetFlow}>
@@ -1452,6 +1521,17 @@ const styles = StyleSheet.create({
   retentionStatBox: { flex: 1, padding: 14, borderRadius: 18, backgroundColor: '#171922', borderWidth: 1, borderColor: '#282B3D' },
   retentionStatValue: { color: '#FFFFFF', fontSize: 24, fontWeight: '900' },
   retentionStatLabel: { color: '#98A0B8', fontSize: 12, marginTop: 4 },
+  bestVersionCard: { padding: 20, borderRadius: 24, backgroundColor: '#151225', borderWidth: 1, borderColor: '#36295F', gap: 8 },
+  bestVersionScore: { color: '#FFFFFF', fontSize: 52, fontWeight: '900' },
+  bestVersionMeta: { color: '#D8CCFF', fontSize: 14, fontWeight: '700' },
+  timelineCard: { padding: 20, borderRadius: 24, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#2A2D3F' },
+  timelineBars: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, height: 180, marginTop: 18 },
+  timelineBarWrap: { flex: 1, alignItems: 'center' },
+  timelineTrack: { width: '100%', height: 140, justifyContent: 'flex-end', alignItems: 'center', position: 'relative' },
+  timelineBar: { position: 'absolute', bottom: 0, width: '56%', borderRadius: 14, backgroundColor: '#7C5CFF' },
+  timelinePotentialBar: { position: 'absolute', bottom: 0, width: '74%', borderRadius: 16, borderWidth: 1, borderColor: '#14E38B', backgroundColor: 'transparent' },
+  timelineScore: { color: '#FFFFFF', fontSize: 12, fontWeight: '800', marginTop: 10 },
+  timelineLegend: { color: '#98A0B8', fontSize: 12, lineHeight: 18, marginTop: 14 },
   historyCard: { padding: 14, borderRadius: 22, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#232535', flexDirection: 'row', alignItems: 'center', gap: 12 },
   historyCardActive: { borderColor: '#7C5CFF' },
   historyThumb: { width: 56, height: 72, borderRadius: 14, backgroundColor: '#0D0E15', overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
@@ -1503,6 +1583,8 @@ const styles = StyleSheet.create({
   battleCardOpponent: { flex: 1, padding: 18, borderRadius: 24, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#2A2D3F', alignItems: 'center' },
   battleVersus: { justifyContent: 'center', alignItems: 'center' },
   battleVersusText: { color: '#FF4FD8', fontSize: 18, fontWeight: '900' },
+  battleInputLabel: { color: '#AAB0C5', fontSize: 12, fontWeight: '700', marginTop: 12, marginBottom: 6 },
+  battleInput: { borderRadius: 16, backgroundColor: '#171922', borderWidth: 1, borderColor: '#2A2D3F', color: '#FFFFFF', paddingHorizontal: 14, paddingVertical: 12 },
   battleName: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
   battleScore: { color: '#FFFFFF', fontSize: 44, fontWeight: '900', marginTop: 10 },
   battleSub: { color: '#C8CDDF', fontSize: 13, fontWeight: '700', textAlign: 'center', marginTop: 6 },
