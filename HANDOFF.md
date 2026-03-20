@@ -46,7 +46,8 @@ Current next steps:
 3. Major post-phase upgrades are now in `facemaxx-mobile/App.tsx`:
    - timeline graph + best-version card added
    - copy shifted further toward optimization framing
-   - score engine upgraded to image-derived local analysis
+   - direct in-app camera capture added
+   - score engine upgraded to image-derived local analysis plus face-detection-derived structural cues
    - battle mode upgraded to support a real second uploaded image
    - caption/share variations added by tone
 4. Later work: screenshots / proof capture using `facemaxx-mobile/REVIEW_CHECKLIST.md`, any final micro-cleanup, then real monetization plumbing if desired

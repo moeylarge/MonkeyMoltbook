@@ -1,4 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import * as FaceDetector from 'expo-face-detector';
 import * as ImagePicker from 'expo-image-picker';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -20,6 +22,7 @@ import {
 type ScreenKey =
   | 'hook'
   | 'upload'
+  | 'camera'
   | 'scan'
   | 'result'
   | 'breakdown'
@@ -95,7 +98,7 @@ type BattleProfile = {
 type ShareTone = 'neutral' | 'confident' | 'humble' | 'provocative';
 
 const STORAGE_KEY = 'facemaxx.scanHistory.v1';
-const screens: ScreenKey[] = ['hook', 'upload', 'scan', 'result', 'breakdown', 'simulate', 'history', 'paywall', 'plan', 'share', 'battle'];
+const screens: ScreenKey[] = ['hook', 'upload', 'camera', 'scan', 'result', 'breakdown', 'simulate', 'history', 'paywall', 'plan', 'share', 'battle'];
 const battleProfiles: BattleProfile[] = [
   { id: '1', name: 'Damon', archetype: 'Pretty Boy', tier: 'Attractive', score: 74, vibe: 'cleaner eye area, softer jaw' },
   { id: '2', name: 'Rex', archetype: 'Rugged Masculine', tier: 'Elite', score: 83, vibe: 'stronger jawline, rougher skin quality' },
@@ -342,6 +345,89 @@ function buildImprovementPlan(scan: ScanRecord): ImprovementItem[] {
   ];
 }
 
+async function detectFaceMetrics(image?: AnalysisImage) {
+  if (!image?.uri) {
+    return {
+      hasFace: false,
+      faceCount: 0,
+      faceWidthRatio: 0.34,
+      faceHeightRatio: 0.46,
+      eyeDistanceRatio: 0.18,
+      jawWidthRatio: 0.31,
+      noseCenterOffset: 0,
+      rollBalance: 0,
+      landmarkDensity: 0,
+    };
+  }
+
+  try {
+    const result = await FaceDetector.detectFacesAsync(image.uri, {
+      mode: FaceDetector.FaceDetectorMode.fast,
+      detectLandmarks: FaceDetector.FaceDetectorLandmarks.all,
+      runClassifications: FaceDetector.FaceDetectorClassifications.none,
+      minDetectionInterval: 0,
+      tracking: false,
+    });
+
+    const face = result.faces?.[0];
+    if (!face) {
+      return {
+        hasFace: false,
+        faceCount: 0,
+        faceWidthRatio: 0.34,
+        faceHeightRatio: 0.46,
+        eyeDistanceRatio: 0.18,
+        jawWidthRatio: 0.31,
+        noseCenterOffset: 0,
+        rollBalance: 0,
+        landmarkDensity: 0,
+      };
+    }
+
+    const imageWidth = image.width ?? 1080;
+    const imageHeight = image.height ?? 1350;
+    const bounds = face.bounds ?? { size: { width: imageWidth * 0.34, height: imageHeight * 0.46 }, origin: { x: imageWidth * 0.33, y: imageHeight * 0.22 } };
+    const leftEye = face.leftEyePosition;
+    const rightEye = face.rightEyePosition;
+    const nose = face.noseBasePosition;
+    const leftCheek = face.leftCheekPosition;
+    const rightCheek = face.rightCheekPosition;
+
+    const faceWidthRatio = bounds.size.width / Math.max(1, imageWidth);
+    const faceHeightRatio = bounds.size.height / Math.max(1, imageHeight);
+    const eyeDistanceRatio = leftEye && rightEye ? Math.abs(rightEye.x - leftEye.x) / Math.max(1, imageWidth) : faceWidthRatio * 0.45;
+    const jawWidthRatio = leftCheek && rightCheek ? Math.abs(rightCheek.x - leftCheek.x) / Math.max(1, imageWidth) : faceWidthRatio * 0.82;
+    const faceCenterX = bounds.origin.x + bounds.size.width / 2;
+    const noseCenterOffset = nose ? Math.abs(nose.x - faceCenterX) / Math.max(1, bounds.size.width) : 0.04;
+    const rollBalance = leftEye && rightEye ? Math.abs(leftEye.y - rightEye.y) / Math.max(1, imageHeight) : 0.01;
+    const landmarkDensity = [leftEye, rightEye, nose, leftCheek, rightCheek].filter(Boolean).length / 5;
+
+    return {
+      hasFace: true,
+      faceCount: result.faces?.length ?? 1,
+      faceWidthRatio,
+      faceHeightRatio,
+      eyeDistanceRatio,
+      jawWidthRatio,
+      noseCenterOffset,
+      rollBalance,
+      landmarkDensity,
+    };
+  } catch {
+    return {
+      hasFace: false,
+      faceCount: 0,
+      faceWidthRatio: 0.34,
+      faceHeightRatio: 0.46,
+      eyeDistanceRatio: 0.18,
+      jawWidthRatio: 0.31,
+      noseCenterOffset: 0,
+      rollBalance: 0,
+      landmarkDensity: 0,
+    };
+  }
+}
+
 function buildRetentionStats(history: ScanRecord[]) {
   const ordered = [...history].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   const bestScore = ordered.reduce((max, item) => Math.max(max, item.score), 0);
@@ -373,30 +459,35 @@ function buildRetentionStats(history: ScanRecord[]) {
 
 async function buildScanFromImage(image: AnalysisImage | undefined, photoLabel: string): Promise<ScanRecord> {
   const signal = await readImageSignal(image);
-  const signalSeed = `${photoLabel}-${signal.width}-${signal.height}-${signal.fileSize}-${Math.round(signal.mean)}-${Math.round(signal.variance)}-${signal.transitions}`;
+  const face = await detectFaceMetrics(image);
+  const signalSeed = `${photoLabel}-${signal.width}-${signal.height}-${signal.fileSize}-${Math.round(signal.mean)}-${Math.round(signal.variance)}-${signal.transitions}-${Math.round(face.faceWidthRatio * 1000)}-${Math.round(face.eyeDistanceRatio * 1000)}-${Math.round(face.jawWidthRatio * 1000)}`;
   const hash = hashString(signalSeed);
 
   const lightingQuality = clamp(52 + (signal.mean - 96) / 2.3, 40, 92);
   const contrastQuality = clamp(48 + signal.variance * 0.72, 40, 92);
-  const framingQuality = clamp(58 + (0.82 - Math.abs(signal.aspect - 0.82)) * 36, 42, 90);
+  const framingQuality = clamp(58 + (0.82 - Math.abs(signal.aspect - 0.82)) * 36 + face.landmarkDensity * 8, 42, 92);
   const textureSignal = clamp(46 + Math.min(signal.transitions, 180) / 4.2, 40, 88);
   const fileSignal = clamp(45 + Math.min(signal.fileSize / 18000, 22), 40, 88);
+  const symmetrySignal = clamp(74 - face.noseCenterOffset * 160 - face.rollBalance * 420 + face.landmarkDensity * 10, 40, 92);
+  const harmonySignal = clamp(66 - Math.abs(face.faceWidthRatio - 0.34) * 180 - Math.abs(face.faceHeightRatio - 0.46) * 120 + face.landmarkDensity * 12, 40, 92);
+  const jawSignal = clamp(58 + face.jawWidthRatio * 70 + contrastQuality * 0.12, 40, 92);
+  const eyeSignal = clamp(54 + face.eyeDistanceRatio * 120 + lightingQuality * 0.15, 40, 92);
 
   const breakdownSeed: BreakdownItem[] = [
     {
       key: 'jawline',
       label: 'Jawline',
-      score: clamp(Math.round((framingQuality * 0.45 + contrastQuality * 0.35 + fileSignal * 0.2) - 4), 42, 90),
+      score: clamp(Math.round((jawSignal * 0.58 + framingQuality * 0.22 + contrastQuality * 0.2) - 4), 42, 92),
       target: 0,
-      why: 'Lower-face definition responds to cleaner framing, leanness, and stronger image separation.',
+      why: face.hasFace ? 'Jawline read is now tied to detected lower-face width, framing, and contrast separation.' : 'Lower-face definition responds to cleaner framing, leanness, and stronger image separation.',
       color: '#7C5CFF',
     },
     {
       key: 'eyes',
       label: 'Eye area',
-      score: clamp(Math.round((lightingQuality * 0.45 + contrastQuality * 0.4 + textureSignal * 0.15) + 1), 44, 92),
+      score: clamp(Math.round((eyeSignal * 0.52 + lightingQuality * 0.28 + contrastQuality * 0.2) + 1), 44, 92),
       target: 0,
-      why: 'Eye presence depends heavily on lighting quality, contrast, and overall sharpness.',
+      why: face.hasFace ? 'Eye area read now uses detected eye spacing plus lighting and contrast quality.' : 'Eye presence depends heavily on lighting quality, contrast, and overall sharpness.',
       color: '#FF4FD8',
     },
     {
@@ -410,9 +501,9 @@ async function buildScanFromImage(image: AnalysisImage | undefined, photoLabel: 
     {
       key: 'symmetry',
       label: 'Symmetry',
-      score: clamp(Math.round((framingQuality * 0.42 + lightingQuality * 0.28 + contrastQuality * 0.3) - 2), 45, 89),
+      score: clamp(Math.round((symmetrySignal * 0.6 + framingQuality * 0.2 + lightingQuality * 0.2) - 2), 45, 91),
       target: 0,
-      why: 'Balanced framing and even lighting make facial symmetry read stronger immediately.',
+      why: face.hasFace ? 'Symmetry read is now tied to detected nose centering, eye balance, and face alignment.' : 'Balanced framing and even lighting make facial symmetry read stronger immediately.',
       color: '#4DA3FF',
     },
     {
@@ -426,9 +517,9 @@ async function buildScanFromImage(image: AnalysisImage | undefined, photoLabel: 
     {
       key: 'thirds',
       label: 'Facial harmony',
-      score: clamp(Math.round((framingQuality * 0.4 + lightingQuality * 0.25 + contrastQuality * 0.35) - 3), 44, 89),
+      score: clamp(Math.round((harmonySignal * 0.58 + framingQuality * 0.22 + contrastQuality * 0.2) - 3), 44, 91),
       target: 0,
-      why: 'Harmony improves when proportions, angle, and visual balance all cooperate.',
+      why: face.hasFace ? 'Facial harmony is now influenced by detected face proportions, alignment, and balance.' : 'Harmony improves when proportions, angle, and visual balance all cooperate.',
       color: '#FFD24D',
     },
   ];
@@ -501,6 +592,9 @@ export default function App() {
   const [battleScan, setBattleScan] = useState<ScanRecord | null>(null);
   const [battleBusy, setBattleBusy] = useState(false);
   const [shareTone, setShareTone] = useState<ShareTone>('neutral');
+
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
+  const cameraRef = useRef<any>(null);
 
   const fade = useRef(new Animated.Value(0)).current;
   const slide = useRef(new Animated.Value(18)).current;
@@ -787,6 +881,33 @@ export default function App() {
     }
   };
 
+  const openCamera = async () => {
+    const permission = cameraPermission?.granted ? cameraPermission : await requestCameraPermission();
+    if (!permission?.granted) {
+      Alert.alert('Camera needed', 'Allow camera access so FACEMAXX can capture a face directly in-app.');
+      return;
+    }
+    setScreen('camera');
+  };
+
+  const capturePhoto = async () => {
+    try {
+      const captured = await cameraRef.current?.takePictureAsync({ quality: 0.8, base64: false });
+      if (captured?.uri) {
+        setImageUri(captured.uri);
+        setSelectedImage({
+          uri: captured.uri,
+          width: captured.width,
+          height: captured.height,
+        });
+        setSelectedPhoto('Front selfie');
+        setScreen('upload');
+      }
+    } catch {
+      Alert.alert('Capture failed', 'FACEMAXX could not capture the photo. Try again.');
+    }
+  };
+
   const pickBattleImage = async () => {
     try {
       setBattleBusy(true);
@@ -960,10 +1081,33 @@ export default function App() {
       </View>
 
       <Pressable style={styles.secondaryButton} onPress={pickImage}>
-        <Text style={styles.secondaryButtonText}>{busyPicking ? 'Opening Photos…' : imageUri ? 'Change Photo' : 'Choose Photo'}</Text>
+        <Text style={styles.secondaryButtonText}>{busyPicking ? 'Opening Photos…' : imageUri ? 'Change Library Photo' : 'Choose Photo from Library'}</Text>
+      </Pressable>
+      <Pressable style={styles.secondaryButton} onPress={openCamera}>
+        <Text style={styles.secondaryButtonText}>Take Photo in App</Text>
       </Pressable>
       <Pressable style={styles.primaryButton} onPress={startScan}>
         <Text style={styles.primaryButtonText}>Run Scan</Text>
+      </Pressable>
+    </View>
+  );
+
+  const renderCamera = () => (
+    <View style={styles.screenBlock}>
+      <Text style={styles.sectionKick}>Direct capture</Text>
+      <Text style={styles.sectionTitle}>Take a face photo directly in-app before running the analysis engine.</Text>
+      <View style={styles.cameraShell}>
+        {cameraPermission?.granted ? (
+          <CameraView ref={cameraRef} facing="front" style={styles.cameraView} />
+        ) : (
+          <View style={styles.cameraFallback}><Text style={styles.cameraFallbackText}>Camera permission required</Text></View>
+        )}
+      </View>
+      <Pressable style={styles.secondaryButton} onPress={() => setScreen('upload')}>
+        <Text style={styles.secondaryButtonText}>Back to Upload</Text>
+      </Pressable>
+      <Pressable style={styles.primaryButton} onPress={capturePhoto}>
+        <Text style={styles.primaryButtonText}>Capture Face Photo</Text>
       </Pressable>
     </View>
   );
@@ -1491,6 +1635,8 @@ export default function App() {
         return renderHook();
       case 'upload':
         return renderUpload();
+      case 'camera':
+        return renderCamera();
       case 'scan':
         return renderScan();
       case 'result':
@@ -1580,6 +1726,10 @@ const styles = StyleSheet.create({
   infoCard: { flex: 1, padding: 16, borderRadius: 18, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#232535' },
   infoValue: { color: '#FFFFFF', fontSize: 24, fontWeight: '900' },
   infoLabel: { color: '#8F95AE', fontSize: 12, marginTop: 4 },
+  cameraShell: { height: 420, borderRadius: 28, overflow: 'hidden', borderWidth: 1, borderColor: '#2A2D3F', backgroundColor: '#11121A' },
+  cameraView: { flex: 1 },
+  cameraFallback: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#12131A' },
+  cameraFallbackText: { color: '#C8CDDF', fontSize: 16, fontWeight: '700' },
   scanCore: { alignItems: 'center', justifyContent: 'center', height: 280 },
   scanHalo: { position: 'absolute', width: 230, height: 230, borderRadius: 999, backgroundColor: '#121320', shadowColor: '#FF4FD8', shadowOpacity: 0.3, shadowRadius: 30, shadowOffset: { width: 0, height: 0 } },
   scanFrame: { width: 170, height: 220, borderRadius: 28, borderWidth: 1, borderColor: '#303245', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0F1017', overflow: 'hidden' },
