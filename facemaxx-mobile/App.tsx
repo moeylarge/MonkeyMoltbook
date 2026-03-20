@@ -2030,10 +2030,12 @@ export default function App() {
           <Text style={styles.loadingText}>Loading saved scans…</Text>
         </View>
       ) : history.length ? (
-        history.map((item, index) => (
+        history.map((item, index) => {
+          const isCleanHistoryScan = isReliableScan(item);
+          return (
           <Pressable
             key={item.id}
-            style={[styles.historyCard, index === 0 && styles.historyCardActive]}
+            style={[styles.historyCard, index === 0 && styles.historyCardActive, !isCleanHistoryScan && styles.historyCardProvisional]}
             onPress={() => {
               setCurrentScan(item);
               setImageUri(item.imageUri);
@@ -2042,7 +2044,12 @@ export default function App() {
           >
             <View style={styles.historyThumb}>{item.imageUri ? <Image source={{ uri: item.imageUri }} style={styles.historyThumbImage} /> : <Text style={styles.historyThumbGlyph}>◌</Text>}</View>
             <View style={styles.historyMeta}>
-              <Text style={styles.historyTitle}>{item.archetype}</Text>
+              <View style={styles.historyTitleRow}>
+                <Text style={styles.historyTitle}>{item.archetype}</Text>
+                <Text style={[styles.historyStatusBadge, isCleanHistoryScan ? styles.historyStatusBadgeClean : styles.historyStatusBadgeProvisional]}>
+                  {isCleanHistoryScan ? 'CLEAN' : 'PROVISIONAL'}
+                </Text>
+              </View>
               <Text style={styles.historySub}>{formatTime(item.createdAt)} • {item.photoLabel}</Text>
               <Text style={styles.historyDeltaText}>
                 {typeof item.deltaFromPrevious === 'number'
@@ -2062,7 +2069,8 @@ export default function App() {
               <Text style={styles.historyPotential}>→ {item.potential}</Text>
             </View>
           </Pressable>
-        ))
+        );
+        })
       ) : (
         <View style={styles.emptyCard}>
           <Text style={styles.emptyTitle}>No scans saved yet</Text>
@@ -2515,11 +2523,16 @@ const styles = StyleSheet.create({
   timelineLegend: { color: '#98A0B8', fontSize: 12, lineHeight: 18, marginTop: 14 },
   historyCard: { padding: 14, borderRadius: 22, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#232535', flexDirection: 'row', alignItems: 'center', gap: 12 },
   historyCardActive: { borderColor: '#7C5CFF' },
+  historyCardProvisional: { backgroundColor: '#17131A', borderColor: '#4A3340' },
   historyThumb: { width: 56, height: 72, borderRadius: 14, backgroundColor: '#0D0E15', overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   historyThumbImage: { width: '100%', height: '100%' },
   historyThumbGlyph: { color: '#FFFFFF', fontSize: 28 },
   historyMeta: { flex: 1 },
-  historyTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
+  historyTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  historyTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '800', flexShrink: 1 },
+  historyStatusBadge: { fontSize: 10, fontWeight: '900', letterSpacing: 0.8, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 999, overflow: 'hidden' },
+  historyStatusBadgeClean: { color: '#CFFBE7', backgroundColor: '#163424' },
+  historyStatusBadgeProvisional: { color: '#FFD7DF', backgroundColor: '#341D24' },
   historySub: { color: '#98A0B8', fontSize: 12, marginTop: 4 },
   historyDeltaText: { color: '#14E38B', fontSize: 12, fontWeight: '700', marginTop: 6 },
   historyConfidenceText: { color: '#B7BBD0', fontSize: 11, marginTop: 6 },
