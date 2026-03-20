@@ -1714,20 +1714,25 @@ export default function App() {
     if (!activeScan) return null;
     const backendMeasurements = activeScan.measurement;
     const recoveryGuidance = getRecoveryGuidance(activeScan);
+    const isProvisionalResult = !!activeScan.rejectionReason || (activeScan.confidence ?? 0) < 55;
+    const resultLabel = isProvisionalResult ? 'Provisional Read' : 'Optimization Score';
+    const resultProgressCopy = isProvisionalResult
+      ? 'This read is being held loosely until FACEMAXX gets a cleaner scan.'
+      : `You are ${eliteDistance}% away from 100-signal ceiling`;
     return (
       <View style={styles.screenBlock}>
         <Text style={styles.sectionKick}>Result impact</Text>
-        <View style={styles.resultCard}>
-          <Text style={styles.rankBadge}>{activeScan.rank}</Text>
-          <Text style={styles.resultLabel}>Optimization Score</Text>
-          <Text style={styles.resultScore}>{scoreDisplay}</Text>
-          <Text style={styles.resultTier}>{activeScan.tier}</Text>
-          <Text style={styles.resultArchetype}>{activeScan.archetype}</Text>
+        <View style={[styles.resultCard, isProvisionalResult && styles.resultCardMuted]}>
+          <Text style={[styles.rankBadge, isProvisionalResult && styles.rankBadgeMuted]}>{isProvisionalResult ? 'PROVISIONAL' : activeScan.rank}</Text>
+          <Text style={styles.resultLabel}>{resultLabel}</Text>
+          <Text style={[styles.resultScore, isProvisionalResult && styles.resultScoreMuted]}>{scoreDisplay}</Text>
+          <Text style={[styles.resultTier, isProvisionalResult && styles.resultTierMuted]}>{isProvisionalResult ? 'Needs Better Scan' : activeScan.tier}</Text>
+          <Text style={styles.resultArchetype}>{isProvisionalResult ? `${activeScan.archetype} • held loosely` : activeScan.archetype}</Text>
           <View style={styles.resultProgressWrap}>
-            <View style={styles.progressTrackSm}>
-              <View style={[styles.progressFillSm, { width: `${activeScan.potential}%` }]} />
+            <View style={[styles.progressTrackSm, isProvisionalResult && styles.progressTrackSmMuted]}>
+              <View style={[styles.progressFillSm, isProvisionalResult && styles.progressFillSmMuted, { width: `${activeScan.potential}%` }]} />
             </View>
-            <Text style={styles.resultProgressText}>You are {eliteDistance}% away from 100-signal ceiling</Text>
+            <Text style={styles.resultProgressText}>{resultProgressCopy}</Text>
           </View>
         </View>
 
@@ -2381,14 +2386,20 @@ const styles = StyleSheet.create({
   progressFillLg: { height: '100%', borderRadius: 999, backgroundColor: '#FF4FD8' },
   progressCaption: { color: '#9DA3B9', fontSize: 13, fontWeight: '700' },
   resultCard: { padding: 26, borderRadius: 28, backgroundColor: '#11121A', borderWidth: 1, borderColor: '#262839', alignItems: 'center' },
+  resultCardMuted: { backgroundColor: '#15161D', borderColor: '#4A3340' },
   rankBadge: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, backgroundColor: '#1B1731', color: '#D7C8FF', fontSize: 11, fontWeight: '800', overflow: 'hidden', letterSpacing: 1.2 },
+  rankBadgeMuted: { backgroundColor: '#341D24', color: '#FFD7DF' },
   resultLabel: { color: '#9197AF', fontSize: 14, fontWeight: '700', marginTop: 12 },
   resultScore: { color: '#14E38B', fontSize: 88, lineHeight: 98, fontWeight: '900', marginTop: 8 },
+  resultScoreMuted: { color: '#FFB4C0' },
   resultTier: { color: '#FFFFFF', fontSize: 20, fontWeight: '900', letterSpacing: 1.4, marginTop: 6 },
+  resultTierMuted: { color: '#FFD7DF' },
   resultArchetype: { color: '#B3B8CE', fontSize: 15, marginTop: 4 },
   resultProgressWrap: { width: '100%', marginTop: 22, gap: 10 },
   progressTrackSm: { height: 10, borderRadius: 999, backgroundColor: '#1A1C24', overflow: 'hidden' },
+  progressTrackSmMuted: { backgroundColor: '#241A20' },
   progressFillSm: { height: '100%', borderRadius: 999, backgroundColor: '#7C5CFF' },
+  progressFillSmMuted: { backgroundColor: '#C96A84' },
   resultProgressText: { color: '#C7CCDE', fontSize: 13, fontWeight: '700' },
   dualStats: { flexDirection: 'row', gap: 12, flexWrap: 'wrap' },
   miniStatCard: { flex: 1, minWidth: 96, padding: 18, borderRadius: 20, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#232535' },
