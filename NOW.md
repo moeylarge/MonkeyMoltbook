@@ -78,6 +78,7 @@ Post-phase refinement progress so far:
 
 Still pending:
 - screenshots / visual proof capture
+- final visual review using `facemaxx-mobile/REVIEW_CHECKLIST.md`
 - any last micro-cleanup after visual review
 - real monetization plumbing only if Moey wants to move beyond prototype framing
 

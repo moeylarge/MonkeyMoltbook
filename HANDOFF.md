@@ -49,7 +49,7 @@ Current next steps:
    - score engine upgraded to image-derived local analysis
    - battle mode upgraded to support a real second uploaded image
    - caption/share variations added by tone
-4. Later work: screenshots / proof capture, any final micro-cleanup, then real monetization plumbing if desired
+4. Later work: screenshots / proof capture using `facemaxx-mobile/REVIEW_CHECKLIST.md`, any final micro-cleanup, then real monetization plumbing if desired
 
 ## UFC note
 
