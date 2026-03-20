@@ -88,6 +88,8 @@ Latest major upgrade:
 - score engine moved from URI/hash-style mock behavior toward image-derived local analysis using uploaded image metadata, byte-signal sampling, and face-detection-derived structural cues
 - battle mode now supports a real second uploaded image and second analysis pass
 - manual battle entry remains as fallback when no second image is provided
+- structured measurement vectors now exist in app scan records (landmarks, ratios, symmetry, quality/confidence, rejection/warning outputs)
+- first dataset/training scaffold docs added (`RATING_RUBRIC.md`, `training/README.md`)
 
 Latest polish pass:
 - spacing tightened across major screens

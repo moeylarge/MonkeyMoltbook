@@ -44,6 +44,52 @@ type BreakdownItem = {
   color: string;
 };
 
+type Point = { x: number; y: number };
+type Bounds = { x: number; y: number; width: number; height: number };
+
+type MeasurementVector = {
+  landmarks: {
+    faceBounds: Bounds;
+    leftEye?: Point;
+    rightEye?: Point;
+    noseBase?: Point;
+    mouthCenter?: Point;
+    leftCheek?: Point;
+    rightCheek?: Point;
+  };
+  ratios: {
+    faceWidthHeight: number;
+    interocularRatio: number;
+    jawWidthRatio: number;
+    upperThirdRatio: number;
+    midThirdRatio: number;
+    lowerThirdRatio: number;
+    noseCenterOffsetRatio: number;
+    cheekToJawProxyRatio: number;
+  };
+  symmetry: {
+    eyeHeightDelta: number;
+    noseCenterOffset: number;
+    rollImbalance: number;
+    leftRightDistanceDelta: number;
+  };
+  quality: {
+    faceCount: number;
+    faceSizeRatio: number;
+    blurProxy: number;
+    lightingQuality: number;
+    contrastQuality: number;
+    occlusionRisk: number;
+    poseConfidence: number;
+    landmarkConfidence: number;
+  };
+  derivedOutputs: {
+    confidence: number;
+    rejectionReason: string | null;
+    warnings: string[];
+  };
+};
+
 type ScanRecord = {
   id: string;
   createdAt: string;
@@ -55,6 +101,10 @@ type ScanRecord = {
   rank: string;
   archetype: string;
   breakdown: BreakdownItem[];
+  measurement?: MeasurementVector;
+  confidence?: number;
+  rejectionReason?: string | null;
+  warnings?: string[];
   deltaFromPrevious?: number;
   streakDays?: number;
 };
@@ -346,19 +396,41 @@ function buildImprovementPlan(scan: ScanRecord): ImprovementItem[] {
 }
 
 async function detectFaceMetrics(image?: AnalysisImage) {
-  if (!image?.uri) {
-    return {
-      hasFace: false,
-      faceCount: 0,
-      faceWidthRatio: 0.34,
-      faceHeightRatio: 0.46,
-      eyeDistanceRatio: 0.18,
-      jawWidthRatio: 0.31,
-      noseCenterOffset: 0,
-      rollBalance: 0,
-      landmarkDensity: 0,
-    };
-  }
+  const imageWidth = image?.width ?? 1080;
+  const imageHeight = image?.height ?? 1350;
+  const defaultBounds = { x: imageWidth * 0.33, y: imageHeight * 0.22, width: imageWidth * 0.34, height: imageHeight * 0.46 };
+  const defaultMetrics = {
+    hasFace: false,
+    faceCount: 0,
+    faceWidthRatio: 0.34,
+    faceHeightRatio: 0.46,
+    eyeDistanceRatio: 0.18,
+    jawWidthRatio: 0.31,
+    noseCenterOffset: 0.04,
+    rollBalance: 0.01,
+    landmarkDensity: 0,
+    faceSizeRatio: 0.16,
+    poseConfidence: 0.35,
+    landmarkConfidence: 0.25,
+    occlusionRisk: 0.55,
+    eyeHeightDelta: 0.02,
+    leftRightDistanceDelta: 0.06,
+    upperThirdRatio: 0.33,
+    midThirdRatio: 0.34,
+    lowerThirdRatio: 0.33,
+    cheekToJawProxyRatio: 1.04,
+    landmarks: {
+      faceBounds: defaultBounds,
+      leftEye: undefined,
+      rightEye: undefined,
+      noseBase: undefined,
+      mouthCenter: undefined,
+      leftCheek: undefined,
+      rightCheek: undefined,
+    },
+  };
+
+  if (!image?.uri) return defaultMetrics;
 
   try {
     const result = await FaceDetector.detectFacesAsync(image.uri, {
@@ -370,37 +442,47 @@ async function detectFaceMetrics(image?: AnalysisImage) {
     });
 
     const face = result.faces?.[0];
-    if (!face) {
-      return {
-        hasFace: false,
-        faceCount: 0,
-        faceWidthRatio: 0.34,
-        faceHeightRatio: 0.46,
-        eyeDistanceRatio: 0.18,
-        jawWidthRatio: 0.31,
-        noseCenterOffset: 0,
-        rollBalance: 0,
-        landmarkDensity: 0,
-      };
-    }
+    if (!face) return { ...defaultMetrics, faceCount: result.faces?.length ?? 0 };
 
-    const imageWidth = image.width ?? 1080;
-    const imageHeight = image.height ?? 1350;
-    const bounds = face.bounds ?? { size: { width: imageWidth * 0.34, height: imageHeight * 0.46 }, origin: { x: imageWidth * 0.33, y: imageHeight * 0.22 } };
-    const leftEye = face.leftEyePosition;
-    const rightEye = face.rightEyePosition;
-    const nose = face.noseBasePosition;
-    const leftCheek = face.leftCheekPosition;
-    const rightCheek = face.rightCheekPosition;
+    const boundsRaw = face.bounds ?? { size: { width: defaultBounds.width, height: defaultBounds.height }, origin: { x: defaultBounds.x, y: defaultBounds.y } };
+    const bounds: Bounds = {
+      x: boundsRaw.origin.x,
+      y: boundsRaw.origin.y,
+      width: boundsRaw.size.width,
+      height: boundsRaw.size.height,
+    };
+    const leftEye = face.leftEyePosition ? { x: face.leftEyePosition.x, y: face.leftEyePosition.y } : undefined;
+    const rightEye = face.rightEyePosition ? { x: face.rightEyePosition.x, y: face.rightEyePosition.y } : undefined;
+    const nose = face.noseBasePosition ? { x: face.noseBasePosition.x, y: face.noseBasePosition.y } : undefined;
+    const mouth = face.bottomMouthPosition ? { x: face.bottomMouthPosition.x, y: face.bottomMouthPosition.y } : undefined;
+    const leftCheek = face.leftCheekPosition ? { x: face.leftCheekPosition.x, y: face.leftCheekPosition.y } : undefined;
+    const rightCheek = face.rightCheekPosition ? { x: face.rightCheekPosition.x, y: face.rightCheekPosition.y } : undefined;
 
-    const faceWidthRatio = bounds.size.width / Math.max(1, imageWidth);
-    const faceHeightRatio = bounds.size.height / Math.max(1, imageHeight);
+    const faceWidthRatio = bounds.width / Math.max(1, imageWidth);
+    const faceHeightRatio = bounds.height / Math.max(1, imageHeight);
+    const faceSizeRatio = (bounds.width * bounds.height) / Math.max(1, imageWidth * imageHeight);
     const eyeDistanceRatio = leftEye && rightEye ? Math.abs(rightEye.x - leftEye.x) / Math.max(1, imageWidth) : faceWidthRatio * 0.45;
     const jawWidthRatio = leftCheek && rightCheek ? Math.abs(rightCheek.x - leftCheek.x) / Math.max(1, imageWidth) : faceWidthRatio * 0.82;
-    const faceCenterX = bounds.origin.x + bounds.size.width / 2;
-    const noseCenterOffset = nose ? Math.abs(nose.x - faceCenterX) / Math.max(1, bounds.size.width) : 0.04;
+    const faceCenterX = bounds.x + bounds.width / 2;
+    const faceTopY = bounds.y;
+    const faceBottomY = bounds.y + bounds.height;
+    const eyeMidY = leftEye && rightEye ? (leftEye.y + rightEye.y) / 2 : faceTopY + bounds.height * 0.28;
+    const noseY = nose?.y ?? faceTopY + bounds.height * 0.53;
+    const mouthY = mouth?.y ?? faceTopY + bounds.height * 0.77;
+    const upperThirdRatio = clamp((eyeMidY - faceTopY) / Math.max(1, bounds.height), 0.15, 0.5);
+    const midThirdRatio = clamp((noseY - eyeMidY) / Math.max(1, bounds.height), 0.15, 0.5);
+    const lowerThirdRatio = clamp((faceBottomY - noseY) / Math.max(1, bounds.height), 0.15, 0.55);
+    const noseCenterOffset = nose ? Math.abs(nose.x - faceCenterX) / Math.max(1, bounds.width) : 0.04;
     const rollBalance = leftEye && rightEye ? Math.abs(leftEye.y - rightEye.y) / Math.max(1, imageHeight) : 0.01;
-    const landmarkDensity = [leftEye, rightEye, nose, leftCheek, rightCheek].filter(Boolean).length / 5;
+    const eyeHeightDelta = leftEye && rightEye ? Math.abs(leftEye.y - rightEye.y) / Math.max(1, bounds.height) : 0.02;
+    const leftDistance = leftEye && nose ? Math.abs(nose.x - leftEye.x) : bounds.width * 0.2;
+    const rightDistance = rightEye && nose ? Math.abs(rightEye.x - nose.x) : bounds.width * 0.2;
+    const leftRightDistanceDelta = Math.abs(leftDistance - rightDistance) / Math.max(1, bounds.width);
+    const landmarkDensity = [leftEye, rightEye, nose, mouth, leftCheek, rightCheek].filter(Boolean).length / 6;
+    const cheekToJawProxyRatio = jawWidthRatio > 0 ? clamp((faceWidthRatio * 0.92) / jawWidthRatio, 0.7, 1.3) : 1.04;
+    const poseConfidence = clamp(1 - noseCenterOffset * 2.2 - rollBalance * 7, 0, 1);
+    const landmarkConfidence = clamp(landmarkDensity * 0.75 + poseConfidence * 0.25, 0, 1);
+    const occlusionRisk = clamp(1 - landmarkDensity + Math.max(0, 0.18 - faceSizeRatio) * 2.5, 0, 1);
 
     return {
       hasFace: true,
@@ -412,19 +494,28 @@ async function detectFaceMetrics(image?: AnalysisImage) {
       noseCenterOffset,
       rollBalance,
       landmarkDensity,
+      faceSizeRatio,
+      poseConfidence,
+      landmarkConfidence,
+      occlusionRisk,
+      eyeHeightDelta,
+      leftRightDistanceDelta,
+      upperThirdRatio,
+      midThirdRatio,
+      lowerThirdRatio,
+      cheekToJawProxyRatio,
+      landmarks: {
+        faceBounds: bounds,
+        leftEye,
+        rightEye,
+        noseBase: nose,
+        mouthCenter: mouth,
+        leftCheek,
+        rightCheek,
+      },
     };
   } catch {
-    return {
-      hasFace: false,
-      faceCount: 0,
-      faceWidthRatio: 0.34,
-      faceHeightRatio: 0.46,
-      eyeDistanceRatio: 0.18,
-      jawWidthRatio: 0.31,
-      noseCenterOffset: 0,
-      rollBalance: 0,
-      landmarkDensity: 0,
-    };
+    return defaultMetrics;
   }
 }
 
@@ -465,6 +556,7 @@ async function buildScanFromImage(image: AnalysisImage | undefined, photoLabel: 
 
   const lightingQuality = clamp(52 + (signal.mean - 96) / 2.3, 40, 92);
   const contrastQuality = clamp(48 + signal.variance * 0.72, 40, 92);
+  const blurProxy = clamp(signal.variance * 1.6 + Math.min(signal.transitions, 180) * 0.12, 0, 100);
   const framingQuality = clamp(58 + (0.82 - Math.abs(signal.aspect - 0.82)) * 36 + face.landmarkDensity * 8, 42, 92);
   const textureSignal = clamp(46 + Math.min(signal.transitions, 180) / 4.2, 40, 88);
   const fileSignal = clamp(45 + Math.min(signal.fileSize / 18000, 22), 40, 88);
@@ -472,6 +564,33 @@ async function buildScanFromImage(image: AnalysisImage | undefined, photoLabel: 
   const harmonySignal = clamp(66 - Math.abs(face.faceWidthRatio - 0.34) * 180 - Math.abs(face.faceHeightRatio - 0.46) * 120 + face.landmarkDensity * 12, 40, 92);
   const jawSignal = clamp(58 + face.jawWidthRatio * 70 + contrastQuality * 0.12, 40, 92);
   const eyeSignal = clamp(54 + face.eyeDistanceRatio * 120 + lightingQuality * 0.15, 40, 92);
+
+  const warnings: string[] = [];
+  let rejectionReason: string | null = null;
+  if (!face.hasFace) rejectionReason = 'No face detected';
+  else if (face.faceCount > 1) rejectionReason = 'Multiple faces detected';
+  else if (face.faceSizeRatio < 0.09) rejectionReason = 'Face too small in frame';
+  else if (face.poseConfidence < 0.28) rejectionReason = 'Angle too strong for reliable scoring';
+  else if (face.landmarkConfidence < 0.32) rejectionReason = 'Landmarks too weak for confident analysis';
+
+  if (lightingQuality < 52) warnings.push('Lighting may be suppressing skin and symmetry analysis.');
+  if (contrastQuality < 52) warnings.push('Low contrast may be softening facial structure read.');
+  if (blurProxy < 38) warnings.push('Image sharpness looks low; detail read may be weaker.');
+  if (face.occlusionRisk > 0.5) warnings.push('Possible occlusion or incomplete landmark coverage detected.');
+  if (face.poseConfidence < 0.45) warnings.push('Angle is reducing confidence in structural scoring.');
+
+  const confidence = clamp(
+    Math.round(
+      (lightingQuality * 0.16) +
+      (contrastQuality * 0.14) +
+      (blurProxy * 0.12) +
+      (face.poseConfidence * 100 * 0.18) +
+      (face.landmarkConfidence * 100 * 0.24) +
+      ((1 - face.occlusionRisk) * 100 * 0.16)
+    ),
+    0,
+    100,
+  );
 
   const breakdownSeed: BreakdownItem[] = [
     {
@@ -529,7 +648,8 @@ async function buildScanFromImage(image: AnalysisImage | undefined, photoLabel: 
     return { ...item, target: clamp(item.score + targetLift, item.score + 4, 95) };
   });
 
-  const score = Math.round(breakdown.reduce((sum, item) => sum + item.score, 0) / breakdown.length);
+  const confidencePenalty = rejectionReason ? 10 : confidence < 55 ? Math.round((55 - confidence) / 3) : 0;
+  const score = clamp(Math.round(breakdown.reduce((sum, item) => sum + item.score, 0) / breakdown.length) - confidencePenalty, 0, 100);
   const potential = Math.round(clamp(breakdown.reduce((sum, item) => sum + item.target, 0) / breakdown.length + 2, score + 6, 95));
 
   const archetypes = ['Chadlite', 'Pretty Boy', 'Model Type A', 'Boy Next Door', 'Rugged Masculine'];
@@ -554,6 +674,41 @@ async function buildScanFromImage(image: AnalysisImage | undefined, photoLabel: 
     rank = 'Gold Signal';
   }
 
+  const measurement: MeasurementVector = {
+    landmarks: face.landmarks,
+    ratios: {
+      faceWidthHeight: Number((face.faceWidthRatio / Math.max(face.faceHeightRatio, 0.0001)).toFixed(4)),
+      interocularRatio: Number(face.eyeDistanceRatio.toFixed(4)),
+      jawWidthRatio: Number(face.jawWidthRatio.toFixed(4)),
+      upperThirdRatio: Number(face.upperThirdRatio.toFixed(4)),
+      midThirdRatio: Number(face.midThirdRatio.toFixed(4)),
+      lowerThirdRatio: Number(face.lowerThirdRatio.toFixed(4)),
+      noseCenterOffsetRatio: Number(face.noseCenterOffset.toFixed(4)),
+      cheekToJawProxyRatio: Number(face.cheekToJawProxyRatio.toFixed(4)),
+    },
+    symmetry: {
+      eyeHeightDelta: Number(face.eyeHeightDelta.toFixed(4)),
+      noseCenterOffset: Number(face.noseCenterOffset.toFixed(4)),
+      rollImbalance: Number(face.rollBalance.toFixed(4)),
+      leftRightDistanceDelta: Number(face.leftRightDistanceDelta.toFixed(4)),
+    },
+    quality: {
+      faceCount: face.faceCount,
+      faceSizeRatio: Number(face.faceSizeRatio.toFixed(4)),
+      blurProxy: Number(blurProxy.toFixed(2)),
+      lightingQuality: Number(lightingQuality.toFixed(2)),
+      contrastQuality: Number(contrastQuality.toFixed(2)),
+      occlusionRisk: Number(face.occlusionRisk.toFixed(4)),
+      poseConfidence: Number(face.poseConfidence.toFixed(4)),
+      landmarkConfidence: Number(face.landmarkConfidence.toFixed(4)),
+    },
+    derivedOutputs: {
+      confidence,
+      rejectionReason,
+      warnings,
+    },
+  };
+
   return {
     id: `${Date.now()}-${hash}`,
     createdAt: new Date().toISOString(),
@@ -565,6 +720,10 @@ async function buildScanFromImage(image: AnalysisImage | undefined, photoLabel: 
     rank,
     archetype,
     breakdown,
+    measurement,
+    confidence,
+    rejectionReason,
+    warnings,
   };
 }
 
@@ -1167,7 +1326,27 @@ export default function App() {
             <Text style={styles.miniStatTop}>Potential</Text>
             <Text style={styles.miniStatValue}>{activeScan.potential}</Text>
           </View>
+          <View style={styles.miniStatCard}>
+            <Text style={styles.miniStatTop}>Confidence</Text>
+            <Text style={styles.miniStatValue}>{activeScan.confidence ?? 0}</Text>
+          </View>
         </View>
+
+        {!!activeScan.rejectionReason && (
+          <View style={styles.warningCard}>
+            <Text style={styles.warningTitle}>Low-confidence / rejection state</Text>
+            <Text style={styles.warningText}>{activeScan.rejectionReason}</Text>
+          </View>
+        )}
+
+        {!!activeScan.warnings?.length && (
+          <View style={styles.warningCardMuted}>
+            <Text style={styles.warningTitle}>Confidence notes</Text>
+            {activeScan.warnings.map((warning) => (
+              <Text key={warning} style={styles.warningText}>• {warning}</Text>
+            ))}
+          </View>
+        )}
 
         <View style={styles.identityLine}>
           <Text style={styles.identityLineTitle}>Identity tagline</Text>
@@ -1390,6 +1569,9 @@ export default function App() {
                       ? `${item.deltaFromPrevious} from previous`
                       : 'No change from previous'
                   : 'First logged scan'}
+              </Text>
+              <Text style={styles.historyConfidenceText}>
+                Confidence {item.confidence ?? 0}{item.rejectionReason ? ` · ${item.rejectionReason}` : ''}
               </Text>
             </View>
             <View style={styles.historyScoreWrap}>
@@ -1750,10 +1932,14 @@ const styles = StyleSheet.create({
   progressFillSm: { height: '100%', borderRadius: 999, backgroundColor: '#7C5CFF' },
   resultProgressText: { color: '#C7CCDE', fontSize: 13, fontWeight: '700' },
   dualStats: { flexDirection: 'row', gap: 12, flexWrap: 'wrap' },
-  miniStatCard: { flex: 1, padding: 18, borderRadius: 20, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#232535' },
-  miniStatCardAccent: { flex: 1, padding: 18, borderRadius: 20, backgroundColor: '#151225', borderWidth: 1, borderColor: '#31245A' },
+  miniStatCard: { flex: 1, minWidth: 96, padding: 18, borderRadius: 20, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#232535' },
+  miniStatCardAccent: { flex: 1, minWidth: 96, padding: 18, borderRadius: 20, backgroundColor: '#151225', borderWidth: 1, borderColor: '#31245A' },
   miniStatTop: { color: '#9CA2B9', fontSize: 12, fontWeight: '700' },
   miniStatValue: { color: '#FFFFFF', fontSize: 34, fontWeight: '900', marginTop: 6 },
+  warningCard: { padding: 18, borderRadius: 20, backgroundColor: '#23151A', borderWidth: 1, borderColor: '#5A2C34' },
+  warningCardMuted: { padding: 18, borderRadius: 20, backgroundColor: '#141820', borderWidth: 1, borderColor: '#2C3447' },
+  warningTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
+  warningText: { color: '#D2D6E5', fontSize: 13, lineHeight: 19, marginTop: 8 },
   identityLine: { padding: 18, borderRadius: 22, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#232535' },
   identityLineTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
   identityLineText: { color: '#AAB0C5', fontSize: 14, lineHeight: 20, marginTop: 6 },
@@ -1831,6 +2017,7 @@ const styles = StyleSheet.create({
   historyTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
   historySub: { color: '#98A0B8', fontSize: 12, marginTop: 4 },
   historyDeltaText: { color: '#14E38B', fontSize: 12, fontWeight: '700', marginTop: 6 },
+  historyConfidenceText: { color: '#B7BBD0', fontSize: 11, marginTop: 6 },
   historyScoreWrap: { alignItems: 'flex-end' },
   historyScore: { color: '#FFFFFF', fontSize: 24, fontWeight: '900' },
   historyPotential: { color: '#14E38B', fontSize: 12, fontWeight: '800', marginTop: 4 },

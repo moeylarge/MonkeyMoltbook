@@ -23,6 +23,8 @@ Important upgrades completed on 2026-03-20:
 - multiple caption/share tones
 - image-derived local analysis replaced older seed/hash-only scoring behavior
 - battle mode now supports a real second uploaded image and second analysis pass
+- structured measurement vectors now exist in app scan records, including landmarks/ratios/symmetry/quality/confidence/rejection outputs
+- v2 docs now include roadmap, measurement schema, dataset schema, rating rubric, model plan, and training scaffold
 
 Current recommendation:
 - FACEMAXX now also has a documented v2 roadmap for real measurement / dataset / model / calibration work
