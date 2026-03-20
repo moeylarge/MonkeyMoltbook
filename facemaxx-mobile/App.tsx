@@ -386,13 +386,28 @@ function buildImprovementPlan(scan: ScanRecord): ImprovementItem[] {
   const lightingQuality = scan.measurement?.quality?.lightingQuality ?? 70;
   const contrastQuality = scan.measurement?.quality?.contrastQuality ?? 60;
   const landmarkConfidence = scan.measurement?.quality?.landmarkConfidence ?? 0.7;
+  const symmetryScore = scan.measurement?.symmetry?.noseCenterOffset !== undefined
+    ? Math.max(0, 1 - scan.measurement.symmetry.noseCenterOffset * 6 - scan.measurement.symmetry.eyeHeightDelta * 8)
+    : 0.65;
+  const faceRatio = scan.measurement?.ratios?.faceWidthHeight ?? 0.75;
+  const jawRatio = scan.measurement?.ratios?.jawWidthRatio ?? 0.3;
+
+  const inferredArchetype = jawRatio > 0.4 && symmetryScore > 0.72
+    ? 'Rugged Masculine'
+    : faceRatio < 0.82 && symmetryScore > 0.7
+      ? 'Pretty Boy'
+      : symmetryScore > 0.75
+        ? 'Model Type A'
+        : jawRatio < 0.32
+          ? 'Boy Next Door'
+          : 'Chadlite';
 
   return [
     {
       id: 'grooming-1',
       category: 'grooming',
       title: 'Clean up the frame first',
-      detail: `Tighten beard lines, trim neck bulk, and clean the brow area so ${primary.label.toLowerCase()} reads sharper instead of softer. Backend quality read: contrast ${Math.round(contrastQuality)} / landmark confidence ${Math.round(landmarkConfidence * 100)}%.`,
+      detail: `Tighten beard lines, trim neck bulk, and clean the brow area so ${primary.label.toLowerCase()} reads sharper instead of softer. Backend quality read: contrast ${Math.round(contrastQuality)} / landmark confidence ${Math.round(landmarkConfidence * 100)}%. Current geometry is leaning toward a ${inferredArchetype} read.`,
       impact: primary.lift >= 10 ? 'high' : 'medium',
       difficulty: 'easy',
       timeToResult: '3-7 days',
@@ -402,7 +417,7 @@ function buildImprovementPlan(scan: ScanRecord): ImprovementItem[] {
       id: 'hair-1',
       category: 'hairstyle',
       title: 'Change the silhouette around the face',
-      detail: `Use more intentional volume and cleaner side control. ${hair.label} is suppressing the way your upper third currently reads. Backend image read says blur ${Math.round(blurProxy)} / lighting ${Math.round(lightingQuality)}.`,
+      detail: `Use more intentional volume and cleaner side control. ${hair.label} is suppressing the way your upper third currently reads. Backend image read says blur ${Math.round(blurProxy)} / lighting ${Math.round(lightingQuality)}. This matters more when face ratio is sitting around ${faceRatio.toFixed(2)}.`,
       impact: hair.lift >= 10 ? 'high' : 'medium',
       difficulty: 'moderate',
       timeToResult: '1-2 weeks',
@@ -422,7 +437,7 @@ function buildImprovementPlan(scan: ScanRecord): ImprovementItem[] {
       id: 'fitness-1',
       category: 'fitness/body fat',
       title: 'Lean down enough to reveal structure',
-      detail: `A modest body-fat drop and better posture will make ${jaw.label.toLowerCase()} and overall facial harmony read stronger without changing identity. The backend geometry stack is already weighting structure heavily here.`,
+      detail: `A modest body-fat drop and better posture will make ${jaw.label.toLowerCase()} and overall facial harmony read stronger without changing identity. The backend geometry stack is already weighting structure heavily here, especially with jaw ratio ${jawRatio.toFixed(2)} and symmetry ${Math.round(symmetryScore * 100)}.`,
       impact: jaw.lift >= 10 ? 'high' : 'medium',
       difficulty: 'hard',
       timeToResult: '6-12 weeks',
@@ -1027,6 +1042,17 @@ export default function App() {
     () => (activeScan ? buildBattleOutcome(activeScan, activeOpponentProfile) : null),
     [activeScan, activeOpponentProfile],
   );
+  const inferredArchetype = useMemo(() => {
+    if (!activeScan?.measurement) return activeScan?.archetype ?? 'Model Type A';
+    const jawRatio = activeScan.measurement.ratios.jawWidthRatio;
+    const faceRatio = activeScan.measurement.ratios.faceWidthHeight;
+    const symmetryScore = Math.max(0, 1 - activeScan.measurement.symmetry.noseCenterOffset * 6 - activeScan.measurement.symmetry.eyeHeightDelta * 8);
+    if (jawRatio > 0.4 && symmetryScore > 0.72) return 'Rugged Masculine';
+    if (faceRatio < 0.82 && symmetryScore > 0.7) return 'Pretty Boy';
+    if (symmetryScore > 0.75) return 'Model Type A';
+    if (jawRatio < 0.32) return 'Boy Next Door';
+    return 'Chadlite';
+  }, [activeScan]);
 
   useEffect(() => {
     const loadHistory = async () => {
@@ -1672,6 +1698,7 @@ export default function App() {
               <View style={styles.metricChip}><Text style={styles.metricKey}>Interocular</Text><Text style={styles.metricValue}>{backendMeasurements.ratios.interocularRatio.toFixed(2)}</Text></View>
               <View style={styles.metricChip}><Text style={styles.metricKey}>Face count</Text><Text style={styles.metricValue}>{backendMeasurements.quality.faceCount}</Text></View>
             </View>
+            <Text style={styles.metricPanelCopy}>Measurement-inferred archetype: {inferredArchetype}</Text>
           </View>
         )}
 

@@ -89,7 +89,8 @@ Still pending:
 - response mapping has been deepened so backend quality/detection/landmark signals feed more directly into UI explanations and stored measurement quality fields
 - backend now emits richer measurement fields (ratios/symmetry-style metrics), and the app now threads more of those into stored measurements, identity copy, battle copy, and recommendation detail
 - richer backend measurements are now also exposed visually in the UI via a backend measurement panel and geometry readout
-- next backend/app step: tune archetype/recommendation logic even more directly around those measurement fields and, later, move toward stronger learned calibration
+- archetype/recommendation logic has now been pushed further toward measurement-driven behavior using jaw ratio, face ratio, symmetry, and backend quality signals
+- next backend/app step: continue refining learned/calibrated mapping so these measurement-driven decisions become less hand-tuned over time
 - collect the first 25 real labeled samples and run the merge flow on actual data
 - real monetization plumbing only if Moey wants to move beyond prototype framing
 
