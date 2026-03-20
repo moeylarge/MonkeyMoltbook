@@ -1590,27 +1590,27 @@ export default function App() {
   const renderHook = () => (
     <View style={styles.heroWrap}>
       <View style={styles.eyebrowRow}>
-        <Text style={styles.eyebrow}>{BRAND_NAME.toUpperCase()}</Text>
+        <Text style={styles.eyebrow}>THE {BRAND_NAME.toUpperCase()} STANDARD</Text>
         <View style={styles.liveDot} />
       </View>
-      <Text style={styles.brandIntro}>Built around the read of {BRAND_FACE_NAME}.</Text>
+      <Text style={styles.brandIntro}>{BRAND_FACE_NAME} is the face, the benchmark, and the tone of the app.</Text>
       <Animated.View style={[styles.brandHeroFrame, { transform: [{ scale: pulse }] }]}>
         <Image source={BRAND_FACE_IMAGE} style={styles.brandHeroImage} resizeMode="cover" />
         <View style={styles.brandHeroShadeTop} />
         <View style={styles.brandHeroShadeBottom} />
         <View style={styles.brandHeroOverlay}>
           <Text style={styles.brandHeroName}>{BRAND_FACE_NAME}</Text>
-          <Text style={styles.brandHeroRole}>Face of {BRAND_NAME}</Text>
+          <Text style={styles.brandHeroRole}>The face of {BRAND_NAME}</Text>
         </View>
       </Animated.View>
       <Animated.View style={[styles.heroOrb, { transform: [{ scale: pulse }] }]}>
         <View style={styles.heroOrbCore}>
           <Text style={styles.heroOrbScore}>{history[0]?.potential ?? 91}</Text>
-          <Text style={styles.heroOrbLabel}>Looks ceiling</Text>
+          <Text style={styles.heroOrbLabel}>Maximum upside</Text>
         </View>
       </Animated.View>
-      <Text style={styles.heroTitle}>{BRAND_NAME} starts with the standard.</Text>
-      <Text style={styles.heroSub}>{BRAND_FACE_NAME} sets the tone. Upload one photo, get your current read, and see how far you can push it.</Text>
+      <Text style={styles.heroTitle}>Measure yourself against the {BRAND_NAME} standard.</Text>
+      <Text style={styles.heroSub}>{BRAND_FACE_NAME} defines the mood. Bring in one photo, get your current read, and see how much stronger your look can land.</Text>
 
       <View style={styles.statRail}>
         <View style={styles.statChip}>
@@ -1624,7 +1624,7 @@ export default function App() {
       </View>
 
       <Pressable style={styles.primaryButton} onPress={() => setScreen('upload')}>
-        <Text style={styles.primaryButtonText}>Enter {BRAND_NAME}</Text>
+        <Text style={styles.primaryButtonText}>Start Your Read</Text>
       </Pressable>
       {!!history.length && (
         <Pressable style={styles.secondaryButton} onPress={() => setScreen('history')}>
@@ -2386,9 +2386,9 @@ const styles = StyleSheet.create({
   navDotActive: { width: 20, backgroundColor: '#FF4FD8' },
   heroWrap: { minHeight: 720, justifyContent: 'center', alignItems: 'center', gap: 18, paddingTop: 12, paddingBottom: 24 },
   eyebrowRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  eyebrow: { color: '#A0A5BC', fontSize: 12, fontWeight: '700', letterSpacing: 1.7 },
+  eyebrow: { color: '#E5DAFF', fontSize: 11, fontWeight: '900', letterSpacing: 1.9 },
   liveDot: { width: 8, height: 8, borderRadius: 999, backgroundColor: '#14E38B' },
-  brandIntro: { color: '#D6DAE9', fontSize: 14, fontWeight: '700', textAlign: 'center' },
+  brandIntro: { color: '#D6DAE9', fontSize: 14, fontWeight: '700', textAlign: 'center', maxWidth: 320, lineHeight: 20 },
   brandHeroFrame: { width: '100%', maxWidth: 348, height: 430, borderRadius: 34, overflow: 'hidden', borderWidth: 1, borderColor: '#2A2D3F', backgroundColor: '#12131A', shadowColor: '#7C5CFF', shadowOpacity: 0.32, shadowRadius: 28, shadowOffset: { width: 0, height: 14 } },
   brandHeroImage: { position: 'absolute', width: '132%', height: '112%', left: '-18%', top: '-4%' },
   brandHeroShadeTop: { position: 'absolute', top: 0, left: 0, right: 0, height: '32%', backgroundColor: 'rgba(11,11,15,0.18)' },
