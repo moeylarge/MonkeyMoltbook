@@ -192,6 +192,13 @@ const BRAND_FACE_NAME = 'Clavicular';
 const BRAND_FACE_IMAGE: ImageSourcePropType = require('./assets/clavicular-brand.png');
 const ANALYSIS_BACKEND_URL = 'http://127.0.0.1:8089';
 const screens: ScreenKey[] = ['hook', 'upload', 'camera', 'scan', 'result', 'breakdown', 'simulate', 'history', 'paywall', 'plan', 'share', 'battle'];
+
+function isLikelyMobileWeb() {
+  if (Platform.OS !== 'web') return false;
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
+}
 const battleProfiles: BattleProfile[] = [
   { id: '1', name: 'Damon', archetype: 'Pretty Boy', tier: 'Attractive', score: 74, vibe: 'cleaner eye area, softer jaw' },
   { id: '2', name: 'Rex', archetype: 'Rugged Masculine', tier: 'Elite', score: 83, vibe: 'stronger jawline, rougher skin quality' },
@@ -1175,6 +1182,18 @@ export default function App() {
     };
   }, []);
 
+  const mobileWeb = isLikelyMobileWeb();
+  const cameraButtonLabel = Platform.OS === 'web'
+    ? (mobileWeb ? 'Take Photo' : 'Take or Choose Photo')
+    : 'Take Photo in App';
+  const uploadHelperCopy = imageUri
+    ? 'Use a clear photo with one face in frame for the strongest read.'
+    : Platform.OS === 'web'
+      ? (mobileWeb
+          ? 'Take a straight-on photo or choose one from your phone, then run the scan.'
+          : 'On desktop, the camera button may open a file chooser instead of a live camera. A clear solo photo still works best.')
+      : 'Start with a clear front-facing photo so the first read feels intentional, not noisy.';
+
   const activeScan = currentScan ?? history[0] ?? null;
   const activeBreakdown = activeScan?.breakdown ?? [];
   const eliteDistance = activeScan ? Math.max(0, 100 - activeScan.potential) : 18;
@@ -1842,7 +1861,7 @@ export default function App() {
       <View style={styles.uploadCard}>
         <Text style={styles.uploadTag}>{imageUri ? 'PHOTO READY' : 'WAITING FOR YOUR PHOTO'}</Text>
         <Text style={styles.uploadTitle}>{imageUri ? selectedPhoto : 'No photo loaded yet'}</Text>
-        <Text style={styles.uploadCopy}>{imageUri ? 'Use a clear photo with one face in frame for the strongest read.' : 'Start with a clear front-facing photo so the first read feels intentional, not noisy.'}</Text>
+        <Text style={styles.uploadCopy}>{uploadHelperCopy}</Text>
         <View style={[styles.photoPreview, !imageUri && styles.photoPreviewEmpty]}>{renderPreview('large')}</View>
         {!!imageUri && (
           <Text style={styles.previewHelperText}>If forehead or chin is cut off here, the scan may read as unstable. A little space around the full face works better.</Text>
@@ -1884,7 +1903,7 @@ export default function App() {
         <Text style={styles.secondaryButtonText}>{busyPicking ? 'Opening Photos…' : imageUri ? 'Change Library Photo' : 'Choose Photo from Library'}</Text>
       </Pressable>
       <Pressable style={styles.secondaryButton} onPress={openCamera}>
-        <Text style={styles.secondaryButtonText}>{Platform.OS === 'web' ? 'Take Photo with Camera' : 'Take Photo in App'}</Text>
+        <Text style={styles.secondaryButtonText}>{cameraButtonLabel}</Text>
       </Pressable>
       <Pressable style={styles.primaryButton} onPress={startScan}>
         <Text style={styles.primaryButtonText}>Run Scan</Text>
