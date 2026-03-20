@@ -2698,7 +2698,7 @@ const styles = StyleSheet.create({
   liveDot: { width: 8, height: 8, borderRadius: 999, backgroundColor: '#14E38B' },
   brandIntro: { color: '#D6DAE9', fontSize: 14, fontWeight: '700', textAlign: 'center', maxWidth: 320, lineHeight: 20 },
   brandHeroFrame: { width: '100%', maxWidth: 348, height: 430, borderRadius: 34, overflow: 'hidden', borderWidth: 1, borderColor: '#2A2D3F', backgroundColor: '#12131A', shadowColor: '#7C5CFF', shadowOpacity: 0.32, shadowRadius: 28, shadowOffset: { width: 0, height: 14 } },
-  brandHeroImage: { position: 'absolute', width: '132%', height: '118%', left: '-16%', top: '-18%' },
+  brandHeroImage: { position: 'absolute', width: '126%', height: '126%', left: '-13%', top: '-28%' },
   brandHeroShadeTop: { position: 'absolute', top: 0, left: 0, right: 0, height: '32%', backgroundColor: 'rgba(11,11,15,0.18)' },
   brandHeroShadeBottom: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '38%', backgroundColor: 'rgba(11,11,15,0.78)' },
   brandHeroOverlay: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 22, paddingVertical: 20 },
