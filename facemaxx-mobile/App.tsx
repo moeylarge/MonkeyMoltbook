@@ -1091,6 +1091,7 @@ export default function App() {
 
   const fade = useRef(new Animated.Value(0)).current;
   const slide = useRef(new Animated.Value(18)).current;
+  const scrollRef = useRef<ScrollView | null>(null);
   const pulse = useRef(new Animated.Value(0.96)).current;
   const scoreAnim = useRef(new Animated.Value(0)).current;
   const compareAnim = useRef(new Animated.Value(0)).current;
@@ -1161,6 +1162,12 @@ export default function App() {
     if (jawRatio < 0.32) return 'Boy Next Door';
     return 'Chadlite';
   }, [activeScan]);
+
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo?.({ y: 0, animated: false });
+    });
+  }, [screen]);
 
   useEffect(() => {
     const loadHistory = async () => {
@@ -1640,10 +1647,10 @@ export default function App() {
       <Text style={styles.sectionTitle}>Choose a photo and see how your current presentation stacks up against the LooksMaxxing standard.</Text>
 
       <View style={styles.uploadCard}>
-        <Text style={styles.uploadTag}>PHOTO READY</Text>
-        <Text style={styles.uploadTitle}>{selectedPhoto}</Text>
-        <Text style={styles.uploadCopy}>Use a clear photo with one face in frame for the strongest read.</Text>
-        <View style={styles.photoPreview}>{renderPreview('large')}</View>
+        <Text style={styles.uploadTag}>{imageUri ? 'PHOTO READY' : 'WAITING FOR YOUR PHOTO'}</Text>
+        <Text style={styles.uploadTitle}>{imageUri ? selectedPhoto : 'No photo loaded yet'}</Text>
+        <Text style={styles.uploadCopy}>{imageUri ? 'Use a clear photo with one face in frame for the strongest read.' : 'Start with a clear front-facing photo so the first read feels intentional, not noisy.'}</Text>
+        <View style={[styles.photoPreview, !imageUri && styles.photoPreviewEmpty]}>{renderPreview('large')}</View>
       </View>
 
       <View style={styles.optionRow}>
@@ -2368,7 +2375,7 @@ export default function App() {
             </Pressable>
           ))}
         </View>
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView ref={scrollRef} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <Animated.View style={{ opacity: fade, transform: [{ translateY: slide }] }}>{renderCurrent()}</Animated.View>
         </ScrollView>
       </View>
@@ -2390,13 +2397,13 @@ const styles = StyleSheet.create({
   liveDot: { width: 8, height: 8, borderRadius: 999, backgroundColor: '#14E38B' },
   brandIntro: { color: '#D6DAE9', fontSize: 14, fontWeight: '700', textAlign: 'center', maxWidth: 320, lineHeight: 20 },
   brandHeroFrame: { width: '100%', maxWidth: 348, height: 430, borderRadius: 34, overflow: 'hidden', borderWidth: 1, borderColor: '#2A2D3F', backgroundColor: '#12131A', shadowColor: '#7C5CFF', shadowOpacity: 0.32, shadowRadius: 28, shadowOffset: { width: 0, height: 14 } },
-  brandHeroImage: { position: 'absolute', width: '132%', height: '112%', left: '-18%', top: '-4%' },
+  brandHeroImage: { position: 'absolute', width: '132%', height: '118%', left: '-16%', top: '-12%' },
   brandHeroShadeTop: { position: 'absolute', top: 0, left: 0, right: 0, height: '32%', backgroundColor: 'rgba(11,11,15,0.18)' },
   brandHeroShadeBottom: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '38%', backgroundColor: 'rgba(11,11,15,0.78)' },
   brandHeroOverlay: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 22, paddingVertical: 20 },
   brandHeroName: { color: '#FFFFFF', fontSize: 28, fontWeight: '900' },
   brandHeroRole: { color: '#D9CFFF', fontSize: 13, fontWeight: '700', marginTop: 4 },
-  heroOrb: { width: 232, height: 232, borderRadius: 999, backgroundColor: '#14151F', borderWidth: 1, borderColor: '#2D3041', shadowColor: '#7C5CFF', shadowOpacity: 0.35, shadowRadius: 40, shadowOffset: { width: 0, height: 0 }, alignItems: 'center', justifyContent: 'center' },
+  heroOrb: { width: 232, height: 232, borderRadius: 999, backgroundColor: '#14151F', borderWidth: 1, borderColor: '#2D3041', shadowColor: '#7C5CFF', shadowOpacity: 0.35, shadowRadius: 40, shadowOffset: { width: 0, height: 0 }, alignItems: 'center', justifyContent: 'center', marginTop: -8 },
   heroOrbCore: { width: 156, height: 156, borderRadius: 999, backgroundColor: '#0E0F16', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#26293C' },
   heroOrbScore: { color: '#FFFFFF', fontSize: 52, fontWeight: '900' },
   heroOrbLabel: { color: '#9DA3B8', fontSize: 12, marginTop: 4 },
@@ -2418,6 +2425,7 @@ const styles = StyleSheet.create({
   uploadTitle: { color: '#FFFFFF', fontSize: 28, fontWeight: '900' },
   uploadCopy: { color: '#AAB0C5', fontSize: 14, lineHeight: 20 },
   photoPreview: { height: 270, borderRadius: 24, backgroundColor: '#0D0E15', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#242637', overflow: 'hidden' },
+  photoPreviewEmpty: { height: 220, borderStyle: 'dashed', borderColor: '#34384D', backgroundColor: '#101119' },
   photoImageLarge: { width: '100%', height: '100%' },
   photoImageSmall: { width: 86, height: 110, borderRadius: 18 },
   photoFaceLarge: { color: '#FFFFFF', fontSize: 88 },
