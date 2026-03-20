@@ -190,8 +190,17 @@ const DATASET_EXPORT_DIR = `${FileSystem.documentDirectory ?? ''}looksmaxxing-da
 const BRAND_NAME = 'LooksMaxxing';
 const BRAND_FACE_NAME = 'Clavicular';
 const BRAND_FACE_IMAGE: ImageSourcePropType = require('./assets/clavicular-brand.png');
-const ANALYSIS_BACKEND_URL = 'http://127.0.0.1:8089';
+const LOCAL_BACKEND_URL = 'http://127.0.0.1:8089';
+const LAN_BACKEND_URL = 'http://192.168.4.52:8089';
 const screens: ScreenKey[] = ['hook', 'upload', 'camera', 'scan', 'result', 'breakdown', 'simulate', 'history', 'paywall', 'plan', 'share', 'battle'];
+
+function getAnalysisBackendUrl() {
+  if (Platform.OS !== 'web') return LOCAL_BACKEND_URL;
+  if (typeof window === 'undefined') return LOCAL_BACKEND_URL;
+  const host = window.location.hostname || '';
+  if (host === 'localhost' || host === '127.0.0.1') return LOCAL_BACKEND_URL;
+  return LAN_BACKEND_URL;
+}
 
 function isLikelyMobileWeb() {
   if (Platform.OS !== 'web') return false;
@@ -832,6 +841,7 @@ async function buildScanFromBackend(image: AnalysisImage | undefined, photoLabel
     if (Platform.OS === 'web') {
       const upload = await processWebImageForUpload(image.originalUri ?? image.uri, filename, image.originalMimeType ?? mimeType);
       console.log('LooksMaxxing web upload debug', {
+        backendUrl: getAnalysisBackendUrl(),
         originalMimeType: image.originalMimeType ?? mimeType,
         originalFilename: filename,
         uploadName: upload.file.name,
@@ -849,7 +859,8 @@ async function buildScanFromBackend(image: AnalysisImage | undefined, photoLabel
       } as any);
     }
 
-    const response = await fetch(`${ANALYSIS_BACKEND_URL}/analyze`, {
+    const backendUrl = getAnalysisBackendUrl();
+    const response = await fetch(`${backendUrl}/analyze`, {
       method: 'POST',
       body: form,
     });
