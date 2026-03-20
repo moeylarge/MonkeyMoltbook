@@ -507,10 +507,10 @@ function buildAffiliateItems(scan: ScanRecord): AffiliateItem[] {
 
 function buildShareCaptions(scan: ScanRecord): Record<ShareTone, string> {
   return {
-    neutral: `${BRAND_NAME} gave me a ${scan.score} and tagged me ${scan.archetype}. Fair read or nah?`,
-    confident: `${scan.score} now, ${scan.potential} ceiling. Strong base or am I gassing it?`,
-    humble: `Trying to improve this honestly. ${BRAND_NAME} read me as ${scan.archetype} with room to grow — fair?`,
-    provocative: `${BRAND_NAME} says ${scan.score} and ${scan.archetype}. Be real — accurate or inflated?`,
+    neutral: `${BRAND_NAME} gave me a ${scan.score} and called me ${scan.archetype}. Fair or nah?`,
+    confident: `${scan.score} right now, ${scan.potential} ceiling. Strong base or am I chatting?`,
+    humble: `Trying to improve this for real. ${BRAND_NAME} called me ${scan.archetype} with room to level up — fair?`,
+    provocative: `${BRAND_NAME} gave me a ${scan.score} and said ${scan.archetype}. Honest rating — fair or inflated?`,
   };
 }
 
