@@ -4,6 +4,7 @@ import * as FaceDetector from 'expo-face-detector';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
 import { StatusBar } from 'expo-status-bar';
+import heic2any from 'heic2any';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -129,6 +130,8 @@ type AnalysisImage = {
   height?: number;
   fileSize?: number;
   mimeType?: string;
+  originalUri?: string;
+  originalMimeType?: string;
 };
 
 type AffiliateItem = {
@@ -702,34 +705,50 @@ function buildRetentionStats(history: ScanRecord[]) {
   };
 }
 
-async function rasterizeWebImageToJpeg(uri: string, filename: string) {
-  return await new Promise<File>((resolve, reject) => {
-    const image = new Image();
-    image.onload = () => {
-      try {
-        const canvas = document.createElement('canvas');
-        canvas.width = image.naturalWidth || image.width;
-        canvas.height = image.naturalHeight || image.height;
-        const context = canvas.getContext('2d');
-        if (!context) {
-          reject(new Error('Could not create canvas context for web image conversion'));
-          return;
-        }
-        context.drawImage(image, 0, 0);
-        canvas.toBlob((blob) => {
-          if (!blob) {
-            reject(new Error('Web image conversion produced no blob'));
-            return;
-          }
-          resolve(new File([blob], filename.replace(/\.[a-z0-9]+$/i, '.jpg'), { type: 'image/jpeg' }));
-        }, 'image/jpeg', 0.92);
-      } catch (error) {
-        reject(error instanceof Error ? error : new Error('Unknown rasterization error'));
-      }
-    };
-    image.onerror = () => reject(new Error('Could not load selected web image into rasterizer'));
-    image.src = uri;
+async function processWebImageForUpload(uri: string, filename: string, mimeType?: string) {
+  const response = await fetch(uri);
+  const sourceBlob = await response.blob();
+  let workingBlob: Blob = sourceBlob;
+  const sourceType = sourceBlob.type || mimeType || 'image/jpeg';
+
+  if (sourceType === 'image/heic' || sourceType === 'image/heif' || /\.hei(c|f)$/i.test(filename)) {
+    const converted = await heic2any({ blob: sourceBlob, toType: 'image/jpeg', quality: 0.9 });
+    workingBlob = Array.isArray(converted) ? converted[0] : converted;
+  }
+
+  const bitmap = await createImageBitmap(workingBlob);
+  const longestSide = Math.max(bitmap.width, bitmap.height);
+  const scale = longestSide > 1600 ? 1600 / longestSide : 1;
+  const width = Math.max(1, Math.round(bitmap.width * scale));
+  const height = Math.max(1, Math.round(bitmap.height * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext('2d');
+  if (!context) {
+    throw new Error('Could not create canvas context for web image conversion');
+  }
+  context.drawImage(bitmap, 0, 0, width, height);
+  const outputBlob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error('Web image conversion produced no blob'));
+    }, 'image/jpeg', 0.82);
   });
+
+  const outputName = filename.replace(/\.[a-z0-9]+$/i, '.jpg');
+  const outputFile = new File([outputBlob], outputName, { type: 'image/jpeg' });
+  const previewUrl = URL.createObjectURL(outputBlob);
+
+  return {
+    file: outputFile,
+    previewUrl,
+    width,
+    height,
+    mimeType: 'image/jpeg',
+    fileSize: outputBlob.size,
+    originalMimeType: sourceType,
+  };
 }
 
 async function buildScanFromBackend(image: AnalysisImage | undefined, photoLabel: string): Promise<ScanRecord | null> {
@@ -741,15 +760,17 @@ async function buildScanFromBackend(image: AnalysisImage | undefined, photoLabel
     const filename = image.uri.split('/').pop() || 'scan-image.jpg';
 
     if (Platform.OS === 'web') {
-      const upload = await rasterizeWebImageToJpeg(image.uri, filename);
+      const upload = await processWebImageForUpload(image.originalUri ?? image.uri, filename, image.originalMimeType ?? mimeType);
       console.log('LooksMaxxing web upload debug', {
-        originalMimeType: mimeType,
+        originalMimeType: image.originalMimeType ?? mimeType,
         originalFilename: filename,
-        uploadName: upload.name,
-        uploadType: upload.type,
-        uploadSize: upload.size,
+        uploadName: upload.file.name,
+        uploadType: upload.file.type,
+        uploadSize: upload.file.size,
+        outputWidth: upload.width,
+        outputHeight: upload.height,
       });
-      form.append('image', upload);
+      form.append('image', upload.file);
     } else {
       form.append('image', {
         uri: image.uri,
@@ -1513,16 +1534,34 @@ export default function App() {
       });
       if (!result.canceled && result.assets?.[0]?.uri) {
         const asset = result.assets[0];
-        const nextImage = {
+        let nextImage: AnalysisImage = {
           uri: asset.uri,
           width: asset.width,
           height: asset.height,
           fileSize: asset.fileSize,
           mimeType: asset.mimeType,
+          originalUri: asset.uri,
+          originalMimeType: asset.mimeType,
         };
-        setImageUri(asset.uri);
+
+        if (Platform.OS === 'web') {
+          const processed = await processWebImageForUpload(asset.uri, asset.fileName ?? asset.uri.split('/').pop() || 'scan-image.jpg', asset.mimeType);
+          nextImage = {
+            uri: processed.previewUrl,
+            width: processed.width,
+            height: processed.height,
+            fileSize: processed.fileSize,
+            mimeType: processed.mimeType,
+            originalUri: asset.uri,
+            originalMimeType: asset.mimeType,
+          };
+        }
+
+        setImageUri(nextImage.uri);
         setSelectedImage(nextImage);
-        await persistPendingUpload(nextImage);
+        if (Platform.OS !== 'web') {
+          await persistPendingUpload(nextImage);
+        }
       }
     } finally {
       setBusyPicking(false);
