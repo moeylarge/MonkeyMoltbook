@@ -32,6 +32,8 @@ def detect_image_format(image_bytes: bytes):
         return "gif"
     if image_bytes.startswith(b"RIFF") and image_bytes[8:12] == b"WEBP":
         return "webp"
+    if len(image_bytes) > 12 and image_bytes[4:8] == b"ftyp" and image_bytes[8:12] in {b"heic", b"heix", b"hevc", b"hevx", b"mif1", b"msf1"}:
+        return "heic"
     return None
 
 
