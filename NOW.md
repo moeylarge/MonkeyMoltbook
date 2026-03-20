@@ -89,6 +89,7 @@ Latest major upgrade:
 - battle mode now supports a real second uploaded image and second analysis pass
 - manual battle entry remains as fallback when no second image is provided
 - structured measurement vectors now exist in app scan records (landmarks, ratios, symmetry, quality/confidence, rejection/warning outputs)
+- scans now also create local training-style dataset export records
 - first dataset/training scaffold docs added (`RATING_RUBRIC.md`, `training/README.md`)
 
 Latest polish pass:

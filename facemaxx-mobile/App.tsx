@@ -147,7 +147,37 @@ type BattleProfile = {
 
 type ShareTone = 'neutral' | 'confident' | 'humble' | 'provocative';
 
+type DatasetExportRecord = {
+  sampleId: string;
+  createdAt: string;
+  photoLabel: string;
+  imageUri?: string;
+  measurement?: MeasurementVector;
+  currentOutputs: {
+    overallScore: number;
+    potential: number;
+    tier: string;
+    archetype: string;
+    confidence: number;
+    rejectionReason: string | null;
+  };
+  labels: {
+    overallRatingMean: number | null;
+    jawlineRatingMean: number | null;
+    eyesRatingMean: number | null;
+    skinRatingMean: number | null;
+    symmetryRatingMean: number | null;
+    hairFramingRatingMean: number | null;
+    facialHarmonyRatingMean: number | null;
+    archetypeLabel: string | null;
+    raterCount: number;
+    ratingVariance: number | null;
+    notes: string | null;
+  };
+};
+
 const STORAGE_KEY = 'facemaxx.scanHistory.v1';
+const DATASET_EXPORT_KEY = 'facemaxx.datasetExports.v1';
 const screens: ScreenKey[] = ['hook', 'upload', 'camera', 'scan', 'result', 'breakdown', 'simulate', 'history', 'paywall', 'plan', 'share', 'battle'];
 const battleProfiles: BattleProfile[] = [
   { id: '1', name: 'Damon', archetype: 'Pretty Boy', tier: 'Attractive', score: 74, vibe: 'cleaner eye area, softer jaw' },
@@ -751,6 +781,7 @@ export default function App() {
   const [battleScan, setBattleScan] = useState<ScanRecord | null>(null);
   const [battleBusy, setBattleBusy] = useState(false);
   const [shareTone, setShareTone] = useState<ShareTone>('neutral');
+  const [exportCount, setExportCount] = useState(0);
 
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const cameraRef = useRef<any>(null);
@@ -820,11 +851,18 @@ export default function App() {
   useEffect(() => {
     const loadHistory = async () => {
       try {
-        const raw = await AsyncStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw) as ScanRecord[];
+        const [rawHistory, rawExports] = await Promise.all([
+          AsyncStorage.getItem(STORAGE_KEY),
+          AsyncStorage.getItem(DATASET_EXPORT_KEY),
+        ]);
+        if (rawHistory) {
+          const parsed = JSON.parse(rawHistory) as ScanRecord[];
           setHistory(parsed);
           if (parsed[0]) setCurrentScan(parsed[0]);
+        }
+        if (rawExports) {
+          const parsedExports = JSON.parse(rawExports) as DatasetExportRecord[];
+          setExportCount(parsedExports.length);
         }
       } catch {
         // keep quiet, local fallback only
@@ -1010,6 +1048,47 @@ export default function App() {
     }
   };
 
+  const buildDatasetExport = (scan: ScanRecord): DatasetExportRecord => ({
+    sampleId: scan.id,
+    createdAt: scan.createdAt,
+    photoLabel: scan.photoLabel,
+    imageUri: scan.imageUri,
+    measurement: scan.measurement,
+    currentOutputs: {
+      overallScore: scan.score,
+      potential: scan.potential,
+      tier: scan.tier,
+      archetype: scan.archetype,
+      confidence: scan.confidence ?? 0,
+      rejectionReason: scan.rejectionReason ?? null,
+    },
+    labels: {
+      overallRatingMean: null,
+      jawlineRatingMean: null,
+      eyesRatingMean: null,
+      skinRatingMean: null,
+      symmetryRatingMean: null,
+      hairFramingRatingMean: null,
+      facialHarmonyRatingMean: null,
+      archetypeLabel: null,
+      raterCount: 0,
+      ratingVariance: null,
+      notes: null,
+    },
+  });
+
+  const appendDatasetExport = async (scan: ScanRecord) => {
+    try {
+      const raw = await AsyncStorage.getItem(DATASET_EXPORT_KEY);
+      const parsed = raw ? (JSON.parse(raw) as DatasetExportRecord[]) : [];
+      const next = [buildDatasetExport(scan), ...parsed].slice(0, 250);
+      await AsyncStorage.setItem(DATASET_EXPORT_KEY, JSON.stringify(next));
+      setExportCount(next.length);
+    } catch {
+      // local convenience only
+    }
+  };
+
   const pickImage = async () => {
     try {
       setBusyPicking(true);
@@ -1096,6 +1175,7 @@ export default function App() {
         setBattleScan(analyzed);
         setBattleArchetype(analyzed.archetype);
         setBattleScoreInput(String(analyzed.score));
+        await appendDatasetExport(analyzed);
       }
     } finally {
       setBattleBusy(false);
@@ -1127,6 +1207,7 @@ export default function App() {
     setCurrentScan(scan);
     const nextHistory = [scan, ...history].slice(0, 12);
     await persistHistory(nextHistory);
+    await appendDatasetExport(scan);
     setScreen('scan');
   };
 
@@ -1234,8 +1315,8 @@ export default function App() {
           <Text style={styles.infoLabel}>saved scans</Text>
         </View>
         <View style={styles.infoCard}>
-          <Text style={styles.infoValue}>LOCAL</Text>
-          <Text style={styles.infoLabel}>storage only</Text>
+          <Text style={styles.infoValue}>{exportCount}</Text>
+          <Text style={styles.infoLabel}>dataset samples</Text>
         </View>
       </View>
 
@@ -1514,6 +1595,7 @@ export default function App() {
                 ? `Current optimization read is ${Math.abs(retentionStats.scoreDelta)} lower than your last scan. Lighting or angle may be suppressing the optimization score.`
                 : 'No score change detected on the last scan. Try angle, lighting, hair control, or skin-day timing.'}
           </Text>
+          <Text style={styles.retentionDatasetText}>{exportCount} training-ready samples logged locally so far.</Text>
         </View>
 
         <View style={styles.bestVersionCard}>
@@ -2070,4 +2152,5 @@ const styles = StyleSheet.create({
   potentialHero: { color: '#FFFFFF', fontSize: 54, fontWeight: '900', marginTop: 8 },
   retentionTitle: { color: '#FFFFFF', fontSize: 18, fontWeight: '800' },
   retentionCopy: { color: '#AAB0C5', fontSize: 14, lineHeight: 20, marginTop: 8 },
+  retentionDatasetText: { color: '#14E38B', fontSize: 12, fontWeight: '700', marginTop: 10 },
 });
