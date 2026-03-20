@@ -1580,6 +1580,17 @@ export default function App() {
     }
   };
 
+  const renderEmptyFacePlaceholder = (size: 'large' | 'small' = 'large') => {
+    const large = size === 'large';
+    return (
+      <View style={large ? styles.emptyFacePlaceholderLarge : styles.emptyFacePlaceholderSmall}>
+        <Text style={styles.emptyFaceEyebrow}>CLAVICULAR</Text>
+        <Text style={large ? styles.emptyFaceTitleLarge : styles.emptyFaceTitleSmall}>Awaiting your read</Text>
+        {large && <Text style={styles.emptyFaceCopy}>Drop in a clean photo to see how you stack up against the standard.</Text>}
+      </View>
+    );
+  };
+
   const renderPreview = (size: 'large' | 'small' = 'large') => {
     const large = size === 'large';
     if (imageUri) {
@@ -1591,7 +1602,7 @@ export default function App() {
         />
       );
     }
-    return <Text style={large ? styles.photoFaceLarge : styles.photoFaceSmall}>◌</Text>;
+    return renderEmptyFacePlaceholder(size);
   };
 
   const renderHook = () => (
@@ -1961,11 +1972,11 @@ export default function App() {
         <View style={styles.simCardWrap}>
           <View style={styles.simCardLeft}>
             <Text style={styles.simTag}>NOW</Text>
-            <View style={styles.simFaceCard}>{imageUri ? renderPreview('small') : <Text style={styles.simFaceGlyph}>◌</Text>}<Text style={styles.simFaceScore}>{activeScan.score}</Text></View>
+            <View style={styles.simFaceCard}>{renderPreview('small')}<Text style={styles.simFaceScore}>{activeScan.score}</Text></View>
           </View>
           <View style={styles.simCardRight}>
             <Text style={styles.simTagAccent}>AFTER</Text>
-            <View style={styles.simFaceCardAccent}>{imageUri ? renderPreview('small') : <Text style={styles.simFaceGlyph}>◌</Text>}<Text style={styles.simFaceScoreAccent}>{compareDisplay}</Text></View>
+            <View style={styles.simFaceCardAccent}>{renderPreview('small')}<Text style={styles.simFaceScoreAccent}>{compareDisplay}</Text></View>
           </View>
         </View>
 
@@ -2061,9 +2072,20 @@ export default function App() {
           <Text style={styles.loadingText}>Loading your scans…</Text>
         </View>
       ) : history.length ? (
-        history.map((item, index) => {
-          const isCleanHistoryScan = isReliableScan(item);
+        (() => {
+          const repeatedProvisionalCount = history.filter((item) => !isReliableScan(item)).length;
+          const visibleHistory = history.filter((item, index) => isReliableScan(item) || index === 0);
           return (
+            <>
+              {repeatedProvisionalCount > 1 && (
+                <View style={styles.historySummaryCard}>
+                  <Text style={styles.historySummaryTitle}>{repeatedProvisionalCount} provisional scans are grouped right now</Text>
+                  <Text style={styles.historySummaryCopy}>The newest shaky read stays visible below. Older provisional inputs are still saved, but hidden here so the tracker does not become repetitive.</Text>
+                </View>
+              )}
+              {visibleHistory.map((item, index) => {
+                const isCleanHistoryScan = isReliableScan(item);
+                return (
           <Pressable
             key={item.id}
             style={[styles.historyCard, index === 0 && styles.historyCardActive, !isCleanHistoryScan && styles.historyCardProvisional]}
@@ -2101,7 +2123,10 @@ export default function App() {
             </View>
           </Pressable>
         );
-        })
+              })}
+            </>
+          );
+        })()
       ) : (
         <View style={styles.emptyCard}>
           <Text style={styles.emptyTitle}>No scans saved yet</Text>
@@ -2117,7 +2142,7 @@ export default function App() {
   const renderPaywall = () => (
     <View style={styles.screenBlock}>
       <Text style={styles.sectionKick}>LooksMaxxing pro</Text>
-      <Text style={styles.sectionTitle}>Unlock the deeper read, the Clavicular-standard plan, and a sharper way to track your climb.</Text>
+      <Text style={styles.sectionTitle}>Unlock the deeper read and the Clavicular-standard plan.</Text>
       <Animated.View
         style={[
           styles.paywallCard,
@@ -2222,7 +2247,7 @@ export default function App() {
     return (
       <View style={styles.screenBlock}>
         <Text style={styles.sectionKick}>Share your read</Text>
-        <Text style={styles.sectionTitle}>A post-ready LooksMaxxing card built around your score, archetype, tier, and upside.</Text>
+        <Text style={styles.sectionTitle}>A post-ready card built around your score, archetype, and upside.</Text>
 
         <View style={styles.shareExportCard}>
           <Text style={styles.shareExportBrand}>{BRAND_NAME}</Text>
@@ -2263,7 +2288,7 @@ export default function App() {
     return (
       <View style={styles.screenBlock}>
         <Text style={styles.sectionKick}>Standard clash</Text>
-        <Text style={styles.sectionTitle}>Put two reads side by side and see who is landing closer to the LooksMaxxing standard right now.</Text>
+        <Text style={styles.sectionTitle}>Put two reads side by side and see who is closer to the standard right now.</Text>
 
         <View style={styles.retentionCard}>
           <Text style={styles.retentionTitle}>Choose a challenger</Text>
@@ -2428,8 +2453,12 @@ const styles = StyleSheet.create({
   photoPreviewEmpty: { height: 220, borderStyle: 'dashed', borderColor: '#34384D', backgroundColor: '#101119' },
   photoImageLarge: { width: '100%', height: '100%' },
   photoImageSmall: { width: 86, height: 110, borderRadius: 18 },
-  photoFaceLarge: { color: '#FFFFFF', fontSize: 88 },
-  photoFaceSmall: { color: '#FFFFFF', fontSize: 56 },
+  emptyFacePlaceholderLarge: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 26 },
+  emptyFacePlaceholderSmall: { width: 86, height: 110, borderRadius: 18, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8, backgroundColor: '#11121A', borderWidth: 1, borderColor: '#2B2E40' },
+  emptyFaceEyebrow: { color: '#E5DAFF', fontSize: 10, fontWeight: '900', letterSpacing: 1.2, textAlign: 'center' },
+  emptyFaceTitleLarge: { color: '#FFFFFF', fontSize: 24, fontWeight: '900', textAlign: 'center', marginTop: 10 },
+  emptyFaceTitleSmall: { color: '#FFFFFF', fontSize: 12, fontWeight: '800', textAlign: 'center', marginTop: 8 },
+  emptyFaceCopy: { color: '#98A0B8', fontSize: 13, lineHeight: 18, textAlign: 'center', marginTop: 8, maxWidth: 220 },
   optionRow: { flexDirection: 'row', gap: 10, flexWrap: 'wrap', rowGap: 10 },
   optionChip: { paddingHorizontal: 14, paddingVertical: 12, borderRadius: 999, backgroundColor: '#151621', borderWidth: 1, borderColor: '#2A2D3F' },
   optionChipActive: { backgroundColor: '#1A1430', borderColor: '#7C5CFF' },
