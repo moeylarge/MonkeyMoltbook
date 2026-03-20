@@ -16,7 +16,7 @@ This is the canonical project list for fast recovery after resets, daemon issues
 ### 1) FACEMAXX
 - **Status:** ACTIVE / CURRENT PRIMARY FOCUS
 - **Type:** Mobile app
-- **Current phase:** Post-phase refinement in progress (timeline/history, positioning copy, battle/share upgrades); next should be final review, proof capture, and cleanup
+- **Current phase:** Post-phase refinement in progress (timeline/history, positioning copy, battle/share upgrades, review cleanup); next should be proof capture and polish
 - **Last known state:** Phase 2 prototype completed with hook → upload → scan → result → breakdown → simulation → paywall → improvement flow
 - **Last known path:** `/Users/moey/.openclaw_old/workspace/facemaxx-mobile`
 - **Important note:** `facemaxx-mobile/` is **not present** in the current workspace snapshot. Do not assume it is gone; it was found in `.openclaw_old/workspace/`.

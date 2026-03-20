@@ -84,7 +84,7 @@ type BattleProfile = {
   vibe: string;
 };
 
-type ShareTone = 'neutral' | 'cocky' | 'humble' | 'ragebait';
+type ShareTone = 'neutral' | 'confident' | 'humble' | 'provocative';
 
 const STORAGE_KEY = 'facemaxx.scanHistory.v1';
 const screens: ScreenKey[] = ['hook', 'upload', 'scan', 'result', 'breakdown', 'simulate', 'history', 'paywall', 'plan', 'share', 'battle'];
@@ -194,9 +194,9 @@ function buildAffiliateItems(scan: ScanRecord): AffiliateItem[] {
 function buildShareCaptions(scan: ScanRecord): Record<ShareTone, string> {
   return {
     neutral: `FACEMAXX scored me ${scan.score} as ${scan.archetype}. Fair read or not?`,
-    cocky: `${scan.score} now and ${scan.potential} potential. Tell me I’m wrong.`,
+    confident: `${scan.score} now and ${scan.potential} potential. Strong base or overhyped?`,
     humble: `Trying to level this up. FACEMAXX says ${scan.archetype} with room to improve — accurate?`,
-    ragebait: `AI says I’m a ${scan.archetype} at ${scan.score}. Be brutally honest — valid or delusional?`,
+    provocative: `FACEMAXX says I’m a ${scan.archetype} at ${scan.score}. Honest takes only — fair or inflated?`,
   };
 }
 
@@ -382,23 +382,26 @@ function buildScanFromSeed(seedSource: string, photoLabel: string, imageUri?: st
     clamp(breakdown.reduce((sum, item) => sum + item.target, 0) / breakdown.length + 2, score + 6, 95),
   );
 
-  const archetypes = ['Sharp Jaw Archetype', 'Pretty Boy Signal', 'Soft Aesthetic', 'Model Type B'];
+  const archetypes = ['Chadlite', 'Pretty Boy', 'Model Type A', 'Boy Next Door', 'Rugged Masculine'];
   const archetype = archetypes[hash % archetypes.length];
 
-  let tier = 'ATTRACTIVE';
-  let rank = 'SILVER SIGNAL';
+  let tier = 'Attractive';
+  let rank = 'Silver Signal';
   if (score < 55) {
-    tier = 'BUILDING';
-    rank = 'BRONZE SIGNAL';
+    tier = 'Normie';
+    rank = 'Bronze Signal';
+  } else if (score >= 92) {
+    tier = 'Genetic Outlier';
+    rank = 'Outlier Signal';
   } else if (score >= 82) {
-    tier = 'ELITE';
-    rank = 'ELITE SIGNAL';
+    tier = 'Elite';
+    rank = 'Elite Signal';
   } else if (score >= 72) {
-    tier = 'ATTRACTIVE';
-    rank = 'SILVER SIGNAL';
+    tier = 'Attractive';
+    rank = 'Silver Signal';
   } else {
-    tier = 'RISING';
-    rank = 'GOLD SIGNAL';
+    tier = 'Above Average';
+    rank = 'Gold Signal';
   }
 
   return {
@@ -1019,7 +1022,7 @@ export default function App() {
         <View style={styles.shareCard}>
           <Text style={styles.shareTitle}>Share card</Text>
           <Text style={styles.shareHeadline}>I went from {activeScan.score} → {potentialDisplay}</Text>
-          <Text style={styles.shareCaption}>Be honest… am I cooked or leveling up?</Text>
+          <Text style={styles.shareCaption}>Be honest… is this a real upgrade or not yet?</Text>
         </View>
 
         <Pressable style={styles.primaryButton} onPress={() => setScreen('share')}>
@@ -1260,7 +1263,7 @@ export default function App() {
         </View>
 
         <View style={styles.optionRow}>
-          {(['neutral', 'cocky', 'humble', 'ragebait'] as ShareTone[]).map((tone) => (
+          {(['neutral', 'confident', 'humble', 'provocative'] as ShareTone[]).map((tone) => (
             <Pressable key={tone} style={[styles.optionChip, shareTone === tone && styles.optionChipActive]} onPress={() => setShareTone(tone)}>
               <Text style={[styles.optionText, shareTone === tone && styles.optionTextActive]}>{tone}</Text>
             </Pressable>

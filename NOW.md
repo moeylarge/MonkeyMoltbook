@@ -78,9 +78,15 @@ Post-phase refinement progress so far:
 
 Still pending:
 - screenshots / visual proof capture
-- polish pass on motion and spacing
-- final product review / cleanup
+- motion and spacing polish
+- final product cleanup pass
 - real monetization plumbing only if Moey wants to move beyond prototype framing
+
+Latest review notes:
+- archetype labels aligned more closely with the original FACEMAXX brief
+- tier labels aligned with Normie / Above Average / Attractive / Elite / Genetic Outlier
+- social caption tones softened away from overly gimmicky phrasing while keeping engagement
+- optimization framing tightened further across the app
 
 ## Guardrails
 

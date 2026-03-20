@@ -48,7 +48,7 @@ Current next steps:
    - copy shifted further toward optimization framing
    - battle mode upgraded to manual two-face compare flow
    - caption/share variations added by tone
-4. Later work: screenshots / motion / spacing refinement, then real monetization plumbing if desired
+4. Later work: screenshots / motion / spacing refinement, final cleanup, then real monetization plumbing if desired
 
 ## UFC note
 
