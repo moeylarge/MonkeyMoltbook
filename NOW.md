@@ -78,9 +78,14 @@ Post-phase refinement progress so far:
 
 Still pending:
 - screenshots / visual proof capture
-- motion and spacing polish
-- final product cleanup pass
+- any last micro-cleanup after visual review
 - real monetization plumbing only if Moey wants to move beyond prototype framing
+
+Latest polish pass:
+- spacing tightened across major screens
+- button sizing and tap targets made more consistent
+- wrapped multi-card rows more safely for mobile layouts
+- section rhythm and vertical spacing cleaned up
 
 Latest review notes:
 - archetype labels aligned more closely with the original FACEMAXX brief
