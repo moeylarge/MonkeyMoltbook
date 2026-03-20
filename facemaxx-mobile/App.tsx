@@ -2009,17 +2009,21 @@ export default function App() {
         <View style={styles.timelineCard}>
           <Text style={styles.retentionTitle}>Timeline graph</Text>
           <View style={styles.timelineBars}>
-            {history.slice().reverse().map((item) => (
+            {history.slice().reverse().map((item) => {
+              const isCleanTimelineScan = isReliableScan(item);
+              return (
               <View key={item.id} style={styles.timelineBarWrap}>
                 <View style={styles.timelineTrack}>
-                  <View style={[styles.timelineBar, { height: `${Math.max(12, item.score)}%` }]} />
-                  <View style={[styles.timelinePotentialBar, { height: `${Math.max(item.score, item.potential)}%` }]} />
+                  <View style={[styles.timelineBar, !isCleanTimelineScan && styles.timelineBarProvisional, { height: `${Math.max(12, item.score)}%` }]} />
+                  <View style={[styles.timelinePotentialBar, !isCleanTimelineScan && styles.timelinePotentialBarProvisional, { height: `${Math.max(item.score, item.potential)}%` }]} />
                 </View>
-                <Text style={styles.timelineScore}>{item.score}</Text>
+                <Text style={[styles.timelineScore, !isCleanTimelineScan && styles.timelineScoreProvisional]}>{item.score}</Text>
+                <Text style={[styles.timelineTag, isCleanTimelineScan ? styles.timelineTagClean : styles.timelineTagProvisional]}>{isCleanTimelineScan ? 'clean' : 'prov'}</Text>
               </View>
-            ))}
+              );
+            })}
           </View>
-          <Text style={styles.timelineLegend}>Solid = current optimization score · Outline = max potential analysis</Text>
+          <Text style={styles.timelineLegend}>Solid = current score · Outline = potential · Purple = clean scan · Rose = provisional scan</Text>
         </View>
         </>
       )}
@@ -2518,8 +2522,14 @@ const styles = StyleSheet.create({
   timelineBarWrap: { flex: 1, alignItems: 'center' },
   timelineTrack: { width: '100%', height: 140, justifyContent: 'flex-end', alignItems: 'center', position: 'relative' },
   timelineBar: { position: 'absolute', bottom: 0, width: '56%', borderRadius: 14, backgroundColor: '#7C5CFF' },
+  timelineBarProvisional: { backgroundColor: '#C96A84' },
   timelinePotentialBar: { position: 'absolute', bottom: 0, width: '74%', borderRadius: 16, borderWidth: 1, borderColor: '#14E38B', backgroundColor: 'transparent' },
+  timelinePotentialBarProvisional: { borderColor: '#FFB4C0' },
   timelineScore: { color: '#FFFFFF', fontSize: 12, fontWeight: '800', marginTop: 10 },
+  timelineScoreProvisional: { color: '#FFD7DF' },
+  timelineTag: { fontSize: 10, fontWeight: '900', letterSpacing: 0.7, marginTop: 6, textTransform: 'uppercase' },
+  timelineTagClean: { color: '#9DDEBF' },
+  timelineTagProvisional: { color: '#FFB4C0' },
   timelineLegend: { color: '#98A0B8', fontSize: 12, lineHeight: 18, marginTop: 14 },
   historyCard: { padding: 14, borderRadius: 22, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#232535', flexDirection: 'row', alignItems: 'center', gap: 12 },
   historyCardActive: { borderColor: '#7C5CFF' },
