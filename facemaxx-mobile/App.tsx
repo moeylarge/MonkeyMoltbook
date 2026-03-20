@@ -49,6 +49,8 @@ type ScanRecord = {
   rank: string;
   archetype: string;
   breakdown: BreakdownItem[];
+  deltaFromPrevious?: number;
+  streakDays?: number;
 };
 
 type ImprovementItem = {
@@ -88,18 +90,35 @@ function hashString(input: string) {
 
 function getTierProgress(score: number) {
   if (score < 55) {
-    return { nextTier: 'Above Average', nextThreshold: 55 };
+    return { currentTier: 'Normie', nextTier: 'Above Average', currentThreshold: 0, nextThreshold: 55 };
   }
   if (score < 72) {
-    return { nextTier: 'Attractive', nextThreshold: 72 };
+    return { currentTier: 'Above Average', nextTier: 'Attractive', currentThreshold: 55, nextThreshold: 72 };
   }
   if (score < 82) {
-    return { nextTier: 'Elite', nextThreshold: 82 };
+    return { currentTier: 'Attractive', nextTier: 'Elite', currentThreshold: 72, nextThreshold: 82 };
   }
   if (score < 92) {
-    return { nextTier: 'Genetic Outlier', nextThreshold: 92 };
+    return { currentTier: 'Elite', nextTier: 'Genetic Outlier', currentThreshold: 82, nextThreshold: 92 };
   }
-  return { nextTier: 'Genetic Outlier', nextThreshold: 100 };
+  return { currentTier: 'Genetic Outlier', nextTier: 'Maxed', currentThreshold: 92, nextThreshold: 100 };
+}
+
+function getProgressPercent(score: number) {
+  const progress = getTierProgress(score);
+  const span = Math.max(1, progress.nextThreshold - progress.currentThreshold);
+  return clamp(Math.round(((score - progress.currentThreshold) / span) * 100), 0, 100);
+}
+
+function getCalendarDayKey(iso: string) {
+  return new Date(iso).toISOString().slice(0, 10);
+}
+
+function getDayDiff(a: string, b: string) {
+  const dayMs = 24 * 60 * 60 * 1000;
+  const aMs = new Date(`${getCalendarDayKey(a)}T00:00:00Z`).getTime();
+  const bMs = new Date(`${getCalendarDayKey(b)}T00:00:00Z`).getTime();
+  return Math.round((aMs - bMs) / dayMs);
 }
 
 function getIdentityTagline(scan: ScanRecord) {
@@ -171,6 +190,33 @@ function buildImprovementPlan(scan: ScanRecord): ImprovementItem[] {
       scoreLift: Math.min(5, Math.max(1, Math.round(secondary.lift / 4))),
     },
   ];
+}
+
+function buildRetentionStats(history: ScanRecord[]) {
+  const ordered = [...history].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  const bestScore = ordered.reduce((max, item) => Math.max(max, item.score), 0);
+  const latest = ordered[ordered.length - 1] ?? null;
+  const previous = ordered[ordered.length - 2] ?? null;
+  const scoreDelta = latest && previous ? latest.score - previous.score : 0;
+
+  let streakDays = ordered.length ? 1 : 0;
+  for (let i = ordered.length - 1; i > 0; i -= 1) {
+    const diff = getDayDiff(ordered[i].createdAt, ordered[i - 1].createdAt);
+    if (diff === 0) continue;
+    if (diff === 1) {
+      streakDays += 1;
+      continue;
+    }
+    break;
+  }
+
+  return {
+    bestScore,
+    latest,
+    previous,
+    scoreDelta,
+    streakDays,
+  };
 }
 
 function buildScanFromSeed(seedSource: string, photoLabel: string, imageUri?: string): ScanRecord {
@@ -304,6 +350,7 @@ export default function App() {
   const activeScan = currentScan ?? history[0] ?? null;
   const activeBreakdown = activeScan?.breakdown ?? [];
   const eliteDistance = activeScan ? Math.max(0, 100 - activeScan.potential) : 18;
+  const retentionStats = useMemo(() => buildRetentionStats(history), [history]);
 
   const topImprovement = useMemo(() => {
     if (!activeScan) return null;
@@ -313,6 +360,7 @@ export default function App() {
   const improvementPlan = useMemo(() => (activeScan ? buildImprovementPlan(activeScan) : []), [activeScan]);
   const identityTagline = useMemo(() => (activeScan ? getIdentityTagline(activeScan) : ''), [activeScan]);
   const tierProgress = useMemo(() => (activeScan ? getTierProgress(activeScan.score) : null), [activeScan]);
+  const tierProgressPercent = useMemo(() => (activeScan ? getProgressPercent(activeScan.score) : 0), [activeScan]);
 
   useEffect(() => {
     const loadHistory = async () => {
@@ -531,7 +579,24 @@ export default function App() {
 
   const startScan = async () => {
     const seed = imageUri ?? `${selectedPhoto}-${Date.now()}`;
-    const scan = buildScanFromSeed(seed, selectedPhoto, imageUri);
+    const rawScan = buildScanFromSeed(seed, selectedPhoto, imageUri);
+    const previous = history[0];
+    const deltaFromPrevious = previous ? rawScan.score - previous.score : 0;
+    const streakDays = previous
+      ? (() => {
+          const diff = getDayDiff(rawScan.createdAt, previous.createdAt);
+          if (diff === 0) return previous.streakDays ?? 1;
+          if (diff === 1) return (previous.streakDays ?? 1) + 1;
+          return 1;
+        })()
+      : 1;
+
+    const scan: ScanRecord = {
+      ...rawScan,
+      deltaFromPrevious,
+      streakDays,
+    };
+
     setCurrentScan(scan);
     const nextHistory = [scan, ...history].slice(0, 12);
     await persistHistory(nextHistory);
@@ -713,9 +778,17 @@ export default function App() {
           <Text style={styles.identityLineTitle}>Identity tagline</Text>
           <Text style={styles.identityLineText}>{identityTagline}</Text>
           {!!tierProgress && (
-            <Text style={styles.identityProgressText}>
-              {Math.max(0, tierProgress.nextThreshold - activeScan.score)} points away from {tierProgress.nextTier}
-            </Text>
+            <>
+              <Text style={styles.identityProgressText}>
+                {Math.max(0, tierProgress.nextThreshold - activeScan.score)} points away from {tierProgress.nextTier}
+              </Text>
+              <View style={styles.progressTierTrack}>
+                <View style={[styles.progressTierFill, { width: `${tierProgressPercent}%` }]} />
+              </View>
+              <Text style={styles.progressTierCaption}>
+                {tierProgressPercent}% through {tierProgress.currentTier}
+              </Text>
+            </>
           )}
         </View>
 
@@ -838,6 +911,37 @@ export default function App() {
     <View style={styles.screenBlock}>
       <Text style={styles.sectionKick}>Saved history</Text>
       <Text style={styles.sectionTitle}>Local scan records for rerating and progress tracking.</Text>
+
+      {!!history.length && (
+        <View style={styles.retentionSummaryCard}>
+          <View style={styles.retentionSummaryTop}>
+            <Text style={styles.retentionTitle}>Glow-up tracker</Text>
+            <Text style={styles.streakBadge}>{retentionStats.streakDays}-day streak</Text>
+          </View>
+          <View style={styles.retentionSummaryRow}>
+            <View style={styles.retentionStatBox}>
+              <Text style={styles.retentionStatValue}>{retentionStats.bestScore}</Text>
+              <Text style={styles.retentionStatLabel}>Best score</Text>
+            </View>
+            <View style={styles.retentionStatBox}>
+              <Text style={styles.retentionStatValue}>{retentionStats.scoreDelta >= 0 ? `+${retentionStats.scoreDelta}` : retentionStats.scoreDelta}</Text>
+              <Text style={styles.retentionStatLabel}>Last change</Text>
+            </View>
+            <View style={styles.retentionStatBox}>
+              <Text style={styles.retentionStatValue}>{history.length}</Text>
+              <Text style={styles.retentionStatLabel}>Scans logged</Text>
+            </View>
+          </View>
+          <Text style={styles.retentionCopy}>
+            {retentionStats.scoreDelta > 0
+              ? `${retentionStats.scoreDelta > 1 ? `+${retentionStats.scoreDelta} improvement detected` : '+1 improvement detected'} from your last scan.`
+              : retentionStats.scoreDelta < 0
+                ? `Current read is ${Math.abs(retentionStats.scoreDelta)} lower than your last scan. Lighting or angle may be suppressing the score.`
+                : 'No score change detected on the last scan. Try angle, lighting, hair control, or skin-day timing.'}
+          </Text>
+        </View>
+      )}
+
       {loadingHistory ? (
         <View style={styles.loadingCard}>
           <ActivityIndicator color="#FF4FD8" />
@@ -858,6 +962,15 @@ export default function App() {
             <View style={styles.historyMeta}>
               <Text style={styles.historyTitle}>{item.archetype}</Text>
               <Text style={styles.historySub}>{formatTime(item.createdAt)} • {item.photoLabel}</Text>
+              <Text style={styles.historyDeltaText}>
+                {typeof item.deltaFromPrevious === 'number'
+                  ? item.deltaFromPrevious > 0
+                    ? `+${item.deltaFromPrevious} from previous`
+                    : item.deltaFromPrevious < 0
+                      ? `${item.deltaFromPrevious} from previous`
+                      : 'No change from previous'
+                  : 'First logged scan'}
+              </Text>
             </View>
             <View style={styles.historyScoreWrap}>
               <Text style={styles.historyScore}>{item.score}</Text>
@@ -1065,6 +1178,9 @@ const styles = StyleSheet.create({
   identityLineTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
   identityLineText: { color: '#AAB0C5', fontSize: 14, lineHeight: 20, marginTop: 6 },
   identityProgressText: { color: '#14E38B', fontSize: 13, fontWeight: '800', marginTop: 10 },
+  progressTierTrack: { height: 10, borderRadius: 999, backgroundColor: '#1A1C24', overflow: 'hidden', marginTop: 10 },
+  progressTierFill: { height: '100%', borderRadius: 999, backgroundColor: '#14E38B' },
+  progressTierCaption: { color: '#98A0B8', fontSize: 12, fontWeight: '700', marginTop: 8 },
   breakCard: { padding: 18, borderRadius: 22, backgroundColor: '#11121A', borderWidth: 1, borderColor: '#232535', gap: 14 },
   breakTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   breakLabel: { color: '#FFFFFF', fontSize: 18, fontWeight: '800', flex: 1 },
@@ -1099,6 +1215,13 @@ const styles = StyleSheet.create({
   shareCaption: { color: '#B7BBD0', fontSize: 14, lineHeight: 20, marginTop: 8 },
   loadingCard: { padding: 22, borderRadius: 24, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#232535', alignItems: 'center', gap: 10 },
   loadingText: { color: '#C8CDDF', fontSize: 14 },
+  retentionSummaryCard: { padding: 20, borderRadius: 24, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#2A2D3F', gap: 14 },
+  retentionSummaryTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  streakBadge: { color: '#14E38B', fontSize: 12, fontWeight: '800', backgroundColor: '#12261C', paddingHorizontal: 10, paddingVertical: 7, borderRadius: 999, overflow: 'hidden' },
+  retentionSummaryRow: { flexDirection: 'row', gap: 10 },
+  retentionStatBox: { flex: 1, padding: 14, borderRadius: 18, backgroundColor: '#171922', borderWidth: 1, borderColor: '#282B3D' },
+  retentionStatValue: { color: '#FFFFFF', fontSize: 24, fontWeight: '900' },
+  retentionStatLabel: { color: '#98A0B8', fontSize: 12, marginTop: 4 },
   historyCard: { padding: 14, borderRadius: 22, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#232535', flexDirection: 'row', alignItems: 'center', gap: 12 },
   historyCardActive: { borderColor: '#7C5CFF' },
   historyThumb: { width: 56, height: 72, borderRadius: 14, backgroundColor: '#0D0E15', overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
@@ -1107,6 +1230,7 @@ const styles = StyleSheet.create({
   historyMeta: { flex: 1 },
   historyTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
   historySub: { color: '#98A0B8', fontSize: 12, marginTop: 4 },
+  historyDeltaText: { color: '#14E38B', fontSize: 12, fontWeight: '700', marginTop: 6 },
   historyScoreWrap: { alignItems: 'flex-end' },
   historyScore: { color: '#FFFFFF', fontSize: 24, fontWeight: '900' },
   historyPotential: { color: '#14E38B', fontSize: 12, fontWeight: '800', marginTop: 4 },

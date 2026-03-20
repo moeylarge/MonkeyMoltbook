@@ -43,7 +43,12 @@ Current next steps:
    - actionable recommendations by category
    - impact / difficulty / time-to-result metadata
    - identity tagline + uncertainty loop copy
-3. Next recommended build target: Phase 5 retention systems
+3. Phase 5 retention systems are now in progress in `facemaxx-mobile/App.tsx`:
+   - glow-up tracker summary
+   - best score / last change / scan count
+   - streak display
+   - per-scan delta labels
+   - progress-to-next-tier bar
 4. Later polish: screenshots / motion / spacing refinement
 
 ## UFC note
