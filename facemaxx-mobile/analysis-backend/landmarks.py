@@ -1,45 +1,65 @@
 from io import BytesIO
+from pathlib import Path
 from typing import Any, Dict
+from urllib.request import urlretrieve
 
 import numpy as np
 from PIL import Image
 
 try:
     import mediapipe as mp
+    from mediapipe.tasks.python import vision
 except Exception:  # pragma: no cover
     mp = None
+    vision = None
 
-_FACE_MESH = None
+_FACE_LANDMARKER = None
+_MODEL_URL = "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
+_MODEL_PATH = Path(__file__).resolve().parent / "models" / "face_landmarker.task"
 
 
-def _get_mesh():
-    global _FACE_MESH
-    if mp is None:
+def _ensure_model() -> str | None:
+    try:
+        _MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
+        if not _MODEL_PATH.exists():
+            urlretrieve(_MODEL_URL, _MODEL_PATH)
+        return str(_MODEL_PATH)
+    except Exception:
         return None
-    if not hasattr(mp, 'solutions'):
+
+
+def _get_landmarker():
+    global _FACE_LANDMARKER
+    if mp is None or vision is None:
         return None
-    if _FACE_MESH is None:
-        _FACE_MESH = mp.solutions.face_mesh.FaceMesh(
-            static_image_mode=True,
-            max_num_faces=1,
-            refine_landmarks=True,
-            min_detection_confidence=0.5,
+    if _FACE_LANDMARKER is None:
+        model_path = _ensure_model()
+        if not model_path:
+            return None
+        base_options = mp.tasks.BaseOptions(model_asset_path=model_path)
+        options = vision.FaceLandmarkerOptions(
+            base_options=base_options,
+            output_face_blendshapes=False,
+            output_facial_transformation_matrixes=False,
+            num_faces=1,
         )
-    return _FACE_MESH
+        _FACE_LANDMARKER = vision.FaceLandmarker.create_from_options(options)
+    return _FACE_LANDMARKER
 
 
 def run_landmarks(image_bytes: bytes, detection: Dict[str, Any]) -> Dict[str, Any]:
     image = np.array(Image.open(BytesIO(image_bytes)).convert("RGB"))
-    mesh = _get_mesh()
-    if mesh is None:
-        warning = "MediaPipe installed but FaceMesh API not exposed in this runtime" if mp is not None else "MediaPipe not available yet"
+    landmarker = _get_landmarker()
+    if landmarker is None:
+        warning = "MediaPipe Tasks FaceLandmarker unavailable or model download failed" if mp is not None else "MediaPipe not available yet"
         return {"available": False, "landmarkCount": 0, "warning": warning}
 
-    result = mesh.process(image)
-    if not result.multi_face_landmarks:
+    mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=image)
+    result = landmarker.detect(mp_image)
+    if not result.face_landmarks:
         return {"available": True, "landmarkCount": 0, "warning": "No landmarks detected"}
 
-    points = result.multi_face_landmarks[0].landmark
+    points = result.face_landmarks[0]
     preview = [{"x": round(p.x, 6), "y": round(p.y, 6), "z": round(p.z, 6)} for p in points[:12]]
 
     return {
