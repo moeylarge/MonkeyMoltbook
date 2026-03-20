@@ -27,6 +27,21 @@ def detect_image_format(image_bytes: bytes):
     return None
 
 
+def detect_declared_format(filename: str | None, content_type: str | None):
+    normalized_type = (content_type or '').lower()
+    if normalized_type.startswith('image/'):
+        return normalized_type.split('/', 1)[1]
+
+    normalized_name = (filename or '').lower()
+    if '.' in normalized_name:
+        ext = normalized_name.rsplit('.', 1)[1]
+        if ext in {'jpg', 'jpeg'}:
+            return 'jpeg'
+        if ext in {'png', 'gif', 'webp'}:
+            return ext
+    return None
+
+
 @app.get("/health")
 def health():
     return {"ok": True, "service": "looksmaxxing-analysis-backend"}
@@ -36,11 +51,14 @@ def health():
 async def analyze(image: UploadFile = File(...)):
     image_bytes = await image.read()
     detected_format = detect_image_format(image_bytes)
+    declared_format = detect_declared_format(image.filename, image.content_type)
     request_debug = {
         "filename": image.filename,
         "contentType": image.content_type,
         "byteLength": len(image_bytes),
+        "declaredFormat": declared_format,
         "detectedFormat": detected_format,
+        "formatMismatch": bool(declared_format and detected_format and declared_format != detected_format),
         "sha256Prefix": hashlib.sha256(image_bytes).hexdigest()[:16] if image_bytes else None,
     }
 
