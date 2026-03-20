@@ -306,6 +306,81 @@ function getIdentityTagline(scan: ScanRecord) {
   return `You are a ${scan.archetype} with ${upside >= 12 ? 'high' : upside >= 8 ? 'real' : 'measured'} upside. Improving ${best.label.toLowerCase()} can push you toward ${scan.potential >= 82 ? 'Elite' : scan.potential >= 72 ? 'Attractive' : 'Above Average'}. ${structureNote}`;
 }
 
+function getRecoveryGuidance(scan: ScanRecord) {
+  const reason = scan.rejectionReason ?? '';
+  const quality = scan.measurement?.quality;
+
+  if (reason === 'No face detected') {
+    return {
+      title: 'We could not lock onto a clear face yet',
+      body: 'The scan did not get a stable front-facing face read, so the result is being held back instead of pretending to be certain.',
+      tips: [
+        'Use a brighter photo with your full face centered in frame.',
+        'Keep only one person in the shot and avoid heavy crops.',
+        'Use a straight-on angle with eyes visible and minimal shadow.',
+      ],
+    };
+  }
+
+  if (reason === 'Multiple faces detected') {
+    return {
+      title: 'More than one face is confusing the read',
+      body: 'FACEMAXX needs a single subject to map structure cleanly. Group photos and reflections can tank confidence fast.',
+      tips: [
+        'Upload a solo photo only.',
+        'Crop out friends, mirrors, posters, or background faces.',
+        'Keep your face as the main subject in the center of frame.',
+      ],
+    };
+  }
+
+  if (reason === 'Face too small in frame') {
+    return {
+      title: 'Your face is too far from the camera',
+      body: 'The app can see a face, but it is too small to extract reliable geometry and detail.',
+      tips: [
+        'Move closer so your face fills more of the frame.',
+        'Use less background and less zoomed-out composition.',
+        'Retake with a chest-up or head-and-shoulders crop.',
+      ],
+    };
+  }
+
+  if (reason === 'Angle too strong for reliable scoring') {
+    return {
+      title: 'The angle is too aggressive for a clean read',
+      body: 'Strong tilt or side angle can make facial structure look better or worse than it really is, so the scan is being conservative.',
+      tips: [
+        'Retake with your face pointed straight at the camera.',
+        'Keep your head level and avoid high-angle or low-angle shots.',
+        'Use even front lighting so both sides of the face read clearly.',
+      ],
+    };
+  }
+
+  if (reason === 'Landmarks too weak for confident analysis') {
+    return {
+      title: 'The structure read is too soft right now',
+      body: 'FACEMAXX found a face, but landmark detail is too weak for a confident geometry pass.',
+      tips: [
+        'Use a sharper photo with less motion blur.',
+        'Remove sunglasses, heavy shadow, or anything covering key features.',
+        `Try better lighting and contrast — current landmark confidence is ${Math.round((quality?.landmarkConfidence ?? 0) * 100)}%.`,
+      ],
+    };
+  }
+
+  return {
+    title: 'This scan is being treated cautiously',
+    body: 'The app found enough signal to show a result, but not enough to act fully certain.',
+    tips: [
+      'Try a brighter, sharper front-facing photo.',
+      'Keep one face only and avoid tight or awkward crops.',
+      'Retake with cleaner lighting and stronger contrast.',
+    ],
+  };
+}
+
 function buildAffiliateItems(scan: ScanRecord): AffiliateItem[] {
   const skin = scan.breakdown.find((item) => item.key === 'skin');
   const hair = scan.breakdown.find((item) => item.key === 'hair');
@@ -1638,6 +1713,7 @@ export default function App() {
   const renderResult = () => {
     if (!activeScan) return null;
     const backendMeasurements = activeScan.measurement;
+    const recoveryGuidance = getRecoveryGuidance(activeScan);
     return (
       <View style={styles.screenBlock}>
         <Text style={styles.sectionKick}>Result impact</Text>
@@ -1672,8 +1748,24 @@ export default function App() {
 
         {!!activeScan.rejectionReason && (
           <View style={styles.warningCard}>
-            <Text style={styles.warningTitle}>Low-confidence / rejection state</Text>
-            <Text style={styles.warningText}>{activeScan.rejectionReason}</Text>
+            <Text style={styles.warningEyebrow}>SCAN NEEDS A CLEANER PHOTO</Text>
+            <Text style={styles.warningTitle}>{recoveryGuidance.title}</Text>
+            <Text style={styles.warningText}>{recoveryGuidance.body}</Text>
+            <View style={styles.tipList}>
+              {recoveryGuidance.tips.map((tip) => (
+                <View key={tip} style={styles.tipRow}>
+                  <Text style={styles.tipBullet}>•</Text>
+                  <Text style={styles.tipText}>{tip}</Text>
+                </View>
+              ))}
+            </View>
+            <View style={styles.warningMetaRow}>
+              <Text style={styles.warningMetaPill}>Reason: {activeScan.rejectionReason}</Text>
+              <Text style={styles.warningMetaPill}>Confidence: {activeScan.confidence ?? 0}</Text>
+            </View>
+            <Pressable style={styles.secondaryButton} onPress={() => setScreen('upload')}>
+              <Text style={styles.secondaryButtonText}>Try a Better Photo</Text>
+            </Pressable>
           </View>
         )}
 
@@ -2305,8 +2397,15 @@ const styles = StyleSheet.create({
   miniStatValue: { color: '#FFFFFF', fontSize: 34, fontWeight: '900', marginTop: 6 },
   warningCard: { padding: 18, borderRadius: 20, backgroundColor: '#23151A', borderWidth: 1, borderColor: '#5A2C34' },
   warningCardMuted: { padding: 18, borderRadius: 20, backgroundColor: '#141820', borderWidth: 1, borderColor: '#2C3447' },
-  warningTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
+  warningEyebrow: { color: '#FF8D9E', fontSize: 11, fontWeight: '900', letterSpacing: 1.1 },
+  warningTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '800', marginTop: 8 },
   warningText: { color: '#D2D6E5', fontSize: 13, lineHeight: 19, marginTop: 8 },
+  tipList: { marginTop: 12, gap: 8 },
+  tipRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  tipBullet: { color: '#FF8D9E', fontSize: 14, lineHeight: 19, fontWeight: '900' },
+  tipText: { flex: 1, color: '#F2F4FB', fontSize: 13, lineHeight: 19 },
+  warningMetaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 },
+  warningMetaPill: { color: '#FFD7DF', fontSize: 12, fontWeight: '700', backgroundColor: '#341D24', borderWidth: 1, borderColor: '#5A2C34', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6 },
   metricPanel: { padding: 18, borderRadius: 22, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#232535', gap: 12 },
   metricPanelMuted: { padding: 18, borderRadius: 22, backgroundColor: '#151621', borderWidth: 1, borderColor: '#2C3145', gap: 8 },
   metricPanelTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
