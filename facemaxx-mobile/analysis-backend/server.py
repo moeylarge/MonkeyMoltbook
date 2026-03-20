@@ -80,10 +80,11 @@ async def analyze(image: UploadFile = File(...)):
     looksmaxxing = run_calibration(pre, det, lm)
 
     logger.info(
-        "/analyze processed debug: width=%s height=%s faceCount=%s landmarks=%s score=%s confidence=%s",
+        "/analyze processed debug: width=%s height=%s faceCount=%s significantFaceCount=%s landmarks=%s score=%s confidence=%s",
         pre.get("width"),
         pre.get("height"),
         det.get("faceCount"),
+        det.get("significantFaceCount"),
         lm.get("landmarkCount"),
         looksmaxxing.get("score"),
         looksmaxxing.get("confidence"),

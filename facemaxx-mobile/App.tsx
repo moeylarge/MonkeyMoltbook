@@ -6,6 +6,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { StatusBar } from 'expo-status-bar';
 import heic2any from 'heic2any';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import type { ComponentRef } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -333,11 +334,11 @@ function getRecoveryGuidance(scan: ScanRecord) {
   if (reason === 'Multiple faces detected') {
     return {
       title: 'More than one face is confusing the read',
-      body: `${BRAND_NAME} needs a single subject to map structure cleanly. Group photos and reflections can tank confidence fast.`,
+      body: `${BRAND_NAME} needs one clear subject. Mirror doubles, background people, posters, and strong reflections can all get read like a second face even when the photo seems mostly solo.`,
       tips: [
-        'Upload a solo photo only.',
-        'Crop out friends, mirrors, posters, or background faces.',
-        'Keep your face as the main subject in the center of frame.',
+        'Use a true solo photo with no friend, poster, or TV face behind you.',
+        'If this is a mirror shot, crop tighter or switch to a normal front-camera selfie.',
+        'Keep your face as the biggest subject near the center of frame.',
       ],
     };
   }
@@ -798,7 +799,8 @@ async function buildScanFromBackend(image: AnalysisImage | undefined, photoLabel
     const brightness = Number(quality?.brightness ?? 0);
     const contrast = Number(quality?.contrast ?? 0);
     const blurScore = Number(quality?.blurScore ?? 0);
-    const faceCount = Number(detection?.faceCount ?? 0);
+    const rawFaceCount = Number(detection?.faceCount ?? 0);
+    const faceCount = Number(detection?.significantFaceCount ?? rawFaceCount ?? 0);
     const bbox = detection?.primaryFace?.bbox ?? [0, 0, 0, 0];
     const imageWidth = Number(quality?.width ?? 1);
     const imageHeight = Number(quality?.height ?? 1);
@@ -818,7 +820,13 @@ async function buildScanFromBackend(image: AnalysisImage | undefined, photoLabel
     const backendMeasurements = looksmaxxing?.measurements ?? {};
     const qualityRead = brightness < 70 ? 'lighting is suppressing detail' : contrast < 30 ? 'contrast is muting structure' : blurScore < 40 ? 'image softness is limiting sharpness' : 'input quality is strong enough for a cleaner read';
     const geometryRead = landmarkCount > 0 ? `${landmarkCount} landmarks were mapped through the backend stack.` : 'landmark coverage is weak, so structure read is less reliable.';
-    const detectionRead = faceCount > 1 ? 'Multiple faces are in frame, which weakens confidence.' : faceCount === 1 ? 'A single aligned face was detected cleanly.' : 'No stable face alignment was found.';
+    const detectionRead = faceCount > 1
+      ? 'More than one meaningful face region was detected. Reflections, background people, posters, or duplicate mirror reads can trip this.'
+      : faceCount === 1
+        ? 'A single aligned face was detected cleanly.'
+        : rawFaceCount > 1
+          ? 'Extra tiny face-like regions were ignored because they looked too small or too weak to count as a real second subject.'
+          : 'No stable face alignment was found.';
 
     const breakdown: BreakdownItem[] = [
       {
@@ -1142,7 +1150,8 @@ export default function App() {
   const [lastExportPath, setLastExportPath] = useState<string | null>(null);
 
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
-  const cameraRef = useRef<any>(null);
+  const cameraRef = useRef<ComponentRef<typeof CameraView> | null>(null);
+  const webCameraInputRef = useRef<HTMLInputElement | null>(null);
 
   const fade = useRef(new Animated.Value(0)).current;
   const slide = useRef(new Animated.Value(18)).current;
@@ -1156,6 +1165,15 @@ export default function App() {
   const barAnims = useRef(Array.from({ length: 6 }, () => new Animated.Value(0))).current;
   const targetBarAnims = useRef(Array.from({ length: 6 }, () => new Animated.Value(0))).current;
   const revealAnims = useRef(Array.from({ length: 6 }, () => new Animated.Value(0))).current;
+
+  useEffect(() => {
+    return () => {
+      if (Platform.OS === 'web' && webCameraInputRef.current) {
+        webCameraInputRef.current.remove();
+        webCameraInputRef.current = null;
+      }
+    };
+  }, []);
 
   const activeScan = currentScan ?? history[0] ?? null;
   const activeBreakdown = activeScan?.breakdown ?? [];
@@ -1518,6 +1536,56 @@ export default function App() {
     }
   };
 
+  const triggerWebCameraCapture = async () => {
+    if (Platform.OS !== 'web') return false;
+    try {
+      if (!webCameraInputRef.current) {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.capture = 'user';
+        input.style.position = 'fixed';
+        input.style.opacity = '0';
+        input.style.pointerEvents = 'none';
+        input.style.width = '1px';
+        input.style.height = '1px';
+        input.onchange = async () => {
+          const file = input.files?.[0];
+          input.value = '';
+          if (!file) return;
+          try {
+            setBusyPicking(true);
+            const objectUrl = URL.createObjectURL(file);
+            const processed = await processWebImageForUpload(objectUrl, file.name || 'camera-capture.jpg', file.type || 'image/jpeg');
+            URL.revokeObjectURL(objectUrl);
+            const nextImage: AnalysisImage = {
+              uri: processed.previewUrl,
+              width: processed.width,
+              height: processed.height,
+              fileSize: processed.fileSize,
+              mimeType: processed.mimeType,
+              originalUri: processed.previewUrl,
+              originalMimeType: file.type || processed.mimeType,
+            };
+            setImageUri(nextImage.uri);
+            setSelectedImage(nextImage);
+            setSelectedPhoto('Front selfie');
+          } catch {
+            Alert.alert('Camera capture failed', `The browser camera flow did not return a usable image. Try again or use your library photo.`);
+          } finally {
+            setBusyPicking(false);
+          }
+        };
+        document.body.appendChild(input);
+        webCameraInputRef.current = input;
+      }
+      webCameraInputRef.current.click();
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const pickImage = async () => {
     try {
       setBusyPicking(true);
@@ -1570,6 +1638,14 @@ export default function App() {
   };
 
   const openCamera = async () => {
+    if (Platform.OS === 'web') {
+      const triggered = await triggerWebCameraCapture();
+      if (!triggered) {
+        Alert.alert('Camera unavailable', 'Your browser did not open the camera capture flow. Try Chrome/Safari camera permissions or use the library upload button instead.');
+      }
+      return;
+    }
+
     const permission = cameraPermission?.granted ? cameraPermission : await requestCameraPermission();
     if (!permission?.granted) {
       Alert.alert('Camera needed', `Allow camera access so ${BRAND_NAME} can capture a face directly in-app.`);
@@ -1808,7 +1884,7 @@ export default function App() {
         <Text style={styles.secondaryButtonText}>{busyPicking ? 'Opening Photos…' : imageUri ? 'Change Library Photo' : 'Choose Photo from Library'}</Text>
       </Pressable>
       <Pressable style={styles.secondaryButton} onPress={openCamera}>
-        <Text style={styles.secondaryButtonText}>Take Photo in App</Text>
+        <Text style={styles.secondaryButtonText}>{Platform.OS === 'web' ? 'Take Photo with Camera' : 'Take Photo in App'}</Text>
       </Pressable>
       <Pressable style={styles.primaryButton} onPress={startScan}>
         <Text style={styles.primaryButtonText}>Run Scan</Text>

@@ -10,6 +10,7 @@ def run_calibration(pre: Dict[str, Any], det: Dict[str, Any], lm: Dict[str, Any]
     contrast = float(pre.get("contrast", 32))
     blur = float(pre.get("blurScore", 50))
     face_count = int(det.get("faceCount", 0))
+    significant_face_count = int(det.get("significantFaceCount", face_count))
     landmark_count = int(lm.get("landmarkCount", 0))
     m = lm.get("measurements", {}) or {}
 
@@ -37,7 +38,7 @@ def run_calibration(pre: Dict[str, Any], det: Dict[str, Any], lm: Dict[str, Any]
     warnings = []
     if face_count == 0:
         rejection_reason = "No face detected"
-    elif face_count > 1:
+    elif significant_face_count > 1:
         rejection_reason = "Multiple faces detected"
     elif landmark_count < 120:
         rejection_reason = "Weak landmark coverage"
