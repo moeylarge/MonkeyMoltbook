@@ -87,7 +87,8 @@ Still pending:
 - `/analyze` now succeeds end-to-end on a real face test image: OpenCV preprocessing works, InsightFace detection works, MediaPipe landmark extraction works via the Tasks API, and calibration returns a structured FACEMAXX payload
 - FACEMAXX app now prefers the local backend (`http://127.0.0.1:8089/analyze`) for scans and battle analysis, with heuristic fallback if the backend is unavailable
 - response mapping has been deepened so backend quality/detection/landmark signals feed more directly into UI explanations and stored measurement quality fields
-- next backend/app step: expose even richer backend measurements (ratios/symmetry fields) and expand recommendation logic around them
+- backend now emits richer measurement fields (ratios/symmetry-style metrics), and the app now threads more of those into stored measurements, identity copy, battle copy, and recommendation detail
+- next backend/app step: expose these richer measurements visually in the UI and tune archetype/recommendation logic more directly around them
 - collect the first 25 real labeled samples and run the merge flow on actual data
 - real monetization plumbing only if Moey wants to move beyond prototype framing
 

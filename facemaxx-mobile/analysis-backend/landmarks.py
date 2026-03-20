@@ -47,6 +47,10 @@ def _get_landmarker():
     return _FACE_LANDMARKER
 
 
+def _point(p):
+    return {"x": round(p.x, 6), "y": round(p.y, 6), "z": round(p.z, 6)}
+
+
 def run_landmarks(image_bytes: bytes, detection: Dict[str, Any]) -> Dict[str, Any]:
     image = np.array(Image.open(BytesIO(image_bytes)).convert("RGB"))
     landmarker = _get_landmarker()
@@ -60,11 +64,59 @@ def run_landmarks(image_bytes: bytes, detection: Dict[str, Any]) -> Dict[str, An
         return {"available": True, "landmarkCount": 0, "warning": "No landmarks detected"}
 
     points = result.face_landmarks[0]
-    preview = [{"x": round(p.x, 6), "y": round(p.y, 6), "z": round(p.z, 6)} for p in points[:12]]
+    preview = [_point(p) for p in points[:12]]
+
+    left_eye = points[33]
+    right_eye = points[263]
+    nose_tip = points[1]
+    mouth = points[13]
+    left_cheek = points[234]
+    right_cheek = points[454]
+    chin = points[152]
+    forehead = points[10]
+
+    interocular_ratio = abs(right_eye.x - left_eye.x)
+    jaw_width_ratio = abs(right_cheek.x - left_cheek.x)
+    face_width = jaw_width_ratio if jaw_width_ratio > 0 else 0.0001
+    face_height = abs(chin.y - forehead.y) if abs(chin.y - forehead.y) > 0 else 0.0001
+    upper_third = abs(left_eye.y - forehead.y) / face_height
+    mid_third = abs(nose_tip.y - left_eye.y) / face_height
+    lower_third = abs(chin.y - nose_tip.y) / face_height
+    nose_center_offset = abs(nose_tip.x - ((left_cheek.x + right_cheek.x) / 2)) / face_width
+    eye_height_delta = abs(left_eye.y - right_eye.y) / face_height
+    left_distance = abs(nose_tip.x - left_eye.x)
+    right_distance = abs(right_eye.x - nose_tip.x)
+    left_right_distance_delta = abs(left_distance - right_distance) / face_width
+    cheek_to_jaw_proxy_ratio = abs(right_cheek.x - left_cheek.x) / face_width
+    facial_width_height_ratio = face_width / face_height
+    symmetry_score = max(0.0, 1.0 - (nose_center_offset * 1.6 + eye_height_delta * 1.8 + left_right_distance_delta))
 
     return {
         "available": True,
         "landmarkCount": len(points),
         "preview": preview,
         "warning": None,
+        "keyAnchors": {
+            "leftEye": _point(left_eye),
+            "rightEye": _point(right_eye),
+            "noseTip": _point(nose_tip),
+            "mouthCenter": _point(mouth),
+            "leftCheek": _point(left_cheek),
+            "rightCheek": _point(right_cheek),
+            "chin": _point(chin),
+            "forehead": _point(forehead),
+        },
+        "measurements": {
+            "facialWidthHeightRatio": round(facial_width_height_ratio, 6),
+            "interocularRatio": round(interocular_ratio, 6),
+            "jawWidthRatio": round(jaw_width_ratio, 6),
+            "upperThirdRatio": round(upper_third, 6),
+            "midThirdRatio": round(mid_third, 6),
+            "lowerThirdRatio": round(lower_third, 6),
+            "noseCenterOffsetRatio": round(nose_center_offset, 6),
+            "eyeHeightDelta": round(eye_height_delta, 6),
+            "leftRightDistanceDelta": round(left_right_distance_delta, 6),
+            "cheekToJawProxyRatio": round(cheek_to_jaw_proxy_ratio, 6),
+            "symmetryScore": round(symmetry_score, 6),
+        },
     }

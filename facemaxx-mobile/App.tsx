@@ -294,7 +294,15 @@ function getDayDiff(a: string, b: string) {
 function getIdentityTagline(scan: ScanRecord) {
   const best = [...scan.breakdown].sort((a, b) => b.target - b.score - (a.target - a.score))[0];
   const upside = Math.max(0, scan.potential - scan.score);
-  return `You are a ${scan.archetype} with ${upside >= 12 ? 'high' : upside >= 8 ? 'real' : 'measured'} upside. Improving ${best.label.toLowerCase()} can push you toward ${scan.potential >= 82 ? 'Elite' : scan.potential >= 72 ? 'Attractive' : 'Above Average'}.`;
+  const symmetryScore = scan.measurement?.symmetry?.noseCenterOffset !== undefined
+    ? Math.max(0, 1 - scan.measurement.symmetry.noseCenterOffset * 6 - scan.measurement.symmetry.eyeHeightDelta * 8)
+    : null;
+  const structureNote = symmetryScore !== null && symmetryScore > 0.72
+    ? 'Backend symmetry and landmark balance are reinforcing the read.'
+    : symmetryScore !== null
+      ? 'Backend geometry suggests the biggest gains come from cleaner structure presentation.'
+      : 'Backend quality signals are still building the structural read.';
+  return `You are a ${scan.archetype} with ${upside >= 12 ? 'high' : upside >= 8 ? 'real' : 'measured'} upside. Improving ${best.label.toLowerCase()} can push you toward ${scan.potential >= 82 ? 'Elite' : scan.potential >= 72 ? 'Attractive' : 'Above Average'}. ${structureNote}`;
 }
 
 function buildAffiliateItems(scan: ScanRecord): AffiliateItem[] {
@@ -345,21 +353,22 @@ function buildShareCaptions(scan: ScanRecord): Record<ShareTone, string> {
 
 function buildBattleOutcome(scan: ScanRecord, opponent: BattleProfile) {
   const delta = scan.score - opponent.score;
+  const confidenceNote = scan.confidence && scan.confidence < 70 ? ' Your read is still somewhat suppressed by backend confidence limits.' : '';
   if (delta >= 3) {
     return {
       winner: 'you',
-      summary: `You win on overall signal. Your ${scan.archetype.toLowerCase()} read edges out ${opponent.name}'s ${opponent.archetype.toLowerCase()} profile.`,
+      summary: `You win on overall signal. Your ${scan.archetype.toLowerCase()} read edges out ${opponent.name}'s ${opponent.archetype.toLowerCase()} profile.${confidenceNote}`,
     };
   }
   if (delta <= -3) {
     return {
       winner: 'opponent',
-      summary: `${opponent.name} wins on current signal. Their profile reads stronger right now, but your ceiling is still competitive.`,
+      summary: `${opponent.name} wins on current signal. Their profile reads stronger right now, but your ceiling is still competitive.${confidenceNote}`,
     };
   }
   return {
     winner: 'draw',
-    summary: `Near draw. This comes down to angle, grooming, and who presents their strongest frame better.`,
+    summary: `Near draw. This comes down to backend geometry confidence, grooming, and who presents their strongest frame better.${confidenceNote}`,
   };
 }
 
@@ -373,13 +382,17 @@ function buildImprovementPlan(scan: ScanRecord): ImprovementItem[] {
   const skin = lifts.find((item) => item.key === 'skin') ?? lifts[0];
   const hair = lifts.find((item) => item.key === 'hair') ?? lifts[1] ?? lifts[0];
   const jaw = lifts.find((item) => item.key === 'jawline') ?? lifts[0];
+  const blurProxy = scan.measurement?.quality?.blurProxy ?? 60;
+  const lightingQuality = scan.measurement?.quality?.lightingQuality ?? 70;
+  const contrastQuality = scan.measurement?.quality?.contrastQuality ?? 60;
+  const landmarkConfidence = scan.measurement?.quality?.landmarkConfidence ?? 0.7;
 
   return [
     {
       id: 'grooming-1',
       category: 'grooming',
       title: 'Clean up the frame first',
-      detail: `Tighten beard lines, trim neck bulk, and clean the brow area so ${primary.label.toLowerCase()} reads sharper instead of softer.`,
+      detail: `Tighten beard lines, trim neck bulk, and clean the brow area so ${primary.label.toLowerCase()} reads sharper instead of softer. Backend quality read: contrast ${Math.round(contrastQuality)} / landmark confidence ${Math.round(landmarkConfidence * 100)}%.`,
       impact: primary.lift >= 10 ? 'high' : 'medium',
       difficulty: 'easy',
       timeToResult: '3-7 days',
@@ -389,7 +402,7 @@ function buildImprovementPlan(scan: ScanRecord): ImprovementItem[] {
       id: 'hair-1',
       category: 'hairstyle',
       title: 'Change the silhouette around the face',
-      detail: `Use more intentional volume and cleaner side control. ${hair.label} is suppressing the way your upper third currently reads.`,
+      detail: `Use more intentional volume and cleaner side control. ${hair.label} is suppressing the way your upper third currently reads. Backend image read says blur ${Math.round(blurProxy)} / lighting ${Math.round(lightingQuality)}.`,
       impact: hair.lift >= 10 ? 'high' : 'medium',
       difficulty: 'moderate',
       timeToResult: '1-2 weeks',
@@ -399,7 +412,7 @@ function buildImprovementPlan(scan: ScanRecord): ImprovementItem[] {
       id: 'skin-1',
       category: 'skincare',
       title: 'Run a basic skin reset',
-      detail: `Consistency matters more than complexity here: cleanse, moisturize, SPF, and reduce irritation so ${skin.label.toLowerCase()} stops dragging first impression.`,
+      detail: `Consistency matters more than complexity here: cleanse, moisturize, SPF, and reduce irritation so ${skin.label.toLowerCase()} stops dragging first impression. Backend preprocessing is reading brightness ${Math.round(lightingQuality)} and contrast ${Math.round(contrastQuality)}.`,
       impact: skin.lift >= 9 ? 'high' : 'medium',
       difficulty: 'easy',
       timeToResult: '2-6 weeks',
@@ -409,7 +422,7 @@ function buildImprovementPlan(scan: ScanRecord): ImprovementItem[] {
       id: 'fitness-1',
       category: 'fitness/body fat',
       title: 'Lean down enough to reveal structure',
-      detail: `A modest body-fat drop and better posture will make ${jaw.label.toLowerCase()} and overall facial harmony read stronger without changing identity.`,
+      detail: `A modest body-fat drop and better posture will make ${jaw.label.toLowerCase()} and overall facial harmony read stronger without changing identity. The backend geometry stack is already weighting structure heavily here.`,
       impact: jaw.lift >= 10 ? 'high' : 'medium',
       difficulty: 'hard',
       timeToResult: '6-12 weeks',
@@ -419,7 +432,7 @@ function buildImprovementPlan(scan: ScanRecord): ImprovementItem[] {
       id: 'cosmetic-1',
       category: 'optional cosmetic',
       title: 'Only consider clinical upgrades after the basics',
-      detail: `If you still plateau after grooming, skin, and leanness, get a neutral consult for dermatology, orthodontics, or hair-density support.`,
+      detail: `If you still plateau after grooming, skin, and leanness, get a neutral consult for dermatology, orthodontics, or hair-density support. This is most worth considering once backend confidence is consistently high across repeat scans.`,
       impact: secondary.lift >= 11 ? 'medium' : 'low',
       difficulty: 'hard',
       timeToResult: '2-6 months',
@@ -624,6 +637,7 @@ async function buildScanFromBackend(image: AnalysisImage | undefined, photoLabel
     const score = clamp(Number(facemaxx.score ?? 0), 0, 100);
     const confidence = clamp(Number(facemaxx.confidence ?? 0), 0, 100);
 
+    const backendMeasurements = facemaxx?.measurements ?? {};
     const qualityRead = brightness < 70 ? 'lighting is suppressing detail' : contrast < 30 ? 'contrast is muting structure' : blurScore < 40 ? 'image softness is limiting sharpness' : 'input quality is strong enough for a cleaner read';
     const geometryRead = landmarkCount > 0 ? `${landmarkCount} landmarks were mapped through the backend stack.` : 'landmark coverage is weak, so structure read is less reliable.';
     const detectionRead = faceCount > 1 ? 'Multiple faces are in frame, which weakens confidence.' : faceCount === 1 ? 'A single aligned face was detected cleanly.' : 'No stable face alignment was found.';
@@ -690,18 +704,18 @@ async function buildScanFromBackend(image: AnalysisImage | undefined, photoLabel
         },
       },
       ratios: {
-        faceWidthHeight: faceHeight > 0 ? Number((faceWidth / faceHeight).toFixed(4)) : 0,
-        interocularRatio: 0,
-        jawWidthRatio: 0,
-        upperThirdRatio: 0,
-        midThirdRatio: 0,
-        lowerThirdRatio: 0,
-        noseCenterOffsetRatio: 0,
-        cheekToJawProxyRatio: 0,
+        faceWidthHeight: Number(backendMeasurements?.facialWidthHeightRatio ?? (faceHeight > 0 ? Number((faceWidth / faceHeight).toFixed(4)) : 0)),
+        interocularRatio: Number(backendMeasurements?.interocularRatio ?? 0),
+        jawWidthRatio: Number(backendMeasurements?.jawWidthRatio ?? 0),
+        upperThirdRatio: Number(backendMeasurements?.upperThirdRatio ?? 0),
+        midThirdRatio: Number(backendMeasurements?.midThirdRatio ?? 0),
+        lowerThirdRatio: Number(backendMeasurements?.lowerThirdRatio ?? 0),
+        noseCenterOffsetRatio: Number(backendMeasurements?.noseCenterOffsetRatio ?? 0),
+        cheekToJawProxyRatio: Number(backendMeasurements?.jawWidthRatio ?? 0),
       },
       symmetry: {
-        eyeHeightDelta: 0,
-        noseCenterOffset: 0,
+        eyeHeightDelta: Number(backendMeasurements?.eyeHeightDelta ?? 0),
+        noseCenterOffset: Number(backendMeasurements?.noseCenterOffsetRatio ?? 0),
         rollImbalance: 0,
         leftRightDistanceDelta: 0,
       },
