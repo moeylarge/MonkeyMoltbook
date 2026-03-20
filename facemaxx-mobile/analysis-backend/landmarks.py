@@ -4,7 +4,7 @@ from typing import Any, Dict
 from urllib.request import urlretrieve
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
 
 try:
     import mediapipe as mp
@@ -51,19 +51,51 @@ def _point(p):
     return {"x": round(p.x, 6), "y": round(p.y, 6), "z": round(p.z, 6)}
 
 
+def _detect_points(landmarker, image: np.ndarray):
+    mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=image)
+    result = landmarker.detect(mp_image)
+    if not result.face_landmarks:
+        return None
+    return result.face_landmarks[0]
+
+
 def run_landmarks(image_bytes: bytes, detection: Dict[str, Any]) -> Dict[str, Any]:
-    image = np.array(Image.open(BytesIO(image_bytes)).convert("RGB"))
+    image = np.array(ImageOps.exif_transpose(Image.open(BytesIO(image_bytes))).convert("RGB"))
     landmarker = _get_landmarker()
     if landmarker is None:
         warning = "MediaPipe Tasks FaceLandmarker unavailable or model download failed" if mp is not None else "MediaPipe not available yet"
         return {"available": False, "landmarkCount": 0, "warning": warning}
 
-    mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=image)
-    result = landmarker.detect(mp_image)
-    if not result.face_landmarks:
-        return {"available": True, "landmarkCount": 0, "warning": "No landmarks detected"}
+    points = _detect_points(landmarker, image)
+    warning = None
+    fallback_used = False
 
-    points = result.face_landmarks[0]
+    if points is None:
+        bbox = ((detection.get("primaryFace") or {}).get("bbox") or []) if detection else []
+        if len(bbox) == 4:
+            height, width = image.shape[:2]
+            x1, y1, x2, y2 = [float(v) for v in bbox]
+            pad_x = max(12, int((x2 - x1) * 0.18))
+            pad_y = max(12, int((y2 - y1) * 0.22))
+            crop_x1 = max(0, int(x1) - pad_x)
+            crop_y1 = max(0, int(y1) - pad_y)
+            crop_x2 = min(width, int(x2) + pad_x)
+            crop_y2 = min(height, int(y2) + pad_y)
+            if crop_x2 > crop_x1 and crop_y2 > crop_y1:
+                cropped = image[crop_y1:crop_y2, crop_x1:crop_x2]
+                points = _detect_points(landmarker, cropped)
+                if points is not None:
+                    fallback_used = True
+                    warning = "Full-image landmark pass failed; recovered via face crop fallback"
+        if points is None:
+            return {
+                "available": True,
+                "landmarkCount": 0,
+                "warning": "No landmarks detected; full-image and face-crop passes both failed",
+                "fallbackUsed": False,
+            }
+
+    
     preview = [_point(p) for p in points[:12]]
 
     left_eye = points[33]
@@ -95,7 +127,8 @@ def run_landmarks(image_bytes: bytes, detection: Dict[str, Any]) -> Dict[str, An
         "available": True,
         "landmarkCount": len(points),
         "preview": preview,
-        "warning": None,
+        "warning": warning,
+        "fallbackUsed": fallback_used,
         "keyAnchors": {
             "leftEye": _point(left_eye),
             "rightEye": _point(right_eye),

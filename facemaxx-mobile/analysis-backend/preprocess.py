@@ -3,14 +3,15 @@ from typing import Any, Dict
 
 import cv2
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
 from pillow_heif import register_heif_opener
 
 register_heif_opener()
 
 
 def _load_image(image_bytes: bytes) -> np.ndarray:
-    image = Image.open(BytesIO(image_bytes)).convert("RGB")
+    image = Image.open(BytesIO(image_bytes))
+    image = ImageOps.exif_transpose(image).convert("RGB")
     return cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
 
 

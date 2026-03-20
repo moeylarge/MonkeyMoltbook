@@ -2,7 +2,7 @@ from io import BytesIO
 from typing import Any, Dict
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
 
 
 def _face_area_ratio(bbox, image_width: int, image_height: int) -> float:
@@ -29,7 +29,7 @@ def _get_app():
 
 
 def run_detection(image_bytes: bytes, preprocess: Dict[str, Any]) -> Dict[str, Any]:
-    image = np.array(Image.open(BytesIO(image_bytes)).convert("RGB"))
+    image = np.array(ImageOps.exif_transpose(Image.open(BytesIO(image_bytes))).convert("RGB"))
     image_width = int(preprocess.get("width") or image.shape[1] or 0)
     image_height = int(preprocess.get("height") or image.shape[0] or 0)
     app = _get_app()
