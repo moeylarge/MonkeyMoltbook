@@ -1545,7 +1545,8 @@ export default function App() {
         };
 
         if (Platform.OS === 'web') {
-          const processed = await processWebImageForUpload(asset.uri, asset.fileName ?? asset.uri.split('/').pop() || 'scan-image.jpg', asset.mimeType);
+          const processedFilename = asset.fileName ?? (asset.uri.split('/').pop() || 'scan-image.jpg');
+          const processed = await processWebImageForUpload(asset.uri, processedFilename, asset.mimeType);
           nextImage = {
             uri: processed.previewUrl,
             width: processed.width,
@@ -1698,11 +1699,13 @@ export default function App() {
     const large = size === 'large';
     if (imageUri) {
       return (
-        <Image
-          source={{ uri: imageUri }}
-          style={large ? styles.photoImageLarge : styles.photoImageSmall}
-          resizeMode="cover"
-        />
+        <View style={large ? styles.photoFrameLarge : styles.photoFrameSmall}>
+          <Image
+            source={{ uri: imageUri }}
+            style={large ? styles.photoImageLarge : styles.photoImageSmall}
+            resizeMode="contain"
+          />
+        </View>
       );
     }
     return renderEmptyFacePlaceholder(size);
@@ -1765,6 +1768,9 @@ export default function App() {
         <Text style={styles.uploadTitle}>{imageUri ? selectedPhoto : 'No photo loaded yet'}</Text>
         <Text style={styles.uploadCopy}>{imageUri ? 'Use a clear photo with one face in frame for the strongest read.' : 'Start with a clear front-facing photo so the first read feels intentional, not noisy.'}</Text>
         <View style={[styles.photoPreview, !imageUri && styles.photoPreviewEmpty]}>{renderPreview('large')}</View>
+        {!!imageUri && (
+          <Text style={styles.previewHelperText}>If forehead or chin is cut off here, the scan may read as unstable. A little space around the full face works better.</Text>
+        )}
       </View>
 
       <View style={styles.optionRow}>
@@ -2552,10 +2558,13 @@ const styles = StyleSheet.create({
   uploadTag: { color: '#14E38B', fontSize: 12, fontWeight: '800', letterSpacing: 1.2 },
   uploadTitle: { color: '#FFFFFF', fontSize: 28, fontWeight: '900' },
   uploadCopy: { color: '#AAB0C5', fontSize: 14, lineHeight: 20 },
+  previewHelperText: { color: '#9FA6BD', fontSize: 12, lineHeight: 18, marginTop: 12 },
   photoPreview: { height: 270, borderRadius: 24, backgroundColor: '#0D0E15', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#242637', overflow: 'hidden' },
   photoPreviewEmpty: { height: 220, borderStyle: 'dashed', borderColor: '#34384D', backgroundColor: '#101119' },
+  photoFrameLarge: { width: '100%', height: '100%', padding: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: '#0D0E15' },
+  photoFrameSmall: { width: 86, height: 110, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: '#0D0E15', overflow: 'hidden' },
   photoImageLarge: { width: '100%', height: '100%' },
-  photoImageSmall: { width: 86, height: 110, borderRadius: 18 },
+  photoImageSmall: { width: '100%', height: '100%' },
   emptyFacePlaceholderLarge: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 26 },
   emptyFacePlaceholderSmall: { width: 86, height: 110, borderRadius: 18, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8, backgroundColor: '#11121A', borderWidth: 1, borderColor: '#2B2E40' },
   emptyFaceEyebrow: { color: '#E5DAFF', fontSize: 10, fontWeight: '900', letterSpacing: 1.2, textAlign: 'center' },
