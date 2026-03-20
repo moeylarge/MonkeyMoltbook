@@ -33,6 +33,7 @@ Current recommendation:
 - the workspace now includes a real labeling scaffold under `facemaxx-mobile/training/` with annotation schema/template, merge rules, status docs, raw/annotation/merged/review folders, a manifest builder script, an annotation merge script, and a first-batch rater packet
 - the chosen technical direction for the next serious engine upgrade is the fuller local stack: OpenCV + InsightFace + MediaPipe + FACEMAXX calibration, scaffolded under `facemaxx-mobile/analysis-backend/`
 - `analysis-backend/` now contains initial Python modules for preprocessing, detection/alignment, landmarks, calibration, FastAPI server, requirements, and usage docs, and the local backend environment installs successfully with a passing `/health` check
+- `/analyze` has been tested against a real face test image: OpenCV preprocessing works, InsightFace detection works, and FACEMAXX calibration returns a payload; MediaPipe landmark extraction currently needs adaptation because this runtime exposes `mediapipe.tasks` but not `solutions.face_mesh`
 - before attempting a deeply trained attractiveness model, use the roadmap files in `facemaxx-mobile/` to build the measurement schema, dataset, and v1 model pipeline
 - only add real monetization plumbing after validating the product loop
 
