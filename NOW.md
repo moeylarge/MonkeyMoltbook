@@ -82,7 +82,8 @@ Still pending:
 - any last micro-cleanup after visual review
 - serious backend/model work should follow `facemaxx-mobile/FACEMAXX_V2_ROADMAP.md`
 - chosen analysis direction is now the fuller stack: OpenCV + InsightFace + MediaPipe + FACEMAXX calibration
-- next backend step after this scaffold: start `analysis-backend/` implementation with preprocessing + detection/alignment
+- `analysis-backend/` is now scaffolded with preprocess/detect/landmarks/calibration/server modules
+- next backend step after this scaffold: install/test the Python environment and begin real module hardening
 - collect the first 25 real labeled samples and run the merge flow on actual data
 - real monetization plumbing only if Moey wants to move beyond prototype framing
 

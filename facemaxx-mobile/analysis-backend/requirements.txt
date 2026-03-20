@@ -1,0 +1,10 @@
+opencv-python
+mediapipe
+insightface
+onnxruntime
+numpy
+fastapi
+uvicorn[standard]
+pydantic
+python-multipart
+Pillow
