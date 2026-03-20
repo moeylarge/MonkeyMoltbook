@@ -29,14 +29,19 @@ Updated: 2026-03-20 12:51 AM America/Los_Angeles
 
 ## What to do next for FACEMAXX
 
-1. Restore or copy `facemaxx-mobile/` into the active workspace, or explicitly continue from the old workspace location
-2. Run the project and confirm it boots
-3. Continue Phase 3:
+Update:
+- `facemaxx-mobile/` has been restored into the active workspace
+- Phase 3 implementation is now underway in `/Users/moey/.openclaw/workspace/facemaxx-mobile`
+- TypeScript validation passed after the Phase 3 code update
+
+Current next steps:
+1. Run the restored project and confirm it boots on-device/web
+2. Verify the new Phase 3 features actually work in runtime:
    - real image picker / upload handling
    - local result-generation logic
    - saved scan history / persistence
-   - proof screenshots / verification
-   - polish pass
+3. Capture proof screenshots / verification
+4. Do the polish pass on motion and spacing
 
 ## UFC note
 

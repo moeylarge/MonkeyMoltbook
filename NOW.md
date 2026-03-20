@@ -39,6 +39,8 @@ The next step is:
 2. verify the project still runs
 3. then begin Phase 3
 
+Update: `facemaxx-mobile/` has now been restored into the active workspace and Phase 3 implementation has started in the live copy.
+
 ## Phase 3 target
 
 Make FACEMAXX feel like a real product, not just a staged prototype:
@@ -47,6 +49,19 @@ Make FACEMAXX feel like a real product, not just a staged prototype:
 - saved scan history / persistence
 - proof / screenshots / verification
 - motion and spacing polish
+
+## Phase 3 progress so far
+
+Implemented in `facemaxx-mobile/App.tsx`:
+- Expo image picker wiring (`expo-image-picker`)
+- local persisted scan history via AsyncStorage
+- deterministic local score generation from selected image/photo seed
+- history screen for rerating / opening prior scans
+- restored FACEMAXX into active workspace at `/Users/moey/.openclaw/workspace/facemaxx-mobile`
+
+Still pending:
+- runtime verification / screenshots
+- polish pass on motion and spacing
 
 ## Guardrails
 
