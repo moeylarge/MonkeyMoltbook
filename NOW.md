@@ -81,7 +81,9 @@ Still pending:
 - final visual review using `facemaxx-mobile/REVIEW_CHECKLIST.md`
 - any last micro-cleanup after visual review
 - serious backend/model work should follow `facemaxx-mobile/FACEMAXX_V2_ROADMAP.md`
-- next backend step after this scaffold: collect the first 25 real labeled samples and run the merge flow on actual data
+- chosen analysis direction is now the fuller stack: OpenCV + InsightFace + MediaPipe + FACEMAXX calibration
+- next backend step after this scaffold: start `analysis-backend/` implementation with preprocessing + detection/alignment
+- collect the first 25 real labeled samples and run the merge flow on actual data
 - real monetization plumbing only if Moey wants to move beyond prototype framing
 
 Latest major upgrade:
