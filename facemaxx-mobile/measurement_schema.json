@@ -1,6 +1,6 @@
 {
   "version": "v1",
-  "description": "Structured feature vector for FACEMAXX face analysis pipeline.",
+  "description": "Structured feature vector for LooksMaxxing face analysis pipeline.",
   "landmarks": {
     "faceBounds": { "x": "number", "y": "number", "width": "number", "height": "number" },
     "leftEye": { "x": "number", "y": "number" },

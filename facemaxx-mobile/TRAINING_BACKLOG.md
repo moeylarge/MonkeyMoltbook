@@ -1,4 +1,4 @@
-# FACEMAXX Training Backlog
+# LooksMaxxing Training Backlog
 
 ## Immediate
 - [ ] Finalize measurement schema
@@ -23,7 +23,7 @@
 ## Calibration
 - [ ] Define rejection thresholds
 - [ ] Define confidence buckets
-- [ ] Map output score to FACEMAXX tiers
+- [ ] Map output score to LooksMaxxing tiers
 - [ ] Calibrate explanation templates to low/high confidence states
 
 ## Product integration

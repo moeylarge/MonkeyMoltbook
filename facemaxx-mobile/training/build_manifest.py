@@ -26,7 +26,7 @@ for raw_file in sorted(RAW.glob('*.json')):
 
 payload = {
     'version': 'v1',
-    'description': 'Generated FACEMAXX labeling manifest.',
+    'description': 'Generated LooksMaxxing labeling manifest.',
     'samples': samples,
 }
 

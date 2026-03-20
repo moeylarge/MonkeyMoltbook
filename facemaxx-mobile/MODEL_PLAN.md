@@ -1,4 +1,4 @@
-# FACEMAXX Model Plan
+# LooksMaxxing Model Plan
 
 ## v1 model recommendation
 Use a multi-head model, not a single black-box score.

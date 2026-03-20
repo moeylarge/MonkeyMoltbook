@@ -1,4 +1,4 @@
-# FACEMAXX Rating Rubric
+# LooksMaxxing Rating Rubric
 
 ## Purpose
 Human raters should label faces consistently enough to train a v1 scoring model.

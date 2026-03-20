@@ -179,9 +179,9 @@ type DatasetExportRecord = {
   };
 };
 
-const STORAGE_KEY = 'facemaxx.scanHistory.v1';
-const DATASET_EXPORT_KEY = 'facemaxx.datasetExports.v1';
-const DATASET_EXPORT_DIR = `${FileSystem.documentDirectory ?? ''}facemaxx-dataset`;
+const STORAGE_KEY = 'looksmaxxing.scanHistory.v1';
+const DATASET_EXPORT_KEY = 'looksmaxxing.datasetExports.v1';
+const DATASET_EXPORT_DIR = `${FileSystem.documentDirectory ?? ''}looksmaxxing-dataset`;
 const BRAND_NAME = 'LooksMaxxing';
 const BRAND_FACE_NAME = 'Clavicular';
 const BRAND_FACE_IMAGE: ImageSourcePropType = require('./assets/clavicular-brand.png');
@@ -730,7 +730,7 @@ async function buildScanFromBackend(image: AnalysisImage | undefined, photoLabel
     });
     if (!response.ok) {
       const errorText = await response.text().catch(() => '');
-      console.warn('FACEMAXX backend analyze failed', response.status, errorText);
+      console.warn('LooksMaxxing backend analyze failed', response.status, errorText);
       return null;
     }
 

@@ -1,17 +1,17 @@
-# FACEMAXX Analysis Backend
+# LooksMaxxing Analysis Backend
 
 This folder is reserved for the fuller local analysis stack:
 - OpenCV
 - InsightFace
 - MediaPipe
-- FACEMAXX calibration layer
+- LooksMaxxing calibration layer
 
 ## Intended responsibilities
 - preprocess images
 - detect and align faces
 - extract landmarks and ratios
 - compute quality/confidence features
-- map outputs into FACEMAXX scores and categories
+- map outputs into LooksMaxxing scores and categories
 
 ## Suggested implementation language
 Python

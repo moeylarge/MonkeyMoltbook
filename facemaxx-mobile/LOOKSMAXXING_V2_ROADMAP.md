@@ -1,10 +1,10 @@
-# FACEMAXX v2 Roadmap
+# LooksMaxxing v2 Roadmap
 
 Updated: 2026-03-20
 
 ## Goal
 
-Move FACEMAXX from a strong prototype into a real face-analysis product by building:
+Move LooksMaxxing from a strong prototype into a real face-analysis product by building:
 - a measurement pipeline
 - a labeled dataset
 - a trainable scoring model
@@ -77,7 +77,7 @@ Extract stable, interpretable facial features that can power both rule-based sco
 ## Phase B — Small High-Quality Labeled Dataset
 
 ### Objective
-Create a first useful dataset for training FACEMAXX v1 scoring.
+Create a first useful dataset for training LooksMaxxing v1 scoring.
 
 ### Target size
 - initial target: 1,000–5,000 faces
@@ -196,10 +196,10 @@ Prevent bad inputs from producing overconfident bad outputs.
 
 ---
 
-## Phase E — Calibrate Into FACEMAXX UI
+## Phase E — Calibrate Into LooksMaxxing UI
 
 ### Objective
-Map scientific/technical outputs into the FACEMAXX product experience.
+Map scientific/technical outputs into the LooksMaxxing product experience.
 
 ### UI outputs to calibrate
 - overall score
@@ -241,13 +241,13 @@ Recommendations should use:
 5. collect small labeled dataset
 6. train v1 multi-head model
 7. add confidence/rejection logic
-8. plug calibrated outputs back into FACEMAXX UI
+8. plug calibrated outputs back into LooksMaxxing UI
 
 ---
 
 ## Reality check
 
-FACEMAXX is currently past prototype shell stage, but this roadmap is the bridge from:
+LooksMaxxing is currently past prototype shell stage, but this roadmap is the bridge from:
 - product theater
 into
 - real analysis product

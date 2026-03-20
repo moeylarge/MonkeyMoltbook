@@ -1,4 +1,4 @@
-# FACEMAXX Labeling Workflow
+# LooksMaxxing Labeling Workflow
 
 ## Goal
 Turn exported scan samples into reusable labeled training data.

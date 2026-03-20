@@ -1,4 +1,4 @@
-# FACEMAXX Rater Packet
+# LooksMaxxing Rater Packet
 
 Give raters these files:
 - `../RATING_RUBRIC.md`

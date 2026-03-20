@@ -1,4 +1,4 @@
-# FACEMAXX Full Stack Integration Plan
+# LooksMaxxing Full Stack Integration Plan
 
 Updated: 2026-03-20
 
@@ -7,9 +7,9 @@ Use the fuller local stack immediately:
 - OpenCV
 - InsightFace
 - MediaPipe
-- FACEMAXX scoring calibration layer
+- LooksMaxxing scoring calibration layer
 
-This is the higher-overhead route, but it gives FACEMAXX a stronger analysis backbone from day one.
+This is the higher-overhead route, but it gives LooksMaxxing a stronger analysis backbone from day one.
 
 ---
 
@@ -41,7 +41,7 @@ Responsible for:
 - pose/alignment cues
 - symmetry-related features
 
-### 4. FACEMAXX calibration layer
+### 4. LooksMaxxing calibration layer
 Responsible for:
 - overall score
 - category scores
@@ -64,7 +64,7 @@ Create a local or self-hosted analysis service that accepts an image and returns
 - face detection/alignment results
 - landmark measurements
 - embeddings (if needed)
-- calibrated FACEMAXX outputs
+- calibrated LooksMaxxing outputs
 
 ### Output schema
 The service should eventually produce:
@@ -104,7 +104,7 @@ Implement:
 - symmetry metrics
 - pose-derived features
 
-### Phase 4 — FACEMAXX calibration module
+### Phase 4 — LooksMaxxing calibration module
 Implement:
 - score mapping
 - category score mapping
@@ -134,6 +134,6 @@ This is now backend/computer-vision engineering work, not just app product work.
 
 The likely cleanest implementation path is:
 - Python service for CV stack
-- FACEMAXX mobile app calls service locally or over LAN/dev host during development
+- LooksMaxxing mobile app calls service locally or over LAN/dev host during development
 
 That is the most practical way to use OpenCV + InsightFace + MediaPipe together.

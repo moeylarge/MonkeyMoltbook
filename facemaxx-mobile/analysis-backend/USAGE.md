@@ -1,8 +1,8 @@
-# FACEMAXX Analysis Backend Usage
+# LooksMaxxing Analysis Backend Usage
 
 ## Install dependencies
 ```bash
-cd facemaxx-mobile/analysis-backend
+cd looksmaxxing-mobile/analysis-backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -10,7 +10,7 @@ pip install -r requirements.txt
 
 ## Run backend
 ```bash
-cd facemaxx-mobile/analysis-backend
+cd looksmaxxing-mobile/analysis-backend
 ./run_backend.sh
 ```
 
@@ -31,7 +31,7 @@ It wires together:
 - OpenCV preprocessing
 - InsightFace detection/alignment scaffold
 - MediaPipe landmark scaffold
-- FACEMAXX calibration layer
+- LooksMaxxing calibration layer
 
 Further work is still required for:
 - real environment setup

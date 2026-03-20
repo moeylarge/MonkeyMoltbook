@@ -1,4 +1,4 @@
-# FACEMAXX Training Scaffold
+# LooksMaxxing Training Scaffold
 
 This folder is reserved for the future v1 scoring model pipeline.
 

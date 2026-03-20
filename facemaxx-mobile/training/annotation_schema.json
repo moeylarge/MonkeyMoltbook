@@ -1,6 +1,6 @@
 {
   "version": "v1",
-  "description": "Human annotation payload for FACEMAXX dataset samples.",
+  "description": "Human annotation payload for LooksMaxxing dataset samples.",
   "sampleId": "string",
   "imageId": "string|null",
   "raterId": "string",

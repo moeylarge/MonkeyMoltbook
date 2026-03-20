@@ -1,4 +1,4 @@
-# FACEMAXX First Participant Process
+# LooksMaxxing First Participant Process
 
 ## Goal
 Process one real participant cleanly from intake to training pipeline.
@@ -44,9 +44,9 @@ Prefer:
 - limited occlusion
 - mostly frontal
 
-## Step 6 — Run through FACEMAXX
+## Step 6 — Run through LooksMaxxing
 Upload/capture the selected image in the app.
-Let FACEMAXX generate:
+Let LooksMaxxing generate:
 - scan output
 - measurement vector
 - dataset export
@@ -69,7 +69,7 @@ Fields:
 ## Step 9 — Build manifest
 Run:
 ```bash
-cd facemaxx-mobile/training
+cd looksmaxxing-mobile/training
 ./build_manifest.py
 ```
 
@@ -82,6 +82,6 @@ Give raters:
 ## Step 11 — Merge annotations later
 Once 3 ratings exist for the sample, run:
 ```bash
-cd facemaxx-mobile/training
+cd looksmaxxing-mobile/training
 ./merge_annotations.py
 ```

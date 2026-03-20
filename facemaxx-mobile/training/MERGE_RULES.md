@@ -1,4 +1,4 @@
-# FACEMAXX Merge Rules
+# LooksMaxxing Merge Rules
 
 ## Purpose
 Define how multiple annotation files become one merged training label.

@@ -1,7 +1,7 @@
-# FACEMAXX Dataset Schema
+# LooksMaxxing Dataset Schema
 
 ## Objective
-Create a small, high-quality labeled dataset for training the FACEMAXX v1 scoring model.
+Create a small, high-quality labeled dataset for training the LooksMaxxing v1 scoring model.
 
 ## Recommended initial size
 - 1,000–5,000 face images

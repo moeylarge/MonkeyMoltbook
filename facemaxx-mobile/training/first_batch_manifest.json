@@ -1,7 +1,7 @@
 {
   "version": "v1",
   "batchName": "first-25",
-  "description": "Starter labeling batch for FACEMAXX model pipeline.",
+  "description": "Starter labeling batch for LooksMaxxing model pipeline.",
   "targetSampleCount": 25,
   "targetRatersPerSample": 3,
   "samples": [],

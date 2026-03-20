@@ -11,14 +11,14 @@ from landmarks import run_landmarks
 from calibrate import run_calibration
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("facemaxx.analysis")
+logger = logging.getLogger("looksmaxxing.analysis")
 
-app = FastAPI(title="FACEMAXX Analysis Backend", version="0.1.0")
+app = FastAPI(title="LooksMaxxing Analysis Backend", version="0.1.0")
 
 
 @app.get("/health")
 def health():
-    return {"ok": True, "service": "facemaxx-analysis-backend"}
+    return {"ok": True, "service": "looksmaxxing-analysis-backend"}
 
 
 @app.post("/analyze")

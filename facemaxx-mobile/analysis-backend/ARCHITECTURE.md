@@ -1,11 +1,11 @@
-# FACEMAXX Analysis Backend Architecture
+# LooksMaxxing Analysis Backend Architecture
 
 ## Request flow
 1. App sends image
 2. OpenCV preprocesses quality/normalization
 3. InsightFace detects + aligns face
 4. MediaPipe extracts landmarks/geometry
-5. FACEMAXX calibration layer maps features to:
+5. LooksMaxxing calibration layer maps features to:
    - score
    - category breakdowns
    - tier

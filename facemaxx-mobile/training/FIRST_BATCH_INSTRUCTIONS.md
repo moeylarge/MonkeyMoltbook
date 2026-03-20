@@ -1,7 +1,7 @@
-# FACEMAXX First Batch Instructions
+# LooksMaxxing First Batch Instructions
 
 ## What you are doing
-You are rating exported FACEMAXX face samples for model training.
+You are rating exported LooksMaxxing face samples for model training.
 
 ## Files you should read first
 - `RATING_RUBRIC.md`

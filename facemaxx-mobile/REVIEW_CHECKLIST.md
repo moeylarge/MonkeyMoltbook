@@ -1,10 +1,10 @@
-# FACEMAXX Review Checklist
+# LooksMaxxing Review Checklist
 
 Updated: 2026-03-20 America/Los_Angeles
 
 ## Goal
 
-Use this checklist before showing FACEMAXX to anyone or deciding on the next major build step.
+Use this checklist before showing LooksMaxxing to anyone or deciding on the next major build step.
 
 ---
 
@@ -53,7 +53,7 @@ If possible, also record one short walkthrough:
 ## 2) Show-Ready Review Questions
 
 ### Product feel
-- Does FACEMAXX feel like a real product, not a toy?
+- Does LooksMaxxing feel like a real product, not a toy?
 - Does it feel like optimization/progression instead of random face judgment?
 - Is the emotional hook immediate in the first 10 seconds?
 
@@ -107,7 +107,7 @@ Next steps:
 - avoid heavy infrastructure too early
 
 ### Branch B — Real product route
-Choose this if FACEMAXX is strong enough to invest in for actual users.
+Choose this if LooksMaxxing is strong enough to invest in for actual users.
 
 Next steps:
 1. stronger scoring backend (likely CV/ML-backed)
@@ -132,7 +132,7 @@ Do not present until these are all true:
 
 ## 6) Current Honest Status
 
-FACEMAXX is now:
+LooksMaxxing is now:
 - prototype-complete
 - showable
 - conceptually strong

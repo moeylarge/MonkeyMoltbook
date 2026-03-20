@@ -1,8 +1,8 @@
-# FACEMAXX Training Usage
+# LooksMaxxing Training Usage
 
 ## 1. Build/update manifest
 ```bash
-cd facemaxx-mobile/training
+cd looksmaxxing-mobile/training
 ./build_manifest.py
 ```
 
@@ -15,7 +15,7 @@ Naming format:
 
 ## 3. Merge annotations
 ```bash
-cd facemaxx-mobile/training
+cd looksmaxxing-mobile/training
 ./merge_annotations.py
 ```
 

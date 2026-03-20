@@ -1,4 +1,4 @@
-# FACEMAXX Incoming Photos
+# LooksMaxxing Incoming Photos
 
 Put real consented participant photos here.
 

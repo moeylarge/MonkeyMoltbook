@@ -1,7 +1,7 @@
 Participant ID: REPLACE_ME
 Date: 2026-03-20
 
-I agree that my submitted photos may be used internally for FACEMAXX testing, analysis, labeling, and model development.
+I agree that my submitted photos may be used internally for LooksMaxxing testing, analysis, labeling, and model development.
 
 Name: 
 Contact: 

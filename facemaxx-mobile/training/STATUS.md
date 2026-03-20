@@ -1,4 +1,4 @@
-# FACEMAXX Training Status
+# LooksMaxxing Training Status
 
 ## Current state
 - raw sample export path exists in the app

@@ -1,7 +1,7 @@
-# FACEMAXX First Labeling Batch Plan
+# LooksMaxxing First Labeling Batch Plan
 
 ## Goal
-Prepare the first 25 real exported FACEMAXX samples for human rating.
+Prepare the first 25 real exported LooksMaxxing samples for human rating.
 
 ## Batch size
 - 25 samples
@@ -31,7 +31,7 @@ Prepare the first 25 real exported FACEMAXX samples for human rating.
 - rater-003 = trusted human #3
 
 ## Workflow
-1. collect 25 raw FACEMAXX export JSON files
+1. collect 25 raw LooksMaxxing export JSON files
 2. copy them into `training/raw-exports/`
 3. run `./build_manifest.py`
 4. give raters:
