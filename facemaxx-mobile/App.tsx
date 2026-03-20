@@ -1596,6 +1596,8 @@ export default function App() {
       <Text style={styles.brandIntro}>Built around the read of {BRAND_FACE_NAME}.</Text>
       <Animated.View style={[styles.brandHeroFrame, { transform: [{ scale: pulse }] }]}>
         <Image source={BRAND_FACE_IMAGE} style={styles.brandHeroImage} resizeMode="cover" />
+        <View style={styles.brandHeroShadeTop} />
+        <View style={styles.brandHeroShadeBottom} />
         <View style={styles.brandHeroOverlay}>
           <Text style={styles.brandHeroName}>{BRAND_FACE_NAME}</Text>
           <Text style={styles.brandHeroRole}>Face of {BRAND_NAME}</Text>
@@ -2381,9 +2383,11 @@ const styles = StyleSheet.create({
   eyebrow: { color: '#A0A5BC', fontSize: 12, fontWeight: '700', letterSpacing: 1.7 },
   liveDot: { width: 8, height: 8, borderRadius: 999, backgroundColor: '#14E38B' },
   brandIntro: { color: '#D6DAE9', fontSize: 14, fontWeight: '700', textAlign: 'center' },
-  brandHeroFrame: { width: '100%', maxWidth: 340, height: 390, borderRadius: 32, overflow: 'hidden', borderWidth: 1, borderColor: '#2A2D3F', backgroundColor: '#12131A', shadowColor: '#7C5CFF', shadowOpacity: 0.32, shadowRadius: 28, shadowOffset: { width: 0, height: 14 } },
-  brandHeroImage: { width: '100%', height: '100%' },
-  brandHeroOverlay: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 22, paddingVertical: 18, backgroundColor: 'rgba(11,11,15,0.58)' },
+  brandHeroFrame: { width: '100%', maxWidth: 348, height: 430, borderRadius: 34, overflow: 'hidden', borderWidth: 1, borderColor: '#2A2D3F', backgroundColor: '#12131A', shadowColor: '#7C5CFF', shadowOpacity: 0.32, shadowRadius: 28, shadowOffset: { width: 0, height: 14 } },
+  brandHeroImage: { position: 'absolute', width: '132%', height: '112%', left: '-18%', top: '-4%' },
+  brandHeroShadeTop: { position: 'absolute', top: 0, left: 0, right: 0, height: '32%', backgroundColor: 'rgba(11,11,15,0.18)' },
+  brandHeroShadeBottom: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '38%', backgroundColor: 'rgba(11,11,15,0.78)' },
+  brandHeroOverlay: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 22, paddingVertical: 20 },
   brandHeroName: { color: '#FFFFFF', fontSize: 28, fontWeight: '900' },
   brandHeroRole: { color: '#D9CFFF', fontSize: 13, fontWeight: '700', marginTop: 4 },
   heroOrb: { width: 232, height: 232, borderRadius: 999, backgroundColor: '#14151F', borderWidth: 1, borderColor: '#2D3041', shadowColor: '#7C5CFF', shadowOpacity: 0.35, shadowRadius: 40, shadowOffset: { width: 0, height: 0 }, alignItems: 'center', justifyContent: 'center' },
