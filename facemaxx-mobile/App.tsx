@@ -11,6 +11,7 @@ import {
   Animated,
   Easing,
   Image,
+  Platform,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -614,17 +615,33 @@ async function buildScanFromBackend(image: AnalysisImage | undefined, photoLabel
 
   try {
     const form = new FormData();
-    form.append('image', {
-      uri: image.uri,
-      name: 'scan-image.jpg',
-      type: image.mimeType ?? 'image/jpeg',
-    } as any);
+    const mimeType = image.mimeType ?? 'image/jpeg';
+    const filename = image.uri.split('/').pop() || 'scan-image.jpg';
+
+    if (Platform.OS === 'web') {
+      const imageResponse = await fetch(image.uri);
+      const blob = await imageResponse.blob();
+      const upload = new File([blob], filename, {
+        type: blob.type || mimeType,
+      });
+      form.append('image', upload);
+    } else {
+      form.append('image', {
+        uri: image.uri,
+        name: filename,
+        type: mimeType,
+      } as any);
+    }
 
     const response = await fetch(`${ANALYSIS_BACKEND_URL}/analyze`, {
       method: 'POST',
       body: form,
     });
-    if (!response.ok) return null;
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '');
+      console.warn('FACEMAXX backend analyze failed', response.status, errorText);
+      return null;
+    }
 
     const payload = await response.json();
     const facemaxx = payload?.facemaxx ?? {};
