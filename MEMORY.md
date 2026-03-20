@@ -25,7 +25,8 @@ Important upgrades completed on 2026-03-20:
 - battle mode now supports a real second uploaded image and second analysis pass
 
 Current recommendation:
-- do proof capture and final visual review next
+- FACEMAXX now also has a documented v2 roadmap for real measurement / dataset / model / calibration work
+- before attempting a deeply trained attractiveness model, use the roadmap files in `facemaxx-mobile/` to build the measurement schema, dataset, and v1 model pipeline
 - only add real monetization plumbing after validating the product loop
 
 Recovery files to read first if context is lost:

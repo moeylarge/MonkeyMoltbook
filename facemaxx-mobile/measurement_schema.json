@@ -1,0 +1,52 @@
+{
+  "version": "v1",
+  "description": "Structured feature vector for FACEMAXX face analysis pipeline.",
+  "landmarks": {
+    "faceBounds": { "x": "number", "y": "number", "width": "number", "height": "number" },
+    "leftEye": { "x": "number", "y": "number" },
+    "rightEye": { "x": "number", "y": "number" },
+    "noseBase": { "x": "number", "y": "number" },
+    "mouthCenter": { "x": "number", "y": "number" },
+    "leftCheek": { "x": "number", "y": "number" },
+    "rightCheek": { "x": "number", "y": "number" }
+  },
+  "ratios": {
+    "faceWidthHeight": "number",
+    "interocularRatio": "number",
+    "jawWidthRatio": "number",
+    "upperThirdRatio": "number",
+    "midThirdRatio": "number",
+    "lowerThirdRatio": "number",
+    "noseCenterOffsetRatio": "number",
+    "cheekToJawProxyRatio": "number"
+  },
+  "symmetry": {
+    "eyeHeightDelta": "number",
+    "noseCenterOffset": "number",
+    "rollImbalance": "number",
+    "leftRightDistanceDelta": "number"
+  },
+  "quality": {
+    "faceCount": "number",
+    "faceSizeRatio": "number",
+    "blurProxy": "number",
+    "lightingQuality": "number",
+    "contrastQuality": "number",
+    "occlusionRisk": "number",
+    "poseConfidence": "number",
+    "landmarkConfidence": "number"
+  },
+  "derivedOutputs": {
+    "overallScore": "number|null",
+    "categoryScores": {
+      "jawline": "number|null",
+      "eyes": "number|null",
+      "skin": "number|null",
+      "symmetry": "number|null",
+      "hairFraming": "number|null",
+      "facialHarmony": "number|null"
+    },
+    "confidence": "number|null",
+    "rejectionReason": "string|null"
+  }
+}
