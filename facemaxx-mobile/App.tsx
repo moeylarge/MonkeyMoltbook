@@ -181,6 +181,7 @@ type DatasetExportRecord = {
 
 const STORAGE_KEY = 'looksmaxxing.scanHistory.v1';
 const DATASET_EXPORT_KEY = 'looksmaxxing.datasetExports.v1';
+const PENDING_UPLOAD_KEY = 'looksmaxxing.pendingUpload.v1';
 const DATASET_EXPORT_DIR = `${FileSystem.documentDirectory ?? ''}looksmaxxing-dataset`;
 const BRAND_NAME = 'LooksMaxxing';
 const BRAND_FACE_NAME = 'Clavicular';
@@ -1172,9 +1173,10 @@ export default function App() {
   useEffect(() => {
     const loadHistory = async () => {
       try {
-        const [rawHistory, rawExports] = await Promise.all([
+        const [rawHistory, rawExports, rawPendingUpload] = await Promise.all([
           AsyncStorage.getItem(STORAGE_KEY),
           AsyncStorage.getItem(DATASET_EXPORT_KEY),
+          AsyncStorage.getItem(PENDING_UPLOAD_KEY),
         ]);
         if (rawHistory) {
           const parsed = JSON.parse(rawHistory) as ScanRecord[];
@@ -1184,6 +1186,17 @@ export default function App() {
         if (rawExports) {
           const parsedExports = JSON.parse(rawExports) as DatasetExportRecord[];
           setExportCount(parsedExports.length);
+          if (parsedExports[0]?.sampleId) {
+            setLastExportPath(`${DATASET_EXPORT_DIR}/${parsedExports[0].sampleId}.json`);
+          }
+        }
+        if (rawPendingUpload) {
+          const parsedPendingUpload = JSON.parse(rawPendingUpload) as AnalysisImage;
+          if (parsedPendingUpload?.uri) {
+            setSelectedImage(parsedPendingUpload);
+            setImageUri(parsedPendingUpload.uri);
+            setScreen('upload');
+          }
         }
       } catch {
         // keep quiet, local fallback only
@@ -1369,6 +1382,18 @@ export default function App() {
     }
   };
 
+  const persistPendingUpload = async (image: AnalysisImage | undefined) => {
+    try {
+      if (!image) {
+        await AsyncStorage.removeItem(PENDING_UPLOAD_KEY);
+        return;
+      }
+      await AsyncStorage.setItem(PENDING_UPLOAD_KEY, JSON.stringify(image));
+    } catch {
+      // local convenience only
+    }
+  };
+
   const buildDatasetExport = (scan: ScanRecord): DatasetExportRecord => ({
     sampleId: scan.id,
     createdAt: scan.createdAt,
@@ -1455,14 +1480,16 @@ export default function App() {
       });
       if (!result.canceled && result.assets?.[0]?.uri) {
         const asset = result.assets[0];
-        setImageUri(asset.uri);
-        setSelectedImage({
+        const nextImage = {
           uri: asset.uri,
           width: asset.width,
           height: asset.height,
           fileSize: asset.fileSize,
           mimeType: asset.mimeType,
-        });
+        };
+        setImageUri(asset.uri);
+        setSelectedImage(nextImage);
+        await persistPendingUpload(nextImage);
       }
     } finally {
       setBusyPicking(false);
@@ -1482,12 +1509,14 @@ export default function App() {
     try {
       const captured = await cameraRef.current?.takePictureAsync({ quality: 0.8, base64: false });
       if (captured?.uri) {
-        setImageUri(captured.uri);
-        setSelectedImage({
+        const nextImage = {
           uri: captured.uri,
           width: captured.width,
           height: captured.height,
-        });
+        };
+        setImageUri(captured.uri);
+        setSelectedImage(nextImage);
+        await persistPendingUpload(nextImage);
         setSelectedPhoto('Front selfie');
         setScreen('upload');
       }
@@ -1556,12 +1585,14 @@ export default function App() {
     setCurrentScan(scan);
     const nextHistory = [scan, ...history].slice(0, 12);
     await persistHistory(nextHistory);
+    await persistPendingUpload(undefined);
     const datasetRecord = await appendDatasetExport(scan);
     if (datasetRecord) await writeDatasetSampleFile(datasetRecord);
     setScreen('scan');
   };
 
   const resetFlow = () => {
+    persistPendingUpload(undefined);
     setSelectedPhoto('Front selfie');
     setImageUri(undefined);
     setSelectedImage(undefined);
