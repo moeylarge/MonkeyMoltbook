@@ -1,5 +1,4 @@
 import hashlib
-import imghdr
 import logging
 
 from fastapi import FastAPI, File, UploadFile
@@ -16,6 +15,18 @@ logger = logging.getLogger("looksmaxxing.analysis")
 app = FastAPI(title="LooksMaxxing Analysis Backend", version="0.1.0")
 
 
+def detect_image_format(image_bytes: bytes):
+    if image_bytes.startswith(b"\xff\xd8\xff"):
+        return "jpeg"
+    if image_bytes.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "png"
+    if image_bytes.startswith((b"GIF87a", b"GIF89a")):
+        return "gif"
+    if image_bytes.startswith(b"RIFF") and image_bytes[8:12] == b"WEBP":
+        return "webp"
+    return None
+
+
 @app.get("/health")
 def health():
     return {"ok": True, "service": "looksmaxxing-analysis-backend"}
@@ -24,7 +35,7 @@ def health():
 @app.post("/analyze")
 async def analyze(image: UploadFile = File(...)):
     image_bytes = await image.read()
-    detected_format = imghdr.what(None, h=image_bytes)
+    detected_format = detect_image_format(image_bytes)
     request_debug = {
         "filename": image.filename,
         "contentType": image.content_type,
