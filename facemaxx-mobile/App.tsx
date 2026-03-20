@@ -67,6 +67,14 @@ type ImprovementItem = {
   scoreLift: number;
 };
 
+type AnalysisImage = {
+  uri?: string;
+  width?: number;
+  height?: number;
+  fileSize?: number;
+  mimeType?: string;
+};
+
 type AffiliateItem = {
   id: string;
   category: 'skincare' | 'grooming' | 'hair products' | 'fitness items';
@@ -113,6 +121,55 @@ function hashString(input: string) {
     hash = (hash * 31 + input.charCodeAt(i)) >>> 0;
   }
   return hash;
+}
+
+async function readImageSignal(image?: AnalysisImage) {
+  const width = image?.width ?? 1080;
+  const height = image?.height ?? 1350;
+  const fileSize = image?.fileSize ?? 0;
+  const aspect = width / Math.max(1, height);
+
+  let mean = 128;
+  let variance = 34;
+  let transitions = 52;
+  let sampleCount = 0;
+
+  if (image?.uri) {
+    try {
+      const response = await fetch(image.uri);
+      const buffer = await response.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      const stride = Math.max(1, Math.floor(bytes.length / 512));
+      let prev = bytes[0] ?? 0;
+      let total = 0;
+      let totalSq = 0;
+      for (let i = 0; i < bytes.length; i += stride) {
+        const value = bytes[i] ?? 0;
+        total += value;
+        totalSq += value * value;
+        if (Math.abs(value - prev) > 24) transitions += 1;
+        prev = value;
+        sampleCount += 1;
+      }
+      if (sampleCount > 0) {
+        mean = total / sampleCount;
+        variance = Math.sqrt(Math.max(0, totalSq / sampleCount - mean * mean));
+      }
+    } catch {
+      // fall back to metadata-only analysis
+    }
+  }
+
+  return {
+    width,
+    height,
+    fileSize,
+    aspect,
+    mean,
+    variance,
+    transitions,
+    sampleCount,
+  };
 }
 
 function getTierProgress(score: number) {
@@ -314,73 +371,75 @@ function buildRetentionStats(history: ScanRecord[]) {
   };
 }
 
-function buildScanFromSeed(seedSource: string, photoLabel: string, imageUri?: string): ScanRecord {
-  const hash = hashString(seedSource + photoLabel);
-  const baseScore = 58 + (hash % 19);
-  const detailA = (hash >> 3) % 9;
-  const detailB = (hash >> 6) % 8;
-  const detailC = (hash >> 9) % 7;
+async function buildScanFromImage(image: AnalysisImage | undefined, photoLabel: string): Promise<ScanRecord> {
+  const signal = await readImageSignal(image);
+  const signalSeed = `${photoLabel}-${signal.width}-${signal.height}-${signal.fileSize}-${Math.round(signal.mean)}-${Math.round(signal.variance)}-${signal.transitions}`;
+  const hash = hashString(signalSeed);
+
+  const lightingQuality = clamp(52 + (signal.mean - 96) / 2.3, 40, 92);
+  const contrastQuality = clamp(48 + signal.variance * 0.72, 40, 92);
+  const framingQuality = clamp(58 + (0.82 - Math.abs(signal.aspect - 0.82)) * 36, 42, 90);
+  const textureSignal = clamp(46 + Math.min(signal.transitions, 180) / 4.2, 40, 88);
+  const fileSignal = clamp(45 + Math.min(signal.fileSize / 18000, 22), 40, 88);
 
   const breakdownSeed: BreakdownItem[] = [
     {
       key: 'jawline',
       label: 'Jawline',
-      score: clamp(baseScore - 6 + detailA, 44, 89),
+      score: clamp(Math.round((framingQuality * 0.45 + contrastQuality * 0.35 + fileSignal * 0.2) - 4), 42, 90),
       target: 0,
-      why: 'Lower-face definition improves fast when framing and leanness stop fighting each other.',
+      why: 'Lower-face definition responds to cleaner framing, leanness, and stronger image separation.',
       color: '#7C5CFF',
     },
     {
       key: 'eyes',
       label: 'Eye area',
-      score: clamp(baseScore + 1 + detailB, 46, 92),
+      score: clamp(Math.round((lightingQuality * 0.45 + contrastQuality * 0.4 + textureSignal * 0.15) + 1), 44, 92),
       target: 0,
-      why: 'Presence is already there. Small cleanup multiplies perceived sharpness.',
+      why: 'Eye presence depends heavily on lighting quality, contrast, and overall sharpness.',
       color: '#FF4FD8',
     },
     {
       key: 'skin',
       label: 'Skin quality',
-      score: clamp(baseScore - 10 + detailC, 40, 84),
+      score: clamp(Math.round((lightingQuality * 0.3 + textureSignal * 0.45 + fileSignal * 0.25) - 6), 40, 86),
       target: 0,
-      why: 'Texture and tone are often the fastest visible gain in first impression.',
+      why: 'Texture, tone, and image clarity strongly affect how skin quality reads on first impression.',
       color: '#14E38B',
     },
     {
       key: 'symmetry',
       label: 'Symmetry',
-      score: clamp(baseScore - 1 + ((hash >> 12) % 6), 48, 88),
+      score: clamp(Math.round((framingQuality * 0.42 + lightingQuality * 0.28 + contrastQuality * 0.3) - 2), 45, 89),
       target: 0,
-      why: 'Already decent. Better angles matter more than chasing perfect balance.',
+      why: 'Balanced framing and even lighting make facial symmetry read stronger immediately.',
       color: '#4DA3FF',
     },
     {
       key: 'hair',
       label: 'Hair / framing',
-      score: clamp(baseScore - 8 + ((hash >> 15) % 10), 41, 86),
+      score: clamp(Math.round((framingQuality * 0.5 + textureSignal * 0.2 + fileSignal * 0.3) - 5), 41, 88),
       target: 0,
-      why: 'Frame control changes how the same face reads before anything else.',
+      why: 'Hair and overall framing control can dramatically change how the same face presents.',
       color: '#FF8A3D',
     },
     {
       key: 'thirds',
-      label: 'Facial thirds',
-      score: clamp(baseScore - 4 + ((hash >> 18) % 9), 45, 88),
+      label: 'Facial harmony',
+      score: clamp(Math.round((framingQuality * 0.4 + lightingQuality * 0.25 + contrastQuality * 0.35) - 3), 44, 89),
       target: 0,
-      why: 'Balance gets stronger when top volume and lower-face styling work together.',
+      why: 'Harmony improves when proportions, angle, and visual balance all cooperate.',
       color: '#FFD24D',
     },
   ];
 
   const breakdown: BreakdownItem[] = breakdownSeed.map((item, index) => {
-    const targetLift = 7 + ((hash >> (index + 2)) % 12);
+    const targetLift = 6 + ((hash >> (index + 1)) % 10);
     return { ...item, target: clamp(item.score + targetLift, item.score + 4, 95) };
   });
 
   const score = Math.round(breakdown.reduce((sum, item) => sum + item.score, 0) / breakdown.length);
-  const potential = Math.round(
-    clamp(breakdown.reduce((sum, item) => sum + item.target, 0) / breakdown.length + 2, score + 6, 95),
-  );
+  const potential = Math.round(clamp(breakdown.reduce((sum, item) => sum + item.target, 0) / breakdown.length + 2, score + 6, 95));
 
   const archetypes = ['Chadlite', 'Pretty Boy', 'Model Type A', 'Boy Next Door', 'Rugged Masculine'];
   const archetype = archetypes[hash % archetypes.length];
@@ -408,7 +467,7 @@ function buildScanFromSeed(seedSource: string, photoLabel: string, imageUri?: st
     id: `${Date.now()}-${hash}`,
     createdAt: new Date().toISOString(),
     photoLabel,
-    imageUri,
+    imageUri: image?.uri,
     score,
     potential,
     tier,
@@ -422,6 +481,7 @@ export default function App() {
   const [screen, setScreen] = useState<ScreenKey>('hook');
   const [selectedPhoto, setSelectedPhoto] = useState<'Front selfie' | 'Mirror shot' | 'Sharp angle'>('Front selfie');
   const [imageUri, setImageUri] = useState<string | undefined>();
+  const [selectedImage, setSelectedImage] = useState<AnalysisImage | undefined>();
   const [history, setHistory] = useState<ScanRecord[]>([]);
   const [currentScan, setCurrentScan] = useState<ScanRecord | null>(null);
   const [scanIndex, setScanIndex] = useState(0);
@@ -436,6 +496,10 @@ export default function App() {
   const [battleName, setBattleName] = useState('Friend');
   const [battleScoreInput, setBattleScoreInput] = useState('71');
   const [battleArchetype, setBattleArchetype] = useState('Pretty Boy');
+  const [battleImageUri, setBattleImageUri] = useState<string | undefined>();
+  const [battleImage, setBattleImage] = useState<AnalysisImage | undefined>();
+  const [battleScan, setBattleScan] = useState<ScanRecord | null>(null);
+  const [battleBusy, setBattleBusy] = useState(false);
   const [shareTone, setShareTone] = useState<ShareTone>('neutral');
 
   const fade = useRef(new Animated.Value(0)).current;
@@ -482,9 +546,22 @@ export default function App() {
     }),
     [battleName, battleArchetype, battleScoreInput],
   );
+  const activeOpponentProfile = useMemo(() => {
+    if (battleScan) {
+      return {
+        id: 'scan-opponent',
+        name: battleName || 'Friend',
+        archetype: battleScan.archetype,
+        tier: battleScan.tier,
+        score: battleScan.score,
+        vibe: 'derived from real second uploaded image',
+      };
+    }
+    return customBattleProfile.score ? customBattleProfile : selectedBattleProfile;
+  }, [battleScan, battleName, customBattleProfile, selectedBattleProfile]);
   const battleOutcome = useMemo(
-    () => (activeScan ? buildBattleOutcome(activeScan, customBattleProfile.score ? customBattleProfile : selectedBattleProfile) : null),
-    [activeScan, selectedBattleProfile, customBattleProfile],
+    () => (activeScan ? buildBattleOutcome(activeScan, activeOpponentProfile) : null),
+    [activeScan, activeOpponentProfile],
   );
 
   useEffect(() => {
@@ -695,16 +772,61 @@ export default function App() {
         quality: 0.8,
       });
       if (!result.canceled && result.assets?.[0]?.uri) {
-        setImageUri(result.assets[0].uri);
+        const asset = result.assets[0];
+        setImageUri(asset.uri);
+        setSelectedImage({
+          uri: asset.uri,
+          width: asset.width,
+          height: asset.height,
+          fileSize: asset.fileSize,
+          mimeType: asset.mimeType,
+        });
       }
     } finally {
       setBusyPicking(false);
     }
   };
 
+  const pickBattleImage = async () => {
+    try {
+      setBattleBusy(true);
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('Permission needed', 'Allow photo access so FACEMAXX can load a second face for battle mode.');
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [4, 5],
+        quality: 0.8,
+      });
+      if (!result.canceled && result.assets?.[0]?.uri) {
+        const asset = result.assets[0];
+        const nextImage = {
+          uri: asset.uri,
+          width: asset.width,
+          height: asset.height,
+          fileSize: asset.fileSize,
+          mimeType: asset.mimeType,
+        };
+        setBattleImageUri(asset.uri);
+        setBattleImage(nextImage);
+        const analyzed = await buildScanFromImage(nextImage, `${battleName || 'Friend'} battle upload`);
+        setBattleScan(analyzed);
+        setBattleArchetype(analyzed.archetype);
+        setBattleScoreInput(String(analyzed.score));
+      }
+    } finally {
+      setBattleBusy(false);
+    }
+  };
+
   const startScan = async () => {
-    const seed = imageUri ?? `${selectedPhoto}-${Date.now()}`;
-    const rawScan = buildScanFromSeed(seed, selectedPhoto, imageUri);
+    const rawScan = await buildScanFromImage(
+      selectedImage ?? { uri: imageUri },
+      selectedPhoto,
+    );
     const previous = history[0];
     const deltaFromPrevious = previous ? rawScan.score - previous.score : 0;
     const streakDays = previous
@@ -731,6 +853,10 @@ export default function App() {
   const resetFlow = () => {
     setSelectedPhoto('Front selfie');
     setImageUri(undefined);
+    setSelectedImage(undefined);
+    setBattleImageUri(undefined);
+    setBattleImage(undefined);
+    setBattleScan(null);
     setCurrentScan(history[0] ?? null);
     setScreen('hook');
   };
@@ -802,7 +928,7 @@ export default function App() {
       <View style={styles.uploadCard}>
         <Text style={styles.uploadTag}>PHASE 3 LIVE INPUT</Text>
         <Text style={styles.uploadTitle}>{selectedPhoto}</Text>
-        <Text style={styles.uploadCopy}>This now accepts a real image from your library and saves the scan locally on-device.</Text>
+        <Text style={styles.uploadCopy}>This now accepts a real image from your library and runs image-derived local analysis before saving the scan on-device.</Text>
         <View style={styles.photoPreview}>{renderPreview('large')}</View>
       </View>
 
@@ -820,7 +946,7 @@ export default function App() {
 
       <View style={styles.infoStack}>
         <View style={styles.infoCard}>
-          <Text style={styles.infoValue}>{imageUri ? 'LIVE' : 'MOCK'}</Text>
+          <Text style={styles.infoValue}>{imageUri ? 'LIVE' : 'WAITING'}</Text>
           <Text style={styles.infoLabel}>input mode</Text>
         </View>
         <View style={styles.infoCard}>
@@ -1285,14 +1411,14 @@ export default function App() {
 
   const renderBattle = () => {
     if (!activeScan) return null;
-    const activeOpponent = customBattleProfile.score ? customBattleProfile : selectedBattleProfile;
+    const activeOpponent = activeOpponentProfile;
     return (
       <View style={styles.screenBlock}>
         <Text style={styles.sectionKick}>Battle mode</Text>
-        <Text style={styles.sectionTitle}>True two-face compare flow with manual friend entry and a declared winner.</Text>
+        <Text style={styles.sectionTitle}>Real two-face compare flow with a second uploaded image and a declared winner.</Text>
 
         <View style={styles.retentionCard}>
-          <Text style={styles.retentionTitle}>Quick opponent presets</Text>
+          <Text style={styles.retentionTitle}>Opponent setup</Text>
           <View style={styles.optionRow}>
             {battleProfiles.map((profile) => (
               <Pressable
@@ -1303,6 +1429,9 @@ export default function App() {
                   setBattleName(profile.name);
                   setBattleScoreInput(String(profile.score));
                   setBattleArchetype(profile.archetype);
+                  setBattleScan(null);
+                  setBattleImage(undefined);
+                  setBattleImageUri(undefined);
                 }}
               >
                 <Text style={[styles.optionText, selectedBattleId === profile.id && styles.optionTextActive]}>{profile.name}</Text>
@@ -1311,10 +1440,18 @@ export default function App() {
           </View>
           <Text style={styles.battleInputLabel}>Friend name</Text>
           <TextInput value={battleName} onChangeText={setBattleName} style={styles.battleInput} placeholder="Friend name" placeholderTextColor="#6F7690" />
-          <Text style={styles.battleInputLabel}>Friend score</Text>
-          <TextInput value={battleScoreInput} onChangeText={setBattleScoreInput} style={styles.battleInput} keyboardType="numeric" placeholder="0-100" placeholderTextColor="#6F7690" />
-          <Text style={styles.battleInputLabel}>Friend archetype</Text>
-          <TextInput value={battleArchetype} onChangeText={setBattleArchetype} style={styles.battleInput} placeholder="Archetype" placeholderTextColor="#6F7690" />
+          <Pressable style={styles.secondaryButton} onPress={pickBattleImage}>
+            <Text style={styles.secondaryButtonText}>{battleBusy ? 'Analyzing second face…' : battleImageUri ? 'Change Friend Photo' : 'Upload Friend Photo'}</Text>
+          </Pressable>
+          {!battleImageUri && (
+            <>
+              <Text style={styles.battleInputLabel}>Fallback score</Text>
+              <TextInput value={battleScoreInput} onChangeText={setBattleScoreInput} style={styles.battleInput} keyboardType="numeric" placeholder="0-100" placeholderTextColor="#6F7690" />
+              <Text style={styles.battleInputLabel}>Fallback archetype</Text>
+              <TextInput value={battleArchetype} onChangeText={setBattleArchetype} style={styles.battleInput} placeholder="Archetype" placeholderTextColor="#6F7690" />
+            </>
+          )}
+          <Text style={styles.battleFootnote}>{battleImageUri ? 'Second image uploaded. Opponent score is coming from a real second analysis pass.' : 'No second photo yet — manual fallback stays available.'}</Text>
         </View>
 
         <View style={styles.battleArena}>

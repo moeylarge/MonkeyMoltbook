@@ -81,6 +81,11 @@ Still pending:
 - any last micro-cleanup after visual review
 - real monetization plumbing only if Moey wants to move beyond prototype framing
 
+Latest major upgrade:
+- score engine moved from URI/hash-style mock behavior toward image-derived local analysis using actual uploaded image metadata and byte-signal sampling
+- battle mode now supports a real second uploaded image and second analysis pass
+- manual battle entry remains as fallback when no second image is provided
+
 Latest polish pass:
 - spacing tightened across major screens
 - button sizing and tap targets made more consistent
