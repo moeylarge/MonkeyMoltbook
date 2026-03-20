@@ -1586,7 +1586,7 @@ export default function App() {
   const renderHook = () => (
     <View style={styles.heroWrap}>
       <View style={styles.eyebrowRow}>
-        <Text style={styles.eyebrow}>LIVE IDENTITY ENGINE</Text>
+        <Text style={styles.eyebrow}>LIVE FACE ANALYSIS</Text>
         <View style={styles.liveDot} />
       </View>
       <Animated.View style={[styles.heroOrb, { transform: [{ scale: pulse }] }]}>
@@ -1623,12 +1623,12 @@ export default function App() {
   const renderUpload = () => (
     <View style={styles.screenBlock}>
       <Text style={styles.sectionKick}>Photo entry</Text>
-      <Text style={styles.sectionTitle}>Load a real image, then let the local optimization engine analyze it.</Text>
+      <Text style={styles.sectionTitle}>Choose a photo and get a fast read on how your face is presenting right now.</Text>
 
       <View style={styles.uploadCard}>
-        <Text style={styles.uploadTag}>PHASE 3 LIVE INPUT</Text>
+        <Text style={styles.uploadTag}>PHOTO READY</Text>
         <Text style={styles.uploadTitle}>{selectedPhoto}</Text>
-        <Text style={styles.uploadCopy}>This now accepts a real image from your library and runs image-derived local analysis before saving the scan on-device.</Text>
+        <Text style={styles.uploadCopy}>Use a clear photo with one face in frame for the strongest read.</Text>
         <View style={styles.photoPreview}>{renderPreview('large')}</View>
       </View>
 
@@ -1647,7 +1647,7 @@ export default function App() {
       <View style={styles.infoStack}>
         <View style={styles.infoCard}>
           <Text style={styles.infoValue}>{imageUri ? 'LIVE' : 'WAITING'}</Text>
-          <Text style={styles.infoLabel}>input mode</Text>
+          <Text style={styles.infoLabel}>photo status</Text>
         </View>
         <View style={styles.infoCard}>
           <Text style={styles.infoValue}>{history.length}</Text>
@@ -1655,11 +1655,11 @@ export default function App() {
         </View>
         <View style={styles.infoCard}>
           <Text style={styles.infoValue}>{exportCount}</Text>
-          <Text style={styles.infoLabel}>dataset samples</Text>
+          <Text style={styles.infoLabel}>saved samples</Text>
         </View>
         <View style={styles.infoCard}>
           <Text style={styles.infoValue}>LIVE</Text>
-          <Text style={styles.infoLabel}>backend mode</Text>
+          <Text style={styles.infoLabel}>scan mode</Text>
         </View>
       </View>
 
@@ -1678,7 +1678,7 @@ export default function App() {
   const renderCamera = () => (
     <View style={styles.screenBlock}>
       <Text style={styles.sectionKick}>Direct capture</Text>
-      <Text style={styles.sectionTitle}>Take a face photo directly in-app before running the analysis engine.</Text>
+      <Text style={styles.sectionTitle}>Take a photo directly in the app for a cleaner, faster scan.</Text>
       <View style={styles.cameraShell}>
         {cameraPermission?.granted ? (
           <CameraView ref={cameraRef} facing="front" style={styles.cameraView} />
@@ -1697,14 +1697,14 @@ export default function App() {
 
   const renderScan = () => (
     <View style={styles.screenBlock}>
-      <Text style={styles.sectionKick}>Scan experience</Text>
-      <Text style={styles.sectionTitle}>Simulating a fast identity read while keeping the UI alive.</Text>
+      <Text style={styles.sectionKick}>Scanning</Text>
+      <Text style={styles.sectionTitle}>Reading framing, structure, balance, and presentation.</Text>
       <View style={styles.scanCore}>
         <Animated.View style={[styles.scanHalo, { transform: [{ scale: pulse }] }]} />
         <View style={styles.scanFrame}>{renderPreview('large')}</View>
       </View>
       <View style={styles.scanStageCard}>
-        <Text style={styles.scanStageLabel}>Current phase</Text>
+        <Text style={styles.scanStageLabel}>Now reading</Text>
         <Text style={styles.scanStageValue}>{scanStages[scanIndex]}</Text>
       </View>
       <View style={styles.progressTrackLg}>
@@ -1717,7 +1717,7 @@ export default function App() {
       </View>
       <Text style={styles.progressCaption}>{scanProgress}% complete</Text>
       <Pressable style={styles.primaryButton} onPress={() => setScreen('result')}>
-        <Text style={styles.primaryButtonText}>Reveal Result</Text>
+        <Text style={styles.primaryButtonText}>See Result</Text>
       </Pressable>
     </View>
   );
@@ -1815,7 +1815,7 @@ export default function App() {
 
         {!!backendMeasurements && (
           <View style={styles.metricPanel}>
-            <Text style={styles.metricPanelTitle}>Backend measurement panel</Text>
+            <Text style={styles.metricPanelTitle}>Face read details</Text>
             <View style={styles.metricGrid}>
               <View style={styles.metricChip}><Text style={styles.metricKey}>Symmetry</Text><Text style={styles.metricValue}>{Math.round((1 - backendMeasurements.symmetry.noseCenterOffset) * 100)}</Text></View>
               <View style={styles.metricChip}><Text style={styles.metricKey}>Landmark confidence</Text><Text style={styles.metricValue}>{Math.round((backendMeasurements.quality.landmarkConfidence ?? 0) * 100)}</Text></View>
@@ -1824,7 +1824,7 @@ export default function App() {
               <View style={styles.metricChip}><Text style={styles.metricKey}>Interocular</Text><Text style={styles.metricValue}>{backendMeasurements.ratios.interocularRatio.toFixed(2)}</Text></View>
               <View style={styles.metricChip}><Text style={styles.metricKey}>Face count</Text><Text style={styles.metricValue}>{backendMeasurements.quality.faceCount}</Text></View>
             </View>
-            <Text style={styles.metricPanelCopy}>Measurement-inferred archetype: {inferredArchetype}</Text>
+            <Text style={styles.metricPanelCopy}>Current visual archetype read: {inferredArchetype}</Text>
           </View>
         )}
 
@@ -1843,7 +1843,7 @@ export default function App() {
         <Text style={styles.sectionTitle}>Current optimization score versus reachable score.</Text>
         {!!activeScan.measurement && (
           <View style={styles.metricPanelMuted}>
-            <Text style={styles.metricPanelTitle}>Geometry reads behind the score</Text>
+            <Text style={styles.metricPanelTitle}>Why the score looks this way</Text>
             <Text style={styles.metricPanelCopy}>
               Upper / mid / lower thirds: {activeScan.measurement.ratios.upperThirdRatio.toFixed(2)} / {activeScan.measurement.ratios.midThirdRatio.toFixed(2)} / {activeScan.measurement.ratios.lowerThirdRatio.toFixed(2)}
             </Text>
@@ -1995,7 +1995,7 @@ export default function App() {
                 ? 'Recent shaky scans are being logged, but progress trend is waiting for cleaner inputs before calling movement.'
                 : 'Not enough clean scan history yet to call a real trend.'}
           </Text>
-          <Text style={styles.retentionDatasetText}>{exportCount} training-ready samples logged locally so far.</Text>
+          <Text style={styles.retentionDatasetText}>{exportCount} scan samples saved locally so far.</Text>
           {!!lastExportPath && <Text style={styles.retentionDatasetPath}>Last sample file: {lastExportPath}</Text>}
         </View>
 
@@ -2031,7 +2031,7 @@ export default function App() {
       {loadingHistory ? (
         <View style={styles.loadingCard}>
           <ActivityIndicator color="#FF4FD8" />
-          <Text style={styles.loadingText}>Loading saved scans…</Text>
+          <Text style={styles.loadingText}>Loading your scans…</Text>
         </View>
       ) : history.length ? (
         history.map((item, index) => {
@@ -2078,7 +2078,7 @@ export default function App() {
       ) : (
         <View style={styles.emptyCard}>
           <Text style={styles.emptyTitle}>No scans saved yet</Text>
-          <Text style={styles.emptyCopy}>Run one real or mock scan and it will persist locally here.</Text>
+          <Text style={styles.emptyCopy}>Run your first scan and it will show up here automatically.</Text>
         </View>
       )}
       <Pressable style={styles.primaryButton} onPress={() => setScreen('paywall')}>
@@ -2236,7 +2236,7 @@ export default function App() {
     return (
       <View style={styles.screenBlock}>
         <Text style={styles.sectionKick}>Battle mode</Text>
-        <Text style={styles.sectionTitle}>Real two-face compare flow with a second uploaded image and a declared winner.</Text>
+        <Text style={styles.sectionTitle}>Compare your read against a second photo and see who wins the current frame.</Text>
 
         <View style={styles.retentionCard}>
           <Text style={styles.retentionTitle}>Opponent setup</Text>
