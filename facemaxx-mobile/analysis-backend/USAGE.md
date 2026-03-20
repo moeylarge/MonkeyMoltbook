@@ -14,6 +14,8 @@ cd looksmaxxing-mobile/analysis-backend
 ./run_backend.sh
 ```
 
+`run_backend.sh` uses the local `.venv` interpreter directly so the backend runs against the installed project dependencies instead of whatever global `python3` happens to be first on PATH.
+
 ## Health check
 Open:
 - `http://127.0.0.1:8089/health`
