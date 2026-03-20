@@ -1753,7 +1753,7 @@ export default function App() {
       : `You are ${eliteDistance}% away from 100-signal ceiling`;
     return (
       <View style={styles.screenBlock}>
-        <Text style={styles.sectionKick}>Result impact</Text>
+        <Text style={styles.sectionKick}>Your read</Text>
         <View style={[styles.resultCard, isProvisionalResult && styles.resultCardMuted]}>
           <Text style={[styles.rankBadge, isProvisionalResult && styles.rankBadgeMuted]}>{isProvisionalResult ? 'PROVISIONAL' : activeScan.rank}</Text>
           <Text style={styles.resultLabel}>{resultLabel}</Text>
@@ -1816,7 +1816,7 @@ export default function App() {
         )}
 
         <View style={styles.identityLine}>
-          <Text style={styles.identityLineTitle}>Identity tagline</Text>
+          <Text style={styles.identityLineTitle}>LooksMaxxing read</Text>
           <Text style={styles.identityLineText}>{identityTagline}</Text>
           {!!tierProgress && (
             <>
@@ -1835,7 +1835,7 @@ export default function App() {
 
         {!!backendMeasurements && (
           <View style={styles.metricPanel}>
-            <Text style={styles.metricPanelTitle}>Face read details</Text>
+            <Text style={styles.metricPanelTitle}>What the read is seeing</Text>
             <View style={styles.metricGrid}>
               <View style={styles.metricChip}><Text style={styles.metricKey}>Symmetry</Text><Text style={styles.metricValue}>{Math.round((1 - backendMeasurements.symmetry.noseCenterOffset) * 100)}</Text></View>
               <View style={styles.metricChip}><Text style={styles.metricKey}>Landmark confidence</Text><Text style={styles.metricValue}>{Math.round((backendMeasurements.quality.landmarkConfidence ?? 0) * 100)}</Text></View>
@@ -1859,11 +1859,11 @@ export default function App() {
     if (!activeScan) return null;
     return (
       <View style={styles.screenBlock}>
-        <Text style={styles.sectionKick}>Structured breakdown</Text>
-        <Text style={styles.sectionTitle}>Current optimization score versus reachable score.</Text>
+        <Text style={styles.sectionKick}>Score breakdown</Text>
+        <Text style={styles.sectionTitle}>Where your current read is landing, and where the upside still lives.</Text>
         {!!activeScan.measurement && (
           <View style={styles.metricPanelMuted}>
-            <Text style={styles.metricPanelTitle}>Why the score looks this way</Text>
+            <Text style={styles.metricPanelTitle}>Why this read landed here</Text>
             <Text style={styles.metricPanelCopy}>
               Upper / mid / lower thirds: {activeScan.measurement.ratios.upperThirdRatio.toFixed(2)} / {activeScan.measurement.ratios.midThirdRatio.toFixed(2)} / {activeScan.measurement.ratios.lowerThirdRatio.toFixed(2)}
             </Text>
@@ -1939,7 +1939,7 @@ export default function App() {
           </Animated.View>
         ))}
         <Pressable style={styles.primaryButton} onPress={() => setScreen('simulate')}>
-          <Text style={styles.primaryButtonText}>Preview Transformation</Text>
+          <Text style={styles.primaryButtonText}>Preview Your Upgrade</Text>
         </Pressable>
       </View>
     );
@@ -1949,8 +1949,8 @@ export default function App() {
     if (!activeScan) return null;
     return (
       <View style={styles.screenBlock}>
-        <Text style={styles.sectionKick}>Future simulation</Text>
-        <Text style={styles.sectionTitle}>A tighter version of the same identity signal.</Text>
+        <Text style={styles.sectionKick}>Upgrade preview</Text>
+        <Text style={styles.sectionTitle}>A sharper version of the same identity, pushed closer to your ceiling.</Text>
         <View style={styles.simCardWrap}>
           <View style={styles.simCardLeft}>
             <Text style={styles.simTag}>NOW</Text>
@@ -1963,9 +1963,9 @@ export default function App() {
         </View>
 
         <View style={styles.shareCard}>
-          <Text style={styles.shareTitle}>Share card</Text>
-          <Text style={styles.shareHeadline}>I went from {activeScan.score} → {potentialDisplay}</Text>
-          <Text style={styles.shareCaption}>Be honest… is this a real upgrade or not yet?</Text>
+          <Text style={styles.shareTitle}>LooksMaxxing preview</Text>
+          <Text style={styles.shareHeadline}>From {activeScan.score} to a possible {potentialDisplay}</Text>
+          <Text style={styles.shareCaption}>The question is not whether the face changes — it is how much stronger the presentation can get.</Text>
         </View>
 
         <Pressable style={styles.primaryButton} onPress={() => setScreen('share')}>
@@ -2171,11 +2171,11 @@ export default function App() {
     if (!activeScan) return null;
     return (
       <View style={styles.screenBlock}>
-        <Text style={styles.sectionKick}>Improvement engine</Text>
-        <Text style={styles.sectionTitle}>Actionable upgrades tied to your current score and ceiling.</Text>
+        <Text style={styles.sectionKick}>Upgrade plan</Text>
+        <Text style={styles.sectionTitle}>The clearest moves between your current read and your best version.</Text>
 
         <View style={styles.retentionCard}>
-          <Text style={styles.retentionTitle}>Max potential score</Text>
+          <Text style={styles.retentionTitle}>Projected ceiling</Text>
           <Text style={styles.potentialHero}>{activeScan.potential}</Text>
           <Text style={styles.retentionCopy}>{identityTagline}</Text>
         </View>
@@ -2214,8 +2214,8 @@ export default function App() {
     if (!activeScan) return null;
     return (
       <View style={styles.screenBlock}>
-        <Text style={styles.sectionKick}>Share card system</Text>
-        <Text style={styles.sectionTitle}>Export-ready optimization framing built around score, archetype, tier, and upside.</Text>
+        <Text style={styles.sectionKick}>Share your read</Text>
+        <Text style={styles.sectionTitle}>A post-ready LooksMaxxing card built around your score, archetype, tier, and upside.</Text>
 
         <View style={styles.shareExportCard}>
           <Text style={styles.shareExportBrand}>{BRAND_NAME}</Text>
@@ -2224,8 +2224,8 @@ export default function App() {
           <Text style={styles.shareExportArchetype}>{activeScan.archetype}</Text>
           <Text style={styles.shareExportTagline}>{identityTagline}</Text>
           <View style={styles.shareMetaRow}>
-            <View style={styles.shareMetaPill}><Text style={styles.shareMetaText}>Potential {activeScan.potential}</Text></View>
-            <View style={styles.shareMetaPill}><Text style={styles.shareMetaText}>Optimization score</Text></View>
+            <View style={styles.shareMetaPill}><Text style={styles.shareMetaText}>Ceiling {activeScan.potential}</Text></View>
+            <View style={styles.shareMetaPill}><Text style={styles.shareMetaText}>Clavicular standard</Text></View>
           </View>
         </View>
 
@@ -2238,9 +2238,9 @@ export default function App() {
         </View>
 
         <View style={styles.shareCard}>
-          <Text style={styles.shareTitle}>Caption generator</Text>
+          <Text style={styles.shareTitle}>Caption style</Text>
           <Text style={styles.shareHeadline}>{shareCaption}</Text>
-          <Text style={styles.shareCaption}>Built for X, Instagram, and TikTok style posting.</Text>
+          <Text style={styles.shareCaption}>Built for screenshots, stories, X posts, TikToks, and whatever else you want to throw it into.</Text>
         </View>
 
         <Pressable style={styles.primaryButton} onPress={() => setScreen('battle')}>
@@ -2528,10 +2528,10 @@ const styles = StyleSheet.create({
   shareTitle: { color: '#FF4FD8', fontSize: 12, fontWeight: '800', letterSpacing: 1.2 },
   shareHeadline: { color: '#FFFFFF', fontSize: 28, lineHeight: 32, fontWeight: '900', marginTop: 10 },
   shareCaption: { color: '#B7BBD0', fontSize: 14, lineHeight: 20, marginTop: 8 },
-  shareExportCard: { padding: 24, borderRadius: 28, backgroundColor: '#151225', borderWidth: 1, borderColor: '#35295C', gap: 10 },
-  shareExportBrand: { color: '#FF4FD8', fontSize: 12, fontWeight: '800', letterSpacing: 1.4 },
+  shareExportCard: { padding: 24, borderRadius: 28, backgroundColor: '#120F1F', borderWidth: 1, borderColor: '#463276', gap: 10, shadowColor: '#7C5CFF', shadowOpacity: 0.3, shadowRadius: 22, shadowOffset: { width: 0, height: 12 } },
+  shareExportBrand: { color: '#F2E8FF', fontSize: 12, fontWeight: '900', letterSpacing: 1.7 },
   shareExportScore: { color: '#FFFFFF', fontSize: 72, fontWeight: '900' },
-  shareExportTier: { color: '#14E38B', fontSize: 16, fontWeight: '800', textTransform: 'uppercase' },
+  shareExportTier: { color: '#9BF5CB', fontSize: 16, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1.1 },
   shareExportArchetype: { color: '#FFFFFF', fontSize: 24, fontWeight: '900' },
   shareExportTagline: { color: '#C8CDDF', fontSize: 14, lineHeight: 20, marginTop: 4 },
   shareMetaRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 6 },
