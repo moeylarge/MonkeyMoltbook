@@ -10,7 +10,14 @@
 - merge rules exist
 
 ## Next recommended tasks
-- write a helper script to build/update labeling manifests
-- write a merge script for annotations → merged labels
 - decide where exported app JSON files will be copied from device/web runtime into `training/raw-exports/`
-- begin collecting first 25-100 internal samples
+- begin collecting first 25 internal samples
+- hand raters the first-batch packet
+- collect 3 ratings per sample
+- run `build_manifest.py` and `merge_annotations.py` on the first real batch
+
+## First-batch prep status
+- `FIRST_BATCH_PLAN.md` created
+- `FIRST_BATCH_INSTRUCTIONS.md` created
+- `first_batch_manifest.json` created
+- `rater_packet/README.md` created

@@ -1,0 +1,13 @@
+{
+  "version": "v1",
+  "batchName": "first-25",
+  "description": "Starter labeling batch for FACEMAXX model pipeline.",
+  "targetSampleCount": 25,
+  "targetRatersPerSample": 3,
+  "samples": [],
+  "raters": [
+    "rater-001",
+    "rater-002",
+    "rater-003"
+  ]
+}
