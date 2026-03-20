@@ -323,8 +323,22 @@ function getIdentityTagline(scan: ScanRecord) {
 }
 
 function getRecoveryGuidance(scan: ScanRecord) {
-  const reason = scan.rejectionReason ?? '';
   const quality = scan.measurement?.quality;
+  const warnings = scan.warnings ?? [];
+  const derivedReason = (() => {
+    if (scan.rejectionReason) return scan.rejectionReason;
+    const confidence = scan.confidence ?? 0;
+    if ((quality?.faceCount ?? 0) > 1) return 'Multiple faces detected';
+    if ((quality?.faceSizeRatio ?? 1) < 0.09) return 'Face too small in frame';
+    if ((quality?.poseConfidence ?? 1) < 0.4) return 'Angle too strong for reliable scoring';
+    if ((quality?.landmarkConfidence ?? 1) < 0.45) return 'Weak landmark coverage';
+    if (warnings.some((warning) => /lighting/i.test(warning))) return 'Lighting too weak for a confident read';
+    if (warnings.some((warning) => /contrast/i.test(warning))) return 'Contrast too low for a confident read';
+    if (warnings.some((warning) => /blur|soft/i.test(warning))) return 'Image too soft for a confident read';
+    if (confidence < 55) return 'Low scan confidence';
+    return '';
+  })();
+  const reason = derivedReason;
 
   if (reason === 'No face detected') {
     return {
@@ -374,7 +388,7 @@ function getRecoveryGuidance(scan: ScanRecord) {
     };
   }
 
-  if (reason === 'Landmarks too weak for confident analysis') {
+  if (reason === 'Landmarks too weak for confident analysis' || reason === 'Weak landmark coverage') {
     return {
       title: 'The structure read is too soft right now',
       body: `${BRAND_NAME} found a face, but landmark detail is too weak for a confident geometry pass.`,
@@ -382,6 +396,54 @@ function getRecoveryGuidance(scan: ScanRecord) {
         'Use a sharper photo with less motion blur.',
         'Remove sunglasses, heavy shadow, or anything covering key features.',
         `Try better lighting and contrast - current landmark confidence is ${Math.round((quality?.landmarkConfidence ?? 0) * 100)}%.`,
+      ],
+    };
+  }
+
+  if (reason === 'Lighting too weak for a confident read') {
+    return {
+      title: 'The lighting is too weak for a solid read',
+      body: `${BRAND_NAME} can see your face, but low light is flattening detail and making the structure read less trustworthy.`,
+      tips: [
+        'Face a window or brighter front light instead of overhead or back light.',
+        'Avoid strong shadow across the eyes, nose, or jaw.',
+        'Retake with your face evenly lit from the front.',
+      ],
+    };
+  }
+
+  if (reason === 'Contrast too low for a confident read') {
+    return {
+      title: 'The photo is reading too flat right now',
+      body: 'Low contrast makes key structure lines blend together, so the scan is staying conservative instead of overselling certainty.',
+      tips: [
+        'Use a photo with cleaner separation between your face and the background.',
+        'Avoid foggy mirrors, washed-out lighting, or heavy filters.',
+        'Retake in clearer light with stronger edge definition around the face.',
+      ],
+    };
+  }
+
+  if (reason === 'Image too soft for a confident read') {
+    return {
+      title: 'The photo is too soft for a clean read',
+      body: 'Blur or softness is muting the detail the scan needs for a sharper structure pass.',
+      tips: [
+        'Use a steadier shot with less motion blur.',
+        'Wipe the lens and avoid compressed screenshots when possible.',
+        'Retake with your face fully in focus before running the scan again.',
+      ],
+    };
+  }
+
+  if (reason === 'Low scan confidence') {
+    return {
+      title: 'The scan picked up a face, but confidence stayed low',
+      body: 'Enough signal came through to attempt a read, but not enough to make the result feel fully locked in.',
+      tips: [
+        'Use a brighter, sharper, front-facing solo photo.',
+        'Keep the full face visible with a little space around forehead and chin.',
+        'Avoid reflections, heavy shadow, and aggressive angles.',
       ],
     };
   }
@@ -2005,7 +2067,7 @@ export default function App() {
           </View>
         </View>
 
-        {!!activeScan.rejectionReason && (
+        {isProvisionalResult && (
           <View style={styles.warningCard}>
             <Text style={styles.warningEyebrow}>SCAN NEEDS A CLEANER PHOTO</Text>
             <Text style={styles.warningTitle}>{recoveryGuidance.title}</Text>
@@ -2019,7 +2081,7 @@ export default function App() {
               ))}
             </View>
             <View style={styles.warningMetaRow}>
-              <Text style={styles.warningMetaPill}>Reason: {activeScan.rejectionReason}</Text>
+              <Text style={styles.warningMetaPill}>Reason: {activeScan.rejectionReason ?? ((activeScan.confidence ?? 0) < 55 ? 'Low scan confidence' : 'Cautious read')}</Text>
               <Text style={styles.warningMetaPill}>Confidence: {activeScan.confidence ?? 0}</Text>
             </View>
             <Pressable style={styles.secondaryButton} onPress={() => setScreen('upload')}>
