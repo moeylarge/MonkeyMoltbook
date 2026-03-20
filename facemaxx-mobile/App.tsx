@@ -25,7 +25,9 @@ type ScreenKey =
   | 'simulate'
   | 'history'
   | 'paywall'
-  | 'plan';
+  | 'plan'
+  | 'share'
+  | 'battle';
 
 type BreakdownKey = 'jawline' | 'eyes' | 'skin' | 'symmetry' | 'hair' | 'thirds';
 
@@ -64,8 +66,22 @@ type ImprovementItem = {
   scoreLift: number;
 };
 
+type BattleProfile = {
+  id: string;
+  name: string;
+  archetype: string;
+  tier: string;
+  score: number;
+  vibe: string;
+};
+
 const STORAGE_KEY = 'facemaxx.scanHistory.v1';
-const screens: ScreenKey[] = ['hook', 'upload', 'scan', 'result', 'breakdown', 'simulate', 'history', 'paywall', 'plan'];
+const screens: ScreenKey[] = ['hook', 'upload', 'scan', 'result', 'breakdown', 'simulate', 'history', 'paywall', 'plan', 'share', 'battle'];
+const battleProfiles: BattleProfile[] = [
+  { id: '1', name: 'Damon', archetype: 'Pretty Boy', tier: 'Attractive', score: 74, vibe: 'cleaner eye area, softer jaw' },
+  { id: '2', name: 'Rex', archetype: 'Rugged Masculine', tier: 'Elite', score: 83, vibe: 'stronger jawline, rougher skin quality' },
+  { id: '3', name: 'Noah', archetype: 'Boy Next Door', tier: 'Above Average', score: 68, vibe: 'balanced, approachable, less frame control' },
+];
 const scanStages = [
   'Locking face frame',
   'Reading structure tension',
@@ -125,6 +141,35 @@ function getIdentityTagline(scan: ScanRecord) {
   const best = [...scan.breakdown].sort((a, b) => b.target - b.score - (a.target - a.score))[0];
   const upside = Math.max(0, scan.potential - scan.score);
   return `You are a ${scan.archetype} with ${upside >= 12 ? 'high' : upside >= 8 ? 'real' : 'measured'} upside. Improving ${best.label.toLowerCase()} can push you toward ${scan.potential >= 82 ? 'Elite' : scan.potential >= 72 ? 'Attractive' : 'Above Average'}.`;
+}
+
+function buildShareCaption(scan: ScanRecord) {
+  const variants = [
+    `AI says I'm a ${scan.archetype} at ${scan.score}. Accurate or delusional?`,
+    `${scan.score} now, ${scan.potential} potential. Be honest — valid glow-up or cope?`,
+    `FACEMAXX gave me ${scan.tier}. Fair read or absolute cap?`,
+  ];
+  return variants[scan.score % variants.length];
+}
+
+function buildBattleOutcome(scan: ScanRecord, opponent: BattleProfile) {
+  const delta = scan.score - opponent.score;
+  if (delta >= 3) {
+    return {
+      winner: 'you',
+      summary: `You win on overall signal. Your ${scan.archetype.toLowerCase()} read edges out ${opponent.name}'s ${opponent.archetype.toLowerCase()} profile.`,
+    };
+  }
+  if (delta <= -3) {
+    return {
+      winner: 'opponent',
+      summary: `${opponent.name} wins on current signal. Their profile reads stronger right now, but your ceiling is still competitive.`,
+    };
+  }
+  return {
+    winner: 'draw',
+    summary: `Near draw. This comes down to angle, grooming, and who presents their strongest frame better.`,
+  };
 }
 
 function buildImprovementPlan(scan: ScanRecord): ImprovementItem[] {
@@ -334,6 +379,7 @@ export default function App() {
   const [potentialDisplay, setPotentialDisplay] = useState(0);
   const [compareDisplay, setCompareDisplay] = useState(0);
   const [lockedIndex, setLockedIndex] = useState(0);
+  const [selectedBattleId, setSelectedBattleId] = useState<string>(battleProfiles[0].id);
 
   const fade = useRef(new Animated.Value(0)).current;
   const slide = useRef(new Animated.Value(18)).current;
@@ -361,6 +407,15 @@ export default function App() {
   const identityTagline = useMemo(() => (activeScan ? getIdentityTagline(activeScan) : ''), [activeScan]);
   const tierProgress = useMemo(() => (activeScan ? getTierProgress(activeScan.score) : null), [activeScan]);
   const tierProgressPercent = useMemo(() => (activeScan ? getProgressPercent(activeScan.score) : 0), [activeScan]);
+  const shareCaption = useMemo(() => (activeScan ? buildShareCaption(activeScan) : ''), [activeScan]);
+  const selectedBattleProfile = useMemo(
+    () => battleProfiles.find((item) => item.id === selectedBattleId) ?? battleProfiles[0],
+    [selectedBattleId],
+  );
+  const battleOutcome = useMemo(
+    () => (activeScan ? buildBattleOutcome(activeScan, selectedBattleProfile) : null),
+    [activeScan, selectedBattleProfile],
+  );
 
   useEffect(() => {
     const loadHistory = async () => {
@@ -900,8 +955,8 @@ export default function App() {
           <Text style={styles.shareCaption}>Be honest… am I cooked or leveling up?</Text>
         </View>
 
-        <Pressable style={styles.primaryButton} onPress={() => setScreen('history')}>
-          <Text style={styles.primaryButtonText}>Open Scan History</Text>
+        <Pressable style={styles.primaryButton} onPress={() => setScreen('share')}>
+          <Text style={styles.primaryButtonText}>Open Share Card</Text>
         </Pressable>
       </View>
     );
@@ -1052,6 +1107,88 @@ export default function App() {
           </Text>
         </View>
 
+        <Pressable style={styles.primaryButton} onPress={() => setScreen('share')}>
+          <Text style={styles.primaryButtonText}>Continue to Share Card</Text>
+        </Pressable>
+      </View>
+    );
+  };
+
+  const renderShare = () => {
+    if (!activeScan) return null;
+    return (
+      <View style={styles.screenBlock}>
+        <Text style={styles.sectionKick}>Share card system</Text>
+        <Text style={styles.sectionTitle}>Export-ready social framing built around score, archetype, tier, and tagline.</Text>
+
+        <View style={styles.shareExportCard}>
+          <Text style={styles.shareExportBrand}>FACEMAXX</Text>
+          <Text style={styles.shareExportScore}>{activeScan.score}</Text>
+          <Text style={styles.shareExportTier}>{activeScan.tier}</Text>
+          <Text style={styles.shareExportArchetype}>{activeScan.archetype}</Text>
+          <Text style={styles.shareExportTagline}>{identityTagline}</Text>
+          <View style={styles.shareMetaRow}>
+            <View style={styles.shareMetaPill}><Text style={styles.shareMetaText}>Potential {activeScan.potential}</Text></View>
+            <View style={styles.shareMetaPill}><Text style={styles.shareMetaText}>Tier {activeScan.tier}</Text></View>
+          </View>
+        </View>
+
+        <View style={styles.shareCard}>
+          <Text style={styles.shareTitle}>Caption generator</Text>
+          <Text style={styles.shareHeadline}>{shareCaption}</Text>
+          <Text style={styles.shareCaption}>Built for X, Instagram, and TikTok style posting.</Text>
+        </View>
+
+        <Pressable style={styles.primaryButton} onPress={() => setScreen('battle')}>
+          <Text style={styles.primaryButtonText}>Open Battle Mode</Text>
+        </Pressable>
+      </View>
+    );
+  };
+
+  const renderBattle = () => {
+    if (!activeScan) return null;
+    return (
+      <View style={styles.screenBlock}>
+        <Text style={styles.sectionKick}>Battle mode</Text>
+        <Text style={styles.sectionTitle}>Side-by-side comparison with a declared winner.</Text>
+
+        <View style={styles.optionRow}>
+          {battleProfiles.map((profile) => (
+            <Pressable
+              key={profile.id}
+              style={[styles.optionChip, selectedBattleId === profile.id && styles.optionChipActive]}
+              onPress={() => setSelectedBattleId(profile.id)}
+            >
+              <Text style={[styles.optionText, selectedBattleId === profile.id && styles.optionTextActive]}>{profile.name}</Text>
+            </Pressable>
+          ))}
+        </View>
+
+        <View style={styles.battleArena}>
+          <View style={styles.battleCardSelf}>
+            <Text style={styles.battleName}>You</Text>
+            <Text style={styles.battleScore}>{activeScan.score}</Text>
+            <Text style={styles.battleSub}>{activeScan.archetype}</Text>
+            <Text style={styles.battleMeta}>{activeScan.tier}</Text>
+          </View>
+          <View style={styles.battleVersus}><Text style={styles.battleVersusText}>VS</Text></View>
+          <View style={styles.battleCardOpponent}>
+            <Text style={styles.battleName}>{selectedBattleProfile.name}</Text>
+            <Text style={styles.battleScore}>{selectedBattleProfile.score}</Text>
+            <Text style={styles.battleSub}>{selectedBattleProfile.archetype}</Text>
+            <Text style={styles.battleMeta}>{selectedBattleProfile.tier}</Text>
+          </View>
+        </View>
+
+        <View style={styles.retentionCard}>
+          <Text style={styles.retentionTitle}>
+            {battleOutcome?.winner === 'you' ? 'Winner: You' : battleOutcome?.winner === 'opponent' ? `Winner: ${selectedBattleProfile.name}` : 'Result: Draw'}
+          </Text>
+          <Text style={styles.retentionCopy}>{battleOutcome?.summary}</Text>
+          <Text style={styles.battleFootnote}>Opponent profile: {selectedBattleProfile.vibe}</Text>
+        </View>
+
         <Pressable style={styles.primaryButton} onPress={resetFlow}>
           <Text style={styles.primaryButtonText}>Restart Experience</Text>
         </Pressable>
@@ -1079,6 +1216,10 @@ export default function App() {
         return renderPaywall();
       case 'plan':
         return renderPlan();
+      case 'share':
+        return renderShare();
+      case 'battle':
+        return renderBattle();
       default:
         return null;
     }
@@ -1213,6 +1354,15 @@ const styles = StyleSheet.create({
   shareTitle: { color: '#FF4FD8', fontSize: 12, fontWeight: '800', letterSpacing: 1.2 },
   shareHeadline: { color: '#FFFFFF', fontSize: 28, lineHeight: 32, fontWeight: '900', marginTop: 10 },
   shareCaption: { color: '#B7BBD0', fontSize: 14, lineHeight: 20, marginTop: 8 },
+  shareExportCard: { padding: 24, borderRadius: 28, backgroundColor: '#151225', borderWidth: 1, borderColor: '#35295C', gap: 10 },
+  shareExportBrand: { color: '#FF4FD8', fontSize: 12, fontWeight: '800', letterSpacing: 1.4 },
+  shareExportScore: { color: '#FFFFFF', fontSize: 72, fontWeight: '900' },
+  shareExportTier: { color: '#14E38B', fontSize: 16, fontWeight: '800', textTransform: 'uppercase' },
+  shareExportArchetype: { color: '#FFFFFF', fontSize: 24, fontWeight: '900' },
+  shareExportTagline: { color: '#C8CDDF', fontSize: 14, lineHeight: 20, marginTop: 4 },
+  shareMetaRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 6 },
+  shareMetaPill: { paddingHorizontal: 10, paddingVertical: 8, borderRadius: 999, backgroundColor: '#1C1730', borderWidth: 1, borderColor: '#3B2E66' },
+  shareMetaText: { color: '#F0E9FF', fontSize: 12, fontWeight: '700' },
   loadingCard: { padding: 22, borderRadius: 24, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#232535', alignItems: 'center', gap: 10 },
   loadingText: { color: '#C8CDDF', fontSize: 14 },
   retentionSummaryCard: { padding: 20, borderRadius: 24, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#2A2D3F', gap: 14 },
@@ -1256,6 +1406,16 @@ const styles = StyleSheet.create({
   planMetaPill: { paddingHorizontal: 10, paddingVertical: 8, borderRadius: 999, backgroundColor: '#1B1D28', borderWidth: 1, borderColor: '#2A2D3F' },
   planMetaText: { color: '#D3D7E8', fontSize: 12, fontWeight: '700' },
   retentionCard: { padding: 20, borderRadius: 24, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#232535' },
+  battleArena: { flexDirection: 'row', alignItems: 'stretch', gap: 10 },
+  battleCardSelf: { flex: 1, padding: 18, borderRadius: 24, backgroundColor: '#151225', borderWidth: 1, borderColor: '#32255F', alignItems: 'center' },
+  battleCardOpponent: { flex: 1, padding: 18, borderRadius: 24, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#2A2D3F', alignItems: 'center' },
+  battleVersus: { justifyContent: 'center', alignItems: 'center' },
+  battleVersusText: { color: '#FF4FD8', fontSize: 18, fontWeight: '900' },
+  battleName: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
+  battleScore: { color: '#FFFFFF', fontSize: 44, fontWeight: '900', marginTop: 10 },
+  battleSub: { color: '#C8CDDF', fontSize: 13, fontWeight: '700', textAlign: 'center', marginTop: 6 },
+  battleMeta: { color: '#14E38B', fontSize: 12, fontWeight: '800', marginTop: 8, textTransform: 'uppercase' },
+  battleFootnote: { color: '#98A0B8', fontSize: 12, marginTop: 10 },
   potentialHero: { color: '#FFFFFF', fontSize: 54, fontWeight: '900', marginTop: 8 },
   retentionTitle: { color: '#FFFFFF', fontSize: 18, fontWeight: '800' },
   retentionCopy: { color: '#AAB0C5', fontSize: 14, lineHeight: 20, marginTop: 8 },

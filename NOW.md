@@ -70,16 +70,16 @@ Phase 4 progress so far:
 - identity tagline added to result flow
 - uncertainty-loop copy added to encourage re-uploads
 
-Phase 5 progress so far:
-- glow-up tracker summary added to history
-- best score, last change, scan count, and streak surfaced
-- per-scan change labels added
-- progress-to-next-tier meter added to result flow
+Phase 6 progress so far:
+- share card system added with export-style layout
+- social caption generator added
+- battle mode added with selectable opponents
+- winner / draw outcome summary added
 
 Still pending:
 - screenshots / visual proof capture
 - polish pass on motion and spacing
-- Phase 6 viral systems
+- Phase 7 monetization refinement
 
 ## Guardrails
 
