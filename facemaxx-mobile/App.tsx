@@ -180,6 +180,7 @@ type DatasetExportRecord = {
 const STORAGE_KEY = 'facemaxx.scanHistory.v1';
 const DATASET_EXPORT_KEY = 'facemaxx.datasetExports.v1';
 const DATASET_EXPORT_DIR = `${FileSystem.documentDirectory ?? ''}facemaxx-dataset`;
+const ANALYSIS_BACKEND_URL = 'http://127.0.0.1:8089';
 const screens: ScreenKey[] = ['hook', 'upload', 'camera', 'scan', 'result', 'breakdown', 'simulate', 'history', 'paywall', 'plan', 'share', 'battle'];
 const battleProfiles: BattleProfile[] = [
   { id: '1', name: 'Damon', archetype: 'Pretty Boy', tier: 'Attractive', score: 74, vibe: 'cleaner eye area, softer jaw' },
@@ -578,6 +579,147 @@ function buildRetentionStats(history: ScanRecord[]) {
     scoreDelta,
     streakDays,
   };
+}
+
+async function buildScanFromBackend(image: AnalysisImage | undefined, photoLabel: string): Promise<ScanRecord | null> {
+  if (!image?.uri) return null;
+
+  try {
+    const form = new FormData();
+    form.append('image', {
+      uri: image.uri,
+      name: 'scan-image.jpg',
+      type: image.mimeType ?? 'image/jpeg',
+    } as any);
+
+    const response = await fetch(`${ANALYSIS_BACKEND_URL}/analyze`, {
+      method: 'POST',
+      body: form,
+    });
+    if (!response.ok) return null;
+
+    const payload = await response.json();
+    const facemaxx = payload?.facemaxx ?? {};
+    const quality = payload?.quality ?? {};
+    const detection = payload?.detection ?? {};
+    const landmarks = payload?.landmarks ?? {};
+
+    const breakdownSource = facemaxx.breakdown ?? {};
+    const score = clamp(Number(facemaxx.score ?? 0), 0, 100);
+    const confidence = clamp(Number(facemaxx.confidence ?? 0), 0, 100);
+    const breakdown: BreakdownItem[] = [
+      {
+        key: 'jawline',
+        label: 'Jawline',
+        score: clamp(Number(breakdownSource.jawline ?? 0), 0, 100),
+        target: clamp(Number(breakdownSource.jawline ?? 0) + 8, 0, 100),
+        why: 'Backend structural analysis is informing lower-face scoring.',
+        color: '#7C5CFF',
+      },
+      {
+        key: 'eyes',
+        label: 'Eye area',
+        score: clamp(Number(breakdownSource.eyes ?? 0), 0, 100),
+        target: clamp(Number(breakdownSource.eyes ?? 0) + 7, 0, 100),
+        why: 'Backend landmark analysis is informing eye-area scoring.',
+        color: '#FF4FD8',
+      },
+      {
+        key: 'skin',
+        label: 'Skin quality',
+        score: clamp(Number(breakdownSource.skin ?? 0), 0, 100),
+        target: clamp(Number(breakdownSource.skin ?? 0) + 7, 0, 100),
+        why: 'Preprocessing quality metrics are informing visible skin read.',
+        color: '#14E38B',
+      },
+      {
+        key: 'symmetry',
+        label: 'Symmetry',
+        score: clamp(Number(breakdownSource.symmetry ?? 0), 0, 100),
+        target: clamp(Number(breakdownSource.symmetry ?? 0) + 6, 0, 100),
+        why: 'Backend geometry and landmark alignment are informing symmetry scoring.',
+        color: '#4DA3FF',
+      },
+      {
+        key: 'hair',
+        label: 'Hair / framing',
+        score: clamp(Number(breakdownSource.hairFraming ?? 0), 0, 100),
+        target: clamp(Number(breakdownSource.hairFraming ?? 0) + 7, 0, 100),
+        why: 'Face crop quality and framing cues are informing presentation scoring.',
+        color: '#FF8A3D',
+      },
+      {
+        key: 'thirds',
+        label: 'Facial harmony',
+        score: clamp(Number(breakdownSource.facialHarmony ?? 0), 0, 100),
+        target: clamp(Number(breakdownSource.facialHarmony ?? 0) + 6, 0, 100),
+        why: 'Backend facial geometry is informing harmony scoring.',
+        color: '#FFD24D',
+      },
+    ];
+
+    const potential = Math.round(clamp(breakdown.reduce((sum, item) => sum + item.target, 0) / breakdown.length + 1, score + 4, 95));
+    const measurement: MeasurementVector = {
+      landmarks: {
+        faceBounds: {
+          x: Number(detection?.primaryFace?.bbox?.[0] ?? 0),
+          y: Number(detection?.primaryFace?.bbox?.[1] ?? 0),
+          width: Math.max(0, Number(detection?.primaryFace?.bbox?.[2] ?? 0) - Number(detection?.primaryFace?.bbox?.[0] ?? 0)),
+          height: Math.max(0, Number(detection?.primaryFace?.bbox?.[3] ?? 0) - Number(detection?.primaryFace?.bbox?.[1] ?? 0)),
+        },
+      },
+      ratios: {
+        faceWidthHeight: 0,
+        interocularRatio: 0,
+        jawWidthRatio: 0,
+        upperThirdRatio: 0,
+        midThirdRatio: 0,
+        lowerThirdRatio: 0,
+        noseCenterOffsetRatio: 0,
+        cheekToJawProxyRatio: 0,
+      },
+      symmetry: {
+        eyeHeightDelta: 0,
+        noseCenterOffset: 0,
+        rollImbalance: 0,
+        leftRightDistanceDelta: 0,
+      },
+      quality: {
+        faceCount: Number(detection?.faceCount ?? 0),
+        faceSizeRatio: 0,
+        blurProxy: Number(quality?.blurScore ?? 0),
+        lightingQuality: Number(quality?.brightness ?? 0),
+        contrastQuality: Number(quality?.contrast ?? 0),
+        occlusionRisk: 0,
+        poseConfidence: landmarks?.available ? 1 : 0,
+        landmarkConfidence: landmarks?.landmarkCount ? 1 : 0,
+      },
+      derivedOutputs: {
+        confidence,
+        rejectionReason: facemaxx.rejectionReason ?? null,
+        warnings: facemaxx.warnings ?? [],
+      },
+    };
+
+    return {
+      id: `${Date.now()}-backend`,
+      createdAt: new Date().toISOString(),
+      photoLabel,
+      imageUri: image.uri,
+      score,
+      potential,
+      tier: facemaxx.tier ?? 'Above Average',
+      rank: `${facemaxx.tier ?? 'Above Average'} Signal`,
+      archetype: facemaxx.archetype ?? 'Model Type A',
+      breakdown,
+      measurement,
+      confidence,
+      rejectionReason: facemaxx.rejectionReason ?? null,
+      warnings: facemaxx.warnings ?? [],
+    };
+  } catch {
+    return null;
+  }
 }
 
 async function buildScanFromImage(image: AnalysisImage | undefined, photoLabel: string): Promise<ScanRecord> {
@@ -1203,7 +1345,7 @@ export default function App() {
         };
         setBattleImageUri(asset.uri);
         setBattleImage(nextImage);
-        const analyzed = await buildScanFromImage(nextImage, `${battleName || 'Friend'} battle upload`);
+        const analyzed = (await buildScanFromBackend(nextImage, `${battleName || 'Friend'} battle upload`)) ?? (await buildScanFromImage(nextImage, `${battleName || 'Friend'} battle upload`));
         setBattleScan(analyzed);
         setBattleArchetype(analyzed.archetype);
         setBattleScoreInput(String(analyzed.score));
@@ -1216,10 +1358,8 @@ export default function App() {
   };
 
   const startScan = async () => {
-    const rawScan = await buildScanFromImage(
-      selectedImage ?? { uri: imageUri },
-      selectedPhoto,
-    );
+    const inputImage = selectedImage ?? { uri: imageUri };
+    const rawScan = (await buildScanFromBackend(inputImage, selectedPhoto)) ?? (await buildScanFromImage(inputImage, selectedPhoto));
     const previous = history[0];
     const deltaFromPrevious = previous ? rawScan.score - previous.score : 0;
     const streakDays = previous
@@ -1351,6 +1491,10 @@ export default function App() {
         <View style={styles.infoCard}>
           <Text style={styles.infoValue}>{exportCount}</Text>
           <Text style={styles.infoLabel}>dataset samples</Text>
+        </View>
+        <View style={styles.infoCard}>
+          <Text style={styles.infoValue}>LIVE</Text>
+          <Text style={styles.infoLabel}>backend mode</Text>
         </View>
       </View>
 

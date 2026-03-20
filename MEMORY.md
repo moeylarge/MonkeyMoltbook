@@ -34,6 +34,7 @@ Current recommendation:
 - the chosen technical direction for the next serious engine upgrade is the fuller local stack: OpenCV + InsightFace + MediaPipe + FACEMAXX calibration, scaffolded under `facemaxx-mobile/analysis-backend/`
 - `analysis-backend/` now contains initial Python modules for preprocessing, detection/alignment, landmarks, calibration, FastAPI server, requirements, and usage docs, and the local backend environment installs successfully with a passing `/health` check
 - `/analyze` now works end-to-end against a real face test image: OpenCV preprocessing works, InsightFace detection works, MediaPipe landmark extraction works via the Tasks API, and FACEMAXX calibration returns a structured payload
+- FACEMAXX app now prefers the local backend endpoint for primary scans and battle-image analysis, while retaining heuristic fallback
 - before attempting a deeply trained attractiveness model, use the roadmap files in `facemaxx-mobile/` to build the measurement schema, dataset, and v1 model pipeline
 - only add real monetization plumbing after validating the product loop
 
