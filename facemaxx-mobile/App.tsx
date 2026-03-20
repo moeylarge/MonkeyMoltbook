@@ -2142,7 +2142,7 @@ export default function App() {
   const renderPaywall = () => (
     <View style={styles.screenBlock}>
       <Text style={styles.sectionKick}>LooksMaxxing pro</Text>
-      <Text style={styles.sectionTitle}>Unlock the deeper read and the Clavicular-standard plan.</Text>
+      <Text style={styles.sectionTitle}>Unlock the deeper read and Clavicular-standard plan.</Text>
       <Animated.View
         style={[
           styles.paywallCard,
@@ -2247,7 +2247,7 @@ export default function App() {
     return (
       <View style={styles.screenBlock}>
         <Text style={styles.sectionKick}>Share your read</Text>
-        <Text style={styles.sectionTitle}>A post-ready card built around your score, archetype, and upside.</Text>
+        <Text style={styles.sectionTitle}>A post-ready card for your score, archetype, and upside.</Text>
 
         <View style={styles.shareExportCard}>
           <Text style={styles.shareExportBrand}>{BRAND_NAME}</Text>
@@ -2288,7 +2288,7 @@ export default function App() {
     return (
       <View style={styles.screenBlock}>
         <Text style={styles.sectionKick}>Standard clash</Text>
-        <Text style={styles.sectionTitle}>Put two reads side by side and see who is closer to the standard right now.</Text>
+        <Text style={styles.sectionTitle}>See which read is closer to the standard right now.</Text>
 
         <View style={styles.retentionCard}>
           <Text style={styles.retentionTitle}>Choose a challenger</Text>
@@ -2519,7 +2519,7 @@ const styles = StyleSheet.create({
   warningMetaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 },
   warningMetaPill: { color: '#FFD7DF', fontSize: 12, fontWeight: '700', backgroundColor: '#341D24', borderWidth: 1, borderColor: '#5A2C34', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6 },
   metricPanel: { padding: 20, borderRadius: 24, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#2A2D3F', gap: 12, shadowColor: '#000000', shadowOpacity: 0.16, shadowRadius: 14, shadowOffset: { width: 0, height: 8 } },
-  metricPanelMuted: { padding: 20, borderRadius: 24, backgroundColor: '#151621', borderWidth: 1, borderColor: '#2C3145', gap: 8, shadowColor: '#000000', shadowOpacity: 0.14, shadowRadius: 12, shadowOffset: { width: 0, height: 8 } },
+  metricPanelMuted: { padding: 22, borderRadius: 24, backgroundColor: '#161824', borderWidth: 1, borderColor: '#333954', gap: 8, shadowColor: '#000000', shadowOpacity: 0.16, shadowRadius: 14, shadowOffset: { width: 0, height: 8 } },
   metricPanelTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
   metricPanelCopy: { color: '#B7BBD0', fontSize: 13, lineHeight: 18 },
   metricGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, rowGap: 10 },
@@ -2563,7 +2563,7 @@ const styles = StyleSheet.create({
   simFaceScoreAccent: { color: '#14E38B', fontSize: 36, fontWeight: '900' },
   shareCard: { padding: 22, borderRadius: 26, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#2C3044', shadowColor: '#000000', shadowOpacity: 0.18, shadowRadius: 14, shadowOffset: { width: 0, height: 8 } },
   shareTitle: { color: '#FF4FD8', fontSize: 12, fontWeight: '800', letterSpacing: 1.2 },
-  shareHeadline: { color: '#FFFFFF', fontSize: 28, lineHeight: 32, fontWeight: '900', marginTop: 10 },
+  shareHeadline: { color: '#FFFFFF', fontSize: 24, lineHeight: 30, fontWeight: '900', marginTop: 10 },
   shareCaption: { color: '#B7BBD0', fontSize: 14, lineHeight: 20, marginTop: 8 },
   shareExportCard: { padding: 24, borderRadius: 28, backgroundColor: '#120F1F', borderWidth: 1, borderColor: '#463276', gap: 10, shadowColor: '#7C5CFF', shadowOpacity: 0.3, shadowRadius: 22, shadowOffset: { width: 0, height: 12 } },
   shareExportBrand: { color: '#F2E8FF', fontSize: 12, fontWeight: '900', letterSpacing: 1.7 },
