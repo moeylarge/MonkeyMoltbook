@@ -22,7 +22,7 @@ Updated: 2026-03-20 12:51 AM America/Los_Angeles
 ## Current truth
 
 - Primary active project: **FACEMAXX**
-- Intended next phase: **finish Phase 3, then move to Phase 4**
+- Intended next phase: **Phase 4 improvement engine is now implemented after Phase 3 verification**
 - FACEMAXX has been restored into the active workspace at:
   - `/Users/moey/.openclaw/workspace/facemaxx-mobile`
 - Moey ended the night to sleep and wants to resume tomorrow from FACEMAXX, not restart context discovery
@@ -35,13 +35,16 @@ Update:
 - TypeScript validation passed after the Phase 3 code update
 
 Current next steps:
-1. Run the restored project and confirm it boots on-device/web
-2. Verify the new Phase 3 features actually work in runtime:
-   - real image picker / upload handling
-   - local result-generation logic
-   - saved scan history / persistence
-3. Capture proof screenshots / verification
-4. Do the polish pass on motion and spacing
+1. Phase 3 verification completed enough to proceed:
+   - TypeScript passes
+   - Expo web export succeeds
+2. Phase 4 improvement engine implemented in `facemaxx-mobile/App.tsx`:
+   - personalized max potential score section
+   - actionable recommendations by category
+   - impact / difficulty / time-to-result metadata
+   - identity tagline + uncertainty loop copy
+3. Next recommended build target: Phase 5 retention systems
+4. Later polish: screenshots / motion / spacing refinement
 
 ## UFC note
 

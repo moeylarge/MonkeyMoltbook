@@ -51,6 +51,17 @@ type ScanRecord = {
   breakdown: BreakdownItem[];
 };
 
+type ImprovementItem = {
+  id: string;
+  category: 'grooming' | 'hairstyle' | 'skincare' | 'fitness/body fat' | 'optional cosmetic';
+  title: string;
+  detail: string;
+  impact: 'low' | 'medium' | 'high';
+  difficulty: 'easy' | 'moderate' | 'hard';
+  timeToResult: string;
+  scoreLift: number;
+};
+
 const STORAGE_KEY = 'facemaxx.scanHistory.v1';
 const screens: ScreenKey[] = ['hook', 'upload', 'scan', 'result', 'breakdown', 'simulate', 'history', 'paywall', 'plan'];
 const scanStages = [
@@ -73,6 +84,93 @@ function hashString(input: string) {
     hash = (hash * 31 + input.charCodeAt(i)) >>> 0;
   }
   return hash;
+}
+
+function getTierProgress(score: number) {
+  if (score < 55) {
+    return { nextTier: 'Above Average', nextThreshold: 55 };
+  }
+  if (score < 72) {
+    return { nextTier: 'Attractive', nextThreshold: 72 };
+  }
+  if (score < 82) {
+    return { nextTier: 'Elite', nextThreshold: 82 };
+  }
+  if (score < 92) {
+    return { nextTier: 'Genetic Outlier', nextThreshold: 92 };
+  }
+  return { nextTier: 'Genetic Outlier', nextThreshold: 100 };
+}
+
+function getIdentityTagline(scan: ScanRecord) {
+  const best = [...scan.breakdown].sort((a, b) => b.target - b.score - (a.target - a.score))[0];
+  const upside = Math.max(0, scan.potential - scan.score);
+  return `You are a ${scan.archetype} with ${upside >= 12 ? 'high' : upside >= 8 ? 'real' : 'measured'} upside. Improving ${best.label.toLowerCase()} can push you toward ${scan.potential >= 82 ? 'Elite' : scan.potential >= 72 ? 'Attractive' : 'Above Average'}.`;
+}
+
+function buildImprovementPlan(scan: ScanRecord): ImprovementItem[] {
+  const lifts = [...scan.breakdown]
+    .map((item) => ({ ...item, lift: item.target - item.score }))
+    .sort((a, b) => b.lift - a.lift);
+
+  const primary = lifts[0];
+  const secondary = lifts[1] ?? lifts[0];
+  const skin = lifts.find((item) => item.key === 'skin') ?? lifts[0];
+  const hair = lifts.find((item) => item.key === 'hair') ?? lifts[1] ?? lifts[0];
+  const jaw = lifts.find((item) => item.key === 'jawline') ?? lifts[0];
+
+  return [
+    {
+      id: 'grooming-1',
+      category: 'grooming',
+      title: 'Clean up the frame first',
+      detail: `Tighten beard lines, trim neck bulk, and clean the brow area so ${primary.label.toLowerCase()} reads sharper instead of softer.`,
+      impact: primary.lift >= 10 ? 'high' : 'medium',
+      difficulty: 'easy',
+      timeToResult: '3-7 days',
+      scoreLift: Math.min(4, Math.max(2, Math.round(primary.lift / 3))),
+    },
+    {
+      id: 'hair-1',
+      category: 'hairstyle',
+      title: 'Change the silhouette around the face',
+      detail: `Use more intentional volume and cleaner side control. ${hair.label} is suppressing the way your upper third currently reads.`,
+      impact: hair.lift >= 10 ? 'high' : 'medium',
+      difficulty: 'moderate',
+      timeToResult: '1-2 weeks',
+      scoreLift: Math.min(5, Math.max(2, Math.round(hair.lift / 3))),
+    },
+    {
+      id: 'skin-1',
+      category: 'skincare',
+      title: 'Run a basic skin reset',
+      detail: `Consistency matters more than complexity here: cleanse, moisturize, SPF, and reduce irritation so ${skin.label.toLowerCase()} stops dragging first impression.`,
+      impact: skin.lift >= 9 ? 'high' : 'medium',
+      difficulty: 'easy',
+      timeToResult: '2-6 weeks',
+      scoreLift: Math.min(4, Math.max(2, Math.round(skin.lift / 3))),
+    },
+    {
+      id: 'fitness-1',
+      category: 'fitness/body fat',
+      title: 'Lean down enough to reveal structure',
+      detail: `A modest body-fat drop and better posture will make ${jaw.label.toLowerCase()} and overall facial harmony read stronger without changing identity.`,
+      impact: jaw.lift >= 10 ? 'high' : 'medium',
+      difficulty: 'hard',
+      timeToResult: '6-12 weeks',
+      scoreLift: Math.min(6, Math.max(3, Math.round(jaw.lift / 2.5))),
+    },
+    {
+      id: 'cosmetic-1',
+      category: 'optional cosmetic',
+      title: 'Only consider clinical upgrades after the basics',
+      detail: `If you still plateau after grooming, skin, and leanness, get a neutral consult for dermatology, orthodontics, or hair-density support.`,
+      impact: secondary.lift >= 11 ? 'medium' : 'low',
+      difficulty: 'hard',
+      timeToResult: '2-6 months',
+      scoreLift: Math.min(5, Math.max(1, Math.round(secondary.lift / 4))),
+    },
+  ];
 }
 
 function buildScanFromSeed(seedSource: string, photoLabel: string, imageUri?: string): ScanRecord {
@@ -211,6 +309,10 @@ export default function App() {
     if (!activeScan) return null;
     return [...activeScan.breakdown].sort((a, b) => b.target - b.score - (a.target - a.score))[0];
   }, [activeScan]);
+
+  const improvementPlan = useMemo(() => (activeScan ? buildImprovementPlan(activeScan) : []), [activeScan]);
+  const identityTagline = useMemo(() => (activeScan ? getIdentityTagline(activeScan) : ''), [activeScan]);
+  const tierProgress = useMemo(() => (activeScan ? getTierProgress(activeScan.score) : null), [activeScan]);
 
   useEffect(() => {
     const loadHistory = async () => {
@@ -608,12 +710,13 @@ export default function App() {
         </View>
 
         <View style={styles.identityLine}>
-          <Text style={styles.identityLineTitle}>Signal read</Text>
-          <Text style={styles.identityLineText}>
-            {topImprovement
-              ? `Your biggest visible upside is ${topImprovement.label.toLowerCase()}. That is the easiest place to create a stronger first impression.`
-              : 'Good base. The upside is in polish, framing, and consistency.'}
-          </Text>
+          <Text style={styles.identityLineTitle}>Identity tagline</Text>
+          <Text style={styles.identityLineText}>{identityTagline}</Text>
+          {!!tierProgress && (
+            <Text style={styles.identityProgressText}>
+              {Math.max(0, tierProgress.nextThreshold - activeScan.score)} points away from {tierProgress.nextTier}
+            </Text>
+          )}
         </View>
 
         <Pressable style={styles.primaryButton} onPress={() => setScreen('breakdown')}>
@@ -800,34 +903,48 @@ export default function App() {
     </View>
   );
 
-  const renderPlan = () => (
-    <View style={styles.screenBlock}>
-      <Text style={styles.sectionKick}>Improvement engine</Text>
-      <Text style={styles.sectionTitle}>Use the score, save the rerates, build the climb.</Text>
-      <View style={styles.planCard}>
-        <Text style={styles.planTier}>FREE</Text>
-        <Text style={styles.planHeadline}>Fix framing before chasing perfect genetics</Text>
-        <Text style={styles.planCopy}>Hair outline, camera angle, lower-face definition, light, and consistency first.</Text>
+  const renderPlan = () => {
+    if (!activeScan) return null;
+    return (
+      <View style={styles.screenBlock}>
+        <Text style={styles.sectionKick}>Improvement engine</Text>
+        <Text style={styles.sectionTitle}>Actionable upgrades tied to your current score and ceiling.</Text>
+
+        <View style={styles.retentionCard}>
+          <Text style={styles.retentionTitle}>Max potential score</Text>
+          <Text style={styles.potentialHero}>{activeScan.potential}</Text>
+          <Text style={styles.retentionCopy}>{identityTagline}</Text>
+        </View>
+
+        {improvementPlan.map((item) => (
+          <View key={item.id} style={item.impact === 'high' ? styles.planCardAccent : styles.planCard}>
+            <View style={styles.planTopRow}>
+              <Text style={styles.planTier}>{item.category}</Text>
+              <Text style={styles.planLift}>+{item.scoreLift}</Text>
+            </View>
+            <Text style={styles.planHeadline}>{item.title}</Text>
+            <Text style={styles.planCopy}>{item.detail}</Text>
+            <View style={styles.planMetaRow}>
+              <View style={styles.planMetaPill}><Text style={styles.planMetaText}>Impact: {item.impact}</Text></View>
+              <View style={styles.planMetaPill}><Text style={styles.planMetaText}>Difficulty: {item.difficulty}</Text></View>
+              <View style={styles.planMetaPill}><Text style={styles.planMetaText}>{item.timeToResult}</Text></View>
+            </View>
+          </View>
+        ))}
+
+        <View style={styles.retentionCard}>
+          <Text style={styles.retentionTitle}>Uncertainty loop</Text>
+          <Text style={styles.retentionCopy}>
+            Lighting may affect this read. Try a cleaner angle, tighter hair control, or better skin-day conditions — that alone could add +2 to +4.
+          </Text>
+        </View>
+
+        <Pressable style={styles.primaryButton} onPress={resetFlow}>
+          <Text style={styles.primaryButtonText}>Restart Experience</Text>
+        </Pressable>
       </View>
-      <View style={styles.planCard}>
-        <Text style={styles.planTier}>INTERMEDIATE</Text>
-        <Text style={styles.planHeadline}>Turn your strongest angles into your default look</Text>
-        <Text style={styles.planCopy}>Skin reset, brow cleanup, beard-line control, posture, neck, and fit.</Text>
-      </View>
-      <View style={styles.planCardAccent}>
-        <Text style={styles.planTier}>ADVANCED</Text>
-        <Text style={styles.planHeadline}>Push the face into higher-status territory</Text>
-        <Text style={styles.planCopy}>Lean-down targets, gym protocol, premium grooming, and tracked rerates over time.</Text>
-      </View>
-      <View style={styles.retentionCard}>
-        <Text style={styles.retentionTitle}>Phase 3 proof</Text>
-        <Text style={styles.retentionCopy}>Real image picking, local score generation, and persisted history are now wired into the app.</Text>
-      </View>
-      <Pressable style={styles.primaryButton} onPress={resetFlow}>
-        <Text style={styles.primaryButtonText}>Restart Experience</Text>
-      </Pressable>
-    </View>
-  );
+    );
+  };
 
   const renderCurrent = () => {
     switch (screen) {
@@ -947,6 +1064,7 @@ const styles = StyleSheet.create({
   identityLine: { padding: 18, borderRadius: 22, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#232535' },
   identityLineTitle: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
   identityLineText: { color: '#AAB0C5', fontSize: 14, lineHeight: 20, marginTop: 6 },
+  identityProgressText: { color: '#14E38B', fontSize: 13, fontWeight: '800', marginTop: 10 },
   breakCard: { padding: 18, borderRadius: 22, backgroundColor: '#11121A', borderWidth: 1, borderColor: '#232535', gap: 14 },
   breakTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   breakLabel: { color: '#FFFFFF', fontSize: 18, fontWeight: '800', flex: 1 },
@@ -1005,10 +1123,16 @@ const styles = StyleSheet.create({
   lockedRowTag: { color: '#14E38B', fontSize: 11, fontWeight: '800' },
   planCard: { padding: 20, borderRadius: 24, backgroundColor: '#11121A', borderWidth: 1, borderColor: '#232535', gap: 8 },
   planCardAccent: { padding: 20, borderRadius: 24, backgroundColor: '#151225', borderWidth: 1, borderColor: '#32255F', gap: 8 },
-  planTier: { color: '#FF4FD8', fontSize: 12, fontWeight: '800', letterSpacing: 1.2 },
+  planTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  planTier: { color: '#FF4FD8', fontSize: 12, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase' },
+  planLift: { color: '#14E38B', fontSize: 22, fontWeight: '900' },
   planHeadline: { color: '#FFFFFF', fontSize: 22, lineHeight: 27, fontWeight: '900' },
   planCopy: { color: '#AAB0C5', fontSize: 14, lineHeight: 20 },
+  planMetaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
+  planMetaPill: { paddingHorizontal: 10, paddingVertical: 8, borderRadius: 999, backgroundColor: '#1B1D28', borderWidth: 1, borderColor: '#2A2D3F' },
+  planMetaText: { color: '#D3D7E8', fontSize: 12, fontWeight: '700' },
   retentionCard: { padding: 20, borderRadius: 24, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#232535' },
+  potentialHero: { color: '#FFFFFF', fontSize: 54, fontWeight: '900', marginTop: 8 },
   retentionTitle: { color: '#FFFFFF', fontSize: 18, fontWeight: '800' },
   retentionCopy: { color: '#AAB0C5', fontSize: 14, lineHeight: 20, marginTop: 8 },
 });
