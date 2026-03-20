@@ -98,3 +98,11 @@ The point is simple:
 - lose the session, keep the thread
 - lose the UI, keep the plan
 - lose the daemon, keep the recovery path
+
+
+High-priority handoff update:
+- Do not lose the fact that the backend is now real and connected to the app.
+- Backend stack: OpenCV + InsightFace + MediaPipe + FACEMAXX calibration.
+- `/analyze` works end-to-end.
+- App prefers backend analysis already.
+- Next session should begin by reading MEMORY.md, memory/2026-03-20.md, NOW.md, and the FACEMAXX backend/training docs listed there.

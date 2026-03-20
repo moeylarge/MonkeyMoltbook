@@ -121,3 +121,9 @@ Latest review notes:
 - Do **not** create cron jobs or loops unless Moey explicitly asks
 - Do **not** switch projects without clear instruction
 - Preserve recovery state here and in `HANDOFF.md`
+
+
+Context-save update:
+- FACEMAXX current state is strong enough that a new session should NOT restart planning from scratch.
+- Local backend is working end-to-end and app is connected to it.
+- Immediate resume point: visual review + polish, then continue backend/app refinement and real sample collection.
