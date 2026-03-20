@@ -735,7 +735,7 @@ async function buildScanFromBackend(image: AnalysisImage | undefined, photoLabel
     }
 
     const payload = await response.json();
-    const looksmaxxing = payload?.looksmaxxing ?? payload?.facemaxx ?? {};
+    const looksmaxxing = payload?.looksmaxxing ?? {};
     const quality = payload?.quality ?? {};
     const detection = payload?.detection ?? {};
     const landmarks = payload?.landmarks ?? {};
