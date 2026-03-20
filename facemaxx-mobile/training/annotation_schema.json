@@ -1,0 +1,29 @@
+{
+  "version": "v1",
+  "description": "Human annotation payload for FACEMAXX dataset samples.",
+  "sampleId": "string",
+  "imageId": "string|null",
+  "raterId": "string",
+  "createdAt": "ISO-8601 string",
+  "ratings": {
+    "overall": "number 0-100",
+    "jawline": "number 0-100",
+    "eyes": "number 0-100",
+    "skin": "number 0-100",
+    "symmetry": "number 0-100",
+    "hairFraming": "number 0-100",
+    "facialHarmony": "number 0-100"
+  },
+  "archetypeLabel": "string|null",
+  "imageQuality": "low|medium|high",
+  "ratingConfidence": "low|medium|high",
+  "flags": {
+    "multipleFaces": "boolean",
+    "occluded": "boolean",
+    "extremeAngle": "boolean",
+    "filteredOrEdited": "boolean",
+    "tooBlurry": "boolean",
+    "invalidSample": "boolean"
+  },
+  "notes": "string|null"
+}

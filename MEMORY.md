@@ -30,6 +30,7 @@ Important upgrades completed on 2026-03-20:
 
 Current recommendation:
 - FACEMAXX now also has a documented v2 roadmap for real measurement / dataset / model / calibration work
+- the workspace now includes a real labeling scaffold under `facemaxx-mobile/training/` with annotation schema/template, merge rules, status docs, raw/annotation/merged/review folders, and a manifest builder script
 - before attempting a deeply trained attractiveness model, use the roadmap files in `facemaxx-mobile/` to build the measurement schema, dataset, and v1 model pipeline
 - only add real monetization plumbing after validating the product loop
 

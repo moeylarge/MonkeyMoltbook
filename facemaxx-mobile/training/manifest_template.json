@@ -1,0 +1,13 @@
+{
+  "version": "v1",
+  "description": "Manifest of FACEMAXX raw exports prepared for labeling.",
+  "samples": [
+    {
+      "sampleId": "sample-001",
+      "rawExportPath": "training/raw-exports/sample-001.json",
+      "annotationCount": 0,
+      "status": "unlabeled",
+      "notes": null
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "sampleId": "REPLACE_ME",
+  "imageId": null,
+  "raterId": "rater-001",
+  "createdAt": "2026-03-20T00:00:00.000Z",
+  "ratings": {
+    "overall": 0,
+    "jawline": 0,
+    "eyes": 0,
+    "skin": 0,
+    "symmetry": 0,
+    "hairFraming": 0,
+    "facialHarmony": 0
+  },
+  "archetypeLabel": null,
+  "imageQuality": "medium",
+  "ratingConfidence": "medium",
+  "flags": {
+    "multipleFaces": false,
+    "occluded": false,
+    "extremeAngle": false,
+    "filteredOrEdited": false,
+    "tooBlurry": false,
+    "invalidSample": false
+  },
+  "notes": null
+}

@@ -81,6 +81,7 @@ Still pending:
 - final visual review using `facemaxx-mobile/REVIEW_CHECKLIST.md`
 - any last micro-cleanup after visual review
 - serious backend/model work should follow `facemaxx-mobile/FACEMAXX_V2_ROADMAP.md`
+- next backend step after this scaffold: annotation merge script + first real labeled sample batch
 - real monetization plumbing only if Moey wants to move beyond prototype framing
 
 Latest major upgrade:
