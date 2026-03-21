@@ -2183,8 +2183,8 @@ export default function App() {
           </View>
           {isFreeTeaserMode && (
             <View style={styles.resultCardLockOverlay}>
-              <Text style={styles.resultCardLockTitle}>Unlock your full LooksMaxxing result</Text>
-              <Text style={styles.resultCardLockCopy}>Your exact score, full archetype read, and premium analysis unlock with the $4.99 review or Pro.</Text>
+              <Text style={styles.resultCardLockTitle}>Your full LooksMaxxing result is ready</Text>
+              <Text style={styles.resultCardLockCopy}>Unlock your exact score, full archetype read, detailed why, and your clearest next moves with the $4.99 review or Pro.</Text>
             </View>
           )}
         </View>
@@ -2207,7 +2207,7 @@ export default function App() {
         {isFreeTeaserMode && (
           <View style={styles.retentionCard}>
             <Text style={styles.retentionTitle}>Your full LooksMaxxing Review is ready</Text>
-            <Text style={styles.retentionCopy}>Unlock the deeper read to see what is helping your score, what is holding it back, and where your biggest gains are most likely to come from.</Text>
+            <Text style={styles.retentionCopy}>See exactly where you land, what is helping your score, what is suppressing it, and which upgrades are most likely to move the read fastest.</Text>
             <Pressable style={[styles.primaryButton, styles.primaryButtonHot]} onPress={unlockCurrentReview}>
               <Text style={styles.primaryButtonText}>Unlock Full Review — $4.99</Text>
             </Pressable>
@@ -2302,6 +2302,7 @@ export default function App() {
           <View style={styles.retentionCard}>
             <Text style={styles.retentionTitle}>Biggest opportunity right now</Text>
             <Text style={styles.retentionCopy}>{biggestOpportunityCopy}</Text>
+            <Text style={styles.retentionDatasetText}>This is the highest-leverage place to push first if your goal is to move the overall read instead of making random low-ROI tweaks.</Text>
           </View>
         )}
 
@@ -2659,8 +2660,8 @@ export default function App() {
   const renderReviewUnlocked = () => (
     <View style={styles.screenBlock}>
       <Text style={styles.sectionKick}>FULL REVIEW UNLOCKED</Text>
-      <Text style={styles.sectionTitle}>Your LooksMaxxing result is now fully revealed</Text>
-      <Text style={styles.metricPanelCopy}>You now have access to your exact score, full archetype read, premium interpretation, detailed breakdown, and personalized plan.</Text>
+      <Text style={styles.sectionTitle}>Your full LooksMaxxing read is now open</Text>
+      <Text style={styles.metricPanelCopy}>You just unlocked the exact score, full archetype read, deeper interpretation, detailed breakdown, and your personalized next-step plan.</Text>
 
       <View style={styles.paywallCard}>
         {['Exact LooksMaxxing score', 'Full archetype and tier reveal', 'Premium interpretation page', 'Detailed breakdown and plan'].map((item) => (
@@ -2674,7 +2675,7 @@ export default function App() {
       <Pressable style={[styles.primaryButton, styles.primaryButtonHot]} onPress={() => setScreen('result')}>
         <Text style={styles.primaryButtonText}>See Your Full Review</Text>
       </Pressable>
-      <Text style={styles.progressCaption}>You paid for the full answer — now you can go deeper into the score, the why, and the plan.</Text>
+      <Text style={styles.progressCaption}>You paid for the full answer — now see the score, the why behind it, and the highest-leverage moves next.</Text>
     </View>
   );
 
