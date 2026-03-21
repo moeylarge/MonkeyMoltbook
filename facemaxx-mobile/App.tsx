@@ -1411,6 +1411,34 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const qaMode = params.get('qa');
+    if (!qaMode) return;
+
+    const runQaRoute = async () => {
+      const qaImage = buildQaSampleImage();
+      if (!qaImage?.uri) return;
+      setImageUri(qaImage.uri);
+      setSelectedImage(qaImage);
+      setSelectedPhoto('Front selfie');
+      setScreen('upload');
+
+      if (qaMode === 'sample-scan') {
+        await runScanFlow(qaImage, 'Front selfie');
+      } else if (qaMode === 'sample-result') {
+        await runScanFlow(qaImage, 'Front selfie');
+        setScreen('result');
+      } else if (qaMode === 'sample-paywall') {
+        await runScanFlow(qaImage, 'Front selfie');
+        setScreen('paywall');
+      }
+    };
+
+    runQaRoute();
+  }, []);
+
+  useEffect(() => {
     fade.setValue(0);
     slide.setValue(18);
     Animated.parallel([
@@ -1819,36 +1847,42 @@ export default function App() {
     }
   };
 
+  const buildQaSampleImage = () => {
+    let uri: string | undefined;
+    let width: number | undefined;
+    let height: number | undefined;
+
+    if (Platform.OS === 'web') {
+      uri = 'http://127.0.0.1:8091/looksmaxx-qa-face.jpg';
+      width = 900;
+      height = 1200;
+    } else {
+      const asset = Image.resolveAssetSource(QA_SAMPLE_IMAGE);
+      uri = asset?.uri;
+      width = asset?.width;
+      height = asset?.height;
+    }
+
+    if (!uri) return undefined;
+    return {
+      uri,
+      width,
+      height,
+      fileSize: undefined,
+      mimeType: 'image/jpeg',
+      originalUri: uri,
+      originalMimeType: 'image/jpeg',
+    } as AnalysisImage;
+  };
+
   const loadQaSampleImage = async () => {
     try {
-      let uri: string | undefined;
-      let width: number | undefined;
-      let height: number | undefined;
-
-      if (Platform.OS === 'web') {
-        uri = 'http://127.0.0.1:8091/looksmaxx-qa-face.jpg';
-        width = 900;
-        height = 1200;
-      } else {
-        const asset = Image.resolveAssetSource(QA_SAMPLE_IMAGE);
-        uri = asset?.uri;
-        width = asset?.width;
-        height = asset?.height;
-      }
-
-      if (!uri) return;
-      const nextImage: AnalysisImage = {
-        uri,
-        width,
-        height,
-        fileSize: undefined,
-        mimeType: 'image/jpeg',
-        originalUri: uri,
-        originalMimeType: 'image/jpeg',
-      };
-      setImageUri(uri);
+      const nextImage = buildQaSampleImage();
+      if (!nextImage?.uri) return;
+      setImageUri(nextImage.uri);
       setSelectedImage(nextImage);
       setSelectedPhoto('Front selfie');
+      setScreen('upload');
     } catch {
       Alert.alert('QA sample unavailable', 'The built-in sample photo could not be loaded.');
     }
@@ -1928,9 +1962,8 @@ export default function App() {
     }
   };
 
-  const startScan = async () => {
-    const inputImage = selectedImage ?? { uri: imageUri };
-    const rawScan = (await buildScanFromBackend(inputImage, selectedPhoto)) ?? (await buildScanFromImage(inputImage, selectedPhoto));
+  const runScanFlow = async (inputImage: AnalysisImage | { uri?: string }, photoLabel: string) => {
+    const rawScan = (await buildScanFromBackend(inputImage, photoLabel)) ?? (await buildScanFromImage(inputImage, photoLabel));
     const previous = history[0];
     const deltaFromPrevious = previous ? rawScan.score - previous.score : 0;
     const streakDays = previous
@@ -1959,6 +1992,11 @@ export default function App() {
     const datasetRecord = await appendDatasetExport(scan);
     if (datasetRecord) await writeDatasetSampleFile(datasetRecord);
     setScreen('scan');
+  };
+
+  const startScan = async () => {
+    const inputImage = selectedImage ?? { uri: imageUri };
+    await runScanFlow(inputImage, selectedPhoto);
   };
 
   const resetFlow = () => {
