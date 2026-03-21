@@ -2124,16 +2124,22 @@ export default function App() {
         <Text style={styles.sectionKick}>{isFreeTeaserMode ? 'Your teaser result' : 'Your read'}</Text>
         <View style={[styles.resultCard, isProvisionalResult && styles.resultCardMuted]}>
           <Text style={[styles.rankBadge, isProvisionalResult && styles.rankBadgeMuted]}>{isProvisionalResult ? 'PROVISIONAL' : activeScan.rank}</Text>
-          <Text style={styles.resultLabel}>{isProvisionalResult ? resultLabel : 'LooksMaxxing Read'}</Text>
-          <Text style={[styles.resultScore, isProvisionalResult && styles.resultScoreMuted]}>{scoreDisplay}</Text>
-          <Text style={[styles.resultTier, isProvisionalResult && styles.resultTierMuted]}>{isProvisionalResult ? 'Needs Better Scan' : activeScan.tier}</Text>
-          <Text style={styles.resultArchetype}>{isProvisionalResult ? `${activeScan.archetype} • held loosely` : activeScan.archetype}</Text>
+          <Text style={styles.resultLabel}>{isFreeTeaserMode ? 'Premium LooksMaxxing Read' : (isProvisionalResult ? resultLabel : 'LooksMaxxing Read')}</Text>
+          <Text style={[styles.resultScore, isProvisionalResult && styles.resultScoreMuted, isFreeTeaserMode && styles.resultScoreLocked]}>{isFreeTeaserMode ? '••' : scoreDisplay}</Text>
+          <Text style={[styles.resultTier, isProvisionalResult && styles.resultTierMuted, isFreeTeaserMode && styles.resultTierLocked]}>{isFreeTeaserMode ? 'Unlock to reveal' : (isProvisionalResult ? 'Needs Better Scan' : activeScan.tier)}</Text>
+          <Text style={[styles.resultArchetype, isFreeTeaserMode && styles.resultArchetypeLocked]}>{isFreeTeaserMode ? 'Your full archetype is locked in the paid review' : (isProvisionalResult ? `${activeScan.archetype} • held loosely` : activeScan.archetype)}</Text>
           <View style={styles.resultProgressWrap}>
             <View style={[styles.progressTrackSm, isProvisionalResult && styles.progressTrackSmMuted]}>
               <View style={[styles.progressFillSm, isProvisionalResult && styles.progressFillSmMuted, { width: `${activeScan.potential}%` }]} />
             </View>
-            <Text style={styles.resultProgressText}>{resultProgressCopy}</Text>
+            <Text style={styles.resultProgressText}>{isFreeTeaserMode ? 'Your exact LooksMaxxing score unlocks with the full review.' : resultProgressCopy}</Text>
           </View>
+          {isFreeTeaserMode && (
+            <View style={styles.resultCardLockOverlay}>
+              <Text style={styles.resultCardLockTitle}>Unlock your full LooksMaxxing result</Text>
+              <Text style={styles.resultCardLockCopy}>Your exact score, full archetype read, and premium analysis unlock with the $4.99 review or Pro.</Text>
+            </View>
+          )}
         </View>
 
         <View style={styles.dualStats}>
@@ -2846,9 +2852,15 @@ const styles = StyleSheet.create({
   resultLabel: { color: '#9197AF', fontSize: 14, fontWeight: '700', marginTop: 12 },
   resultScore: { color: '#14E38B', fontSize: 88, lineHeight: 98, fontWeight: '900', marginTop: 8 },
   resultScoreMuted: { color: '#FFB4C0' },
+  resultScoreLocked: { color: '#EDE8FF', letterSpacing: 6 },
   resultTier: { color: '#FFFFFF', fontSize: 20, fontWeight: '900', letterSpacing: 1.4, marginTop: 6 },
   resultTierMuted: { color: '#FFD7DF' },
+  resultTierLocked: { color: '#E6D8FF', letterSpacing: 0.6 },
   resultArchetype: { color: '#B3B8CE', fontSize: 15, marginTop: 4 },
+  resultArchetypeLocked: { color: '#D7C8FF' },
+  resultCardLockOverlay: { marginTop: 18, padding: 16, borderRadius: 20, backgroundColor: 'rgba(28,19,45,0.88)', borderWidth: 1, borderColor: '#5A45A8', alignItems: 'center', gap: 6 },
+  resultCardLockTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '800', textAlign: 'center' },
+  resultCardLockCopy: { color: '#D7C8FF', fontSize: 13, lineHeight: 18, textAlign: 'center' },
   resultProgressWrap: { width: '100%', marginTop: 22, gap: 10 },
   progressTrackSm: { height: 10, borderRadius: 999, backgroundColor: '#1A1C24', overflow: 'hidden' },
   progressTrackSmMuted: { backgroundColor: '#241A20' },
