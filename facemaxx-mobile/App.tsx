@@ -2188,8 +2188,8 @@ export default function App() {
           </View>
           {isFreeTeaserMode && (
             <View style={styles.resultCardLockOverlay}>
-              <Text style={styles.resultCardLockTitle}>Your strongest read is ready</Text>
-              <Text style={styles.resultCardLockCopy}>Unlock the exact score, full archetype read, detailed why, and the clearest next moves for this scan with the $4.99 review or Pro.</Text>
+              <Text style={styles.resultCardLockTitle}>FOUNDING USER ACCESS</Text>
+              <Text style={styles.resultCardLockCopy}>Your full review is temporarily unlocked during launch while LooksMaxxing calibrates the system and improves results.</Text>
             </View>
           )}
         </View>
@@ -2211,13 +2211,13 @@ export default function App() {
 
         {isFreeTeaserMode && (
           <View style={styles.retentionCard}>
-            <Text style={styles.retentionTitle}>Unlock the full review</Text>
-            <Text style={styles.retentionCopy}>See exactly where you land, what is helping your score most, what is holding it back, and which upgrades are most likely to move the read fastest.</Text>
+            <Text style={styles.retentionTitle}>Early Access: Full review temporarily free</Text>
+            <Text style={styles.retentionCopy}>See exactly where you land, what is helping your score most, what is holding it back, and which upgrades are most likely to move the read fastest during the launch window.</Text>
             <Pressable style={[styles.primaryButton, styles.primaryButtonHot]} onPress={unlockCurrentReview}>
-              <Text style={styles.primaryButtonText}>Unlock Full Review — $4.99</Text>
+              <Text style={styles.primaryButtonText}>Continue with Founding Access</Text>
             </Pressable>
-            <Pressable style={[styles.primaryButton, styles.primaryButtonHot]} onPress={startProAccess}>
-              <Text style={styles.primaryButtonText}>Start Pro — $9.99/month</Text>
+            <Pressable style={styles.secondaryButton} onPress={startProAccess}>
+              <Text style={styles.secondaryButtonText}>Preview Pro Coming Later</Text>
             </Pressable>
           </View>
         )}
@@ -2611,9 +2611,9 @@ export default function App() {
   const renderPaywall = () => (
     <View style={styles.screenBlock}>
       <Image source={BRAND_LOGO_IMAGE} style={styles.brandLogoInline} resizeMode="contain" />
-      <Text style={styles.sectionKick}>Full review ready</Text>
-      <Text style={styles.sectionTitle}>Unlock your full LooksMaxxing review</Text>
-      <Text style={styles.metricPanelCopy}>Reveal your exact score, full archetype read, deeper breakdown, and the highest-leverage next moves for this scan.</Text>
+      <Text style={styles.sectionKick}>FOUNDING USER ACCESS</Text>
+      <Text style={styles.sectionTitle}>Your full LooksMaxxing review is temporarily unlocked</Text>
+      <Text style={styles.metricPanelCopy}>Early access users get full review access during launch while LooksMaxxing improves accuracy, calibrates the system, and sharpens the experience.</Text>
 
       <Animated.View
         style={[
@@ -2622,39 +2622,39 @@ export default function App() {
         ]}
       >
         <Text style={styles.paywallTier}>FULL REVIEW</Text>
-        <Text style={styles.paywallPrice}>$4.99</Text>
-        <Text style={styles.paywallCopy}>One payment unlocks the full LooksMaxxing Review for this scan right now.</Text>
+        <Text style={styles.paywallPrice}>TEMP FREE</Text>
+        <Text style={styles.paywallCopy}>Founding users get full review access temporarily free during launch while the system is being calibrated and improved.</Text>
         {['Full LooksMaxxing Review', 'Full score breakdown', 'Personalized improvement plan'].map((item, index) => (
           <View key={item} style={[styles.lockedRow, lockedIndex === index && styles.lockedRowActive]}>
             <Text style={styles.lockedRowText}>{item}</Text>
-            <Text style={styles.lockedRowTag}>ONCE</Text>
+            <Text style={styles.lockedRowTag}>FREE NOW</Text>
           </View>
         ))}
-        <Text style={styles.progressCaption}>Best if you want the full answer on this scan right now.</Text>
+        <Text style={styles.progressCaption}>Founding users get the full answer free during launch.</Text>
         <Pressable style={[styles.primaryButton, styles.primaryButtonHot]} onPress={unlockCurrentReview}>
-          <Text style={styles.primaryButtonText}>Unlock This Review</Text>
+          <Text style={styles.primaryButtonText}>Continue with Founding Access</Text>
         </Pressable>
       </Animated.View>
 
       <View style={styles.pricingCardAccent}>
         <Text style={styles.pricingTier}>LOOKSMAXXING PRO</Text>
-        <Text style={styles.pricingHeadline}>$9.99/month</Text>
-        <Text style={styles.pricingCopy}>Get everything in Full Review plus ongoing premium access across future scans.</Text>
+        <Text style={styles.pricingHeadline}>Coming Later</Text>
+        <Text style={styles.pricingCopy}>Pro is planned for a later phase once ongoing premium value is strong enough to justify a subscription.</Text>
         {['Unlimited full reviews', 'Progress tracker', 'Advanced battle mode', 'Premium improvement insights'].map((item) => (
           <View key={item} style={styles.lockedRow}>
             <Text style={styles.lockedRowText}>{item}</Text>
-            <Text style={styles.lockedRowTag}>PRO</Text>
+            <Text style={styles.lockedRowTag}>LATER</Text>
           </View>
         ))}
-        <Text style={styles.progressCaption}>Best for ongoing improvement.</Text>
-        <Pressable style={[styles.primaryButton, styles.primaryButtonHot]} onPress={startProAccess}>
-          <Text style={styles.primaryButtonText}>Start Pro</Text>
+        <Text style={styles.progressCaption}>Visible now, but intentionally postponed until recurring value is stronger.</Text>
+        <Pressable style={styles.secondaryButton} onPress={startProAccess}>
+          <Text style={styles.secondaryButtonText}>Preview Pro Direction</Text>
         </Pressable>
       </View>
 
       <View style={styles.retentionCard}>
-        <Text style={styles.retentionTitle}>What unlocks next</Text>
-        <Text style={styles.retentionCopy}>Go deeper on what is helping your score, what is holding it back, and where your biggest gains are most likely to come from.</Text>
+        <Text style={styles.retentionTitle}>Pricing later</Text>
+        <Text style={styles.retentionCopy}>Thanks for helping shape LooksMaxxing. Founding free access will end later, and full reviews will eventually move to a paid unlock.</Text>
         <Pressable style={styles.secondaryButton} onPress={continueWithFreePreview}>
           <Text style={styles.secondaryButtonText}>Continue with free preview</Text>
         </Pressable>
