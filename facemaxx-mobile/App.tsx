@@ -205,6 +205,7 @@ const BRAND_NAME = 'LooksMaxxing';
 const BRAND_FACE_NAME = 'Clavicular';
 const BRAND_FACE_IMAGE: ImageSourcePropType = require('./assets/clavicular-brand.png');
 const BRAND_LOGO_IMAGE: ImageSourcePropType = require('./assets/looksmaxx-logo.png');
+const QA_SAMPLE_IMAGE = require('./training/Confident portrait of a young man.png');
 const LOCAL_BACKEND_URL = 'http://127.0.0.1:8089';
 const LAN_BACKEND_URL = 'http://192.168.4.52:8089';
 const screens: ScreenKey[] = ['hook', 'upload', 'camera', 'scan', 'result', 'breakdown', 'simulate', 'history', 'paywall', 'review-unlocked', 'pro-welcome', 'plan', 'share', 'battle'];
@@ -1818,6 +1819,28 @@ export default function App() {
     }
   };
 
+  const loadQaSampleImage = async () => {
+    try {
+      const asset = Image.resolveAssetSource(QA_SAMPLE_IMAGE);
+      const uri = asset?.uri;
+      if (!uri) return;
+      const nextImage: AnalysisImage = {
+        uri,
+        width: asset.width,
+        height: asset.height,
+        fileSize: undefined,
+        mimeType: 'image/png',
+        originalUri: uri,
+        originalMimeType: 'image/png',
+      };
+      setImageUri(uri);
+      setSelectedImage(nextImage);
+      setSelectedPhoto('Front selfie');
+    } catch {
+      Alert.alert('QA sample unavailable', 'The built-in sample photo could not be loaded.');
+    }
+  };
+
   const openCamera = async () => {
     if (Platform.OS === 'web') {
       const triggered = await triggerWebCameraCapture();
@@ -2070,6 +2093,11 @@ export default function App() {
       <Pressable style={styles.secondaryButton} onPress={openCamera}>
         <Text style={styles.secondaryButtonText}>{cameraButtonLabel}</Text>
       </Pressable>
+      {__DEV__ && (
+        <Pressable style={styles.secondaryButton} onPress={loadQaSampleImage}>
+          <Text style={styles.secondaryButtonText}>Load QA Sample Photo</Text>
+        </Pressable>
+      )}
       <Pressable style={styles.primaryButton} onPress={startScan}>
         <Text style={styles.primaryButtonText}>Run Scan</Text>
       </Pressable>
