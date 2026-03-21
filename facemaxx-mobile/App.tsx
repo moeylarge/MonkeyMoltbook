@@ -2208,11 +2208,11 @@ export default function App() {
           <View style={styles.retentionCard}>
             <Text style={styles.retentionTitle}>Your full LooksMaxxing Review is ready</Text>
             <Text style={styles.retentionCopy}>Unlock the deeper read to see what is helping your score, what is holding it back, and where your biggest gains are most likely to come from.</Text>
-            <Pressable style={styles.primaryButton} onPress={unlockCurrentReview}>
+            <Pressable style={[styles.primaryButton, styles.primaryButtonHot]} onPress={unlockCurrentReview}>
               <Text style={styles.primaryButtonText}>Unlock Full Review — $4.99</Text>
             </Pressable>
-            <Pressable style={styles.secondaryButton} onPress={startProAccess}>
-              <Text style={styles.secondaryButtonText}>Start Pro — $9.99/month</Text>
+            <Pressable style={[styles.primaryButton, styles.primaryButtonHot]} onPress={startProAccess}>
+              <Text style={styles.primaryButtonText}>Start Pro — $9.99/month</Text>
             </Pressable>
           </View>
         )}
@@ -2596,7 +2596,7 @@ export default function App() {
           <Text style={styles.emptyCopy}>Run your first scan and it will show up here automatically.</Text>
         </View>
       )}
-      <Pressable style={styles.primaryButton} onPress={() => setScreen('paywall')}>
+      <Pressable style={[styles.primaryButton, styles.primaryButtonHot]} onPress={() => setScreen('paywall')}>
         <Text style={styles.primaryButtonText}>Continue to Pro Access</Text>
       </Pressable>
     </View>
@@ -2625,7 +2625,7 @@ export default function App() {
           </View>
         ))}
         <Text style={styles.progressCaption}>Best if you want the full answer right now.</Text>
-        <Pressable style={styles.primaryButton} onPress={unlockCurrentReview}>
+        <Pressable style={[styles.primaryButton, styles.primaryButtonHot]} onPress={unlockCurrentReview}>
           <Text style={styles.primaryButtonText}>Unlock This Review</Text>
         </Pressable>
       </Animated.View>
@@ -2641,7 +2641,7 @@ export default function App() {
           </View>
         ))}
         <Text style={styles.progressCaption}>Best for ongoing improvement.</Text>
-        <Pressable style={styles.primaryButton} onPress={startProAccess}>
+        <Pressable style={[styles.primaryButton, styles.primaryButtonHot]} onPress={startProAccess}>
           <Text style={styles.primaryButtonText}>Start Pro</Text>
         </Pressable>
       </View>
@@ -2671,7 +2671,7 @@ export default function App() {
         ))}
       </View>
 
-      <Pressable style={styles.primaryButton} onPress={() => setScreen('result')}>
+      <Pressable style={[styles.primaryButton, styles.primaryButtonHot]} onPress={() => setScreen('result')}>
         <Text style={styles.primaryButtonText}>See Your Full Review</Text>
       </Pressable>
       <Text style={styles.progressCaption}>You paid for the full answer — now you can go deeper into the score, the why, and the plan.</Text>
@@ -2693,7 +2693,7 @@ export default function App() {
         ))}
       </View>
 
-      <Pressable style={styles.primaryButton} onPress={() => setScreen('result')}>
+      <Pressable style={[styles.primaryButton, styles.primaryButtonHot]} onPress={() => setScreen('result')}>
         <Text style={styles.primaryButtonText}>See Your Full Review</Text>
       </Pressable>
       <Text style={styles.progressCaption}>Your future scans now unlock automatically with Pro.</Text>
@@ -2948,7 +2948,8 @@ const styles = StyleSheet.create({
   statChip: { width: 145, paddingVertical: 16, paddingHorizontal: 14, borderRadius: 20, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#222431' },
   statNumber: { color: '#FFFFFF', fontSize: 26, fontWeight: '900' },
   statLabel: { color: '#8F95AE', fontSize: 12, marginTop: 4 },
-  primaryButton: { width: '100%', marginTop: 14, paddingVertical: 18, borderRadius: 24, backgroundColor: '#FF3B30', alignItems: 'center', justifyContent: 'center', shadowColor: '#FF3B30', shadowOpacity: 0.42, shadowRadius: 24, shadowOffset: { width: 0, height: 12 }, minHeight: 58 },
+  primaryButton: { width: '100%', marginTop: 14, paddingVertical: 18, borderRadius: 24, backgroundColor: '#B42318', alignItems: 'center', justifyContent: 'center', shadowColor: '#B42318', shadowOpacity: 0.38, shadowRadius: 22, shadowOffset: { width: 0, height: 12 }, minHeight: 58 },
+  primaryButtonHot: { backgroundColor: '#FF3B30', shadowColor: '#FF3B30', shadowOpacity: 0.45, shadowRadius: 26 },
   primaryButtonText: { color: '#FFFFFF', fontSize: 17, fontWeight: '800', textAlign: 'center' },
   secondaryButton: { width: '100%', marginTop: 10, paddingVertical: 16, borderRadius: 24, backgroundColor: '#151621', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#282B3D', minHeight: 54 },
   secondaryButtonText: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
