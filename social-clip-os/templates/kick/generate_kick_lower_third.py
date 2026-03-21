@@ -13,9 +13,13 @@ LOGO_BOX_X = 56
 LOGO_BOX_Y = 88
 LOGO_BOX_W = 120
 LOGO_BOX_H = 120
-TEXT_X = 198
+KICK_TEXT_X = 198
+KICK_TEXT_Y = 132
+CLIPS_TEXT_X = 198
+CLIPS_TEXT_Y = 180
 HANDLE_Y = 132
 URL_Y = 178
+RIGHT_URL_X = 690
 
 
 def build_svg(handle: str, url_text: str, logo_path: str = "preview/kick-logo.svg.png") -> str:
@@ -46,8 +50,9 @@ def build_svg(handle: str, url_text: str, logo_path: str = "preview/kick-logo.sv
 
   <image href="{safe_logo}" x="72" y="104" width="88" height="88" preserveAspectRatio="xMidYMid meet"/>
 
-  <text x="{TEXT_X}" y="{HANDLE_Y}" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="700" letter-spacing="0.2">{safe_handle}</text>
-  <text x="{TEXT_X}" y="{URL_Y}" fill="#53FC18" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700" letter-spacing="0.3">{safe_url}</text>
+  <text x="{KICK_TEXT_X}" y="{KICK_TEXT_Y}" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="800" letter-spacing="0.8">KICK</text>
+  <text x="{CLIPS_TEXT_X}" y="{CLIPS_TEXT_Y}" fill="#53FC18" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="900" letter-spacing="0.8">CLIPS</text>
+  <text x="{RIGHT_URL_X}" y="{URL_Y}" fill="#53FC18" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700" text-anchor="end" letter-spacing="0.3">{safe_url}</text>
 </svg>
 '''
 

@@ -40,6 +40,6 @@ If the clip is not 1080px wide, scale the overlay to match the video width first
 
 ## Notes
 - The template is designed for bottom placement.
-- The handle line is white.
-- The `kick.com/<handle>` line is Kick green.
+- Layout is: Kick logo | KICK CLIPS | `kick.com/<handle>`.
+- `KICK` is white, `CLIPS` is Kick green, and the URL is Kick green.
 - Future clips can reuse the same style and just swap the handle/URL.
