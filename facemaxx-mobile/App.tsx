@@ -1355,7 +1355,8 @@ export default function App() {
     [activeScan, activeOpponentProfile],
   );
   const inferredArchetype = useMemo(() => {
-    if (!activeScan?.measurement) return activeScan?.archetype ?? 'Model Type A';
+    if (activeScan?.archetype) return activeScan.archetype;
+    if (!activeScan?.measurement) return 'Model Type A';
     const jawRatio = activeScan.measurement.ratios.jawWidthRatio;
     const faceRatio = activeScan.measurement.ratios.faceWidthHeight;
     const symmetryScore = Math.max(0, 1 - activeScan.measurement.symmetry.noseCenterOffset * 6 - activeScan.measurement.symmetry.eyeHeightDelta * 8);
