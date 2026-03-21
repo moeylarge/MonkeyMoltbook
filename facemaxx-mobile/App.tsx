@@ -204,6 +204,7 @@ const DATASET_EXPORT_DIR = `${FileSystem.documentDirectory ?? ''}looksmaxxing-da
 const BRAND_NAME = 'LooksMaxxing';
 const BRAND_FACE_NAME = 'Clavicular';
 const BRAND_FACE_IMAGE: ImageSourcePropType = require('./assets/clavicular-brand.png');
+const BRAND_LOGO_IMAGE: ImageSourcePropType = require('./assets/looksmaxx-logo.png');
 const LOCAL_BACKEND_URL = 'http://127.0.0.1:8089';
 const LAN_BACKEND_URL = 'http://192.168.4.52:8089';
 const screens: ScreenKey[] = ['hook', 'upload', 'camera', 'scan', 'result', 'breakdown', 'simulate', 'history', 'paywall', 'review-unlocked', 'pro-welcome', 'plan', 'share', 'battle'];
@@ -1977,6 +1978,7 @@ export default function App() {
 
   const renderHook = () => (
     <View style={styles.heroWrap}>
+      <Image source={BRAND_LOGO_IMAGE} style={styles.brandLogoTop} resizeMode="contain" />
       <View style={styles.eyebrowRow}>
         <Text style={styles.eyebrow}>THE {BRAND_NAME.toUpperCase()} STANDARD</Text>
         <View style={styles.liveDot} />
@@ -2096,6 +2098,7 @@ export default function App() {
 
   const renderScan = () => (
     <View style={styles.screenBlock}>
+      <Image source={BRAND_LOGO_IMAGE} style={styles.brandLogoInline} resizeMode="contain" />
       <Text style={styles.sectionKick}>{BRAND_NAME} loading</Text>
       <Text style={styles.sectionTitle}>Reading framing, structure, balance, and presentation.</Text>
       <View style={styles.scanCore}>
@@ -2601,6 +2604,7 @@ export default function App() {
 
   const renderPaywall = () => (
     <View style={styles.screenBlock}>
+      <Image source={BRAND_LOGO_IMAGE} style={styles.brandLogoInline} resizeMode="contain" />
       <Text style={styles.sectionKick}>Unlock options</Text>
       <Text style={styles.sectionTitle}>Unlock your LooksMaxxing result</Text>
       <Text style={styles.metricPanelCopy}>See the full review, deeper breakdown, and the clearest path to improving your score.</Text>
@@ -2770,6 +2774,7 @@ export default function App() {
         <Text style={styles.sectionTitle}>A post-ready card for your score, archetype, and upside.</Text>
 
         <View style={styles.shareExportCard}>
+          <Image source={BRAND_LOGO_IMAGE} style={styles.shareLogo} resizeMode="contain" />
           <Text style={styles.shareExportBrand}>{BRAND_NAME}</Text>
           <Text style={styles.shareExportScore}>{activeScan.score}</Text>
           <Text style={styles.shareExportTier}>{activeScan.tier}</Text>
@@ -2925,6 +2930,8 @@ const styles = StyleSheet.create({
   navDot: { width: 7, height: 7, borderRadius: 999, backgroundColor: '#2A2A34' },
   navDotActive: { width: 20, backgroundColor: '#FF4FD8' },
   heroWrap: { minHeight: 720, justifyContent: 'center', alignItems: 'center', gap: 18, paddingTop: 12, paddingBottom: 24 },
+  brandLogoTop: { width: 220, height: 88, alignSelf: 'center', marginBottom: 4 },
+  brandLogoInline: { width: 180, height: 72, alignSelf: 'center', marginBottom: -4 },
   eyebrowRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   eyebrow: { color: '#E5DAFF', fontSize: 11, fontWeight: '900', letterSpacing: 1.9 },
   liveDot: { width: 8, height: 8, borderRadius: 999, backgroundColor: '#14E38B' },
@@ -3086,6 +3093,7 @@ const styles = StyleSheet.create({
   shareHeadline: { color: '#FFFFFF', fontSize: 24, lineHeight: 30, fontWeight: '900', marginTop: 10 },
   shareCaption: { color: '#B7BBD0', fontSize: 14, lineHeight: 20, marginTop: 8 },
   shareExportCard: { padding: 24, borderRadius: 28, backgroundColor: '#120F1F', borderWidth: 1, borderColor: '#463276', gap: 10, shadowColor: '#7C5CFF', shadowOpacity: 0.3, shadowRadius: 22, shadowOffset: { width: 0, height: 12 } },
+  shareLogo: { width: 140, height: 54, alignSelf: 'center', marginBottom: 8 },
   shareExportBrand: { color: '#F2E8FF', fontSize: 12, fontWeight: '900', letterSpacing: 1.7 },
   shareExportScore: { color: '#FFFFFF', fontSize: 76, fontWeight: '900', letterSpacing: -1.6 },
   shareExportTier: { color: '#9BF5CB', fontSize: 16, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1.1 },
