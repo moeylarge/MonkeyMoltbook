@@ -1821,17 +1821,30 @@ export default function App() {
 
   const loadQaSampleImage = async () => {
     try {
-      const asset = Image.resolveAssetSource(QA_SAMPLE_IMAGE);
-      const uri = asset?.uri;
+      let uri: string | undefined;
+      let width: number | undefined;
+      let height: number | undefined;
+
+      if (Platform.OS === 'web') {
+        uri = 'http://127.0.0.1:8091/looksmaxx-qa-face.jpg';
+        width = 900;
+        height = 1200;
+      } else {
+        const asset = Image.resolveAssetSource(QA_SAMPLE_IMAGE);
+        uri = asset?.uri;
+        width = asset?.width;
+        height = asset?.height;
+      }
+
       if (!uri) return;
       const nextImage: AnalysisImage = {
         uri,
-        width: asset.width,
-        height: asset.height,
+        width,
+        height,
         fileSize: undefined,
-        mimeType: 'image/png',
+        mimeType: 'image/jpeg',
         originalUri: uri,
-        originalMimeType: 'image/png',
+        originalMimeType: 'image/jpeg',
       };
       setImageUri(uri);
       setSelectedImage(nextImage);
