@@ -2125,7 +2125,7 @@ export default function App() {
         <View style={[styles.resultCard, isProvisionalResult && styles.resultCardMuted]}>
           <Text style={[styles.rankBadge, isProvisionalResult && styles.rankBadgeMuted]}>{isProvisionalResult ? 'PROVISIONAL' : activeScan.rank}</Text>
           <Text style={styles.resultLabel}>{isFreeTeaserMode ? 'Premium LooksMaxxing Read' : (isProvisionalResult ? resultLabel : 'LooksMaxxing Read')}</Text>
-          <Text style={[styles.resultScore, isProvisionalResult && styles.resultScoreMuted, isFreeTeaserMode && styles.resultScoreLocked]}>{isFreeTeaserMode ? '••' : scoreDisplay}</Text>
+          <Text style={[styles.resultScore, isProvisionalResult && styles.resultScoreMuted, isFreeTeaserMode && styles.resultScoreLocked]}>{isFreeTeaserMode ? 'Pending' : scoreDisplay}</Text>
           <Text style={[styles.resultTier, isProvisionalResult && styles.resultTierMuted, isFreeTeaserMode && styles.resultTierLocked]}>{isFreeTeaserMode ? 'Unlock to reveal' : (isProvisionalResult ? 'Needs Better Scan' : activeScan.tier)}</Text>
           <Text style={[styles.resultArchetype, isFreeTeaserMode && styles.resultArchetypeLocked]}>{isFreeTeaserMode ? 'Your full archetype is locked in the paid review' : (isProvisionalResult ? `${activeScan.archetype} • held loosely` : activeScan.archetype)}</Text>
           <View style={styles.resultProgressWrap}>
@@ -2145,15 +2145,15 @@ export default function App() {
         <View style={styles.dualStats}>
           <View style={styles.miniStatCard}>
             <Text style={styles.miniStatTop}>Current</Text>
-            <Text style={styles.miniStatValue}>{activeScan.score}</Text>
+            <Text style={[styles.miniStatValue, isFreeTeaserMode && styles.miniStatValueLocked]}>{isFreeTeaserMode ? 'Locked' : activeScan.score}</Text>
           </View>
           <View style={styles.miniStatCardAccent}>
             <Text style={styles.miniStatTop}>Potential</Text>
-            <Text style={styles.miniStatValue}>{activeScan.potential}</Text>
+            <Text style={[styles.miniStatValue, isFreeTeaserMode && styles.miniStatValueLocked]}>{isFreeTeaserMode ? 'Locked' : activeScan.potential}</Text>
           </View>
           <View style={styles.miniStatCard}>
             <Text style={styles.miniStatTop}>Confidence</Text>
-            <Text style={styles.miniStatValue}>{activeScan.confidence ?? 0}</Text>
+            <Text style={[styles.miniStatValue, isFreeTeaserMode && styles.miniStatValueLocked]}>{isFreeTeaserMode ? 'Locked' : (activeScan.confidence ?? 0)}</Text>
           </View>
         </View>
 
@@ -2872,6 +2872,7 @@ const styles = StyleSheet.create({
   miniStatCardAccent: { flex: 1, minWidth: 96, padding: 18, borderRadius: 22, backgroundColor: '#171227', borderWidth: 1, borderColor: '#3A2A69', shadowColor: '#7C5CFF', shadowOpacity: 0.18, shadowRadius: 14, shadowOffset: { width: 0, height: 8 } },
   miniStatTop: { color: '#9CA2B9', fontSize: 12, fontWeight: '700' },
   miniStatValue: { color: '#FFFFFF', fontSize: 34, fontWeight: '900', marginTop: 6 },
+  miniStatValueLocked: { color: '#D7C8FF', fontSize: 18, fontWeight: '800', marginTop: 12, letterSpacing: 0.4 },
   warningCard: { padding: 18, borderRadius: 22, backgroundColor: '#23151A', borderWidth: 1, borderColor: '#5A2C34', shadowColor: '#AA4C62', shadowOpacity: 0.14, shadowRadius: 16, shadowOffset: { width: 0, height: 8 } },
   warningCardMuted: { padding: 18, borderRadius: 22, backgroundColor: '#141820', borderWidth: 1, borderColor: '#2C3447', shadowColor: '#000000', shadowOpacity: 0.14, shadowRadius: 12, shadowOffset: { width: 0, height: 8 } },
   warningEyebrow: { color: '#FF8D9E', fontSize: 11, fontWeight: '900', letterSpacing: 1.1 },
