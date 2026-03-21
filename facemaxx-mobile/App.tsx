@@ -2128,14 +2128,28 @@ export default function App() {
           </View>
         )}
 
-        {!!activeScan.warnings?.length && (
-          <View style={styles.warningCardMuted}>
-            <Text style={styles.warningTitle}>Confidence notes</Text>
-            {activeScan.warnings.map((warning) => (
-              <Text key={warning} style={styles.warningText}>• {warning}</Text>
-            ))}
-          </View>
-        )}
+        {(() => {
+          const reviewPoints = Array.from(new Set([
+            ...(activeScan.warnings ?? []),
+            `Confidence is currently reading at ${activeScan.confidence ?? 0}.`,
+            activeScan.rejectionReason
+              ? `Primary caution point: ${activeScan.rejectionReason}.`
+              : 'No hard rejection triggered on this read.',
+            `Current archetype read: ${inferredArchetype}.`,
+            backendMeasurements
+              ? `Symmetry and landmark data are helping shape the current score.`
+              : 'This read is leaning more on visible presentation than deeper geometry signals.',
+          ].filter(Boolean)));
+
+          return reviewPoints.length ? (
+            <View style={styles.warningCardMuted}>
+              <Text style={styles.warningTitle}>LooksMaxxing Review</Text>
+              {reviewPoints.slice(0, 4).map((point) => (
+                <Text key={point} style={styles.warningText}>• {point}</Text>
+              ))}
+            </View>
+          ) : null;
+        })()}
 
         <View style={styles.identityLine}>
           <Text style={styles.identityLineTitle}>LooksMaxxing read</Text>
@@ -2157,7 +2171,7 @@ export default function App() {
 
         {!!backendMeasurements && (
           <View style={styles.metricPanel}>
-            <Text style={styles.metricPanelTitle}>What the read is seeing</Text>
+            <Text style={styles.metricPanelTitle}>LooksMaxx Stats</Text>
             <View style={styles.metricGrid}>
               <View style={styles.metricChip}><Text style={styles.metricKey}>Symmetry</Text><Text style={styles.metricValue}>{Math.round((1 - backendMeasurements.symmetry.noseCenterOffset) * 100)}</Text></View>
               <View style={styles.metricChip}><Text style={styles.metricKey}>Landmark confidence</Text><Text style={styles.metricValue}>{Math.round((backendMeasurements.quality.landmarkConfidence ?? 0) * 100)}</Text></View>
