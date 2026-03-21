@@ -1688,8 +1688,25 @@ export default function App() {
 
   const handleNativeShare = async () => {
     if (!activeScan) return;
+    const message = `${shareCaption}\n\n${BRAND_NAME} gave me a ${activeScan.score} as ${activeScan.archetype} (${activeScan.tier}). Ceiling: ${activeScan.potential}.`;
     try {
-      const message = `${shareCaption}\n\n${BRAND_NAME} gave me a ${activeScan.score} as ${activeScan.archetype} (${activeScan.tier}). Ceiling: ${activeScan.potential}.`;
+      if (Platform.OS === 'web' && typeof navigator !== 'undefined') {
+        const nav = navigator as Navigator & { share?: (data: { title?: string; text?: string; url?: string }) => Promise<void>; clipboard?: { writeText?: (text: string) => Promise<void> } };
+        if (typeof nav.share === 'function') {
+          await nav.share({
+            title: `${BRAND_NAME} score: ${activeScan.score}`,
+            text: message,
+            url: typeof window !== 'undefined' ? window.location.href : undefined,
+          });
+          return;
+        }
+        if (nav.clipboard?.writeText) {
+          await nav.clipboard.writeText(message);
+          Alert.alert('Copied to clipboard', 'Your score and caption were copied. You can now paste them into text, email, or any social app.');
+          return;
+        }
+      }
+
       await Share.share({
         message,
         title: `${BRAND_NAME} score: ${activeScan.score}`,
