@@ -1432,6 +1432,17 @@ export default function App() {
       } else if (qaMode === 'sample-paywall') {
         await runScanFlow(qaImage, 'Front selfie');
         setScreen('paywall');
+      } else if (qaMode === 'sample-success') {
+        const successScan = await makeQaSuccessfulScan(qaImage, 'Front selfie');
+        await finalizeScanFlow(successScan);
+      } else if (qaMode === 'sample-success-result') {
+        const successScan = await makeQaSuccessfulScan(qaImage, 'Front selfie');
+        await finalizeScanFlow(successScan);
+        setScreen('result');
+      } else if (qaMode === 'sample-success-paywall') {
+        const successScan = await makeQaSuccessfulScan(qaImage, 'Front selfie');
+        await finalizeScanFlow(successScan);
+        setScreen('paywall');
       }
     };
 
@@ -1962,8 +1973,7 @@ export default function App() {
     }
   };
 
-  const runScanFlow = async (inputImage: AnalysisImage | { uri?: string }, photoLabel: string) => {
-    const rawScan = (await buildScanFromBackend(inputImage, photoLabel)) ?? (await buildScanFromImage(inputImage, photoLabel));
+  const finalizeScanFlow = async (rawScan: ScanRecord) => {
     const previous = history[0];
     const deltaFromPrevious = previous ? rawScan.score - previous.score : 0;
     const streakDays = previous
@@ -1992,6 +2002,65 @@ export default function App() {
     const datasetRecord = await appendDatasetExport(scan);
     if (datasetRecord) await writeDatasetSampleFile(datasetRecord);
     setScreen('scan');
+  };
+
+  const makeQaSuccessfulScan = async (inputImage: AnalysisImage | { uri?: string }, photoLabel: string) => {
+    const baseScan = await buildScanFromImage(inputImage, photoLabel);
+    const upgradedBreakdown = baseScan.breakdown.map((item) => {
+      const boosted = clamp(Math.max(item.score, item.target - 3), 62, 91);
+      return {
+        ...item,
+        score: boosted,
+        target: clamp(Math.max(item.target, boosted + 4), boosted + 4, 95),
+      };
+    });
+    const score = Math.round(clamp(upgradedBreakdown.reduce((sum, item) => sum + item.score, 0) / upgradedBreakdown.length, 67, 89));
+    const potential = Math.round(clamp(score + 11, score + 6, 95));
+    const measurement = baseScan.measurement;
+    const measurementQuality = measurement?.quality;
+    const measurementDerived = measurement?.derivedOutputs;
+    return {
+      ...baseScan,
+      breakdown: upgradedBreakdown,
+      score,
+      potential,
+      confidence: Math.max(baseScan.confidence ?? 0, 84),
+      rejectionReason: null,
+      warnings: (baseScan.warnings ?? []).filter((warning) => !/occlusion|confidence|angle/i.test(warning)),
+      tier: score >= 82 ? 'Elite' : score >= 72 ? 'Attractive' : 'Above Average',
+      rank: score >= 82 ? 'Elite Signal' : score >= 72 ? 'Silver Signal' : 'Gold Signal',
+      archetype: 'Pretty Boy',
+      measurement: measurement ? {
+        ...measurement,
+        quality: {
+          ...measurementQuality,
+          faceCount: 1,
+          landmarkConfidence: Math.max(measurementQuality?.landmarkConfidence ?? 0, 0.82),
+          poseConfidence: Math.max(measurementQuality?.poseConfidence ?? 0, 0.86),
+          occlusionRisk: Math.min(measurementQuality?.occlusionRisk ?? 0.18, 0.18),
+        },
+        derivedOutputs: {
+          ...measurementDerived,
+          overallScore: score,
+          confidence: Math.max(measurementDerived?.confidence ?? 0, 84),
+          rejectionReason: null,
+          warnings: (measurementDerived?.warnings ?? []).filter((warning) => !/occlusion|confidence|angle/i.test(warning)),
+          categoryScores: {
+            jawline: upgradedBreakdown.find((item) => item.key === 'jawline')?.score ?? null,
+            eyes: upgradedBreakdown.find((item) => item.key === 'eyes')?.score ?? null,
+            skin: upgradedBreakdown.find((item) => item.key === 'skin')?.score ?? null,
+            symmetry: upgradedBreakdown.find((item) => item.key === 'symmetry')?.score ?? null,
+            hairFraming: upgradedBreakdown.find((item) => item.key === 'hair')?.score ?? null,
+            facialHarmony: upgradedBreakdown.find((item) => item.key === 'thirds')?.score ?? null,
+          },
+        },
+      } : undefined,
+    } as ScanRecord;
+  };
+
+  const runScanFlow = async (inputImage: AnalysisImage | { uri?: string }, photoLabel: string) => {
+    const rawScan = (await buildScanFromBackend(inputImage, photoLabel)) ?? (await buildScanFromImage(inputImage, photoLabel));
+    await finalizeScanFlow(rawScan);
   };
 
   const startScan = async () => {
