@@ -18,6 +18,7 @@ import {
   Pressable,
   SafeAreaView,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   TextInput,
@@ -1685,6 +1686,19 @@ export default function App() {
     setScreen('paywall');
   };
 
+  const handleNativeShare = async () => {
+    if (!activeScan) return;
+    try {
+      const message = `${shareCaption}\n\n${BRAND_NAME} gave me a ${activeScan.score} as ${activeScan.archetype} (${activeScan.tier}). Ceiling: ${activeScan.potential}.`;
+      await Share.share({
+        message,
+        title: `${BRAND_NAME} score: ${activeScan.score}`,
+      });
+    } catch {
+      Alert.alert('Share unavailable', 'The share sheet could not open right now. Try again in a moment.');
+    }
+  };
+
   const triggerWebCameraCapture = async () => {
     if (Platform.OS !== 'web') return false;
     try {
@@ -2761,11 +2775,14 @@ export default function App() {
         <View style={styles.shareCard}>
           <Text style={styles.shareTitle}>Caption style</Text>
           <Text style={styles.shareHeadline}>{shareCaption}</Text>
-          <Text style={styles.shareCaption}>Made to be screenshot-ready, story-ready, and clean enough to post without extra explaining.</Text>
+          <Text style={styles.shareCaption}>Made to be screenshot-ready, story-ready, and easy to send by text, email, or share sheet.</Text>
         </View>
 
-        <Pressable style={styles.primaryButton} onPress={() => setScreen('battle')}>
-          <Text style={styles.primaryButtonText}>Open Standard Clash</Text>
+        <Pressable style={styles.primaryButton} onPress={handleNativeShare}>
+          <Text style={styles.primaryButtonText}>Share Score with a Friend</Text>
+        </Pressable>
+        <Pressable style={styles.secondaryButton} onPress={() => setScreen('battle')}>
+          <Text style={styles.secondaryButtonText}>Open Standard Clash</Text>
         </Pressable>
       </View>
     );
