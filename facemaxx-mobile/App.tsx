@@ -2007,7 +2007,13 @@ export default function App() {
         <View style={styles.scanFrameBrand}>
           <Image source={BRAND_FACE_IMAGE} style={styles.scanBrandImage} resizeMode="cover" />
           <View style={styles.scanBrandShade} />
+          <View style={styles.scanGridOverlay} />
+          <Animated.View style={[styles.scanSweepLine, { transform: [{ translateY: pulse.interpolate({ inputRange: [0.96, 1.04], outputRange: [-10, 14] }) }] }]} />
           <View style={styles.scanFrameGlow} />
+          <View style={styles.scanCornerTopLeft} />
+          <View style={styles.scanCornerTopRight} />
+          <View style={styles.scanCornerBottomLeft} />
+          <View style={styles.scanCornerBottomRight} />
         </View>
       </View>
       <View style={styles.scanStageCard}>
@@ -2744,7 +2750,13 @@ const styles = StyleSheet.create({
   scanFrameBrand: { width: 272, height: 324, borderRadius: 30, backgroundColor: '#11121A', borderWidth: 1, borderColor: '#2A2D3F', overflow: 'hidden', shadowColor: '#7C5CFF', shadowOpacity: 0.28, shadowRadius: 24, shadowOffset: { width: 0, height: 12 } },
   scanBrandImage: { position: 'absolute', width: '118%', height: '118%', left: '-9%', top: '-4%' },
   scanBrandShade: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(7,7,10,0.18)' },
+  scanGridOverlay: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, borderRadius: 30, borderWidth: 1, borderColor: 'rgba(255,255,255,0.03)', backgroundColor: 'transparent' },
+  scanSweepLine: { position: 'absolute', left: 18, right: 18, top: '46%', height: 2, borderRadius: 999, backgroundColor: 'rgba(255,79,216,0.65)', shadowColor: '#FF4FD8', shadowOpacity: 0.45, shadowRadius: 12, shadowOffset: { width: 0, height: 0 } },
   scanFrameGlow: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, borderRadius: 30, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', shadowColor: '#FF4FD8', shadowOpacity: 0.16, shadowRadius: 22, shadowOffset: { width: 0, height: 0 } },
+  scanCornerTopLeft: { position: 'absolute', top: 16, left: 16, width: 28, height: 28, borderTopWidth: 2, borderLeftWidth: 2, borderColor: 'rgba(255,255,255,0.42)', borderTopLeftRadius: 10 },
+  scanCornerTopRight: { position: 'absolute', top: 16, right: 16, width: 28, height: 28, borderTopWidth: 2, borderRightWidth: 2, borderColor: 'rgba(255,255,255,0.42)', borderTopRightRadius: 10 },
+  scanCornerBottomLeft: { position: 'absolute', bottom: 16, left: 16, width: 28, height: 28, borderBottomWidth: 2, borderLeftWidth: 2, borderColor: 'rgba(255,255,255,0.42)', borderBottomLeftRadius: 10 },
+  scanCornerBottomRight: { position: 'absolute', bottom: 16, right: 16, width: 28, height: 28, borderBottomWidth: 2, borderRightWidth: 2, borderColor: 'rgba(255,255,255,0.42)', borderBottomRightRadius: 10 },
   scanStageCard: { padding: 18, borderRadius: 22, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#232535' },
   scanStageLabel: { color: '#8D94AA', fontSize: 12, marginBottom: 6 },
   scanStageValue: { color: '#FFFFFF', fontSize: 22, fontWeight: '800' },
