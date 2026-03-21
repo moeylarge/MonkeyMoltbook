@@ -89,7 +89,16 @@ type MeasurementVector = {
     landmarkConfidence: number;
   };
   derivedOutputs: {
-    confidence: number;
+    overallScore: number | null;
+    categoryScores: {
+      jawline: number | null;
+      eyes: number | null;
+      skin: number | null;
+      symmetry: number | null;
+      hairFraming: number | null;
+      facialHarmony: number | null;
+    };
+    confidence: number | null;
     rejectionReason: string | null;
     warnings: string[];
   };
@@ -156,6 +165,7 @@ type ShareTone = 'neutral' | 'confident' | 'humble' | 'provocative';
 
 type DatasetExportRecord = {
   sampleId: string;
+  schemaVersion: 'v1';
   createdAt: string;
   photoLabel: string;
   imageUri?: string;
@@ -996,6 +1006,15 @@ async function buildScanFromBackend(image: AnalysisImage | undefined, photoLabel
         landmarkConfidence: Number(landmarkConfidence.toFixed(4)),
       },
       derivedOutputs: {
+        overallScore: score,
+        categoryScores: {
+          jawline: clamp(Number(breakdownSource.jawline ?? 0), 0, 100),
+          eyes: clamp(Number(breakdownSource.eyes ?? 0), 0, 100),
+          skin: clamp(Number(breakdownSource.skin ?? 0), 0, 100),
+          symmetry: clamp(Number(breakdownSource.symmetry ?? 0), 0, 100),
+          hairFraming: clamp(Number(breakdownSource.hairFraming ?? 0), 0, 100),
+          facialHarmony: clamp(Number(breakdownSource.facialHarmony ?? 0), 0, 100),
+        },
         confidence,
         rejectionReason: looksmaxxing.rejectionReason ?? null,
         warnings,
@@ -1178,6 +1197,15 @@ async function buildScanFromImage(image: AnalysisImage | undefined, photoLabel: 
       landmarkConfidence: Number(face.landmarkConfidence.toFixed(4)),
     },
     derivedOutputs: {
+      overallScore: score,
+      categoryScores: {
+        jawline: breakdown.find((item) => item.key === 'jawline')?.score ?? null,
+        eyes: breakdown.find((item) => item.key === 'eyes')?.score ?? null,
+        skin: breakdown.find((item) => item.key === 'skin')?.score ?? null,
+        symmetry: breakdown.find((item) => item.key === 'symmetry')?.score ?? null,
+        hairFraming: breakdown.find((item) => item.key === 'hair')?.score ?? null,
+        facialHarmony: breakdown.find((item) => item.key === 'thirds')?.score ?? null,
+      },
       confidence,
       rejectionReason,
       warnings,
@@ -1560,6 +1588,7 @@ export default function App() {
 
   const buildDatasetExport = (scan: ScanRecord): DatasetExportRecord => ({
     sampleId: scan.id,
+    schemaVersion: 'v1',
     createdAt: scan.createdAt,
     photoLabel: scan.photoLabel,
     imageUri: scan.imageUri,
