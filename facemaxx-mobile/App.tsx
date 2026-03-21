@@ -2001,15 +2001,13 @@ export default function App() {
   const renderScan = () => (
     <View style={styles.screenBlock}>
       <Text style={styles.sectionKick}>{BRAND_NAME} loading</Text>
-      <Text style={styles.sectionTitle}>{BRAND_FACE_NAME} is setting the standard while we read framing, structure, balance, and presentation.</Text>
+      <Text style={styles.sectionTitle}>Reading framing, structure, balance, and presentation.</Text>
       <View style={styles.scanCore}>
         <Animated.View style={[styles.scanHalo, { transform: [{ scale: pulse }] }]} />
         <View style={styles.scanFrameBrand}>
           <Image source={BRAND_FACE_IMAGE} style={styles.scanBrandImage} resizeMode="cover" />
           <View style={styles.scanBrandShade} />
-          <View style={styles.scanBrandBadge}>
-            <Text style={styles.scanBrandBadgeText}>{BRAND_FACE_NAME}</Text>
-          </View>
+          <View style={styles.scanFrameGlow} />
         </View>
       </View>
       <View style={styles.scanStageCard}>
@@ -2744,10 +2742,9 @@ const styles = StyleSheet.create({
   scanHalo: { position: 'absolute', width: 300, height: 300, borderRadius: 999, backgroundColor: '#121320', shadowColor: '#FF4FD8', shadowOpacity: 0.3, shadowRadius: 30, shadowOffset: { width: 0, height: 0 } },
   scanFrame: { width: 170, height: 220, borderRadius: 28, borderWidth: 1, borderColor: '#303245', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0F1017', overflow: 'hidden' },
   scanFrameBrand: { width: 272, height: 324, borderRadius: 30, backgroundColor: '#11121A', borderWidth: 1, borderColor: '#2A2D3F', overflow: 'hidden', shadowColor: '#7C5CFF', shadowOpacity: 0.28, shadowRadius: 24, shadowOffset: { width: 0, height: 12 } },
-  scanBrandImage: { position: 'absolute', width: '136%', height: '112%', left: '-20%', top: '-2%' },
-  scanBrandShade: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '42%', backgroundColor: 'rgba(7,7,10,0.76)' },
-  scanBrandBadge: { position: 'absolute', left: 18, right: 18, bottom: 18, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 16, backgroundColor: 'rgba(20,20,27,0.88)', borderWidth: 1, borderColor: '#34384D', alignItems: 'center' },
-  scanBrandBadgeText: { color: '#FFFFFF', fontSize: 15, fontWeight: '900', letterSpacing: 0.8 },
+  scanBrandImage: { position: 'absolute', width: '118%', height: '118%', left: '-9%', top: '-4%' },
+  scanBrandShade: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(7,7,10,0.18)' },
+  scanFrameGlow: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, borderRadius: 30, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', shadowColor: '#FF4FD8', shadowOpacity: 0.16, shadowRadius: 22, shadowOffset: { width: 0, height: 0 } },
   scanStageCard: { padding: 18, borderRadius: 22, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#232535' },
   scanStageLabel: { color: '#8D94AA', fontSize: 12, marginBottom: 6 },
   scanStageValue: { color: '#FFFFFF', fontSize: 22, fontWeight: '800' },
