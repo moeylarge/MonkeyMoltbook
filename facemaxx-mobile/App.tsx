@@ -2605,9 +2605,9 @@ export default function App() {
   const renderPaywall = () => (
     <View style={styles.screenBlock}>
       <Image source={BRAND_LOGO_IMAGE} style={styles.brandLogoInline} resizeMode="contain" />
-      <Text style={styles.sectionKick}>Unlock options</Text>
-      <Text style={styles.sectionTitle}>Unlock your LooksMaxxing result</Text>
-      <Text style={styles.metricPanelCopy}>See the full review, deeper breakdown, and the clearest path to improving your score.</Text>
+      <Text style={styles.sectionKick}>Full review ready</Text>
+      <Text style={styles.sectionTitle}>Unlock your full LooksMaxxing review</Text>
+      <Text style={styles.metricPanelCopy}>Reveal your exact score, full archetype read, deeper breakdown, and the clearest next moves for this scan.</Text>
 
       <Animated.View
         style={[
@@ -2617,7 +2617,7 @@ export default function App() {
       >
         <Text style={styles.paywallTier}>FULL REVIEW</Text>
         <Text style={styles.paywallPrice}>$4.99</Text>
-        <Text style={styles.paywallCopy}>Unlock this full LooksMaxxing Review for your current result.</Text>
+        <Text style={styles.paywallCopy}>One payment unlocks the full LooksMaxxing Review for this scan right now.</Text>
         {['Full LooksMaxxing Review', 'Full score breakdown', 'Personalized improvement plan'].map((item, index) => (
           <View key={item} style={[styles.lockedRow, lockedIndex === index && styles.lockedRowActive]}>
             <Text style={styles.lockedRowText}>{item}</Text>
@@ -2633,7 +2633,7 @@ export default function App() {
       <View style={styles.pricingCardAccent}>
         <Text style={styles.pricingTier}>LOOKSMAXXING PRO</Text>
         <Text style={styles.pricingHeadline}>$9.99/month</Text>
-        <Text style={styles.pricingCopy}>Unlock everything in Full Review plus ongoing premium access.</Text>
+        <Text style={styles.pricingCopy}>Get everything in Full Review plus ongoing premium access across future scans.</Text>
         {['Unlimited full reviews', 'Progress tracker', 'Advanced battle mode', 'Premium improvement insights'].map((item) => (
           <View key={item} style={styles.lockedRow}>
             <Text style={styles.lockedRowText}>{item}</Text>
