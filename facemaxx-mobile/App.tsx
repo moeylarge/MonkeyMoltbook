@@ -2659,26 +2659,45 @@ export default function App() {
           <Text style={styles.retentionCopy}>{identityTagline}</Text>
         </View>
 
-        {improvementPlan.map((item) => (
-          <View key={item.id} style={item.impact === 'high' ? styles.planCardAccent : styles.planCard}>
-            <View style={styles.planTopRow}>
-              <Text style={styles.planTier}>{item.category}</Text>
-              <Text style={styles.planLift}>+{item.scoreLift}</Text>
+        {improvementPlan.map((item, index) => {
+          const whyItMatters = item.impact === 'high'
+            ? `This is one of the fastest ways to move the overall read because it is directly tied to how strongly your face is currently presenting.`
+            : item.impact === 'medium'
+              ? `This matters because it can sharpen the overall impression and stop weaker presentation from dragging the score down.`
+              : `This is a supporting upgrade. It will not move the score alone, but it helps the stronger areas land more cleanly.`;
+          const whatToDo = item.category.toLowerCase().includes('presentation')
+            ? 'Use cleaner lighting, sharper framing, and more controlled presentation so the face lands stronger and more consistently.'
+            : item.category.toLowerCase().includes('eye')
+              ? 'Reduce tiredness cues, improve eye-area sharpness, and make sure the upper face is not being flattened by lighting or angle.'
+              : item.category.toLowerCase().includes('skin')
+                ? 'Focus on clearer skin texture, cleaner light, and less visual suppression from softness or poor contrast.'
+                : item.category.toLowerCase().includes('hair')
+                  ? 'Control silhouette, volume, and edge shape so the upper frame reads more intentionally.'
+                  : 'Tighten the highest-leverage habits in this area first before chasing lower-ROI changes.';
+
+          return (
+            <View key={item.id} style={item.impact === 'high' ? styles.planCardAccent : styles.planCard}>
+              <View style={styles.planTopRow}>
+                <Text style={styles.planTier}>Priority {index + 1} • {item.category}</Text>
+                <Text style={styles.planLift}>+{item.scoreLift}</Text>
+              </View>
+              <Text style={styles.planHeadline}>{item.title}</Text>
+              <Text style={styles.planCopy}>{item.detail}</Text>
+              <Text style={styles.planDetail}><Text style={styles.planDetailLabel}>Why this matters: </Text>{whyItMatters}</Text>
+              <Text style={styles.planDetail}><Text style={styles.planDetailLabel}>What to do: </Text>{whatToDo}</Text>
+              <View style={styles.planMetaRow}>
+                <View style={styles.planMetaPill}><Text style={styles.planMetaText}>Impact: {item.impact}</Text></View>
+                <View style={styles.planMetaPill}><Text style={styles.planMetaText}>Difficulty: {item.difficulty}</Text></View>
+                <View style={styles.planMetaPill}><Text style={styles.planMetaText}>{item.timeToResult}</Text></View>
+              </View>
             </View>
-            <Text style={styles.planHeadline}>{item.title}</Text>
-            <Text style={styles.planCopy}>{item.detail}</Text>
-            <View style={styles.planMetaRow}>
-              <View style={styles.planMetaPill}><Text style={styles.planMetaText}>Impact: {item.impact}</Text></View>
-              <View style={styles.planMetaPill}><Text style={styles.planMetaText}>Difficulty: {item.difficulty}</Text></View>
-              <View style={styles.planMetaPill}><Text style={styles.planMetaText}>{item.timeToResult}</Text></View>
-            </View>
-          </View>
-        ))}
+          );
+        })}
 
         <View style={styles.retentionCard}>
-          <Text style={styles.retentionTitle}>Uncertainty loop</Text>
+          <Text style={styles.retentionTitle}>Execution note</Text>
           <Text style={styles.retentionCopy}>
-            Lighting may affect this read. Try a cleaner angle, tighter hair control, or better skin-day conditions - that alone could add +2 to +4.
+            Do not treat every point of upside as a structural issue. Some of the gain here is likely available through better lighting, cleaner framing, sharper grooming, and more consistent scan quality alone. The smartest path is to fix the highest-leverage presentation issues first, then reassess.
           </Text>
         </View>
 
@@ -3094,6 +3113,8 @@ const styles = StyleSheet.create({
   planLift: { color: '#14E38B', fontSize: 22, fontWeight: '900' },
   planHeadline: { color: '#FFFFFF', fontSize: 22, lineHeight: 27, fontWeight: '900' },
   planCopy: { color: '#AAB0C5', fontSize: 14, lineHeight: 20 },
+  planDetail: { color: '#B9C0D5', fontSize: 13, lineHeight: 19 },
+  planDetailLabel: { color: '#FFFFFF', fontWeight: '800' },
   planMetaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, rowGap: 8, marginTop: 8 },
   planMetaPill: { paddingHorizontal: 10, paddingVertical: 8, borderRadius: 999, backgroundColor: '#1B1D28', borderWidth: 1, borderColor: '#2A2D3F' },
   planMetaText: { color: '#D3D7E8', fontSize: 12, fontWeight: '700' },
