@@ -1292,7 +1292,7 @@ export default function App() {
 
   const mobileWeb = isLikelyMobileWeb();
   const cameraButtonLabel = Platform.OS === 'web'
-    ? (mobileWeb ? 'Take Photo' : 'Take or Choose Photo')
+    ? (mobileWeb ? 'Take Photo' : 'Take Photo with Camera')
     : 'Take Photo in App';
   const uploadHelperCopy = imageUri
     ? 'Use a clear photo with one face in frame for the strongest read.'
@@ -1984,12 +1984,12 @@ export default function App() {
         <View style={styles.liveDot} />
       </View>
       <Text style={styles.brandIntro}>Get a sharper read on how your current presentation lands - and where the biggest gains are hiding.</Text>
-      <Animated.View style={[styles.brandHeroFrame, { transform: [{ scale: pulse }] }]}> 
-        <Image source={BRAND_FACE_IMAGE} style={styles.brandHeroImage} resizeMode="cover" />
-      </Animated.View>
       <Pressable style={styles.primaryButton} onPress={() => setScreen('upload')}>
         <Text style={styles.primaryButtonText}>Click to LooksMaxx</Text>
       </Pressable>
+      <Animated.View style={[styles.brandHeroFrame, { transform: [{ scale: pulse }] }]}> 
+        <Image source={BRAND_FACE_IMAGE} style={styles.brandHeroImage} resizeMode="cover" />
+      </Animated.View>
       <Animated.View style={[styles.heroOrb, { transform: [{ scale: pulse }] }]}>
         <View style={styles.heroOrbCore}>
           <Text style={styles.heroOrbScore}>{history[0]?.potential ?? 91}</Text>
@@ -2929,14 +2929,14 @@ const styles = StyleSheet.create({
   navDotWrap: { padding: 4 },
   navDot: { width: 7, height: 7, borderRadius: 999, backgroundColor: '#2A2A34' },
   navDotActive: { width: 20, backgroundColor: '#FF4FD8' },
-  heroWrap: { minHeight: 720, justifyContent: 'center', alignItems: 'center', gap: 18, paddingTop: 12, paddingBottom: 24 },
-  brandLogoTop: { width: 460, height: 184, alignSelf: 'center', marginBottom: 10 },
+  heroWrap: { minHeight: 660, justifyContent: 'center', alignItems: 'center', gap: 16, paddingTop: 8, paddingBottom: 20 },
+  brandLogoTop: { width: 420, height: 168, alignSelf: 'center', marginBottom: 6 },
   brandLogoInline: { width: 320, height: 128, alignSelf: 'center', marginBottom: 6 },
   eyebrowRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   eyebrow: { color: '#E5DAFF', fontSize: 11, fontWeight: '900', letterSpacing: 1.9 },
   liveDot: { width: 8, height: 8, borderRadius: 999, backgroundColor: '#14E38B' },
   brandIntro: { color: '#D6DAE9', fontSize: 14, fontWeight: '700', textAlign: 'center', maxWidth: 320, lineHeight: 20 },
-  brandHeroFrame: { width: '100%', maxWidth: 348, height: 430, borderRadius: 34, overflow: 'hidden', borderWidth: 1, borderColor: '#2A2D3F', backgroundColor: '#12131A', shadowColor: '#7C5CFF', shadowOpacity: 0.32, shadowRadius: 28, shadowOffset: { width: 0, height: 14 } },
+  brandHeroFrame: { width: '100%', maxWidth: 332, height: 388, borderRadius: 32, overflow: 'hidden', borderWidth: 1, borderColor: '#2A2D3F', backgroundColor: '#12131A', shadowColor: '#7C5CFF', shadowOpacity: 0.32, shadowRadius: 28, shadowOffset: { width: 0, height: 14 } },
   brandHeroImage: { position: 'absolute', width: '104%', height: '104%', left: '-2%', top: '0%' },
   heroOrb: { width: 232, height: 232, borderRadius: 999, backgroundColor: '#14151F', borderWidth: 1, borderColor: '#2D3041', shadowColor: '#7C5CFF', shadowOpacity: 0.35, shadowRadius: 40, shadowOffset: { width: 0, height: 0 }, alignItems: 'center', justifyContent: 'center', marginTop: -8 },
   heroOrbCore: { width: 156, height: 156, borderRadius: 999, backgroundColor: '#0E0F16', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#26293C' },
