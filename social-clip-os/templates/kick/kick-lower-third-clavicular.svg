@@ -1,0 +1,27 @@
+<svg width="1080" height="220" viewBox="0 0 1080 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="shadow" x="0" y="0" width="120%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+    <linearGradient id="bar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0E0F12"/>
+      <stop offset="100%" stop-color="#17191D"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#53FC18"/>
+      <stop offset="100%" stop-color="#36C80A"/>
+    </linearGradient>
+  </defs>
+
+  <g filter="url(#shadow)">
+    <rect x="40" y="140" width="1000" height="52" rx="22" fill="url(#bar)"/>
+    <rect x="56" y="88" width="120" height="120" rx="26" fill="#101114"/>
+    <rect x="56" y="88" width="120" height="120" rx="26" stroke="#24282D" stroke-width="2"/>
+    <circle cx="1002" cy="166" r="10" fill="url(#accent)"/>
+  </g>
+
+  <image href="preview/kick-logo.svg.png" x="72" y="104" width="88" height="88" preserveAspectRatio="xMidYMid meet"/>
+
+  <text x="198" y="132" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="700" letter-spacing="0.2">Clavicular</text>
+  <text x="198" y="178" fill="#53FC18" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700" letter-spacing="0.3">kick.com/Clavicular</text>
+</svg>
