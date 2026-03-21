@@ -2809,8 +2809,8 @@ export default function App() {
   const renderReviewUnlocked = () => (
     <View style={styles.screenBlock}>
       <Text style={styles.sectionKick}>FULL REVIEW UNLOCKED</Text>
-      <Text style={styles.sectionTitle}>Your full LooksMaxxing read is now open</Text>
-      <Text style={styles.metricPanelCopy}>You just unlocked the exact score, full archetype read, deeper interpretation, detailed breakdown, and your personalized next-step plan.</Text>
+      <Text style={styles.sectionTitle}>Your full LooksMaxxing read is unlocked</Text>
+      <Text style={styles.metricPanelCopy}>You now have the exact score, full archetype read, deeper interpretation, detailed breakdown, and the clearest next-step plan for this scan.</Text>
 
       <View style={styles.paywallCard}>
         {['Exact LooksMaxxing score', 'Full archetype and tier reveal', 'Premium interpretation page', 'Detailed breakdown and plan'].map((item) => (
@@ -2824,7 +2824,7 @@ export default function App() {
       <Pressable style={[styles.primaryButton, styles.primaryButtonHot]} onPress={() => setScreen('result')}>
         <Text style={styles.primaryButtonText}>See Your Full Review</Text>
       </Pressable>
-      <Text style={styles.progressCaption}>You paid for the full answer — now see the score, the why behind it, and the highest-leverage moves next.</Text>
+      <Text style={styles.progressCaption}>You paid for the full answer — now see exactly where you land and what moves the read most from here.</Text>
     </View>
   );
 
