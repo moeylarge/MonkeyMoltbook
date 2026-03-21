@@ -2562,29 +2562,10 @@ export default function App() {
     return (
       <View style={styles.screenBlock}>
         <Text style={styles.sectionKick}>Standard clash</Text>
-        <Text style={styles.sectionTitle}>See which read is closer to the standard right now.</Text>
+        <Text style={styles.sectionTitle}>Battle a friend to compare your LooksMaxxing scores.</Text>
 
         <View style={styles.retentionCard}>
-          <Text style={styles.retentionTitle}>Choose a challenger</Text>
-          <View style={styles.optionRow}>
-            {battleProfiles.map((profile) => (
-              <Pressable
-                key={profile.id}
-                style={[styles.optionChip, selectedBattleId === profile.id && styles.optionChipActive]}
-                onPress={() => {
-                  setSelectedBattleId(profile.id);
-                  setBattleName(profile.name);
-                  setBattleScoreInput(String(profile.score));
-                  setBattleArchetype(profile.archetype);
-                  setBattleScan(null);
-                  setBattleImage(undefined);
-                  setBattleImageUri(undefined);
-                }}
-              >
-                <Text style={[styles.optionText, selectedBattleId === profile.id && styles.optionTextActive]}>{profile.name}</Text>
-              </Pressable>
-            ))}
-          </View>
+          <Text style={styles.retentionTitle}>Set your opponent</Text>
           <Text style={styles.battleInputLabel}>Opponent name</Text>
           <TextInput value={battleName} onChangeText={setBattleName} style={styles.battleInput} placeholder="Opponent name" placeholderTextColor="#6F7690" />
           <Pressable style={styles.secondaryButton} onPress={pickBattleImage}>
