@@ -2321,9 +2321,9 @@ export default function App() {
         <View style={[styles.resultCard, isProvisionalResult && styles.resultCardMuted]}>
           <Text style={[styles.rankBadge, isProvisionalResult && styles.rankBadgeMuted]}>{isProvisionalResult ? 'PROVISIONAL' : activeScan.rank}</Text>
           <Text style={styles.resultLabel}>{isFreeTeaserMode ? 'Premium LooksMaxxing Read' : (isProvisionalResult ? resultLabel : 'LooksMaxxing Read')}</Text>
-          <Text style={[styles.resultScore, isProvisionalResult && styles.resultScoreMuted, isFreeTeaserMode && styles.resultScoreLocked]}>{isFreeTeaserMode ? 'Pending' : scoreDisplay}</Text>
-          <Text style={[styles.resultTier, isProvisionalResult && styles.resultTierMuted, isFreeTeaserMode && styles.resultTierLocked]}>{isFreeTeaserMode ? 'Unlock to reveal' : (isProvisionalResult ? 'Needs Better Scan' : activeScan.tier)}</Text>
-          <Text style={[styles.resultArchetype, isFreeTeaserMode && styles.resultArchetypeLocked]}>{isFreeTeaserMode ? 'Your full archetype is locked in the paid review' : (isProvisionalResult ? `${activeScan.archetype} • held loosely` : activeScan.archetype)}</Text>
+          <Text style={[styles.resultScore, isProvisionalResult && styles.resultScoreMuted, isFreeTeaserMode && styles.resultScoreLocked]}>{isFreeTeaserMode ? 'Score Locked' : scoreDisplay}</Text>
+          <Text style={[styles.resultTier, isProvisionalResult && styles.resultTierMuted, isFreeTeaserMode && styles.resultTierLocked]}>{isFreeTeaserMode ? 'Full read ready to unlock' : (isProvisionalResult ? 'Needs Better Scan' : activeScan.tier)}</Text>
+          <Text style={[styles.resultArchetype, isFreeTeaserMode && styles.resultArchetypeLocked]}>{isFreeTeaserMode ? 'Your full archetype and breakdown unlock in the paid review' : (isProvisionalResult ? `${activeScan.archetype} • held loosely` : activeScan.archetype)}</Text>
           <View style={styles.resultProgressWrap}>
             <View style={[styles.progressTrackSm, isProvisionalResult && styles.progressTrackSmMuted]}>
               <View style={[styles.progressFillSm, isProvisionalResult && styles.progressFillSmMuted, { width: `${activeScan.potential}%` }]} />
@@ -2332,8 +2332,8 @@ export default function App() {
           </View>
           {isFreeTeaserMode && (
             <View style={styles.resultCardLockOverlay}>
-              <Text style={styles.resultCardLockTitle}>Your full LooksMaxxing result is ready</Text>
-              <Text style={styles.resultCardLockCopy}>Unlock your exact score, full archetype read, detailed why, and your clearest next moves with the $4.99 review or Pro.</Text>
+              <Text style={styles.resultCardLockTitle}>Your strongest read is ready</Text>
+              <Text style={styles.resultCardLockCopy}>Unlock the exact score, full archetype read, detailed why, and the clearest next moves for this scan with the $4.99 review or Pro.</Text>
             </View>
           )}
         </View>
@@ -2355,8 +2355,8 @@ export default function App() {
 
         {isFreeTeaserMode && (
           <View style={styles.retentionCard}>
-            <Text style={styles.retentionTitle}>Your full LooksMaxxing Review is ready</Text>
-            <Text style={styles.retentionCopy}>See exactly where you land, what is helping your score, what is suppressing it, and which upgrades are most likely to move the read fastest.</Text>
+            <Text style={styles.retentionTitle}>Unlock the full review</Text>
+            <Text style={styles.retentionCopy}>See exactly where you land, what is helping your score most, what is holding it back, and which upgrades are most likely to move the read fastest.</Text>
             <Pressable style={[styles.primaryButton, styles.primaryButtonHot]} onPress={unlockCurrentReview}>
               <Text style={styles.primaryButtonText}>Unlock Full Review — $4.99</Text>
             </Pressable>
@@ -2757,7 +2757,7 @@ export default function App() {
       <Image source={BRAND_LOGO_IMAGE} style={styles.brandLogoInline} resizeMode="contain" />
       <Text style={styles.sectionKick}>Full review ready</Text>
       <Text style={styles.sectionTitle}>Unlock your full LooksMaxxing review</Text>
-      <Text style={styles.metricPanelCopy}>Reveal your exact score, full archetype read, deeper breakdown, and the clearest next moves for this scan.</Text>
+      <Text style={styles.metricPanelCopy}>Reveal your exact score, full archetype read, deeper breakdown, and the highest-leverage next moves for this scan.</Text>
 
       <Animated.View
         style={[
@@ -2774,7 +2774,7 @@ export default function App() {
             <Text style={styles.lockedRowTag}>ONCE</Text>
           </View>
         ))}
-        <Text style={styles.progressCaption}>Best if you want the full answer right now.</Text>
+        <Text style={styles.progressCaption}>Best if you want the full answer on this scan right now.</Text>
         <Pressable style={[styles.primaryButton, styles.primaryButtonHot]} onPress={unlockCurrentReview}>
           <Text style={styles.primaryButtonText}>Unlock This Review</Text>
         </Pressable>
