@@ -1919,7 +1919,7 @@ export default function App() {
         <Image source={BRAND_FACE_IMAGE} style={styles.brandHeroImage} resizeMode="cover" />
       </Animated.View>
       <Pressable style={styles.primaryButton} onPress={() => setScreen('upload')}>
-        <Text style={styles.primaryButtonText}>Start Your Read</Text>
+        <Text style={styles.primaryButtonText}>Start Your LooksMaxxing Read</Text>
       </Pressable>
       <Animated.View style={[styles.heroOrb, { transform: [{ scale: pulse }] }]}>
         <View style={styles.heroOrbCore}>
