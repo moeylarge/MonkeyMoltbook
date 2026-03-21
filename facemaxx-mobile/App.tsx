@@ -2151,6 +2151,19 @@ export default function App() {
           </View>
         </View>
 
+        {isFreeTeaserMode && (
+          <View style={styles.retentionCard}>
+            <Text style={styles.retentionTitle}>Your full LooksMaxxing Review is ready</Text>
+            <Text style={styles.retentionCopy}>Unlock the deeper read to see what is helping your score, what is holding it back, and where your biggest gains are most likely to come from.</Text>
+            <Pressable style={styles.primaryButton} onPress={unlockCurrentReview}>
+              <Text style={styles.primaryButtonText}>Unlock Full Review — $4.99</Text>
+            </Pressable>
+            <Pressable style={styles.secondaryButton} onPress={startProAccess}>
+              <Text style={styles.secondaryButtonText}>Start Pro — $9.99/month</Text>
+            </Pressable>
+          </View>
+        )}
+
         {isProvisionalResult && (
           <View style={styles.warningCard}>
             <Text style={styles.warningEyebrow}>SCAN NEEDS A CLEANER PHOTO</Text>
@@ -2219,19 +2232,6 @@ export default function App() {
               <View style={styles.metricChip}><Text style={styles.metricKey}>Face count</Text><Text style={styles.metricValue}>{backendMeasurements.quality.faceCount}</Text></View>
             </View>
             <Text style={styles.metricPanelCopy}>Current archetype read: {inferredArchetype}</Text>
-          </View>
-        )}
-
-        {isFreeTeaserMode && (
-          <View style={styles.retentionCard}>
-            <Text style={styles.retentionTitle}>Your full LooksMaxxing Review is ready</Text>
-            <Text style={styles.retentionCopy}>Unlock the deeper read to see what is helping your score, what is holding it back, and where your biggest gains are most likely to come from.</Text>
-            <Pressable style={styles.primaryButton} onPress={unlockCurrentReview}>
-              <Text style={styles.primaryButtonText}>Unlock Full Review — $4.99</Text>
-            </Pressable>
-            <Pressable style={styles.secondaryButton} onPress={startProAccess}>
-              <Text style={styles.secondaryButtonText}>Start Pro — $9.99/month</Text>
-            </Pressable>
           </View>
         )}
 
