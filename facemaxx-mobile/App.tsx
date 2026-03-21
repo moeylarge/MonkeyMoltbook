@@ -2299,71 +2299,92 @@ export default function App() {
           </View>
         )}
 
-        {activeBreakdown.map((item, index) => (
-          <Animated.View
-            key={item.key}
-            style={[
-              styles.breakCard,
-              {
-                opacity: revealAnims[index],
-                transform: [
-                  { translateY: revealAnims[index].interpolate({ inputRange: [0, 1], outputRange: [18, 0] }) },
-                ],
-              },
-            ]}
-          >
-            <View style={styles.breakTopRow}>
-              <Text style={styles.breakLabel}>{item.label}</Text>
-              <View style={[styles.deltaPill, { backgroundColor: `${item.color}22` }]}>
-                <Text style={[styles.deltaText, { color: item.color }]}>+{item.target - item.score} toward standard</Text>
-              </View>
-            </View>
+        {activeBreakdown.map((item, index) => {
+          const meaning = item.score >= 78
+            ? `${item.label} is already one of the stronger parts of your current read and is helping the overall result feel more premium.`
+            : item.score >= 68
+              ? `${item.label} is contributing positively, but it still has visible headroom before it feels like a real standout.`
+              : `${item.label} is currently one of the clearer drags on the read and is leaving noticeable points on the table.`;
+          const liftMove = item.key === 'jawline'
+            ? 'Better leanness, angle control, and lower-face presentation would raise this fastest.'
+            : item.key === 'eyes'
+              ? 'Sharper eye-area presentation, better rest, brow control, and cleaner framing would raise this most.'
+              : item.key === 'skin'
+                ? 'Clearer lighting, better skin quality, and less texture suppression would move this upward.'
+                : item.key === 'symmetry'
+                  ? 'Straighter framing, cleaner posture, and more consistent alignment would improve how this reads.'
+                  : item.key === 'hair'
+                    ? 'Hair control, silhouette, and stronger upper-frame presentation would push this up fastest.'
+                    : 'Cleaner thirds balance, framing, and overall structure presentation would improve this area.';
 
-            <View style={styles.scoreCompareRow}>
-              <View style={styles.scoreCompareBlock}>
-                <Text style={styles.scoreCompareValue}>{item.score}</Text>
-                <Text style={styles.scoreCompareLabel}>Current</Text>
-              </View>
-              <Text style={styles.scoreArrow}>→</Text>
-              <View style={styles.scoreCompareBlock}>
-                <Text style={[styles.scoreCompareValue, { color: item.color }]}>{item.target}</Text>
-                <Text style={styles.scoreCompareLabel}>Target</Text>
-              </View>
-            </View>
-
-            <View style={styles.compareBarsWrap}>
-              <View style={styles.compareLine}>
-                <Text style={styles.compareBarLabel}>Now</Text>
-                <View style={styles.compareTrack}>
-                  <Animated.View
-                    style={[
-                      styles.compareFill,
-                      {
-                        backgroundColor: item.color,
-                        width: barAnims[index].interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] }),
-                      },
-                    ]}
-                  />
+          return (
+            <Animated.View
+              key={item.key}
+              style={[
+                styles.breakCard,
+                {
+                  opacity: revealAnims[index],
+                  transform: [
+                    { translateY: revealAnims[index].interpolate({ inputRange: [0, 1], outputRange: [18, 0] }) },
+                  ],
+                },
+              ]}
+            >
+              <View style={styles.breakTopRow}>
+                <Text style={styles.breakLabel}>{item.label}</Text>
+                <View style={[styles.deltaPill, { backgroundColor: `${item.color}22` }]}>
+                  <Text style={[styles.deltaText, { color: item.color }]}>+{item.target - item.score} toward standard</Text>
                 </View>
               </View>
-              <View style={styles.compareLine}>
-                <Text style={styles.compareBarLabel}>Target</Text>
-                <View style={styles.compareTrackMuted}>
-                  <Animated.View
-                    style={[
-                      styles.compareFillGhost,
-                      {
-                        borderColor: item.color,
-                        width: targetBarAnims[index].interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] }),
-                      },
-                    ]}
-                  />
+
+              <View style={styles.scoreCompareRow}>
+                <View style={styles.scoreCompareBlock}>
+                  <Text style={styles.scoreCompareValue}>{item.score}</Text>
+                  <Text style={styles.scoreCompareLabel}>Current</Text>
+                </View>
+                <Text style={styles.scoreArrow}>→</Text>
+                <View style={styles.scoreCompareBlock}>
+                  <Text style={[styles.scoreCompareValue, { color: item.color }]}>{item.target}</Text>
+                  <Text style={styles.scoreCompareLabel}>Target</Text>
                 </View>
               </View>
-            </View>
-            <Text style={styles.breakReason}>{item.why}</Text>
-          </Animated.View>
-        ))}
+
+              <View style={styles.compareBarsWrap}>
+                <View style={styles.compareLine}>
+                  <Text style={styles.compareBarLabel}>Now</Text>
+                  <View style={styles.compareTrack}>
+                    <Animated.View
+                      style={[
+                        styles.compareFill,
+                        {
+                          backgroundColor: item.color,
+                          width: barAnims[index].interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] }),
+                        },
+                      ]}
+                    />
+                  </View>
+                </View>
+                <View style={styles.compareLine}>
+                  <Text style={styles.compareBarLabel}>Target</Text>
+                  <View style={styles.compareTrackMuted}>
+                    <Animated.View
+                      style={[
+                        styles.compareFillGhost,
+                        {
+                          borderColor: item.color,
+                          width: targetBarAnims[index].interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] }),
+                        },
+                      ]}
+                    />
+                  </View>
+                </View>
+              </View>
+              <Text style={styles.breakReason}>{item.why}</Text>
+              <Text style={styles.breakDetail}><Text style={styles.breakDetailLabel}>What it means: </Text>{meaning}</Text>
+              <Text style={styles.breakDetail}><Text style={styles.breakDetailLabel}>What raises it: </Text>{liftMove}</Text>
+            </Animated.View>
+          );
+        })}
         <Pressable style={styles.primaryButton} onPress={() => setScreen('simulate')}>
           <Text style={styles.primaryButtonText}>Preview Your Upgrade</Text>
         </Pressable>
@@ -2970,6 +2991,8 @@ const styles = StyleSheet.create({
   compareFill: { height: '100%', borderRadius: 999 },
   compareFillGhost: { height: '100%', borderRadius: 999, borderWidth: 1, backgroundColor: 'transparent' },
   breakReason: { color: '#A7ACC0', fontSize: 13, lineHeight: 19 },
+  breakDetail: { color: '#AEB5CB', fontSize: 13, lineHeight: 19 },
+  breakDetailLabel: { color: '#FFFFFF', fontWeight: '800' },
   simCardWrap: { flexDirection: 'row', gap: 12, alignItems: 'stretch' },
   simCardLeft: { flex: 1 },
   simCardRight: { flex: 1 },
