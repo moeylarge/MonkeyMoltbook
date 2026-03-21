@@ -1918,6 +1918,9 @@ export default function App() {
       <Animated.View style={[styles.brandHeroFrame, { transform: [{ scale: pulse }] }]}> 
         <Image source={BRAND_FACE_IMAGE} style={styles.brandHeroImage} resizeMode="cover" />
       </Animated.View>
+      <Pressable style={styles.primaryButton} onPress={() => setScreen('upload')}>
+        <Text style={styles.primaryButtonText}>Start Your Read</Text>
+      </Pressable>
       <Animated.View style={[styles.heroOrb, { transform: [{ scale: pulse }] }]}>
         <View style={styles.heroOrbCore}>
           <Text style={styles.heroOrbScore}>{history[0]?.potential ?? 91}</Text>
@@ -1938,9 +1941,6 @@ export default function App() {
         </View>
       </View>
 
-      <Pressable style={styles.primaryButton} onPress={() => setScreen('upload')}>
-        <Text style={styles.primaryButtonText}>Start Your Read</Text>
-      </Pressable>
       {!!history.length && (
         <Pressable style={styles.secondaryButton} onPress={() => setScreen('history')}>
           <Text style={styles.secondaryButtonText}>Open Standard History</Text>
