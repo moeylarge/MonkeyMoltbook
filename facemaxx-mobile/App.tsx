@@ -34,6 +34,7 @@ type ScreenKey =
   | 'simulate'
   | 'history'
   | 'paywall'
+  | 'review-unlocked'
   | 'pro-welcome'
   | 'plan'
   | 'share'
@@ -204,7 +205,7 @@ const BRAND_FACE_NAME = 'Clavicular';
 const BRAND_FACE_IMAGE: ImageSourcePropType = require('./assets/clavicular-brand.png');
 const LOCAL_BACKEND_URL = 'http://127.0.0.1:8089';
 const LAN_BACKEND_URL = 'http://192.168.4.52:8089';
-const screens: ScreenKey[] = ['hook', 'upload', 'camera', 'scan', 'result', 'breakdown', 'simulate', 'history', 'paywall', 'pro-welcome', 'plan', 'share', 'battle'];
+const screens: ScreenKey[] = ['hook', 'upload', 'camera', 'scan', 'result', 'breakdown', 'simulate', 'history', 'paywall', 'review-unlocked', 'pro-welcome', 'plan', 'share', 'battle'];
 
 function getAnalysisBackendUrl() {
   if (Platform.OS !== 'web') return LOCAL_BACKEND_URL;
@@ -1667,7 +1668,7 @@ export default function App() {
     if (!activeScan) return;
     setAccessTier('review_unlocked');
     setUnlockedReviewId(activeScan.id);
-    setScreen('result');
+    setScreen('review-unlocked');
   };
 
   const startProAccess = () => {
@@ -2620,6 +2621,28 @@ export default function App() {
     </View>
   );
 
+  const renderReviewUnlocked = () => (
+    <View style={styles.screenBlock}>
+      <Text style={styles.sectionKick}>FULL REVIEW UNLOCKED</Text>
+      <Text style={styles.sectionTitle}>Your LooksMaxxing result is now fully revealed</Text>
+      <Text style={styles.metricPanelCopy}>You now have access to your exact score, full archetype read, premium interpretation, detailed breakdown, and personalized plan.</Text>
+
+      <View style={styles.paywallCard}>
+        {['Exact LooksMaxxing score', 'Full archetype and tier reveal', 'Premium interpretation page', 'Detailed breakdown and plan'].map((item) => (
+          <View key={item} style={styles.lockedRow}>
+            <Text style={styles.lockedRowText}>{item}</Text>
+            <Text style={styles.lockedRowTag}>UNLOCKED</Text>
+          </View>
+        ))}
+      </View>
+
+      <Pressable style={styles.primaryButton} onPress={() => setScreen('result')}>
+        <Text style={styles.primaryButtonText}>See Your Full Review</Text>
+      </Pressable>
+      <Text style={styles.progressCaption}>You paid for the full answer — now you can go deeper into the score, the why, and the plan.</Text>
+    </View>
+  );
+
   const renderProWelcome = () => (
     <View style={styles.screenBlock}>
       <Text style={styles.sectionKick}>PRO UNLOCKED</Text>
@@ -2825,6 +2848,8 @@ export default function App() {
         return renderHistory();
       case 'paywall':
         return renderPaywall();
+      case 'review-unlocked':
+        return renderReviewUnlocked();
       case 'pro-welcome':
         return renderProWelcome();
       case 'plan':
