@@ -2948,7 +2948,7 @@ const styles = StyleSheet.create({
   statChip: { width: 145, paddingVertical: 16, paddingHorizontal: 14, borderRadius: 20, backgroundColor: '#12131A', borderWidth: 1, borderColor: '#222431' },
   statNumber: { color: '#FFFFFF', fontSize: 26, fontWeight: '900' },
   statLabel: { color: '#8F95AE', fontSize: 12, marginTop: 4 },
-  primaryButton: { width: '100%', marginTop: 14, paddingVertical: 18, borderRadius: 24, backgroundColor: '#7C5CFF', alignItems: 'center', justifyContent: 'center', shadowColor: '#7C5CFF', shadowOpacity: 0.4, shadowRadius: 24, shadowOffset: { width: 0, height: 12 }, minHeight: 58 },
+  primaryButton: { width: '100%', marginTop: 14, paddingVertical: 18, borderRadius: 24, backgroundColor: '#FF3B30', alignItems: 'center', justifyContent: 'center', shadowColor: '#FF3B30', shadowOpacity: 0.42, shadowRadius: 24, shadowOffset: { width: 0, height: 12 }, minHeight: 58 },
   primaryButtonText: { color: '#FFFFFF', fontSize: 17, fontWeight: '800', textAlign: 'center' },
   secondaryButton: { width: '100%', marginTop: 10, paddingVertical: 16, borderRadius: 24, backgroundColor: '#151621', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#282B3D', minHeight: 54 },
   secondaryButtonText: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
