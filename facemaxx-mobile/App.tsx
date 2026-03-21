@@ -509,8 +509,8 @@ function buildShareCaptions(scan: ScanRecord): Record<ShareTone, string> {
   return {
     neutral: `${BRAND_NAME} gave me a ${scan.score} and called me ${scan.archetype}. Fair or nah?`,
     confident: `${scan.score} right now, ${scan.potential} ceiling. Strong base or am I chatting?`,
-    humble: `Trying to improve this for real. ${BRAND_NAME} called me ${scan.archetype} with room to level up — fair?`,
-    provocative: `${BRAND_NAME} gave me a ${scan.score} and said ${scan.archetype}. Honest rating — fair or inflated?`,
+    humble: `Trying to improve this for real. ${BRAND_NAME} called me ${scan.archetype} with room to level up - fair?`,
+    provocative: `${BRAND_NAME} gave me a ${scan.score} and said ${scan.archetype}. Honest rating - fair or inflated?`,
   };
 }
 
@@ -1885,15 +1885,9 @@ export default function App() {
         <Text style={styles.eyebrow}>THE {BRAND_NAME.toUpperCase()} STANDARD</Text>
         <View style={styles.liveDot} />
       </View>
-      <Text style={styles.brandIntro}>Get a sharper read on how your current presentation lands — and where the biggest gains are hiding.</Text>
-      <Animated.View style={[styles.brandHeroFrame, { transform: [{ scale: pulse }] }]}>
+      <Text style={styles.brandIntro}>Get a sharper read on how your current presentation lands - and where the biggest gains are hiding.</Text>
+      <Animated.View style={[styles.brandHeroFrame, { transform: [{ scale: pulse }] }]}> 
         <Image source={BRAND_FACE_IMAGE} style={styles.brandHeroImage} resizeMode="cover" />
-        <View style={styles.brandHeroShadeTop} />
-        <View style={styles.brandHeroShadeBottom} />
-        <View style={styles.brandHeroOverlay}>
-          <Text style={styles.brandHeroName}>{BRAND_NAME}</Text>
-          <Text style={styles.brandHeroRole}>Read the look. Find the upside.</Text>
-        </View>
       </Animated.View>
       <Animated.View style={[styles.heroOrb, { transform: [{ scale: pulse }] }]}>
         <View style={styles.heroOrbCore}>
@@ -2260,7 +2254,7 @@ export default function App() {
         <View style={styles.shareCard}>
           <Text style={styles.shareTitle}>Clavicular preview</Text>
           <Text style={styles.shareHeadline}>From {activeScan.score} to a possible {potentialDisplay}</Text>
-          <Text style={styles.shareCaption}>The question is not whether the face changes — it is how much stronger the presentation can get.</Text>
+          <Text style={styles.shareCaption}>The question is not whether the face changes - it is how much stronger the presentation can get.</Text>
         </View>
 
         <Pressable style={styles.primaryButton} onPress={() => setScreen('share')}>
@@ -2698,12 +2692,7 @@ const styles = StyleSheet.create({
   liveDot: { width: 8, height: 8, borderRadius: 999, backgroundColor: '#14E38B' },
   brandIntro: { color: '#D6DAE9', fontSize: 14, fontWeight: '700', textAlign: 'center', maxWidth: 320, lineHeight: 20 },
   brandHeroFrame: { width: '100%', maxWidth: 348, height: 430, borderRadius: 34, overflow: 'hidden', borderWidth: 1, borderColor: '#2A2D3F', backgroundColor: '#12131A', shadowColor: '#7C5CFF', shadowOpacity: 0.32, shadowRadius: 28, shadowOffset: { width: 0, height: 14 } },
-  brandHeroImage: { position: 'absolute', width: '104%', height: '104%', left: '-2%', top: '18%' },
-  brandHeroShadeTop: { position: 'absolute', top: 0, left: 0, right: 0, height: '32%', backgroundColor: 'rgba(11,11,15,0.18)' },
-  brandHeroShadeBottom: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '38%', backgroundColor: 'rgba(11,11,15,0.78)' },
-  brandHeroOverlay: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 22, paddingVertical: 20 },
-  brandHeroName: { color: '#FFFFFF', fontSize: 28, fontWeight: '900' },
-  brandHeroRole: { color: '#D9CFFF', fontSize: 13, fontWeight: '700', marginTop: 4 },
+  brandHeroImage: { position: 'absolute', width: '104%', height: '104%', left: '-2%', top: '8%' },
   heroOrb: { width: 232, height: 232, borderRadius: 999, backgroundColor: '#14151F', borderWidth: 1, borderColor: '#2D3041', shadowColor: '#7C5CFF', shadowOpacity: 0.35, shadowRadius: 40, shadowOffset: { width: 0, height: 0 }, alignItems: 'center', justifyContent: 'center', marginTop: -8 },
   heroOrbCore: { width: 156, height: 156, borderRadius: 999, backgroundColor: '#0E0F16', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#26293C' },
   heroOrbScore: { color: '#FFFFFF', fontSize: 52, fontWeight: '900' },
