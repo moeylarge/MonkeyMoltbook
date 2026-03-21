@@ -1856,7 +1856,7 @@ export default function App() {
     const large = size === 'large';
     return (
       <View style={large ? styles.emptyFacePlaceholderLarge : styles.emptyFacePlaceholderSmall}>
-        <Text style={styles.emptyFaceEyebrow}>CLAVICULAR</Text>
+        <Text style={styles.emptyFaceEyebrow}>PHOTO PREVIEW</Text>
         <Text style={large ? styles.emptyFaceTitleLarge : styles.emptyFaceTitleSmall}>Awaiting your read</Text>
         {large && <Text style={styles.emptyFaceCopy}>Drop in a clean photo to see how you stack up against the standard.</Text>}
       </View>
