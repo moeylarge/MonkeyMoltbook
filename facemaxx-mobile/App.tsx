@@ -162,6 +162,7 @@ type BattleProfile = {
 };
 
 type ShareTone = 'neutral' | 'confident' | 'humble' | 'provocative';
+type AccessTier = 'free' | 'review_unlocked' | 'pro';
 
 type DatasetExportRecord = {
   sampleId: string;
@@ -1254,6 +1255,8 @@ export default function App() {
   const [battleScan, setBattleScan] = useState<ScanRecord | null>(null);
   const [battleBusy, setBattleBusy] = useState(false);
   const [shareTone, setShareTone] = useState<ShareTone>('neutral');
+  const [accessTier, setAccessTier] = useState<AccessTier>('free');
+  const [unlockedReviewId, setUnlockedReviewId] = useState<string | null>(null);
   const [exportCount, setExportCount] = useState(0);
   const [lastExportPath, setLastExportPath] = useState<string | null>(null);
 
@@ -1297,6 +1300,8 @@ export default function App() {
 
   const activeScan = currentScan ?? history[0] ?? null;
   const activeBreakdown = activeScan?.breakdown ?? [];
+  const canViewPremiumForCurrentScan = !!activeScan && (accessTier === 'pro' || (accessTier === 'review_unlocked' && unlockedReviewId === activeScan.id));
+  const canViewProFeatures = accessTier === 'pro';
   const eliteDistance = activeScan ? Math.max(0, 100 - activeScan.potential) : 18;
   const retentionStats = useMemo(() => buildRetentionStats(history), [history]);
 
@@ -1657,6 +1662,27 @@ export default function App() {
     }
   };
 
+  const unlockCurrentReview = () => {
+    if (!activeScan) return;
+    setAccessTier('review_unlocked');
+    setUnlockedReviewId(activeScan.id);
+    setScreen('result');
+  };
+
+  const startProAccess = () => {
+    setAccessTier('pro');
+    setUnlockedReviewId(null);
+    setScreen('result');
+  };
+
+  const continueWithFreePreview = () => {
+    setScreen('result');
+  };
+
+  const openPremiumGate = () => {
+    setScreen('paywall');
+  };
+
   const triggerWebCameraCapture = async () => {
     if (Platform.OS !== 'web') return false;
     try {
@@ -1853,6 +1879,10 @@ export default function App() {
     };
 
     setCurrentScan(scan);
+    if (accessTier === 'review_unlocked') {
+      setAccessTier('free');
+      setUnlockedReviewId(null);
+    }
     const nextHistory = [scan, ...history].slice(0, 12);
     await persistHistory(nextHistory);
     await persistPendingUpload(undefined);
@@ -1863,6 +1893,10 @@ export default function App() {
 
   const resetFlow = () => {
     persistPendingUpload(undefined);
+    if (accessTier === 'review_unlocked') {
+      setAccessTier('free');
+      setUnlockedReviewId(null);
+    }
     setSelectedPhoto('Front selfie');
     setImageUri(undefined);
     setSelectedImage(undefined);
@@ -2069,13 +2103,25 @@ export default function App() {
     const backendMeasurements = activeScan.measurement;
     const recoveryGuidance = getRecoveryGuidance(activeScan);
     const isProvisionalResult = !!activeScan.rejectionReason || (activeScan.confidence ?? 0) < 55;
+    const isFreeTeaserMode = !canViewPremiumForCurrentScan;
     const resultLabel = isProvisionalResult ? 'Provisional Read' : 'Optimization Score';
     const resultProgressCopy = isProvisionalResult
       ? `This read is being held loosely until ${BRAND_NAME} gets a cleaner scan.`
       : `You are ${eliteDistance}% away from the LooksMaxxing ceiling`;
+    const reviewPoints = Array.from(new Set([
+      ...(activeScan.warnings ?? []),
+      `Confidence is currently reading at ${activeScan.confidence ?? 0}.`,
+      activeScan.rejectionReason
+        ? `Primary caution point: ${activeScan.rejectionReason}.`
+        : 'No hard rejection triggered on this read.',
+      `Current archetype read: ${inferredArchetype}.`,
+      backendMeasurements
+        ? `Symmetry and landmark data are helping shape the current score.`
+        : 'This read is leaning more on visible presentation than deeper geometry signals.',
+    ].filter(Boolean)));
     return (
       <View style={styles.screenBlock}>
-        <Text style={styles.sectionKick}>Your read</Text>
+        <Text style={styles.sectionKick}>{isFreeTeaserMode ? 'Your teaser result' : 'Your read'}</Text>
         <View style={[styles.resultCard, isProvisionalResult && styles.resultCardMuted]}>
           <Text style={[styles.rankBadge, isProvisionalResult && styles.rankBadgeMuted]}>{isProvisionalResult ? 'PROVISIONAL' : activeScan.rank}</Text>
           <Text style={styles.resultLabel}>{isProvisionalResult ? resultLabel : 'LooksMaxxing Read'}</Text>
@@ -2128,32 +2174,24 @@ export default function App() {
           </View>
         )}
 
-        {(() => {
-          const reviewPoints = Array.from(new Set([
-            ...(activeScan.warnings ?? []),
-            `Confidence is currently reading at ${activeScan.confidence ?? 0}.`,
-            activeScan.rejectionReason
-              ? `Primary caution point: ${activeScan.rejectionReason}.`
-              : 'No hard rejection triggered on this read.',
-            `Current archetype read: ${inferredArchetype}.`,
-            backendMeasurements
-              ? `Symmetry and landmark data are helping shape the current score.`
-              : 'This read is leaning more on visible presentation than deeper geometry signals.',
-          ].filter(Boolean)));
-
-          return reviewPoints.length ? (
-            <View style={styles.warningCardMuted}>
-              <Text style={styles.warningTitle}>LooksMaxxing Review</Text>
-              {reviewPoints.slice(0, 4).map((point) => (
-                <Text key={point} style={styles.warningText}>• {point}</Text>
-              ))}
-            </View>
-          ) : null;
-        })()}
+        {reviewPoints.length ? (
+          <Pressable style={styles.warningCardMuted} onPress={() => { if (isFreeTeaserMode) openPremiumGate(); }}>
+            <Text style={styles.warningTitle}>LooksMaxxing Review</Text>
+            {(isFreeTeaserMode ? reviewPoints.slice(0, 1) : reviewPoints.slice(0, 4)).map((point) => (
+              <Text key={point} style={styles.warningText}>• {point}</Text>
+            ))}
+            {isFreeTeaserMode && (
+              <>
+                <Text style={styles.warningText}>• Premium review points are locked until you unlock this result.</Text>
+                <Text style={styles.metricPanelCopy}>Unlock the full review to see the deeper read, clearer recommendations, and the real reasons behind this score.</Text>
+              </>
+            )}
+          </Pressable>
+        ) : null}
 
         <View style={styles.identityLine}>
-          <Text style={styles.identityLineTitle}>LooksMaxxing read</Text>
-          <Text style={styles.identityLineText}>{identityTagline}</Text>
+          <Text style={styles.identityLineTitle}>{isFreeTeaserMode ? 'Teaser read' : 'LooksMaxxing read'}</Text>
+          <Text style={styles.identityLineText}>{isFreeTeaserMode ? `You are reading as ${activeScan.archetype} with visible upside. Unlock the full review to see what is helping, what is holding you back, and where your biggest gains are hiding.` : identityTagline}</Text>
           {!!tierProgress && (
             <>
               <Text style={styles.identityProgressText}>
@@ -2184,8 +2222,21 @@ export default function App() {
           </View>
         )}
 
-        <Pressable style={styles.primaryButton} onPress={() => setScreen('breakdown')}>
-          <Text style={styles.primaryButtonText}>Open Score Breakdown</Text>
+        {isFreeTeaserMode && (
+          <View style={styles.retentionCard}>
+            <Text style={styles.retentionTitle}>Your full LooksMaxxing Review is ready</Text>
+            <Text style={styles.retentionCopy}>Unlock the deeper read to see what is helping your score, what is holding it back, and where your biggest gains are most likely to come from.</Text>
+            <Pressable style={styles.primaryButton} onPress={unlockCurrentReview}>
+              <Text style={styles.primaryButtonText}>Unlock Full Review — $4.99</Text>
+            </Pressable>
+            <Pressable style={styles.secondaryButton} onPress={startProAccess}>
+              <Text style={styles.secondaryButtonText}>Start Pro — $9.99/month</Text>
+            </Pressable>
+          </View>
+        )}
+
+        <Pressable style={styles.primaryButton} onPress={() => (canViewPremiumForCurrentScan ? setScreen('breakdown') : openPremiumGate())}>
+          <Text style={styles.primaryButtonText}>{canViewPremiumForCurrentScan ? 'Open Score Breakdown' : 'See Full Breakdown'}</Text>
         </Pressable>
       </View>
     );
@@ -2193,6 +2244,10 @@ export default function App() {
 
   const renderBreakdown = () => {
     if (!activeScan) return null;
+    if (!canViewPremiumForCurrentScan) {
+      setScreen('paywall');
+      return null;
+    }
     return (
       <View style={styles.screenBlock}>
         <Text style={styles.sectionKick}>Score breakdown</Text>
@@ -2458,66 +2513,63 @@ export default function App() {
 
   const renderPaywall = () => (
     <View style={styles.screenBlock}>
-      <Text style={styles.sectionKick}>LooksMaxxing pro</Text>
-      <Text style={styles.sectionTitle}>Unlock the deeper read and the full improvement plan.</Text>
+      <Text style={styles.sectionKick}>Unlock options</Text>
+      <Text style={styles.sectionTitle}>Unlock your LooksMaxxing result</Text>
+      <Text style={styles.metricPanelCopy}>See the full review, deeper breakdown, and the clearest path to improving your score.</Text>
+
       <Animated.View
         style={[
           styles.paywallCard,
-          { shadowOpacity: paywallGlow.interpolate({ inputRange: [0.25, 1], outputRange: [0.12, 0.42] }) },
+          { shadowOpacity: paywallGlow.interpolate({ inputRange: [0.25, 1], outputRange: [0.12, 0.3] }) },
         ]}
       >
-        <Text style={styles.paywallTier}>PRO ACCESS</Text>
-        <Text style={styles.paywallPrice}>$7.99</Text>
-        <Text style={styles.paywallCopy}>Unlock your full breakdown, projected ceiling, standard cards, clash insights, and a sharper plan for what to improve next.</Text>
-        {['Full standard plan', 'Projected max score', 'Weekly standard check-ins', 'Clash insights'].map((item, index) => (
+        <Text style={styles.paywallTier}>FULL REVIEW</Text>
+        <Text style={styles.paywallPrice}>$4.99</Text>
+        <Text style={styles.paywallCopy}>Unlock this full LooksMaxxing Review for your current result.</Text>
+        {['Full LooksMaxxing Review', 'Full score breakdown', 'Personalized improvement plan'].map((item, index) => (
           <View key={item} style={[styles.lockedRow, lockedIndex === index && styles.lockedRowActive]}>
             <Text style={styles.lockedRowText}>{item}</Text>
-            <Text style={styles.lockedRowTag}>PAID</Text>
+            <Text style={styles.lockedRowTag}>ONCE</Text>
           </View>
         ))}
+        <Text style={styles.progressCaption}>Best if you want the full answer right now.</Text>
+        <Pressable style={styles.primaryButton} onPress={unlockCurrentReview}>
+          <Text style={styles.primaryButtonText}>Unlock This Review</Text>
+        </Pressable>
       </Animated.View>
 
-      <View style={styles.pricingGrid}>
-        <View style={styles.pricingCardMuted}>
-          <Text style={styles.pricingTier}>FREE</Text>
-          <Text style={styles.pricingHeadline}>Quick read</Text>
-          <Text style={styles.pricingCopy}>Score, light breakdown, preview, and recent history.</Text>
-        </View>
-        <View style={styles.pricingCardAccent}>
-          <Text style={styles.pricingTier}>PRO</Text>
-          <Text style={styles.pricingHeadline}>Full improvement plan</Text>
-          <Text style={styles.pricingCopy}>Detailed upgrades, progress tracking, standard cards, and clash insights.</Text>
-        </View>
-        <View style={styles.pricingCardMuted}>
-          <Text style={styles.pricingTier}>SUBSCRIPTION</Text>
-          <Text style={styles.pricingHeadline}>Ongoing tracking</Text>
-          <Text style={styles.pricingCopy}>Weekly progress reports, repeat scans, and a clearer view of what is actually changing.</Text>
-        </View>
+      <View style={styles.pricingCardAccent}>
+        <Text style={styles.pricingTier}>LOOKSMAXXING PRO</Text>
+        <Text style={styles.pricingHeadline}>$9.99/month</Text>
+        <Text style={styles.pricingCopy}>Unlock everything in Full Review plus ongoing premium access.</Text>
+        {['Unlimited full reviews', 'Progress tracker', 'Advanced battle mode', 'Premium improvement insights'].map((item) => (
+          <View key={item} style={styles.lockedRow}>
+            <Text style={styles.lockedRowText}>{item}</Text>
+            <Text style={styles.lockedRowTag}>PRO</Text>
+          </View>
+        ))}
+        <Text style={styles.progressCaption}>Best for ongoing improvement.</Text>
+        <Pressable style={styles.primaryButton} onPress={startProAccess}>
+          <Text style={styles.primaryButtonText}>Start Pro</Text>
+        </Pressable>
       </View>
 
       <View style={styles.retentionCard}>
-        <Text style={styles.retentionTitle}>Recommended add-ons</Text>
-        <Text style={styles.retentionCopy}>Products and routines that match the areas most worth improving first.</Text>
-        {affiliateItems.map((item) => (
-          <View key={item.id} style={styles.affiliateRow}>
-            <View style={styles.affiliateMeta}>
-              <Text style={styles.affiliateCategory}>{item.category}</Text>
-              <Text style={styles.affiliateName}>{item.name}</Text>
-              <Text style={styles.affiliateReason}>{item.reason}</Text>
-            </View>
-            <Text style={styles.affiliateCta}>{item.cta}</Text>
-          </View>
-        ))}
+        <Text style={styles.retentionTitle}>What unlocks next</Text>
+        <Text style={styles.retentionCopy}>Go deeper on what is helping your score, what is holding it back, and where your biggest gains are most likely to come from.</Text>
+        <Pressable style={styles.secondaryButton} onPress={continueWithFreePreview}>
+          <Text style={styles.secondaryButtonText}>Continue with free preview</Text>
+        </Pressable>
       </View>
-
-      <Pressable style={styles.primaryButton} onPress={() => setScreen('plan')}>
-        <Text style={styles.primaryButtonText}>Unlock the Standard Plan</Text>
-      </Pressable>
     </View>
   );
 
   const renderPlan = () => {
     if (!activeScan) return null;
+    if (!canViewPremiumForCurrentScan) {
+      setScreen('paywall');
+      return null;
+    }
     return (
       <View style={styles.screenBlock}>
         <Text style={styles.sectionKick}>Your blueprint</Text>
