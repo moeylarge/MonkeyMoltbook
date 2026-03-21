@@ -2120,6 +2120,17 @@ export default function App() {
         ? `Symmetry and landmark data are helping shape the current score.`
         : 'This read is leaning more on visible presentation than deeper geometry signals.',
     ].filter(Boolean)));
+    const strongestArea = [...activeBreakdown].sort((a, b) => b.score - a.score)[0] ?? null;
+    const biggestGap = [...activeBreakdown].sort((a, b) => (b.target - b.score) - (a.target - a.score))[0] ?? null;
+    const premiumSummary = strongestArea && biggestGap
+      ? `Right now your result is being supported most by ${strongestArea.label.toLowerCase()}, while the biggest untapped upside is sitting in ${biggestGap.label.toLowerCase()}. This read does not look capped by one catastrophic weakness — it looks more like a result with real room above it if presentation and weaker areas tighten up.`
+      : identityTagline;
+    const interpretationSummary = strongestArea && biggestGap
+      ? `You are not starting from a weak baseline. The stronger parts of your face are already giving the read some shape, but the score still feels held back by how consistently your weaker areas are landing. In plain terms: this looks more like a refinement opportunity than a rescue job.`
+      : 'This result suggests there is meaningful upside available, but the biggest gains will come from clarifying what is already working instead of chasing random fixes.';
+    const biggestOpportunityCopy = biggestGap
+      ? `Your highest leverage opportunity right now is ${biggestGap.label.toLowerCase()}. That is the area most likely to move the score if you improve how it presents in photos and in real life.`
+      : 'Your biggest opportunity right now is improving how your strongest features land more consistently.';
     return (
       <View style={styles.screenBlock}>
         <Text style={styles.sectionKick}>{isFreeTeaserMode ? 'Your teaser result' : 'Your read'}</Text>
@@ -2197,21 +2208,31 @@ export default function App() {
         {reviewPoints.length ? (
           <Pressable style={styles.warningCardMuted} onPress={() => { if (isFreeTeaserMode) openPremiumGate(); }}>
             <Text style={styles.warningTitle}>LooksMaxxing Review</Text>
-            {(isFreeTeaserMode ? reviewPoints.slice(0, 1) : reviewPoints.slice(0, 4)).map((point) => (
-              <Text key={point} style={styles.warningText}>• {point}</Text>
-            ))}
-            {isFreeTeaserMode && (
+            {isFreeTeaserMode ? (
               <>
+                {reviewPoints.slice(0, 1).map((point) => (
+                  <Text key={point} style={styles.warningText}>• {point}</Text>
+                ))}
                 <Text style={styles.warningText}>• Premium review points are locked until you unlock this result.</Text>
                 <Text style={styles.metricPanelCopy}>Unlock the full review to see the deeper read, clearer recommendations, and the real reasons behind this score.</Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.metricPanelCopy}>{premiumSummary}</Text>
+                <View style={styles.tipList}>
+                  <View style={styles.tipRow}><Text style={styles.tipBullet}>•</Text><Text style={styles.tipText}>What is helping: {strongestArea ? `${strongestArea.label} is currently carrying the strongest part of the read.` : 'The stronger parts of your read are giving the score a usable baseline.'}</Text></View>
+                  <View style={styles.tipRow}><Text style={styles.tipBullet}>•</Text><Text style={styles.tipText}>What is limiting: {biggestGap ? `${biggestGap.label} still has the biggest gap between where you are and where you could reasonably land.` : 'A few weaker areas are still leaving points on the table.'}</Text></View>
+                  <View style={styles.tipRow}><Text style={styles.tipBullet}>•</Text><Text style={styles.tipText}>Structure vs photo suppression: {backendMeasurements ? 'Some of the score looks structural, but presentation and image quality are still suppressing the ceiling.' : 'This read still depends meaningfully on presentation and image quality, not just structure alone.'}</Text></View>
+                  <View style={styles.tipRow}><Text style={styles.tipBullet}>•</Text><Text style={styles.tipText}>Biggest upside: {biggestOpportunityCopy}</Text></View>
+                </View>
               </>
             )}
           </Pressable>
         ) : null}
 
         <View style={styles.identityLine}>
-          <Text style={styles.identityLineTitle}>{isFreeTeaserMode ? 'Teaser read' : 'LooksMaxxing read'}</Text>
-          <Text style={styles.identityLineText}>{isFreeTeaserMode ? `You are reading as ${activeScan.archetype} with visible upside. Unlock the full review to see what is helping, what is holding you back, and where your biggest gains are hiding.` : identityTagline}</Text>
+          <Text style={styles.identityLineTitle}>{isFreeTeaserMode ? 'Teaser read' : 'Premium Read Summary'}</Text>
+          <Text style={styles.identityLineText}>{isFreeTeaserMode ? `You are reading as ${activeScan.archetype} with visible upside. Unlock the full review to see what is helping, what is holding you back, and where your biggest gains are hiding.` : premiumSummary}</Text>
           {!!tierProgress && (
             <>
               <Text style={styles.identityProgressText}>
@@ -2238,7 +2259,14 @@ export default function App() {
               <View style={styles.metricChip}><Text style={styles.metricKey}>Interocular</Text><Text style={styles.metricValue}>{backendMeasurements.ratios.interocularRatio.toFixed(2)}</Text></View>
               <View style={styles.metricChip}><Text style={styles.metricKey}>Face count</Text><Text style={styles.metricValue}>{backendMeasurements.quality.faceCount}</Text></View>
             </View>
-            <Text style={styles.metricPanelCopy}>Current archetype read: {inferredArchetype}</Text>
+            <Text style={styles.metricPanelCopy}>{isFreeTeaserMode ? `Current archetype read: ${inferredArchetype}` : interpretationSummary}</Text>
+          </View>
+        )}
+
+        {!isFreeTeaserMode && (
+          <View style={styles.retentionCard}>
+            <Text style={styles.retentionTitle}>Biggest opportunity right now</Text>
+            <Text style={styles.retentionCopy}>{biggestOpportunityCopy}</Text>
           </View>
         )}
 
