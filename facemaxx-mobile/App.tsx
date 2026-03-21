@@ -2133,7 +2133,7 @@ export default function App() {
               <View style={styles.metricChip}><Text style={styles.metricKey}>Interocular</Text><Text style={styles.metricValue}>{backendMeasurements.ratios.interocularRatio.toFixed(2)}</Text></View>
               <View style={styles.metricChip}><Text style={styles.metricKey}>Face count</Text><Text style={styles.metricValue}>{backendMeasurements.quality.faceCount}</Text></View>
             </View>
-            <Text style={styles.metricPanelCopy}>Current Clavicular-side archetype read: {inferredArchetype}</Text>
+            <Text style={styles.metricPanelCopy}>Current archetype read: {inferredArchetype}</Text>
           </View>
         )}
 
@@ -2252,7 +2252,7 @@ export default function App() {
         </View>
 
         <View style={styles.shareCard}>
-          <Text style={styles.shareTitle}>Clavicular preview</Text>
+          <Text style={styles.shareTitle}>Preview</Text>
           <Text style={styles.shareHeadline}>From {activeScan.score} to a possible {potentialDisplay}</Text>
           <Text style={styles.shareCaption}>The question is not whether the face changes - it is how much stronger the presentation can get.</Text>
         </View>
@@ -2266,14 +2266,14 @@ export default function App() {
 
   const renderHistory = () => (
     <View style={styles.screenBlock}>
-      <Text style={styles.sectionKick}>Clavicular standard</Text>
+      <Text style={styles.sectionKick}>Your standard</Text>
       <Text style={styles.sectionTitle}>Track how close your read is getting to the LooksMaxxing standard over time.</Text>
 
       {!!history.length && (
         <>
         <View style={styles.retentionSummaryCard}>
           <View style={styles.retentionSummaryTop}>
-            <Text style={styles.retentionTitle}>Clavicular tracker</Text>
+            <Text style={styles.retentionTitle}>Progress tracker</Text>
             <Text style={styles.streakBadge}>{retentionStats.streakDays}-day streak</Text>
           </View>
           {!!retentionStats.provisionalCount && (
@@ -2404,7 +2404,7 @@ export default function App() {
         </View>
       )}
       <Pressable style={styles.primaryButton} onPress={() => setScreen('paywall')}>
-        <Text style={styles.primaryButtonText}>Continue to Clavicular Access</Text>
+        <Text style={styles.primaryButtonText}>Continue to Pro Access</Text>
       </Pressable>
     </View>
   );
@@ -2412,16 +2412,16 @@ export default function App() {
   const renderPaywall = () => (
     <View style={styles.screenBlock}>
       <Text style={styles.sectionKick}>LooksMaxxing pro</Text>
-      <Text style={styles.sectionTitle}>Unlock the deeper read and Clavicular-standard plan.</Text>
+      <Text style={styles.sectionTitle}>Unlock the deeper read and the full improvement plan.</Text>
       <Animated.View
         style={[
           styles.paywallCard,
           { shadowOpacity: paywallGlow.interpolate({ inputRange: [0.25, 1], outputRange: [0.12, 0.42] }) },
         ]}
       >
-        <Text style={styles.paywallTier}>CLAVICULAR ACCESS</Text>
+        <Text style={styles.paywallTier}>PRO ACCESS</Text>
         <Text style={styles.paywallPrice}>$7.99</Text>
-        <Text style={styles.paywallCopy}>Unlock your full breakdown, projected ceiling, Clavicular-standard cards, clash insights, and a sharper plan for what to improve next.</Text>
+        <Text style={styles.paywallCopy}>Unlock your full breakdown, projected ceiling, standard cards, clash insights, and a sharper plan for what to improve next.</Text>
         {['Full standard plan', 'Projected max score', 'Weekly standard check-ins', 'Clash insights'].map((item, index) => (
           <View key={item} style={[styles.lockedRow, lockedIndex === index && styles.lockedRowActive]}>
             <Text style={styles.lockedRowText}>{item}</Text>
@@ -2473,11 +2473,11 @@ export default function App() {
     if (!activeScan) return null;
     return (
       <View style={styles.screenBlock}>
-        <Text style={styles.sectionKick}>Clavicular blueprint</Text>
+        <Text style={styles.sectionKick}>Your blueprint</Text>
         <Text style={styles.sectionTitle}>The clearest moves between your current read and the LooksMaxxing standard.</Text>
 
         <View style={styles.retentionCard}>
-          <Text style={styles.retentionTitle}>Your Clavicular ceiling</Text>
+          <Text style={styles.retentionTitle}>Your ceiling</Text>
           <Text style={styles.potentialHero}>{activeScan.potential}</Text>
           <Text style={styles.retentionCopy}>{identityTagline}</Text>
         </View>
@@ -2527,7 +2527,7 @@ export default function App() {
           <Text style={styles.shareExportTagline}>{identityTagline}</Text>
           <View style={styles.shareMetaRow}>
             <View style={styles.shareMetaPill}><Text style={styles.shareMetaText}>Ceiling {activeScan.potential}</Text></View>
-            <View style={styles.shareMetaPill}><Text style={styles.shareMetaText}>Clavicular standard</Text></View>
+            <View style={styles.shareMetaPill}><Text style={styles.shareMetaText}>Current standard</Text></View>
           </View>
         </View>
 
@@ -2540,7 +2540,7 @@ export default function App() {
         </View>
 
         <View style={styles.shareCard}>
-          <Text style={styles.shareTitle}>Clavicular caption style</Text>
+          <Text style={styles.shareTitle}>Caption style</Text>
           <Text style={styles.shareHeadline}>{shareCaption}</Text>
           <Text style={styles.shareCaption}>Made to be screenshot-ready, story-ready, and clean enough to post without extra explaining.</Text>
         </View>
