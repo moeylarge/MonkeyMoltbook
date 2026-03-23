@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "LooksMaxxing",
-    "slug": "looksmaxxing",
+    "name": "LooksMaxx",
+    "slug": "looksmaxx",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -12,7 +12,14 @@
       "backgroundColor": "#07070A"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.moey.looksmaxx",
+      "buildNumber": "1.0.0",
+      "infoPlist": {
+        "NSCameraUsageDescription": "LooksMaxx uses the camera so you can capture a photo for your face analysis.",
+        "NSPhotoLibraryUsageDescription": "LooksMaxx uses your photo library so you can upload a photo for your face analysis.",
+        "NSPhotoLibraryAddUsageDescription": "LooksMaxx may save generated share images to your photo library if you choose to export them."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -21,7 +28,8 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.moey.looksmaxx"
     },
     "web": {
       "favicon": "./assets/favicon.png"

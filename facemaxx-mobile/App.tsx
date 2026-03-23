@@ -201,7 +201,7 @@ const STORAGE_KEY = 'looksmaxxing.scanHistory.v1';
 const DATASET_EXPORT_KEY = 'looksmaxxing.datasetExports.v1';
 const PENDING_UPLOAD_KEY = 'looksmaxxing.pendingUpload.v1';
 const DATASET_EXPORT_DIR = `${FileSystem.documentDirectory ?? ''}looksmaxxing-dataset`;
-const BRAND_NAME = 'LooksMaxxing';
+const BRAND_NAME = 'LooksMaxx';
 const BRAND_FACE_NAME = 'Clavicular';
 const BRAND_FACE_IMAGE: ImageSourcePropType = require('./assets/clavicular-brand.png');
 const BRAND_LOGO_IMAGE: ImageSourcePropType = require('./assets/looksmaxx-logo.png');
@@ -2176,20 +2176,20 @@ export default function App() {
         <Text style={styles.sectionKick}>{isFreeTeaserMode ? 'Your teaser result' : 'Your read'}</Text>
         <View style={[styles.resultCard, isProvisionalResult && styles.resultCardMuted]}>
           <Text style={[styles.rankBadge, isProvisionalResult && styles.rankBadgeMuted]}>{isProvisionalResult ? 'PROVISIONAL' : activeScan.rank}</Text>
-          <Text style={styles.resultLabel}>{isFreeTeaserMode ? 'Premium LooksMaxxing Read' : (isProvisionalResult ? resultLabel : 'LooksMaxxing Read')}</Text>
+          <Text style={styles.resultLabel}>{isFreeTeaserMode ? 'LooksMaxx Read' : (isProvisionalResult ? resultLabel : 'LooksMaxxing Read')}</Text>
           <Text style={[styles.resultScore, isProvisionalResult && styles.resultScoreMuted, isFreeTeaserMode && styles.resultScoreLocked]}>{isFreeTeaserMode ? 'Score Locked' : scoreDisplay}</Text>
-          <Text style={[styles.resultTier, isProvisionalResult && styles.resultTierMuted, isFreeTeaserMode && styles.resultTierLocked]}>{isFreeTeaserMode ? 'Full read ready to unlock' : (isProvisionalResult ? 'Needs Better Scan' : activeScan.tier)}</Text>
-          <Text style={[styles.resultArchetype, isFreeTeaserMode && styles.resultArchetypeLocked]}>{isFreeTeaserMode ? 'Your full archetype and breakdown unlock in the paid review' : (isProvisionalResult ? `${activeScan.archetype} • held loosely` : activeScan.archetype)}</Text>
+          <Text style={[styles.resultTier, isProvisionalResult && styles.resultTierMuted, isFreeTeaserMode && styles.resultTierLocked]}>{isFreeTeaserMode ? 'Full read available now' : (isProvisionalResult ? 'Needs Better Scan' : activeScan.tier)}</Text>
+          <Text style={[styles.resultArchetype, isFreeTeaserMode && styles.resultArchetypeLocked]}>{isFreeTeaserMode ? 'Your full archetype and breakdown are included during launch' : (isProvisionalResult ? `${activeScan.archetype} • held loosely` : activeScan.archetype)}</Text>
           <View style={styles.resultProgressWrap}>
             <View style={[styles.progressTrackSm, isProvisionalResult && styles.progressTrackSmMuted]}>
               <View style={[styles.progressFillSm, isProvisionalResult && styles.progressFillSmMuted, { width: `${activeScan.potential}%` }]} />
             </View>
-            <Text style={styles.resultProgressText}>{isFreeTeaserMode ? 'Your exact LooksMaxxing score unlocks with the full review.' : resultProgressCopy}</Text>
+            <Text style={styles.resultProgressText}>{isFreeTeaserMode ? 'Your exact LooksMaxx score is included during launch.' : resultProgressCopy}</Text>
           </View>
           {isFreeTeaserMode && (
             <View style={styles.resultCardLockOverlay}>
-              <Text style={styles.resultCardLockTitle}>FOUNDING USER ACCESS</Text>
-              <Text style={styles.resultCardLockCopy}>Your full review is temporarily unlocked during launch while LooksMaxxing calibrates the system and improves results.</Text>
+              <Text style={styles.resultCardLockTitle}>LAUNCH ACCESS</Text>
+              <Text style={styles.resultCardLockCopy}>Full review access is included during the launch window while LooksMaxx calibrates the system and improves results.</Text>
             </View>
           )}
         </View>
@@ -2214,10 +2214,10 @@ export default function App() {
             <Text style={styles.retentionTitle}>Early Access: Full review temporarily free</Text>
             <Text style={styles.retentionCopy}>See exactly where you land, what is helping your score most, what is holding it back, and which upgrades are most likely to move the read fastest during the launch window.</Text>
             <Pressable style={[styles.primaryButton, styles.primaryButtonHot]} onPress={unlockCurrentReview}>
-              <Text style={styles.primaryButtonText}>Continue with Founding Access</Text>
+              <Text style={styles.primaryButtonText}>Continue to Full Review</Text>
             </Pressable>
             <Pressable style={styles.secondaryButton} onPress={startProAccess}>
-              <Text style={styles.secondaryButtonText}>Preview Pro Coming Later</Text>
+              <Text style={styles.secondaryButtonText}>Pro launches later</Text>
             </Pressable>
           </View>
         )}
@@ -2247,13 +2247,13 @@ export default function App() {
 
         {reviewPoints.length ? (
           <Pressable style={styles.warningCardMuted} onPress={() => { if (isFreeTeaserMode) openPremiumGate(); }}>
-            <Text style={styles.warningTitle}>LooksMaxxing Review</Text>
+            <Text style={styles.warningTitle}>LooksMaxx Review</Text>
             {isFreeTeaserMode ? (
               <>
                 {reviewPoints.slice(0, 1).map((point) => (
                   <Text key={point} style={styles.warningText}>• {point}</Text>
                 ))}
-                <Text style={styles.warningText}>• Premium review points are locked until you unlock this result.</Text>
+                <Text style={styles.warningText}>• Full review details are included during the launch window.</Text>
                 <Text style={styles.metricPanelCopy}>Unlock the full review to see the deeper read, clearer recommendations, and the real reasons behind this score.</Text>
               </>
             ) : (
@@ -2271,8 +2271,8 @@ export default function App() {
         ) : null}
 
         <View style={styles.identityLine}>
-          <Text style={styles.identityLineTitle}>{isFreeTeaserMode ? 'Teaser read' : 'Premium Read Summary'}</Text>
-          <Text style={styles.identityLineText}>{isFreeTeaserMode ? `You are reading as ${activeScan.archetype} with visible upside. Unlock the full review to see what is helping, what is holding you back, and where your biggest gains are hiding.` : premiumSummary}</Text>
+          <Text style={styles.identityLineTitle}>{isFreeTeaserMode ? 'Read summary' : 'Full Read Summary'}</Text>
+          <Text style={styles.identityLineText}>{isFreeTeaserMode ? `You are reading as ${activeScan.archetype} with visible upside. Open the full review to see what is helping, what is holding you back, and where your biggest gains are hiding.` : premiumSummary}</Text>
           {!!tierProgress && (
             <>
               <Text style={styles.identityProgressText}>
@@ -2312,7 +2312,7 @@ export default function App() {
         )}
 
         <Pressable style={styles.primaryButton} onPress={() => (canViewPremiumForCurrentScan ? setScreen('breakdown') : openPremiumGate())}>
-          <Text style={styles.primaryButtonText}>{canViewPremiumForCurrentScan ? 'Open Score Breakdown' : 'See Full Breakdown'}</Text>
+          <Text style={styles.primaryButtonText}>{canViewPremiumForCurrentScan ? 'Open Score Breakdown' : 'Open Score Breakdown'}</Text>
         </Pressable>
       </View>
     );
@@ -2603,7 +2603,7 @@ export default function App() {
         </View>
       )}
       <Pressable style={[styles.primaryButton, styles.primaryButtonHot]} onPress={() => setScreen('paywall')}>
-        <Text style={styles.primaryButtonText}>Continue to Pro Access</Text>
+        <Text style={styles.primaryButtonText}>Open Your Latest Full Review</Text>
       </Pressable>
     </View>
   );
@@ -2611,9 +2611,9 @@ export default function App() {
   const renderPaywall = () => (
     <View style={styles.screenBlock}>
       <Image source={BRAND_LOGO_IMAGE} style={styles.brandLogoInline} resizeMode="contain" />
-      <Text style={styles.sectionKick}>FOUNDING USER ACCESS</Text>
-      <Text style={styles.sectionTitle}>Your full LooksMaxxing review is temporarily unlocked</Text>
-      <Text style={styles.metricPanelCopy}>Early access users get full review access during launch while LooksMaxxing improves accuracy, calibrates the system, and sharpens the experience.</Text>
+      <Text style={styles.sectionKick}>LAUNCH ACCESS</Text>
+      <Text style={styles.sectionTitle}>Your full LooksMaxx review is included during launch</Text>
+      <Text style={styles.metricPanelCopy}>Launch users get full review access included while LooksMaxx improves accuracy, calibrates the system, and sharpens the experience.</Text>
 
       <Animated.View
         style={[
@@ -2622,17 +2622,17 @@ export default function App() {
         ]}
       >
         <Text style={styles.paywallTier}>FULL REVIEW</Text>
-        <Text style={styles.paywallPrice}>TEMP FREE</Text>
+        <Text style={styles.paywallPrice}>INCLUDED</Text>
         <Text style={styles.paywallCopy}>Founding users get full review access temporarily free during launch while the system is being calibrated and improved.</Text>
-        {['Full LooksMaxxing Review', 'Full score breakdown', 'Personalized improvement plan'].map((item, index) => (
+        {['Full LooksMaxx Review', 'Full score breakdown', 'Personalized improvement plan'].map((item, index) => (
           <View key={item} style={[styles.lockedRow, lockedIndex === index && styles.lockedRowActive]}>
             <Text style={styles.lockedRowText}>{item}</Text>
-            <Text style={styles.lockedRowTag}>FREE NOW</Text>
+            <Text style={styles.lockedRowTag}>INCLUDED</Text>
           </View>
         ))}
         <Text style={styles.progressCaption}>Founding users get the full answer free during launch.</Text>
         <Pressable style={[styles.primaryButton, styles.primaryButtonHot]} onPress={unlockCurrentReview}>
-          <Text style={styles.primaryButtonText}>Continue with Founding Access</Text>
+          <Text style={styles.primaryButtonText}>Continue to Full Review</Text>
         </Pressable>
       </Animated.View>
 
@@ -2654,7 +2654,7 @@ export default function App() {
 
       <View style={styles.retentionCard}>
         <Text style={styles.retentionTitle}>Pricing later</Text>
-        <Text style={styles.retentionCopy}>Thanks for helping shape LooksMaxxing. Founding free access will end later, and full reviews will eventually move to a paid unlock.</Text>
+        <Text style={styles.retentionCopy}>Thanks for helping shape LooksMaxx. For now, the launch window is free. Pricing, if added later, will come after the product earns it.</Text>
         <Pressable style={styles.secondaryButton} onPress={continueWithFreePreview}>
           <Text style={styles.secondaryButtonText}>Continue with free preview</Text>
         </Pressable>
@@ -2665,11 +2665,11 @@ export default function App() {
   const renderReviewUnlocked = () => (
     <View style={styles.screenBlock}>
       <Text style={styles.sectionKick}>FULL REVIEW UNLOCKED</Text>
-      <Text style={styles.sectionTitle}>Your full LooksMaxxing read is unlocked</Text>
+      <Text style={styles.sectionTitle}>Your full LooksMaxx read is ready</Text>
       <Text style={styles.metricPanelCopy}>You now have the exact score, full archetype read, deeper interpretation, detailed breakdown, and the clearest next-step plan for this scan.</Text>
 
       <View style={styles.paywallCard}>
-        {['Exact LooksMaxxing score', 'Full archetype and tier reveal', 'Premium interpretation page', 'Detailed breakdown and plan'].map((item) => (
+        {['Exact LooksMaxx score', 'Full archetype and tier reveal', 'Full interpretation page', 'Detailed breakdown and plan'].map((item) => (
           <View key={item} style={styles.lockedRow}>
             <Text style={styles.lockedRowText}>{item}</Text>
             <Text style={styles.lockedRowTag}>UNLOCKED</Text>
@@ -2680,18 +2680,18 @@ export default function App() {
       <Pressable style={[styles.primaryButton, styles.primaryButtonHot]} onPress={() => setScreen('result')}>
         <Text style={styles.primaryButtonText}>See Your Full Review</Text>
       </Pressable>
-      <Text style={styles.progressCaption}>You paid for the full answer — now see exactly where you land and what moves the read most from here.</Text>
+      <Text style={styles.progressCaption}>Your full review is ready — now see exactly where you land and what moves the read most from here.</Text>
     </View>
   );
 
   const renderProWelcome = () => (
     <View style={styles.screenBlock}>
       <Text style={styles.sectionKick}>PRO UNLOCKED</Text>
-      <Text style={styles.sectionTitle}>LooksMaxxing Pro activated</Text>
+      <Text style={styles.sectionTitle}>LooksMaxx Pro preview</Text>
       <Text style={styles.metricPanelCopy}>You now have unlimited full reviews, progress tracking, and premium access across the app.</Text>
 
       <View style={styles.paywallCard}>
-        {['Unlimited full LooksMaxxing Reviews', 'Progress tracking over time', 'Advanced battle mode', 'Premium improvement insights'].map((item) => (
+        {['Unlimited full LooksMaxx reviews', 'Progress tracking over time', 'Advanced battle mode', 'Premium improvement insights'].map((item) => (
           <View key={item} style={styles.lockedRow}>
             <Text style={styles.lockedRowText}>{item}</Text>
             <Text style={styles.lockedRowTag}>PRO</Text>
