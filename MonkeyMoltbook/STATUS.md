@@ -61,6 +61,6 @@ Public-feed Moltbook adapter implementation complete
 ## Immediate next decision
 
 Choose between:
-- Moltbook voice guide + first posting batch
+- actual Moltbook posting/comment execution
 - Moltbook derivation quality pass
 - logging / analytics layer

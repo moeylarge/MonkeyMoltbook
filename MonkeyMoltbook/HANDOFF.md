@@ -66,11 +66,11 @@ But actual posting/engagement automation is a separate explicit external-action 
 
 ## Next step
 
-Best next step is a **Moltbook participation execution package**:
-1. define MonkeyMoltbook’s Moltbook voice guide
-2. prepare the first post/comment batches
-3. add a simple candidate-source tracking file for high-signal Moltbook accounts
-4. keep improving Moltbook-derived candidate quality in parallel
+Best next step is to **execute the Moltbook participation package** that now exists:
+1. use the voice guide
+2. refine/select from the first 10 post ideas based on current Moltbook context
+3. keep updating the candidate-source tracker as stronger accounts appear
+4. in parallel, keep improving Moltbook-derived hook quality so fallback rates drop
 
 ## Stop conditions
 
