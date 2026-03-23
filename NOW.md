@@ -46,3 +46,8 @@ The project already has:
 - Do **not** switch active projects without clear instruction
 - Update continuity files before major restarts, refreshes, or project switches
 - Prefer project-local `HANDOFF.md` / `STATUS.md` for implementation-state truth
+
+## 2026-03-23 update
+- LooksMaxx launch prep culminated in successful App Store submission.
+- Current external state: **Waiting for Review** in App Store Connect.
+- If switching to a new project/session, keep this submission state intact and do not reopen launch-prep work unless Apple review requires it.

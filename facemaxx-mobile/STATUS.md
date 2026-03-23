@@ -71,3 +71,17 @@ LooksMaxx (formerly FACEMAXX / LooksMaxxing in older notes) is the strongest-pre
 - backend health check passes
 - `/analyze` end-to-end verified previously
 - still worth doing another deliberate visual review pass before major launch moves
+
+## 2026-03-23 launch submission update
+- LooksMaxx is no longer only in launch-prep mode; the iOS app was built, uploaded, and submitted to Apple.
+- Current App Store Connect state: **Waiting for Review**.
+- The major native build blocker during submission was `expo-face-detector`; it was removed to unblock the EAS iOS build.
+- Public App Store metadata URLs are currently served from:
+  - `https://looksmaxx-site.vercel.app`
+  - `https://looksmaxx-site.vercel.app/privacy`
+  - `https://looksmaxx-site.vercel.app/support`
+- Draft submission screenshots were generated locally and saved under:
+  - `screenshots-draft/`
+  - `screenshots-appstore-1284x2778/`
+  - `screenshots-appstore-ipad-2064x2752/`
+- Immediate next step is no longer launch prep; it is monitoring Apple review and responding only if Apple requests changes.

@@ -95,3 +95,13 @@ The point is simple:
 - lose the session, keep the thread
 - lose the UI, keep the plan
 - lose the daemon, keep the recovery path
+
+## 2026-03-23 LooksMaxx submission milestone
+- LooksMaxx was fully built, uploaded, and submitted to Apple today.
+- Current App Store Connect state: **Waiting for Review**.
+- If resuming LooksMaxx, do not restart launch prep from scratch.
+- Resume by checking:
+  1. App Store Connect review status
+  2. `facemaxx-mobile/HANDOFF.md`
+  3. `facemaxx-mobile/STATUS.md`
+- Only act if Apple review changes state (approval / rejection / request for more info).

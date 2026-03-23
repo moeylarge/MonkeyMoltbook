@@ -115,3 +115,32 @@ If something feels off twice, log it and then fix it.
 - Current one-time paid funnel still exists in-product, but near-term launch strategy is now free-first for learning/traction.
 - Share page now supports native share on phone and fallback copy/share behavior on web.
 - Important recent commits in this stretch: `84629d1`, `6953b92`, `d966753`, `4ee0e85`, `8cf4405`, `7b3354e`, `4158578`, `05a4ebe`, `1e1b189`, `70291d0`.
+
+## Session addendum — 2026-03-23 App Store submission completed
+- LooksMaxx iOS build succeeded through EAS after removing `expo-face-detector`, which had been breaking native iOS compilation with `EXLogError` / `EXLogWarn` build failures.
+- Important build-fix commit:
+  - `ec99812` — `Remove expo-face-detector to unblock iOS build`
+- Additional launch-prep commits from this session:
+  - `31cad88` — `Add LooksMaxx App Store web pages and submission pack`
+  - `accf390` — `Add deployable LooksMaxx static site for App Store URLs`
+- Live public URLs currently used in App Store Connect:
+  - marketing: `https://looksmaxx-site.vercel.app`
+  - privacy: `https://looksmaxx-site.vercel.app/privacy`
+  - support: `https://looksmaxx-site.vercel.app/support`
+- Draft screenshot folders created in project:
+  - `screenshots-draft/`
+  - `screenshots-appstore-1284x2778/`
+  - `screenshots-appstore-ipad-2064x2752/`
+- App Store Connect submission state reached successfully:
+  - build uploaded
+  - metadata filled
+  - iPhone screenshots uploaded
+  - iPad screenshots uploaded
+  - App Privacy completed
+  - Digital Services Act completed via non-trader / not distributing in EU path
+  - submission completed
+- Current App Store Connect status at end of session:
+  - **Waiting for Review**
+- Launch/review rule from here:
+  - stop changing submission settings unless Apple asks for something specific
+  - next work is only to react to Apple review outcome (approval or rejection notes)
