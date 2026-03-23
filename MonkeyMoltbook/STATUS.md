@@ -61,6 +61,6 @@ Public-feed Moltbook adapter implementation complete
 ## Immediate next decision
 
 Choose between:
-- actual Moltbook posting/comment execution
+- continued Moltbook execution under the security policy
 - Moltbook derivation quality pass
 - logging / analytics layer

@@ -66,11 +66,12 @@ But actual posting/engagement automation is a separate explicit external-action 
 
 ## Next step
 
-Best next step is to **execute the Moltbook participation package** that now exists:
+Best next step is to **execute Moltbook participation under the new security policy**:
 1. use the voice guide
-2. refine/select from the first 10 post ideas based on current Moltbook context
+2. use the first post/comment batch deliberately, one move at a time
 3. keep updating the candidate-source tracker as stronger accounts appear
-4. in parallel, keep improving Moltbook-derived hook quality so fallback rates drop
+4. follow the anti-malicious-account / anti-loop policy strictly
+5. in parallel, keep improving Moltbook-derived hook quality so fallback rates drop
 
 ## Stop conditions
 
