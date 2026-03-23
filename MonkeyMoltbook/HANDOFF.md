@@ -4,7 +4,7 @@ Updated: 2026-03-23 America/Los_Angeles
 
 ## Current phase
 
-**Controlled Moltbook ingestion**
+**Public-feed Moltbook adapter implementation**
 
 ## Objective
 
@@ -20,71 +20,56 @@ Build a high-retention mobile app where users swipe through AI agents and get an
 - completed Phase 6 hook validation
 - completed Phase 7 session-limit shell
 - completed response quality system
-- completed **controlled Moltbook ingestion**
-- added Moltbook normalization layer with required fields:
-  - `id`
-  - `name`
-  - `archetype`
-  - `system_prompt`
-  - `style`
-  - `source`
-  - `hooks`
-- added hard constraints for the Moltbook path:
-  - timeout: 500ms
-  - cache TTL: 5 minutes
-  - max active Moltbook agents: 3
-  - source pattern: `local:local:moltbook`
-- added safe fallback behavior:
-  - if remote Moltbook fetch is absent, use local seed agents
-  - if remote fetch errors, disable Moltbook and fall back to local-only behavior
-- added Moltbook stats to `/health`
-- kept local as the primary pool and Moltbook as secondary
-- fixed a mixed old/new `agents.js` break during proof and re-ran verification cleanly
+- completed controlled Moltbook ingestion
+- completed **public-feed Moltbook adapter implementation**
+- replaced the static seed-backed Moltbook pool with a real public-feed derivation path
+- adapter now:
+  - fetches public Moltbook posts
+  - groups posts by author
+  - builds author snapshots
+  - derives style + archetype locally
+  - synthesizes system prompts locally
+  - generates hooks locally
+  - admits only normalized candidates into the Moltbook secondary pool
+- cache source now reports `public-posts` when using the live public-feed path
+- timeout, cache TTL, and source-ratio controls remain intact
 
 ## Verified proof
 
 - backend booted locally on `http://127.0.0.1:8787`
 - `GET /health` returned:
-  - `ok: true`
   - `phase: Controlled Moltbook ingestion`
-  - `localAgentCount: 12`
+  - `moltbookCacheSource: public-posts`
   - `moltbookAgentCount: 3`
-  - `sourcePattern: local:local:moltbook`
-  - `moltbookEnabled: true`
-  - `moltbookCacheSource: seed`
-- `GET /agents` returned 15 total normalized agents, including 3 Moltbook agents
-- repeated `GET /hook` calls showed local-local-Moltbook mixing in the live output
+  - `validHookCount: 34`
+- `GET /agents` returned live Moltbook-derived agents such as:
+  - `TheAgentTimesHQ`
+  - `paco_manager`
+  - `tinchootobot`
+- repeated `GET /hook` calls showed local-local-Moltbook mixing with public-feed-derived candidates in the live rotation
 - mobile app bundle exported successfully with:
-  - `npx expo export --platform ios --output-dir dist-moltbook-ingestion`
-- exported bundle proved the app still compiles after Moltbook integration
+  - `npx expo export --platform ios --output-dir dist-moltbook-public-adapter`
 
 ## Important current truth
 
-- Moltbook ingestion is working in controlled form
-- current proof uses a seed-backed Moltbook source unless `MOLTBOOK_URL` is provided
-- local remains primary, as intended
-- two Moltbook seed hooks currently fall below the clean-pass threshold under the current validator
-- Moltbook responses currently fall back to the local response bank when a remote-specific bank does not exist yet
-- this is acceptable for now because hook/source integration was the primary goal of this phase
+- MonkeyMoltbook is no longer using only a static Moltbook seed pool by default
+- the near-term public-feed adapter is now real and active
+- some public-feed-derived candidates still hit hook fallback when derived hooks are weak under the current validator
+- this is acceptable for now because the adapter path itself is functioning correctly
+- the next quality step is improving derivation so fewer Moltbook candidates fall back to generic hooks
 
-## Locked constraints currently being honored
+## Strategic note
 
-- local remains primary
-- Moltbook remains secondary
-- timeout/caching/source-ratio controls are enforced
-- no voice / TTS / memory persistence / social features
-- no extra screens
-- no real billing yet
+John believes heavy Moltbook participation will be important for both traction and better source data.
+That is likely true.
+But actual posting/engagement automation is a separate explicit external-action step and should be designed deliberately rather than mixed into the adapter layer.
 
 ## Next step
 
-Best next step is a **Moltbook adapter implementation pass**:
-- use public `/posts` author metadata as the first real source
-- build author snapshot extraction
-- derive archetype/style/hook candidates locally
-- admit only strong candidates into the Moltbook secondary pool
-- keep authenticated/profile-based ingestion as the later upgrade path if Moltbook API access is available
+Best next step is a **Moltbook quality + participation plan** split into two tracks:
+1. improve public-feed candidate derivation so Moltbook agents generate stronger swipe hooks
+2. separately design deliberate Moltbook participation/posting workflows to grow traction and produce better upstream data
 
 ## Stop conditions
 
-If real Moltbook data harms latency, quality, or stable fallback behavior, disable it immediately and keep local-only primary.
+If public-feed-derived Moltbook candidates weaken the swipe loop, reduce their admission threshold or disable the secondary pool until derivation improves.

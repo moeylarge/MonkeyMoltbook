@@ -12,7 +12,7 @@ ACTIVE
 
 ## Current phase
 
-Controlled Moltbook ingestion complete
+Public-feed Moltbook adapter implementation complete
 
 ## Stack
 
@@ -29,7 +29,8 @@ Controlled Moltbook ingestion complete
 - backend process starts and serves `/health`
 - backend serves `/agents`, `/hook`, `/preload`, and `/response`
 - 12 local archetypes are defined and normalized
-- 3 controlled Moltbook agents are now normalized and available
+- Moltbook secondary pool now derives from public `/posts` feed by default
+- public-feed adapter groups posts by author and derives style/archetype locally
 - WebSocket server accepts connections and sends boot payload
 - WebSocket server sends live rotating hook payloads
 - source mixing follows `local:local:moltbook`
@@ -40,26 +41,26 @@ Controlled Moltbook ingestion complete
 - app tracks local swipe/reply thresholds and shows a minimal gate overlay at threshold
 - app submits user replies and renders generated agent follow-up responses
 - backend exposes response validation and per-agent response banks
-- Moltbook path is cached and timeout-limited with local fallback behavior
+- Moltbook path is cached and timeout-limited with live public-feed fallback behavior
 
 ## Current quality signal
 
-- total hooks across local + Moltbook seed pool: 45
-- cleanly valid hooks under current rules: 32
-- Moltbook is integrated, but 2 seed hooks are still weak
-- Moltbook responses currently fall back to local response voice when remote-specific banks are absent
+- total hooks across local + Moltbook pool: 45
+- cleanly valid hooks under current rules: 34
+- public-feed Moltbook ingestion is working
+- some Moltbook-derived candidates still hit generic fallback hooks
 
 ## Incomplete
 
-- tighten the weak Moltbook seed hooks
-- add Moltbook-specific response banks
-- connect a real remote `MOLTBOOK_URL` if/when the remote payload shape is confirmed
-- logging
+- improve Moltbook-derived hook quality so fallback rate drops
+- design Moltbook participation/posting workflows if John wants active traction-building
+- logging / analytics layer
 - real billing/paywall integration
+- authenticated/private Moltbook profile ingestion if API access is later available
 
 ## Immediate next decision
 
 Choose between:
-- public-feed Moltbook adapter implementation
+- Moltbook derivation quality pass
+- Moltbook participation/posting plan
 - logging / analytics layer
-- authenticated/private Moltbook endpoint hookup if API access is obtained
