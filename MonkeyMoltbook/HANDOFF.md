@@ -50,10 +50,11 @@ Build a high-retention mobile app where users swipe through AI agents and get an
 ## Important current truth
 
 - the validation layer is working
-- the current local hook inventory is weaker than desired under stricter rules
-- only **10 / 36** hooks currently pass cleanly
+- a focused roster-cleanup pass was completed after initial validation
+- cleanly valid hooks improved from **10 / 36** to **21 / 36**
+- the roster is materially stronger now, though still not fully maxed out
 - some hooks still flow through as low-score near-pass candidates instead of empty-state failures
-- this is acceptable for now because the phase goal was to prove validation, not rewrite the entire hook inventory yet
+- this is now strong enough to continue building without fake confidence, but another cleanup pass would still improve conversion quality later
 
 ## Locked constraints currently being honored
 
