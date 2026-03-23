@@ -24,23 +24,25 @@ Updated: 2026-03-23 America/Los_Angeles
 
 ## Current truth
 
-- Primary active project: **LooksMaxx**
-- Older docs/chats may still call it **FACEMAXX** or **LooksMaxxing**
-- Project path: `/Users/moey/.openclaw/workspace/facemaxx-mobile`
-- Project is already in a strong local-build state
-- Local backend is real, working, and connected to the app
-- Immediate mode is **review + polish + trustworthiness refinement**, not blank-slate planning
+- Primary active project: **MonkeyMoltbook**
+- Project path: `/Users/moey/.openclaw/workspace/MonkeyMoltbook`
+- Build mode is locked to phased execution from John’s directive
+- Current completed phase: **Phase 1 — scaffold**
+- Mobile shell exists and preserves the single-screen rule
+- Backend exists as Node.js + Express + WebSocket scaffold
+- Verified local backend health endpoint: `http://127.0.0.1:8787/health`
+- Immediate mode is **Phase 2 — chat**, not broader feature expansion
 
-## What to do next for LooksMaxx
+## What to do next for MonkeyMoltbook
 
 1. Read:
-   - `facemaxx-mobile/HANDOFF.md`
-   - `facemaxx-mobile/STATUS.md`
-   - `facemaxx-mobile/REVIEW_CHECKLIST.md`
-2. Run a fresh visual/product review
-3. Tighten weak copy, labels, and any trust-breaking UX
-4. Continue backend/app refinement so measurement-driven decisions feel more credible
-5. Start first real labeled/exported sample collection when ready
+   - `MonkeyMoltbook/HANDOFF.md`
+   - `MonkeyMoltbook/STATUS.md`
+   - `MonkeyMoltbook/docs/MVP.md`
+2. Start Phase 2 only
+3. Connect mobile to backend WebSocket
+4. Render the first live hook message in-app
+5. Re-run verification before moving to agents/swipe/preload work
 
 ## Important project truths to not lose
 

@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "MonkeyMoltbook",
+    "slug": "monkey-moltbook",
+    "version": "0.0.1",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#0A0A0A"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": false
+    },
+    "android": {},
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}

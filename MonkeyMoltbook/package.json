@@ -1,0 +1,14 @@
+{
+  "name": "monkey-moltbook",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:mobile": "npm --workspace apps/mobile run start",
+    "dev:server": "npm --workspace apps/server run dev",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  }
+}

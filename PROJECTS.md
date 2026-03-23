@@ -18,8 +18,28 @@ This is the canonical project index for fast recovery after resets, daemon issue
 
 ## Active projects
 
-### 1) LooksMaxx / FACEMAXX / LooksMaxxing
+### 1) MonkeyMoltbook
 - **Status:** ACTIVE / CURRENT PRIMARY FOCUS
+- **Type:** Mobile app + realtime backend
+- **Path:** `/Users/moey/.openclaw/workspace/MonkeyMoltbook`
+- **Purpose:** swipe-based AI agent app with instant first-message emotional hooks and infinite rapid progression
+- **Current state:**
+  - new project initialized from a tightly constrained MVP build directive
+  - Phase 1 scaffold is complete
+  - monorepo structure exists with `apps/mobile`, `apps/server`, `packages/shared`, and `docs`
+  - Expo-based React Native shell exists as a single-screen UI baseline
+  - Node/Express/WebSocket backend boots and passes a local health check
+- **Next step:** start Phase 2 (chat) only: connect mobile UI to backend WebSocket and render the first live hook message in-app
+- **Key docs:**
+  - `MonkeyMoltbook/HANDOFF.md`
+  - `MonkeyMoltbook/STATUS.md`
+  - `MonkeyMoltbook/docs/MVP.md`
+- **Risks / blockers:**
+  - must avoid feature creep beyond the locked MVP
+  - hook quality and latency requirements are strict and must be proven, not assumed
+
+### 2) LooksMaxx / FACEMAXX / LooksMaxxing
+- **Status:** ACTIVE / RECENTLY SUBMITTED
 - **Type:** Mobile app + local analysis backend
 - **Path:** `/Users/moey/.openclaw/workspace/facemaxx-mobile`
 - **Purpose:** face-analysis / looks review product with scan flow, battle mode, progression, and premium review funnel

@@ -4,39 +4,42 @@ Updated: 2026-03-23 America/Los_Angeles
 
 ## Current active focus
 
-**LooksMaxx**
-
-(older notes may still refer to this as FACEMAXX / LooksMaxxing)
+**MonkeyMoltbook**
 
 ## Resume point
 
-LooksMaxx is the current primary project and is already in a strong local-build state.
+MonkeyMoltbook is now the current primary project.
 
-Do **not** restart planning from scratch.
-The project already has:
-- working scan flow
-- real image-driven behavior
-- battle mode with real second-image analysis
-- local analysis backend connected to the app
-- stronger premium/product framing than the earlier prototype phase
+Execution mode is locked to John’s phased build directive:
+- no feature expansion
+- no speculative redesign
+- build one phase at a time
+- BUILD → RUN → VERIFY → PROVE
+
+Current project state is not beyond scaffold yet.
+Do **not** skip ahead into extra systems before the current phase is proven.
 
 ## Current truth
 
-- app path: `/Users/moey/.openclaw/workspace/facemaxx-mobile`
-- project-local handoff: `facemaxx-mobile/HANDOFF.md`
-- project-local live status: `facemaxx-mobile/STATUS.md`
-- backend health check: `http://127.0.0.1:8089/health`
-- current product direction: launch **free first** for **2–4 weeks** or until roughly **1000 users**, gather traction/feedback, and only then push harder on monetization
+- project path: `/Users/moey/.openclaw/workspace/MonkeyMoltbook`
+- project-local handoff: `MonkeyMoltbook/HANDOFF.md`
+- project-local live status: `MonkeyMoltbook/STATUS.md`
+- current completed phase: **Phase 1 — scaffold**
+- backend local health endpoint: `http://127.0.0.1:8787/health`
+- mobile shell exists as a single-screen React Native baseline
+- backend exists as Node.js + Express + WebSocket scaffold
 
 ## Current next steps
 
-1. Run a fresh visual/product review using `facemaxx-mobile/REVIEW_CHECKLIST.md`
-2. Tighten weak copy, labels, spacing, and any trust-breaking UX revealed by that review
-3. Continue backend/app refinement so measurement-driven behavior feels more trustworthy and less hand-tuned
-4. Start collecting the first real labeled/exported sample batch when ready
+1. Start **Phase 2 — chat** only
+2. Connect the mobile shell to the backend WebSocket
+3. Render the first live message in-app
+4. Keep the surface to one screen with no menus, settings, or extra navigation
+5. Re-verify latency and proof steps before moving to Phase 3
 
 ## Secondary project state
 
+- **LooksMaxx:** submitted to Apple; current state is **Waiting for Review**; do not reopen launch prep unless review changes
 - **UFC:** paused; verify app/env/refresh pipeline before doing more work
 - **Social Clip OS:** background; Kick lower-third workflow exists but broader continuity is still thin
 
@@ -46,8 +49,3 @@ The project already has:
 - Do **not** switch active projects without clear instruction
 - Update continuity files before major restarts, refreshes, or project switches
 - Prefer project-local `HANDOFF.md` / `STATUS.md` for implementation-state truth
-
-## 2026-03-23 update
-- LooksMaxx launch prep culminated in successful App Store submission.
-- Current external state: **Waiting for Review** in App Store Connect.
-- If switching to a new project/session, keep this submission state intact and do not reopen launch-prep work unless Apple review requires it.

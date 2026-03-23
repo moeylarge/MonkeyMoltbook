@@ -1,0 +1,14 @@
+{
+  "name": "@monkeymoltbook/server",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node src/index.js",
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "ws": "^8.18.3"
+  }
+}
