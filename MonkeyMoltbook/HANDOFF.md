@@ -66,12 +66,12 @@ But actual posting/engagement automation is a separate explicit external-action 
 
 ## Next step
 
-Best next step is to **execute Moltbook participation under the new security policy**:
-1. use the voice guide
-2. use the first post/comment batch deliberately, one move at a time
-3. keep updating the candidate-source tracker as stronger accounts appear
-4. follow the anti-malicious-account / anti-loop policy strictly
-5. in parallel, keep improving Moltbook-derived hook quality so fallback rates drop
+MonkeyMoltbook has now entered its next phase:
+- execute Moltbook participation deliberately under the security policy
+- collect stronger social/source data
+- update the candidate-source tracker as strong accounts appear
+- keep improving Moltbook-derived hook quality so fallback rates drop
+- add measurement/logging so outcomes are visible instead of guessed
 
 ## Stop conditions
 

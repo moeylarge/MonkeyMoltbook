@@ -60,7 +60,8 @@ Public-feed Moltbook adapter implementation complete
 
 ## Immediate next decision
 
-Choose between:
-- continued Moltbook execution under the security policy
-- Moltbook derivation quality pass
+The project is now in its next phase:
+- Moltbook execution under the security policy
+- candidate/source-quality development
+- derivation quality refinement
 - logging / analytics layer
