@@ -1249,7 +1249,7 @@ export default function App() {
   const [scoreDisplay, setScoreDisplay] = useState(0);
   const [potentialDisplay, setPotentialDisplay] = useState(0);
   const [compareDisplay, setCompareDisplay] = useState(0);
-  const [lockedIndex, setLockedIndex] = useState(0);
+  const [lockedIndex, setReadyIndex] = useState(0);
   const [selectedBattleId, setSelectedBattleId] = useState<string>(battleProfiles[0].id);
   const [battleName, setBattleName] = useState('Friend');
   const [battleScoreInput, setBattleScoreInput] = useState('71');
@@ -1554,8 +1554,8 @@ export default function App() {
   useEffect(() => {
     if (screen !== 'paywall') return;
     paywallGlow.setValue(0.25);
-    setLockedIndex(0);
-    const interval = setInterval(() => setLockedIndex((v) => (v + 1) % 4), 900);
+    setReadyIndex(0);
+    const interval = setInterval(() => setReadyIndex((v) => (v + 1) % 4), 900);
     Animated.loop(
       Animated.sequence([
         Animated.timing(paywallGlow, {
@@ -2026,7 +2026,7 @@ export default function App() {
   const renderUpload = () => (
     <View style={styles.screenBlock}>
       <Text style={styles.sectionKick}>Enter the standard</Text>
-      <Text style={styles.sectionTitle}>Choose a photo and see how your current presentation stacks up against the LooksMaxxing standard.</Text>
+      <Text style={styles.sectionTitle}>Choose a photo and see how your current presentation stacks up against the LooksMaxx standard.</Text>
 
       <View style={styles.uploadCard}>
         <Text style={styles.uploadTag}>{imageUri ? 'PHOTO READY' : 'WAITING FOR YOUR PHOTO'}</Text>
@@ -2084,7 +2084,7 @@ export default function App() {
   const renderCamera = () => (
     <View style={styles.screenBlock}>
       <Text style={styles.sectionKick}>Capture for the standard</Text>
-      <Text style={styles.sectionTitle}>Take a photo directly in the app for the cleanest possible read against the LooksMaxxing standard.</Text>
+      <Text style={styles.sectionTitle}>Take a photo directly in the app for the cleanest possible read against the LooksMaxx standard.</Text>
       <View style={styles.cameraShell}>
         {cameraPermission?.granted ? (
           <CameraView ref={cameraRef} facing="front" style={styles.cameraView} />
@@ -2148,7 +2148,7 @@ export default function App() {
     const resultLabel = isProvisionalResult ? 'Provisional Read' : 'Optimization Score';
     const resultProgressCopy = isProvisionalResult
       ? `This read is being held loosely until ${BRAND_NAME} gets a cleaner scan.`
-      : `You are ${eliteDistance}% away from the LooksMaxxing ceiling`;
+      : `You are ${eliteDistance}% away from the LooksMaxx ceiling`;
     const reviewPoints = Array.from(new Set([
       ...(activeScan.warnings ?? []),
       `Confidence is currently reading at ${activeScan.confidence ?? 0}.`,
@@ -2173,13 +2173,13 @@ export default function App() {
       : 'Your biggest opportunity right now is improving how your strongest features land more consistently.';
     return (
       <View style={styles.screenBlock}>
-        <Text style={styles.sectionKick}>{isFreeTeaserMode ? 'Your teaser result' : 'Your read'}</Text>
+        <Text style={styles.sectionKick}>{isFreeTeaserMode ? 'Your result' : 'Your read'}</Text>
         <View style={[styles.resultCard, isProvisionalResult && styles.resultCardMuted]}>
           <Text style={[styles.rankBadge, isProvisionalResult && styles.rankBadgeMuted]}>{isProvisionalResult ? 'PROVISIONAL' : activeScan.rank}</Text>
-          <Text style={styles.resultLabel}>{isFreeTeaserMode ? 'LooksMaxx Read' : (isProvisionalResult ? resultLabel : 'LooksMaxxing Read')}</Text>
-          <Text style={[styles.resultScore, isProvisionalResult && styles.resultScoreMuted, isFreeTeaserMode && styles.resultScoreLocked]}>{isFreeTeaserMode ? 'Score Locked' : scoreDisplay}</Text>
-          <Text style={[styles.resultTier, isProvisionalResult && styles.resultTierMuted, isFreeTeaserMode && styles.resultTierLocked]}>{isFreeTeaserMode ? 'Full read available now' : (isProvisionalResult ? 'Needs Better Scan' : activeScan.tier)}</Text>
-          <Text style={[styles.resultArchetype, isFreeTeaserMode && styles.resultArchetypeLocked]}>{isFreeTeaserMode ? 'Your full archetype and breakdown are included during launch' : (isProvisionalResult ? `${activeScan.archetype} • held loosely` : activeScan.archetype)}</Text>
+          <Text style={styles.resultLabel}>{isFreeTeaserMode ? 'LooksMaxx Read' : (isProvisionalResult ? resultLabel : 'LooksMaxx Read')}</Text>
+          <Text style={[styles.resultScore, isProvisionalResult && styles.resultScoreMuted, isFreeTeaserMode && styles.resultScoreReady]}>{isFreeTeaserMode ? 'Score ready' : scoreDisplay}</Text>
+          <Text style={[styles.resultTier, isProvisionalResult && styles.resultTierMuted, isFreeTeaserMode && styles.resultTierReady]}>{isFreeTeaserMode ? 'Full read available now' : (isProvisionalResult ? 'Needs Better Scan' : activeScan.tier)}</Text>
+          <Text style={[styles.resultArchetype, isFreeTeaserMode && styles.resultArchetypeReady]}>{isFreeTeaserMode ? 'Your full archetype and breakdown are included during launch' : (isProvisionalResult ? `${activeScan.archetype} • held loosely` : activeScan.archetype)}</Text>
           <View style={styles.resultProgressWrap}>
             <View style={[styles.progressTrackSm, isProvisionalResult && styles.progressTrackSmMuted]}>
               <View style={[styles.progressFillSm, isProvisionalResult && styles.progressFillSmMuted, { width: `${activeScan.potential}%` }]} />
@@ -2197,24 +2197,24 @@ export default function App() {
         <View style={styles.dualStats}>
           <View style={styles.miniStatCard}>
             <Text style={styles.miniStatTop}>Current</Text>
-            <Text style={[styles.miniStatValue, isFreeTeaserMode && styles.miniStatValueLocked]}>{isFreeTeaserMode ? 'Locked' : activeScan.score}</Text>
+            <Text style={[styles.miniStatValue, isFreeTeaserMode && styles.miniStatValueReady]}>{isFreeTeaserMode ? 'Ready' : activeScan.score}</Text>
           </View>
           <View style={styles.miniStatCardAccent}>
             <Text style={styles.miniStatTop}>Potential</Text>
-            <Text style={[styles.miniStatValue, isFreeTeaserMode && styles.miniStatValueLocked]}>{isFreeTeaserMode ? 'Locked' : activeScan.potential}</Text>
+            <Text style={[styles.miniStatValue, isFreeTeaserMode && styles.miniStatValueReady]}>{isFreeTeaserMode ? 'Ready' : activeScan.potential}</Text>
           </View>
           <View style={styles.miniStatCard}>
             <Text style={styles.miniStatTop}>Confidence</Text>
-            <Text style={[styles.miniStatValue, isFreeTeaserMode && styles.miniStatValueLocked]}>{isFreeTeaserMode ? 'Locked' : (activeScan.confidence ?? 0)}</Text>
+            <Text style={[styles.miniStatValue, isFreeTeaserMode && styles.miniStatValueReady]}>{isFreeTeaserMode ? 'Ready' : (activeScan.confidence ?? 0)}</Text>
           </View>
         </View>
 
         {isFreeTeaserMode && (
           <View style={styles.retentionCard}>
-            <Text style={styles.retentionTitle}>Early Access: Full review temporarily free</Text>
+            <Text style={styles.retentionTitle}>Launch access: full review included</Text>
             <Text style={styles.retentionCopy}>See exactly where you land, what is helping your score most, what is holding it back, and which upgrades are most likely to move the read fastest during the launch window.</Text>
             <Pressable style={[styles.primaryButton, styles.primaryButtonHot]} onPress={unlockCurrentReview}>
-              <Text style={styles.primaryButtonText}>Continue to Full Review</Text>
+              <Text style={styles.primaryButtonText}>Open Full Review</Text>
             </Pressable>
             <Pressable style={styles.secondaryButton} onPress={startProAccess}>
               <Text style={styles.secondaryButtonText}>Pro launches later</Text>
@@ -2466,7 +2466,7 @@ export default function App() {
   const renderHistory = () => (
     <View style={styles.screenBlock}>
       <Text style={styles.sectionKick}>Your standard</Text>
-      <Text style={styles.sectionTitle}>Track how close your read is getting to the LooksMaxxing standard over time.</Text>
+      <Text style={styles.sectionTitle}>Track how close your read is getting to the LooksMaxx standard over time.</Text>
 
       {!!history.length && (
         <>
@@ -2603,7 +2603,7 @@ export default function App() {
         </View>
       )}
       <Pressable style={[styles.primaryButton, styles.primaryButtonHot]} onPress={() => setScreen('paywall')}>
-        <Text style={styles.primaryButtonText}>Open Your Latest Full Review</Text>
+        <Text style={styles.primaryButtonText}>Open your latest full review</Text>
       </Pressable>
     </View>
   );
@@ -2632,15 +2632,15 @@ export default function App() {
         ))}
         <Text style={styles.progressCaption}>Founding users get the full answer free during launch.</Text>
         <Pressable style={[styles.primaryButton, styles.primaryButtonHot]} onPress={unlockCurrentReview}>
-          <Text style={styles.primaryButtonText}>Continue to Full Review</Text>
+          <Text style={styles.primaryButtonText}>Open Full Review</Text>
         </Pressable>
       </Animated.View>
 
       <View style={styles.pricingCardAccent}>
         <Text style={styles.pricingTier}>LOOKSMAXXING PRO</Text>
         <Text style={styles.pricingHeadline}>Coming Later</Text>
-        <Text style={styles.pricingCopy}>Pro is planned for a later phase once ongoing premium value is strong enough to justify a subscription.</Text>
-        {['Unlimited full reviews', 'Progress tracker', 'Advanced battle mode', 'Premium improvement insights'].map((item) => (
+        <Text style={styles.pricingCopy}>A Pro tier may come later, but launch access stays free while we learn what users actually value.</Text>
+        {['Unlimited full reviews', 'Progress tracker', 'Advanced battle mode', 'Advanced improvement insights'].map((item) => (
           <View key={item} style={styles.lockedRow}>
             <Text style={styles.lockedRowText}>{item}</Text>
             <Text style={styles.lockedRowTag}>LATER</Text>
@@ -2648,13 +2648,13 @@ export default function App() {
         ))}
         <Text style={styles.progressCaption}>Visible now, but intentionally postponed until recurring value is stronger.</Text>
         <Pressable style={styles.secondaryButton} onPress={startProAccess}>
-          <Text style={styles.secondaryButtonText}>Preview Pro Direction</Text>
+          <Text style={styles.secondaryButtonText}>Preview future Pro direction</Text>
         </Pressable>
       </View>
 
       <View style={styles.retentionCard}>
         <Text style={styles.retentionTitle}>Pricing later</Text>
-        <Text style={styles.retentionCopy}>Thanks for helping shape LooksMaxx. For now, the launch window is free. Pricing, if added later, will come after the product earns it.</Text>
+        <Text style={styles.retentionCopy}>Thanks for helping shape LooksMaxx. For now, the launch window is free. If pricing is added later, it comes only after the product earns it.</Text>
         <Pressable style={styles.secondaryButton} onPress={continueWithFreePreview}>
           <Text style={styles.secondaryButtonText}>Continue with free preview</Text>
         </Pressable>
@@ -2688,10 +2688,10 @@ export default function App() {
     <View style={styles.screenBlock}>
       <Text style={styles.sectionKick}>PRO UNLOCKED</Text>
       <Text style={styles.sectionTitle}>LooksMaxx Pro preview</Text>
-      <Text style={styles.metricPanelCopy}>You now have unlimited full reviews, progress tracking, and premium access across the app.</Text>
+      <Text style={styles.metricPanelCopy}>This is a preview of where a future Pro tier could go after the free launch window.</Text>
 
       <View style={styles.paywallCard}>
-        {['Unlimited full LooksMaxx reviews', 'Progress tracking over time', 'Advanced battle mode', 'Premium improvement insights'].map((item) => (
+        {['Unlimited full LooksMaxx reviews', 'Progress tracking over time', 'Advanced battle mode', 'Advanced improvement insights'].map((item) => (
           <View key={item} style={styles.lockedRow}>
             <Text style={styles.lockedRowText}>{item}</Text>
             <Text style={styles.lockedRowTag}>PRO</Text>
@@ -2715,7 +2715,7 @@ export default function App() {
     return (
       <View style={styles.screenBlock}>
         <Text style={styles.sectionKick}>Your blueprint</Text>
-        <Text style={styles.sectionTitle}>The clearest moves between your current read and the LooksMaxxing standard.</Text>
+        <Text style={styles.sectionTitle}>The clearest moves between your current read and the LooksMaxx standard.</Text>
 
         <View style={styles.retentionCard}>
           <Text style={styles.retentionTitle}>Your ceiling</Text>
@@ -2822,7 +2822,7 @@ export default function App() {
     return (
       <View style={styles.screenBlock}>
         <Text style={styles.sectionKick}>Standard clash</Text>
-        <Text style={styles.sectionTitle}>Battle a friend to compare your LooksMaxxing scores.</Text>
+        <Text style={styles.sectionTitle}>Battle a friend to compare your LooksMaxx scores.</Text>
 
         <View style={styles.retentionCard}>
           <Text style={styles.retentionTitle}>Set your opponent</Text>
@@ -3018,12 +3018,12 @@ const styles = StyleSheet.create({
   resultLabel: { color: '#9197AF', fontSize: 14, fontWeight: '700', marginTop: 12 },
   resultScore: { color: '#14E38B', fontSize: 88, lineHeight: 98, fontWeight: '900', marginTop: 8 },
   resultScoreMuted: { color: '#FFB4C0' },
-  resultScoreLocked: { color: '#EDE8FF', letterSpacing: 6 },
+  resultScoreReady: { color: '#EDE8FF', letterSpacing: 6 },
   resultTier: { color: '#FFFFFF', fontSize: 20, fontWeight: '900', letterSpacing: 1.4, marginTop: 6 },
   resultTierMuted: { color: '#FFD7DF' },
-  resultTierLocked: { color: '#E6D8FF', letterSpacing: 0.6 },
+  resultTierReady: { color: '#E6D8FF', letterSpacing: 0.6 },
   resultArchetype: { color: '#B3B8CE', fontSize: 15, marginTop: 4 },
-  resultArchetypeLocked: { color: '#D7C8FF' },
+  resultArchetypeReady: { color: '#D7C8FF' },
   resultCardLockOverlay: { marginTop: 18, padding: 16, borderRadius: 20, backgroundColor: 'rgba(28,19,45,0.88)', borderWidth: 1, borderColor: '#5A45A8', alignItems: 'center', gap: 6 },
   resultCardLockTitle: { color: '#FFFFFF', fontSize: 16, fontWeight: '800', textAlign: 'center' },
   resultCardLockCopy: { color: '#D7C8FF', fontSize: 13, lineHeight: 18, textAlign: 'center' },
@@ -3038,7 +3038,7 @@ const styles = StyleSheet.create({
   miniStatCardAccent: { flex: 1, minWidth: 96, padding: 18, borderRadius: 22, backgroundColor: '#171227', borderWidth: 1, borderColor: '#3A2A69', shadowColor: '#7C5CFF', shadowOpacity: 0.18, shadowRadius: 14, shadowOffset: { width: 0, height: 8 } },
   miniStatTop: { color: '#9CA2B9', fontSize: 12, fontWeight: '700' },
   miniStatValue: { color: '#FFFFFF', fontSize: 34, fontWeight: '900', marginTop: 6 },
-  miniStatValueLocked: { color: '#D7C8FF', fontSize: 18, fontWeight: '800', marginTop: 12, letterSpacing: 0.4 },
+  miniStatValueReady: { color: '#D7C8FF', fontSize: 18, fontWeight: '800', marginTop: 12, letterSpacing: 0.4 },
   warningCard: { padding: 18, borderRadius: 22, backgroundColor: '#23151A', borderWidth: 1, borderColor: '#5A2C34', shadowColor: '#AA4C62', shadowOpacity: 0.14, shadowRadius: 16, shadowOffset: { width: 0, height: 8 } },
   warningCardMuted: { padding: 18, borderRadius: 22, backgroundColor: '#141820', borderWidth: 1, borderColor: '#2C3447', shadowColor: '#000000', shadowOpacity: 0.14, shadowRadius: 12, shadowOffset: { width: 0, height: 8 } },
   warningEyebrow: { color: '#FF8D9E', fontSize: 11, fontWeight: '900', letterSpacing: 1.1 },
@@ -3211,3 +3211,4 @@ const styles = StyleSheet.create({
   retentionDatasetText: { color: '#14E38B', fontSize: 12, fontWeight: '700', marginTop: 10 },
   retentionDatasetPath: { color: '#98A0B8', fontSize: 11, lineHeight: 16, marginTop: 6 },
 });
+);
