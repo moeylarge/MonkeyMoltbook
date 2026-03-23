@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import * as FaceDetector from 'expo-face-detector';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
 import { StatusBar } from 'expo-status-bar';
@@ -671,91 +670,23 @@ async function detectFaceMetrics(image?: AnalysisImage) {
 
   if (!image?.uri) return defaultMetrics;
 
-  try {
-    const result = await FaceDetector.detectFacesAsync(image.uri, {
-      mode: FaceDetector.FaceDetectorMode.fast,
-      detectLandmarks: FaceDetector.FaceDetectorLandmarks.all,
-      runClassifications: FaceDetector.FaceDetectorClassifications.none,
-      minDetectionInterval: 0,
-      tracking: false,
-    });
+  const signal = await readImageSignal(image);
+  const aspectPenalty = Math.abs((imageWidth / Math.max(1, imageHeight)) - 0.8);
+  const faceCount = signal.sampleCount > 0 ? 1 : 0;
+  const poseConfidence = clamp(0.58 + (signal.transitions - 40) / 120 - aspectPenalty * 0.3, 0.35, 0.9);
+  const landmarkConfidence = clamp(0.55 + (signal.variance - 24) / 80 + (signal.transitions - 44) / 160, 0.25, 0.92);
+  const occlusionRisk = clamp(0.42 - (signal.transitions - 52) / 180 + aspectPenalty * 0.2, 0.08, 0.55);
+  const faceSizeRatio = clamp(0.16 + (signal.mean - 110) / 900, 0.14, 0.24);
 
-    const face = result.faces?.[0];
-    if (!face) return { ...defaultMetrics, faceCount: result.faces?.length ?? 0 };
-
-    const boundsRaw = face.bounds ?? { size: { width: defaultBounds.width, height: defaultBounds.height }, origin: { x: defaultBounds.x, y: defaultBounds.y } };
-    const bounds: Bounds = {
-      x: boundsRaw.origin.x,
-      y: boundsRaw.origin.y,
-      width: boundsRaw.size.width,
-      height: boundsRaw.size.height,
-    };
-    const leftEye = face.leftEyePosition ? { x: face.leftEyePosition.x, y: face.leftEyePosition.y } : undefined;
-    const rightEye = face.rightEyePosition ? { x: face.rightEyePosition.x, y: face.rightEyePosition.y } : undefined;
-    const nose = face.noseBasePosition ? { x: face.noseBasePosition.x, y: face.noseBasePosition.y } : undefined;
-    const mouth = face.bottomMouthPosition ? { x: face.bottomMouthPosition.x, y: face.bottomMouthPosition.y } : undefined;
-    const leftCheek = face.leftCheekPosition ? { x: face.leftCheekPosition.x, y: face.leftCheekPosition.y } : undefined;
-    const rightCheek = face.rightCheekPosition ? { x: face.rightCheekPosition.x, y: face.rightCheekPosition.y } : undefined;
-
-    const faceWidthRatio = bounds.width / Math.max(1, imageWidth);
-    const faceHeightRatio = bounds.height / Math.max(1, imageHeight);
-    const faceSizeRatio = (bounds.width * bounds.height) / Math.max(1, imageWidth * imageHeight);
-    const eyeDistanceRatio = leftEye && rightEye ? Math.abs(rightEye.x - leftEye.x) / Math.max(1, imageWidth) : faceWidthRatio * 0.45;
-    const jawWidthRatio = leftCheek && rightCheek ? Math.abs(rightCheek.x - leftCheek.x) / Math.max(1, imageWidth) : faceWidthRatio * 0.82;
-    const faceCenterX = bounds.x + bounds.width / 2;
-    const faceTopY = bounds.y;
-    const faceBottomY = bounds.y + bounds.height;
-    const eyeMidY = leftEye && rightEye ? (leftEye.y + rightEye.y) / 2 : faceTopY + bounds.height * 0.28;
-    const noseY = nose?.y ?? faceTopY + bounds.height * 0.53;
-    const mouthY = mouth?.y ?? faceTopY + bounds.height * 0.77;
-    const upperThirdRatio = clamp((eyeMidY - faceTopY) / Math.max(1, bounds.height), 0.15, 0.5);
-    const midThirdRatio = clamp((noseY - eyeMidY) / Math.max(1, bounds.height), 0.15, 0.5);
-    const lowerThirdRatio = clamp((faceBottomY - noseY) / Math.max(1, bounds.height), 0.15, 0.55);
-    const noseCenterOffset = nose ? Math.abs(nose.x - faceCenterX) / Math.max(1, bounds.width) : 0.04;
-    const rollBalance = leftEye && rightEye ? Math.abs(leftEye.y - rightEye.y) / Math.max(1, imageHeight) : 0.01;
-    const eyeHeightDelta = leftEye && rightEye ? Math.abs(leftEye.y - rightEye.y) / Math.max(1, bounds.height) : 0.02;
-    const leftDistance = leftEye && nose ? Math.abs(nose.x - leftEye.x) : bounds.width * 0.2;
-    const rightDistance = rightEye && nose ? Math.abs(rightEye.x - nose.x) : bounds.width * 0.2;
-    const leftRightDistanceDelta = Math.abs(leftDistance - rightDistance) / Math.max(1, bounds.width);
-    const landmarkDensity = [leftEye, rightEye, nose, mouth, leftCheek, rightCheek].filter(Boolean).length / 6;
-    const cheekToJawProxyRatio = jawWidthRatio > 0 ? clamp((faceWidthRatio * 0.92) / jawWidthRatio, 0.7, 1.3) : 1.04;
-    const poseConfidence = clamp(1 - noseCenterOffset * 2.2 - rollBalance * 7, 0, 1);
-    const landmarkConfidence = clamp(landmarkDensity * 0.75 + poseConfidence * 0.25, 0, 1);
-    const occlusionRisk = clamp(1 - landmarkDensity + Math.max(0, 0.18 - faceSizeRatio) * 2.5, 0, 1);
-
-    return {
-      hasFace: true,
-      faceCount: result.faces?.length ?? 1,
-      faceWidthRatio,
-      faceHeightRatio,
-      eyeDistanceRatio,
-      jawWidthRatio,
-      noseCenterOffset,
-      rollBalance,
-      landmarkDensity,
-      faceSizeRatio,
-      poseConfidence,
-      landmarkConfidence,
-      occlusionRisk,
-      eyeHeightDelta,
-      leftRightDistanceDelta,
-      upperThirdRatio,
-      midThirdRatio,
-      lowerThirdRatio,
-      cheekToJawProxyRatio,
-      landmarks: {
-        faceBounds: bounds,
-        leftEye,
-        rightEye,
-        noseBase: nose,
-        mouthCenter: mouth,
-        leftCheek,
-        rightCheek,
-      },
-    };
-  } catch {
-    return defaultMetrics;
-  }
+  return {
+    ...defaultMetrics,
+    hasFace: faceCount > 0,
+    faceCount,
+    faceSizeRatio,
+    poseConfidence,
+    landmarkConfidence,
+    occlusionRisk,
+  };
 }
 
 function isReliableScan(scan: ScanRecord) {
