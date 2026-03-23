@@ -45,6 +45,8 @@ When resuming this project, first verify reality before coding:
 
 ## Known issues / risks
 - visible workspace snapshot may not represent the full intended app state
+- important deployment state may currently live in Vercel rather than in the visible local files
+- John specifically recalls `ufcpickspro.com` plus password protection, but that state is not currently recoverable from the visible workspace snapshot alone
 - logs may be present without a clean restorable runtime state
 - refresh scheduling may be fixed while the underlying job still fails
 
@@ -52,4 +54,6 @@ When resuming this project, first verify reality before coding:
 1. Read this file
 2. Inspect `.env.local` and runtime config
 3. Inspect refresh scripts/jobs
+4. Run validation checks before changing anything
+jobs
 4. Run validation checks before changing anything
