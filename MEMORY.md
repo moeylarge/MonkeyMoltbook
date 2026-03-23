@@ -40,8 +40,22 @@ Current brand direction is now settled around **LooksMaxx**.
 - do **not** switch to a hosted third-party analysis API right now
 
 ### Product direction
-- current top product priority is making the **$4.99 one-time Full Review** feel excellent
-- monthly Pro is a later step and should not launch until recurring-value features are real
+- launch strategy changed: LooksMaxx should launch as a **free product first** for **2–4 weeks** or until roughly **1000 users**
+- the free period is for learning, traction, and feedback before pushing harder on monetization
+- App Store naming block is already chosen:
+  - `LooksMaxx`
+  - fallback: `LooksMaxx: Looks Rater`
+  - fallback: `LooksMaxx: Looks Rating System`
+- App Store subtitle is locked:
+  - `Looks rating, face analysis, beauty scan`
+- App Store keywords are locked:
+  - `looksmax,looksmaxxing,face analysis,looks rating,glow up,attractiveness test,face scan,beauty score,archetype,selfie,beautymaxx,beautymax`
+- Apple submission / launch checklist was already created and should be treated as the active launch-prep path
+- launch rule that was explicitly set:
+  - no new feature ideas
+  - no random redesigns
+  - only fix real launch blockers
+  - submit
 - use the app like a real product for a while; if something feels off twice, log it and then fix it
 
 ### Current best next steps

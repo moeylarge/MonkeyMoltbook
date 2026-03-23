@@ -94,3 +94,24 @@ Watch for:
 - trust issues across similar photos
 
 If something feels off twice, log it and then fix it.
+
+
+## Session addendum — launch / monetization / brand update
+- Brand direction now settled on **LooksMaxx**.
+- New main logo asset: `assets/looksmaxx-logo.png` sourced from `training/Stylish _LooksMaxx_ logo design (1).png`.
+- Launch strategy was later clarified: LooksMaxx should launch as a **free product first** for **2–4 weeks** or until roughly **1000 users**.
+- Apple submission checklist and App Store listing block were already created and should be treated as active launch-prep documents.
+- App Store naming block:
+  - `LooksMaxx`
+  - `LooksMaxx: Looks Rater`
+  - `LooksMaxx: Looks Rating System`
+- Subtitle:
+  - `Looks rating, face analysis, beauty scan`
+- Launch rule:
+  - no new feature ideas
+  - no random redesigns
+  - only fix real launch blockers
+  - submit
+- Current one-time paid funnel still exists in-product, but near-term launch strategy is now free-first for learning/traction.
+- Share page now supports native share on phone and fallback copy/share behavior on web.
+- Important recent commits in this stretch: `84629d1`, `6953b92`, `d966753`, `4ee0e85`, `8cf4405`, `7b3354e`, `4158578`, `05a4ebe`, `1e1b189`, `70291d0`.

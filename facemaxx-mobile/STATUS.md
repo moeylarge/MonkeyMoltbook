@@ -41,10 +41,12 @@ LooksMaxx (formerly FACEMAXX / LooksMaxxing in older notes) is the strongest-pre
 - settled brand direction around **LooksMaxx**
 
 ## Product / business direction
-- immediate priority is making the **$4.99 one-time Full Review** feel excellent
-- monthly Pro is a later step, not the immediate launch priority
+- launch strategy changed: LooksMaxx should go out as a **free product first** for **2–4 weeks** or until roughly **1000 users**
+- immediate goal is learning/traction/feedback, not squeezing monetization too early
+- App Store listing block and screenshot order were already defined for submission
 - do not switch to a hosted third-party looks-analysis API right now
 - use the app like a real product for a while and log repeated friction before over-polishing blindly
+- launch rule: no new feature ideas, no random redesigns, only fix real launch blockers, then submit
 
 ## In progress
 - continued visual review and polish
