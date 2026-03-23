@@ -66,8 +66,12 @@ export function getNextAgentHook() {
     style: agent.style,
     text: selectNextHook(agent),
     source: agent.source,
-    phase: 'Phase 4 — swipe'
+    phase: 'Phase 5 — preload'
   };
+}
+
+export function getNextAgentHooks(count = 1) {
+  return Array.from({ length: count }, () => getNextAgentHook());
 }
 
 export function getAgentStats() {

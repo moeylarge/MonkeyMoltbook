@@ -12,7 +12,7 @@ ACTIVE
 
 ## Current phase
 
-Phase 4 — swipe complete
+Phase 5 — preload complete
 
 ## Stack
 
@@ -27,18 +27,19 @@ Phase 4 — swipe complete
 - package workspaces configured
 - mobile shell exists and matches the single-screen rule
 - backend process starts and serves `/health`
-- backend serves `/agents` and rotating `/hook`
+- backend serves `/agents`, `/hook`, and `/preload`
 - 12 local archetypes are defined and normalized
 - WebSocket server accepts connections and sends boot payload
 - WebSocket server sends live rotating hook payloads
 - mobile shell is wired to open a WebSocket and render live hook data
 - swipe-left progression is implemented in the app
-- next hook fetch triggers on swipe and on fallback button press
+- app maintains a local preload queue of upcoming hooks
+- next hook display can advance from the preload queue for faster repeated progression
 - Expo mobile bundle export succeeds from the monorepo layout
 
 ## Incomplete
 
-- preload system
+- hook validation hardening
 - response quality system
 - logging
 - paywall/session limit logic
@@ -46,4 +47,4 @@ Phase 4 — swipe complete
 
 ## Immediate next build phase
 
-Phase 5 — preload
+Phase 6 — hook validation

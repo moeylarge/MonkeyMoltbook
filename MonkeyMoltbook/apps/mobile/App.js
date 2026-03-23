@@ -25,6 +25,7 @@ const DEFAULT_API_URL = Platform.select({
 });
 
 const SWIPE_THRESHOLD = -80;
+const PRELOAD_TARGET = 3;
 
 export default function App() {
   const [agentName, setAgentName] = useState('Connecting...');
@@ -32,10 +33,17 @@ export default function App() {
   const [status, setStatus] = useState('Opening socket...');
   const [swipeCount, setSwipeCount] = useState(0);
   const [isLoadingNext, setIsLoadingNext] = useState(false);
-  const socketRef = useRef(null);
+  const [queueDepth, setQueueDepth] = useState(0);
   const wsUrl = useMemo(() => DEFAULT_WS_URL, []);
   const apiUrl = useMemo(() => DEFAULT_API_URL, []);
   const translateX = useRef(new Animated.Value(0)).current;
+  const preloadQueueRef = useRef([]);
+  const bootHookAppliedRef = useRef(false);
+  const isFetchingPreloadRef = useRef(false);
+
+  const updateQueueDepth = () => {
+    setQueueDepth(preloadQueueRef.current.length);
+  };
 
   const applyHookPayload = (payload, sourceLabel = 'live hook') => {
     setAgentName(payload.agentName || 'Unknown Agent');
@@ -52,19 +60,53 @@ export default function App() {
     }).start();
   };
 
-  const loadNextHook = async () => {
+  const fillPreloadQueue = async (minimum = PRELOAD_TARGET) => {
+    if (isFetchingPreloadRef.current) return;
+    if (preloadQueueRef.current.length >= minimum) return;
+
+    isFetchingPreloadRef.current = true;
+
+    try {
+      const needed = Math.max(minimum - preloadQueueRef.current.length, 1);
+      const response = await fetch(`${apiUrl}/preload?count=${needed}`);
+      const payload = await response.json();
+      const hooks = Array.isArray(payload.hooks) ? payload.hooks : [];
+      preloadQueueRef.current = [...preloadQueueRef.current, ...hooks];
+      updateQueueDepth();
+    } catch (_error) {
+      setStatus('Preload failed');
+    } finally {
+      isFetchingPreloadRef.current = false;
+    }
+  };
+
+  const primeInitialQueue = async () => {
+    await fillPreloadQueue(PRELOAD_TARGET);
+  };
+
+  const advanceFromQueue = async () => {
     if (isLoadingNext) return;
 
     setIsLoadingNext(true);
-    setStatus('Loading next hook...');
 
     try {
-      const response = await fetch(`${apiUrl}/hook`);
-      const payload = await response.json();
-      applyHookPayload(payload, 'swiped');
-      setSwipeCount((value) => value + 1);
+      if (preloadQueueRef.current.length === 0) {
+        setStatus('Queue empty • refilling');
+        await fillPreloadQueue(1);
+      }
+
+      const nextPayload = preloadQueueRef.current.shift();
+      updateQueueDepth();
+
+      if (nextPayload) {
+        applyHookPayload(nextPayload, 'preloaded');
+        setSwipeCount((value) => value + 1);
+        void fillPreloadQueue(PRELOAD_TARGET);
+      } else {
+        setStatus('No next hook available');
+      }
     } catch (_error) {
-      setStatus('Failed to load next hook');
+      setStatus('Failed to advance');
     } finally {
       setIsLoadingNext(false);
       resetCardPosition();
@@ -79,7 +121,7 @@ export default function App() {
       duration: 140,
       useNativeDriver: true
     }).start(() => {
-      loadNextHook();
+      advanceFromQueue();
     });
   };
 
@@ -109,7 +151,6 @@ export default function App() {
 
   useEffect(() => {
     const socket = new WebSocket(wsUrl);
-    socketRef.current = socket;
 
     socket.onopen = () => {
       setStatus('Connected');
@@ -125,7 +166,15 @@ export default function App() {
         }
 
         if (payload.type === 'hook') {
-          applyHookPayload(payload, 'live hook');
+          if (!bootHookAppliedRef.current) {
+            bootHookAppliedRef.current = true;
+            applyHookPayload(payload, 'live hook');
+            void primeInitialQueue();
+            return;
+          }
+
+          preloadQueueRef.current = [...preloadQueueRef.current, payload];
+          updateQueueDepth();
         }
       } catch (_error) {
         setStatus('Invalid server payload');
@@ -150,7 +199,10 @@ export default function App() {
       <StatusBar barStyle="light-content" />
       <View style={styles.topBar}>
         <Text style={styles.agentName}>{agentName}</Text>
-        <Text style={styles.counter}>Swipes {swipeCount}</Text>
+        <View style={styles.statsBlock}>
+          <Text style={styles.counter}>Swipes {swipeCount}</Text>
+          <Text style={styles.counter}>Queued {queueDepth}</Text>
+        </View>
       </View>
 
       <Animated.View
@@ -198,6 +250,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     flex: 1,
     paddingRight: 12
+  },
+  statsBlock: {
+    alignItems: 'flex-end',
+    gap: 2
   },
   counter: {
     color: '#7D7D7D',
