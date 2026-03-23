@@ -13,6 +13,15 @@ What is known:
 - John recalls that this site was deployed on Vercel and had password protection added
 - live-site verification now confirms the site is currently served by **Vercel** and protected by **HTTP Basic Auth**
 - confirmed auth header: `www-authenticate: Basic realm="UFC Picks Pro", charset="UTF-8"`
+- Vercel dashboard evidence now also confirms:
+  - domain: `ufcpickspro.com`
+  - status: **Active**
+  - registrar: **Third Party**
+  - nameservers: **Third Party**
+  - Vercel CDN: **Active**
+  - age shown in Vercel: **Mar 18**
+  - visible DNS record in screenshot: root `A` record → `76.76.21.21` with `TTL 60`
+  - Vercel DNS is **not** currently enabled for the domain from the shown screen
 - the currently visible local workspace snapshot does **not** preserve obvious Vercel config, password-protection code, or deployment metadata for that site
 - the local refresh cadence was intentionally slowed down
 - a stale fast refresh job was disabled

@@ -180,6 +180,14 @@ Related path:
 - John recalls that the site was deployed on Vercel and that password protection was added
 - live-site verification confirms the site currently returns `401` from **Vercel** with **HTTP Basic Auth**
 - confirmed auth header: `www-authenticate: Basic realm="UFC Picks Pro", charset="UTF-8"`
+- Vercel dashboard evidence confirms:
+  - `ufcpickspro.com` is active
+  - registrar: third party
+  - nameservers: third party
+  - Vercel CDN: active
+  - age shown: Mar 18
+  - visible DNS record: root `A` record → `76.76.21.21` with `TTL 60`
+  - Vercel DNS was not enabled from the shown screen
 - current caveat: the visible local workspace snapshot does **not** currently preserve obvious Vercel config or password-protection implementation details, so that deployment state may need to be recovered from Vercel rather than local files
 
 ### Resume caution
