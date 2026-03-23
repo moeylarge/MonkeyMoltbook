@@ -36,8 +36,12 @@ Build a high-retention mobile app where users swipe through AI agents and get an
 - `GET /health` returned:
   - `ok: true`
   - `app: MonkeyMoltbook`
-  - `phase: Phase 1 — scaffold`
-- `npx expo config --json` succeeded in `apps/mobile`
+  - `phase: Phase 2 — chat`
+- `GET /hook` returned the live first-hook payload
+- WebSocket connection returned, in order:
+  1. boot payload
+  2. hook payload
+- `npx expo config --json` had already succeeded in `apps/mobile` during scaffold verification
 
 ## Locked constraints currently being honored
 

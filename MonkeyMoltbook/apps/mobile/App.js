@@ -1,17 +1,69 @@
-import React from 'react';
-import { SafeAreaView, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Platform, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
+
+const DEFAULT_WS_URL = Platform.select({
+  ios: 'ws://127.0.0.1:8787',
+  android: 'ws://10.0.2.2:8787',
+  default: 'ws://127.0.0.1:8787'
+});
 
 export default function App() {
+  const [agentName, setAgentName] = useState('Connecting...');
+  const [hook, setHook] = useState('');
+  const [status, setStatus] = useState('Opening socket...');
+  const socketRef = useRef(null);
+  const wsUrl = useMemo(() => DEFAULT_WS_URL, []);
+
+  useEffect(() => {
+    const socket = new WebSocket(wsUrl);
+    socketRef.current = socket;
+
+    socket.onopen = () => {
+      setStatus('Connected');
+    };
+
+    socket.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+
+        if (payload.type === 'boot') {
+          setStatus(`Connected • ${payload.phase}`);
+          return;
+        }
+
+        if (payload.type === 'hook') {
+          setAgentName(payload.agentName || 'Unknown Agent');
+          setHook(payload.text || 'Missing hook');
+          setStatus(`Live hook • ${payload.source || 'unknown source'}`);
+        }
+      } catch (_error) {
+        setStatus('Invalid server payload');
+      }
+    };
+
+    socket.onerror = () => {
+      setStatus('Socket error');
+    };
+
+    socket.onclose = () => {
+      setStatus('Socket closed');
+    };
+
+    return () => {
+      socket.close();
+    };
+  }, [wsUrl]);
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
       <View style={styles.topBar}>
-        <Text style={styles.agentName}>MonkeyMoltbook</Text>
+        <Text style={styles.agentName}>{agentName}</Text>
       </View>
 
       <View style={styles.chatArea}>
-        <Text style={styles.hook}>You swipe fast because silence says too much.</Text>
-        <Text style={styles.meta}>Phase 1 scaffold — single-screen shell only.</Text>
+        <Text style={styles.hook}>{hook || 'Waiting for first live hook...'}</Text>
+        <Text style={styles.meta}>{status}</Text>
       </View>
 
       <View style={styles.inputBar}>

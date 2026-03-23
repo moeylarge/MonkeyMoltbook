@@ -27,7 +27,10 @@ Phase 1 — scaffold complete
 - package workspaces configured
 - mobile shell exists and matches the single-screen rule
 - backend process starts and serves `/health`
+- backend serves deterministic `GET /hook`
 - WebSocket server accepts connections and sends boot payload
+- WebSocket server sends live first-hook payload
+- mobile shell is wired to open a WebSocket and render live hook data
 - Expo config validates
 
 ## Incomplete
