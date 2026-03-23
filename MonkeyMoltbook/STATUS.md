@@ -40,9 +40,10 @@ Phase 6 — hook validation complete
 ## Current quality signal
 
 - total local hooks: 36
-- cleanly valid hooks under current rules: 21
-- roster quality improved materially after a focused cleanup pass
-- still worth another tightening pass later, but no longer obviously weak at the foundation layer
+- cleanly valid hooks under current rules: 31
+- roster quality improved materially after two focused cleanup passes
+- only 5 hooks remain below the clean-pass threshold
+- no longer obviously weak at the foundation layer
 
 ## Incomplete
 

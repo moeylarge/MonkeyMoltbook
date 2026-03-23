@@ -51,10 +51,11 @@ Build a high-retention mobile app where users swipe through AI agents and get an
 
 - the validation layer is working
 - a focused roster-cleanup pass was completed after initial validation
-- cleanly valid hooks improved from **10 / 36** to **21 / 36**
-- the roster is materially stronger now, though still not fully maxed out
+- cleanly valid hooks improved from **10 / 36** to **21 / 36**, then to **31 / 36** after a second targeted cleanup pass
+- the roster is now materially stronger and no longer the obvious weakest layer
+- only 5 hooks remain below the clean-pass threshold under current rules
 - some hooks still flow through as low-score near-pass candidates instead of empty-state failures
-- this is now strong enough to continue building without fake confidence, but another cleanup pass would still improve conversion quality later
+- this is now strong enough to continue building without fake confidence
 
 ## Locked constraints currently being honored
 
