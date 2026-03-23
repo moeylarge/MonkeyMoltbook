@@ -3211,4 +3211,3 @@ const styles = StyleSheet.create({
   retentionDatasetText: { color: '#14E38B', fontSize: 12, fontWeight: '700', marginTop: 10 },
   retentionDatasetPath: { color: '#98A0B8', fontSize: 11, lineHeight: 16, marginTop: 6 },
 });
-);
