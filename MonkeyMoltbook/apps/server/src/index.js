@@ -2,37 +2,39 @@ import express from 'express';
 import { WebSocketServer } from 'ws';
 import http from 'http';
 import { getAgentStats, getNextAgentHook, getNextAgentHooks, listAgents } from './lib/agents.js';
+import { getMoltbookStats } from './lib/moltbook.js';
 import { getResponse, getResponseStats } from './lib/responses.js';
 
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 const PORT = process.env.PORT || 8787;
-const PHASE = 'Response quality system';
+const PHASE = 'Controlled Moltbook ingestion';
 const DEFAULT_PRELOAD_COUNT = 3;
 
-app.get('/health', (_req, res) => {
+app.get('/health', async (_req, res) => {
   res.json({
     ok: true,
     app: 'MonkeyMoltbook',
     phase: PHASE,
-    ...getAgentStats(),
+    ...(await getAgentStats()),
+    ...getMoltbookStats(),
     ...getResponseStats()
   });
 });
 
-app.get('/agents', (_req, res) => {
+app.get('/agents', async (_req, res) => {
   res.json({
     phase: PHASE,
-    agents: listAgents()
+    agents: await listAgents()
   });
 });
 
-app.get('/hook', (_req, res) => {
-  res.json(getNextAgentHook());
+app.get('/hook', async (_req, res) => {
+  res.json(await getNextAgentHook());
 });
 
-app.get('/preload', (req, res) => {
+app.get('/preload', async (req, res) => {
   const requested = Number.parseInt(req.query.count, 10);
   const count = Number.isFinite(requested) && requested > 0
     ? Math.min(requested, DEFAULT_PRELOAD_COUNT)
@@ -41,7 +43,7 @@ app.get('/preload', (req, res) => {
   res.json({
     phase: PHASE,
     count,
-    hooks: getNextAgentHooks(count)
+    hooks: await getNextAgentHooks(count)
   });
 });
 
@@ -63,7 +65,7 @@ app.get('/response', (req, res) => {
   });
 });
 
-wss.on('connection', (ws) => {
+wss.on('connection', async (ws) => {
   ws.send(JSON.stringify({
     type: 'boot',
     app: 'MonkeyMoltbook',
@@ -71,7 +73,7 @@ wss.on('connection', (ws) => {
     status: 'connected'
   }));
 
-  ws.send(JSON.stringify(getNextAgentHook()));
+  ws.send(JSON.stringify(await getNextAgentHook()));
 });
 
 server.listen(PORT, () => {

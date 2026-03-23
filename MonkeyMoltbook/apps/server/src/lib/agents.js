@@ -1,8 +1,10 @@
 import { LOCAL_AGENTS } from '../data/agents.js';
+import { getMoltbookAgents } from './moltbook.js';
 
 const HOOK_WINDOW = 10;
 const MIN_HOOK_SCORE = 3;
 const FALLBACK_HOOK = 'You are avoiding the obvious question again.';
+const SOURCE_PATTERN = ['local', 'local', 'moltbook'];
 
 let cursor = 0;
 const recentHookKeys = [];
@@ -17,11 +19,7 @@ function tokenize(text) {
 
 function scoreHook(text) {
   if (typeof text !== 'string') {
-    return {
-      valid: false,
-      score: 0,
-      reasons: ['not-string']
-    };
+    return { valid: false, score: 0, reasons: ['not-string'] };
   }
 
   const trimmed = text.trim();
@@ -44,27 +42,9 @@ function scoreHook(text) {
   if (/\bnot\b|\bnever\b|\bexactly\b|\bstill\b|\bdefinitely\b|\bobvious\b/.test(lower)) score += 1;
   if (/\b(attention|ego|strategy|opinions|posture|discipline|identity|charm|execution|future|standards)\b/.test(lower)) score += 1;
 
-  if (reasons.length > 0) {
-    return {
-      valid: false,
-      score,
-      reasons
-    };
-  }
-
-  if (score < MIN_HOOK_SCORE) {
-    return {
-      valid: false,
-      score,
-      reasons: ['low-score']
-    };
-  }
-
-  return {
-    valid: true,
-    score,
-    reasons: []
-  };
+  if (reasons.length > 0) return { valid: false, score, reasons };
+  if (score < MIN_HOOK_SCORE) return { valid: false, score, reasons: ['low-score'] };
+  return { valid: true, score, reasons: [] };
 }
 
 function normalizeAgent(agent) {
@@ -87,17 +67,9 @@ function selectNextHook(agent) {
   for (const text of agent.hooks) {
     const key = makeHookKey(agent.id, text);
     const scored = scoreHook(text);
-
     if (!recentHookKeys.includes(key) && scored.valid) {
       rememberHook(key);
-      return {
-        text,
-        validation: {
-          valid: true,
-          score: scored.score,
-          reasons: []
-        }
-      };
+      return { text, validation: { valid: true, score: scored.score, reasons: [] } };
     }
   }
 
@@ -122,20 +94,36 @@ function selectNextHook(agent) {
   rememberHook(fallbackKey);
   return {
     text: FALLBACK_HOOK,
-    validation: {
-      valid: true,
-      score: MIN_HOOK_SCORE,
-      reasons: ['fallback']
-    }
+    validation: { valid: true, score: MIN_HOOK_SCORE, reasons: ['fallback'] }
   };
 }
 
-export function listAgents() {
-  return LOCAL_AGENTS.map(normalizeAgent);
+export async function listAgents() {
+  const moltbook = await getMoltbookAgents();
+  return [...LOCAL_AGENTS, ...moltbook.agents].map(normalizeAgent);
 }
 
-export function getNextAgentHook() {
-  const agent = LOCAL_AGENTS[cursor % LOCAL_AGENTS.length];
+async function pickAgentPool() {
+  const moltbook = await getMoltbookAgents();
+  const preferredSource = SOURCE_PATTERN[cursor % SOURCE_PATTERN.length];
+  const localPool = LOCAL_AGENTS;
+  const moltbookPool = moltbook.enabled && moltbook.agents.length > 0 ? moltbook.agents : [];
+
+  if (preferredSource === 'moltbook' && moltbookPool.length > 0) {
+    return {
+      agent: moltbookPool[Math.floor(cursor / SOURCE_PATTERN.length) % moltbookPool.length],
+      sourceMix: { local: localPool.length, moltbook: moltbookPool.length }
+    };
+  }
+
+  return {
+    agent: localPool[cursor % localPool.length],
+    sourceMix: { local: localPool.length, moltbook: moltbookPool.length }
+  };
+}
+
+export async function getNextAgentHook() {
+  const { agent } = await pickAgentPool();
   cursor += 1;
   const selected = selectNextHook(agent);
 
@@ -147,29 +135,35 @@ export function getNextAgentHook() {
     style: agent.style,
     text: selected.text,
     source: agent.source,
-    phase: 'Phase 6 — hook validation',
+    phase: 'Controlled Moltbook ingestion',
     validation: selected.validation
   };
 }
 
-export function getNextAgentHooks(count = 1) {
-  return Array.from({ length: count }, () => getNextAgentHook());
+export async function getNextAgentHooks(count = 1) {
+  const hooks = [];
+  for (let i = 0; i < count; i += 1) hooks.push(await getNextAgentHook());
+  return hooks;
 }
 
-export function getAgentStats() {
-  const allHooks = LOCAL_AGENTS.flatMap((agent) => agent.hooks);
+export async function getAgentStats() {
+  const moltbook = await getMoltbookAgents();
+  const allAgents = [...LOCAL_AGENTS, ...moltbook.agents];
+  const allHooks = allAgents.flatMap((agent) => agent.hooks);
   const validHooks = allHooks.filter((hook) => scoreHook(hook).valid);
 
   return {
     localAgentCount: LOCAL_AGENTS.length,
+    moltbookAgentCount: moltbook.agents.length,
     totalHookCount: allHooks.length,
     validHookCount: validHooks.length,
     hookWindow: HOOK_WINDOW,
     minHookScore: MIN_HOOK_SCORE,
     recentHookCount: recentHookKeys.length,
+    sourcePattern: SOURCE_PATTERN.join(':'),
     sourceMix: {
       local: LOCAL_AGENTS.length,
-      moltbook: 0
+      moltbook: moltbook.agents.length
     }
   };
 }

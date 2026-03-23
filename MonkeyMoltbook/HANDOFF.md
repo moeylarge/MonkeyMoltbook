@@ -4,7 +4,7 @@ Updated: 2026-03-23 America/Los_Angeles
 
 ## Current phase
 
-**Response quality system**
+**Controlled Moltbook ingestion**
 
 ## Objective
 
@@ -19,56 +19,70 @@ Build a high-retention mobile app where users swipe through AI agents and get an
 - completed Phase 5 preload queue
 - completed Phase 6 hook validation
 - completed Phase 7 session-limit shell
-- completed **response quality system**
-- added per-agent response banks for all 12 archetypes
-- added response selection rules designed to avoid:
-  - agreement-only replies
-  - passive neutral replies
-  - weak generic follow-ups
-- added lightweight response validation with score + reasons
-- added `/response` endpoint to generate the next pressure/challenge line from the current agent
-- wired mobile reply submission to fetch and render the generated follow-up line in-app
-- kept everything local and deterministic
-- fixed two write-merge breakages during proof (`index.js` and `App.js`) and re-ran verification cleanly
+- completed response quality system
+- completed **controlled Moltbook ingestion**
+- added Moltbook normalization layer with required fields:
+  - `id`
+  - `name`
+  - `archetype`
+  - `system_prompt`
+  - `style`
+  - `source`
+  - `hooks`
+- added hard constraints for the Moltbook path:
+  - timeout: 500ms
+  - cache TTL: 5 minutes
+  - max active Moltbook agents: 3
+  - source pattern: `local:local:moltbook`
+- added safe fallback behavior:
+  - if remote Moltbook fetch is absent, use local seed agents
+  - if remote fetch errors, disable Moltbook and fall back to local-only behavior
+- added Moltbook stats to `/health`
+- kept local as the primary pool and Moltbook as secondary
+- fixed a mixed old/new `agents.js` break during proof and re-ran verification cleanly
 
 ## Verified proof
 
 - backend booted locally on `http://127.0.0.1:8787`
 - `GET /health` returned:
   - `ok: true`
-  - `app: MonkeyMoltbook`
-  - `phase: Response quality system`
-  - `responseAgentCount: 12`
-- `GET /response?agentId=brutal-life-coach&userText=No%20I%20am%20just%20busy` returned a valid pressure response with validation metadata
+  - `phase: Controlled Moltbook ingestion`
+  - `localAgentCount: 12`
+  - `moltbookAgentCount: 3`
+  - `sourcePattern: local:local:moltbook`
+  - `moltbookEnabled: true`
+  - `moltbookCacheSource: seed`
+- `GET /agents` returned 15 total normalized agents, including 3 Moltbook agents
+- repeated `GET /hook` calls showed local-local-Moltbook mixing in the live output
 - mobile app bundle exported successfully with:
-  - `npx expo export --platform ios --output-dir dist-response-quality`
-- exported bundle proved the current mobile app compiles successfully after response-system integration
+  - `npx expo export --platform ios --output-dir dist-moltbook-ingestion`
+- exported bundle proved the app still compiles after Moltbook integration
 
 ## Important current truth
 
-- the app now has a real post-hook behavior layer, not just opening lines
-- response generation is still template-driven/local, not model-driven
-- this is good for speed and control at the current stage
-- hook layer remains materially stronger at **31 / 36** clean-valid hooks
-- Moltbook is still not connected yet
+- Moltbook ingestion is working in controlled form
+- current proof uses a seed-backed Moltbook source unless `MOLTBOOK_URL` is provided
+- local remains primary, as intended
+- two Moltbook seed hooks currently fall below the clean-pass threshold under the current validator
+- Moltbook responses currently fall back to the local response bank when a remote-specific bank does not exist yet
+- this is acceptable for now because hook/source integration was the primary goal of this phase
 
 ## Locked constraints currently being honored
 
-- no feature expansion beyond current requested systems
-- no social / voice / TTS / memory persistence
+- local remains primary
+- Moltbook remains secondary
+- timeout/caching/source-ratio controls are enforced
+- no voice / TTS / memory persistence / social features
 - no extra screens
-- no menus / profiles / settings
 - no real billing yet
-- no Moltbook fetch path yet
 
 ## Next step
 
-Best next step is **controlled Moltbook ingestion**:
-- normalize remote agent data into the local schema
-- enforce timeout / caching / source-ratio rules
-- keep local as primary and Moltbook as secondary
-- do not let Moltbook degrade latency or hook quality
+Best next step is a **Moltbook quality pass**:
+- tighten the 2 weak Moltbook seed hooks
+- add Moltbook-specific response banks so remote agents do not inherit local fallback voice
+- optionally attach a real `MOLTBOOK_URL` once the remote shape is confirmed
 
 ## Stop conditions
 
-If Moltbook integration harms latency, quality, or deterministic fallback behavior, disable it and keep local primary.
+If real Moltbook data harms latency, quality, or stable fallback behavior, disable it immediately and keep local-only primary.

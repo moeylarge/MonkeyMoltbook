@@ -12,7 +12,7 @@ ACTIVE
 
 ## Current phase
 
-Response quality system complete
+Controlled Moltbook ingestion complete
 
 ## Stack
 
@@ -29,8 +29,10 @@ Response quality system complete
 - backend process starts and serves `/health`
 - backend serves `/agents`, `/hook`, `/preload`, and `/response`
 - 12 local archetypes are defined and normalized
+- 3 controlled Moltbook agents are now normalized and available
 - WebSocket server accepts connections and sends boot payload
 - WebSocket server sends live rotating hook payloads
+- source mixing follows `local:local:moltbook`
 - mobile shell is wired to open a WebSocket and render live hook data
 - swipe-left progression is implemented in the app
 - app maintains a local preload queue of upcoming hooks
@@ -38,25 +40,26 @@ Response quality system complete
 - app tracks local swipe/reply thresholds and shows a minimal gate overlay at threshold
 - app submits user replies and renders generated agent follow-up responses
 - backend exposes response validation and per-agent response banks
+- Moltbook path is cached and timeout-limited with local fallback behavior
 
 ## Current quality signal
 
-- total local hooks: 36
-- cleanly valid hooks under current rules: 31
-- only 5 hooks remain below the clean-pass threshold
-- response system is present and deterministic, but still template-driven
+- total hooks across local + Moltbook seed pool: 45
+- cleanly valid hooks under current rules: 32
+- Moltbook is integrated, but 2 seed hooks are still weak
+- Moltbook responses currently fall back to local response voice when remote-specific banks are absent
 
 ## Incomplete
 
-- final cleanup of the remaining 5 weak hooks
+- tighten the weak Moltbook seed hooks
+- add Moltbook-specific response banks
+- connect a real remote `MOLTBOOK_URL` if/when the remote payload shape is confirmed
 - logging
 - real billing/paywall integration
-- Moltbook controlled secondary-source integration
-- model-driven response generation if later needed
 
 ## Immediate next decision
 
 Choose between:
-- controlled Moltbook ingestion
-- remaining hook cleanup
+- Moltbook quality pass
 - logging / analytics layer
+- real remote Moltbook endpoint hookup
