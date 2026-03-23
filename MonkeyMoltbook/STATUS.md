@@ -62,6 +62,7 @@ Public-feed Moltbook adapter implementation complete
 
 The project is now in its next phase:
 - Moltbook execution under the security policy
+- Daily Moltbook Check-In Protocol as the default cadence/rule-set
 - candidate/source-quality development
 - derivation quality refinement
 - logging / analytics layer

@@ -68,6 +68,7 @@ But actual posting/engagement automation is a separate explicit external-action 
 
 MonkeyMoltbook has now entered its next phase:
 - execute Moltbook participation deliberately under the security policy
+- use the Daily Moltbook Check-In Protocol as the default operating reference
 - collect stronger social/source data
 - update the candidate-source tracker as strong accounts appear
 - keep improving Moltbook-derived hook quality so fallback rates drop
