@@ -42,22 +42,26 @@ This is the canonical project index for fast recovery after resets, daemon issue
   - developer-ish labels leaking into UI
 
 ### 2) UFC betting engine / website
-- **Status:** PAUSED
+- **Status:** PAUSED / PARTIALLY RECOVERED
 - **Type:** Website / data refresh system
 - **Path:** `/Users/moey/.openclaw/workspace/ufc-operator-web`
 - **Related path:** `/Users/moey/.openclaw/workspace/ufc-analytics`
-- **Purpose:** UFC-related betting/data workflow with refresh automation
+- **Purpose:** UFC-related betting/data workflow with refresh automation plus the Vercel-hosted site `ufcpickspro.com`
 - **Current state:**
-  - project is present in the workspace, but current continuity suggests the visible snapshot may be incomplete/log-heavy
-  - refresh cadence was intentionally slowed down
-  - stale fast refresh job was disabled
-  - env/config should be verified before resuming work
-- **Next step:** verify real app state, `.env.local`, and refresh pipeline before changing anything else
+  - live continuity now confirms a Vercel-hosted site at `https://www.ufcpickspro.com/`
+  - live site is currently protected by **HTTP Basic Auth** on Vercel
+  - Vercel dashboard evidence confirms the domain is active with third-party registrar/nameservers and Vercel CDN enabled
+  - the visible local workspace snapshot is much thinner than the live deploy state
+  - `ufc-operator-web/` currently appears to contain mostly handoff notes and logs, not the full site/app source
+  - `ufc-analytics/` also appears log-heavy from the visible snapshot
+  - refresh cadence was intentionally slowed down and the stale fast job was disabled
+- **Next step:** if UFC resumes, recover the deploy/code truth in this order: Vercel project state, local env/config, refresh pipeline, then actual source location
 - **Key docs:**
   - `ufc-operator-web/HANDOFF.md`
 - **Risks / blockers:**
-  - visible snapshot may not reflect the full intended app state
-  - refresh scheduling may be fixed while underlying job still fails
+  - visible local snapshot does not currently preserve the full website/deploy implementation
+  - important state may currently live in Vercel rather than the visible workspace
+  - refresh scheduling may be fixed while the underlying job still fails
 
 ### 3) Social Clip OS
 - **Status:** BACKGROUND / PARTIALLY DOCUMENTED
