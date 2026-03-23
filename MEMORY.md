@@ -178,6 +178,8 @@ Related path:
 - stale fast job was disabled
 - John recalls that the UFC project also included a website at `https://www.ufcpickspro.com/`
 - John recalls that the site was deployed on Vercel and that password protection was added
+- live-site verification confirms the site currently returns `401` from **Vercel** with **HTTP Basic Auth**
+- confirmed auth header: `www-authenticate: Basic realm="UFC Picks Pro", charset="UTF-8"`
 - current caveat: the visible local workspace snapshot does **not** currently preserve obvious Vercel config or password-protection implementation details, so that deployment state may need to be recovered from Vercel rather than local files
 
 ### Resume caution

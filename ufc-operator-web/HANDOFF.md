@@ -9,6 +9,11 @@ This project exists in the active workspace, but current continuity notes say th
 What is known:
 - visible project path: `/Users/moey/.openclaw/workspace/ufc-operator-web`
 - related workspace folder also exists: `/Users/moey/.openclaw/workspace/ufc-analytics`
+- John recalls a UFC site at `https://www.ufcpickspro.com/`
+- John recalls that this site was deployed on Vercel and had password protection added
+- live-site verification now confirms the site is currently served by **Vercel** and protected by **HTTP Basic Auth**
+- confirmed auth header: `www-authenticate: Basic realm="UFC Picks Pro", charset="UTF-8"`
+- the currently visible local workspace snapshot does **not** preserve obvious Vercel config, password-protection code, or deployment metadata for that site
 - the local refresh cadence was intentionally slowed down
 - a stale fast refresh job was disabled
 
@@ -23,13 +28,15 @@ Operational notes already recovered:
 - disabled LaunchAgent: `com.moey.ufc-operator-live-odds-fast`
 - environment dependency: `.env.local`
 - important caveat: cadence was fixed, but refresh may still fail if env or app state is incomplete
+- deployment caveat: important deploy/protection state may currently live in Vercel rather than in the visible local files
 
 ## How to run / verify
 When resuming this project, first verify reality before coding:
 1. inspect project files and confirm the app state is actually present
 2. inspect `.env.local` and any refresh-related config/scripts
 3. verify the refresh path still works end-to-end
-4. only then make product/code changes
+4. if website/deploy behavior matters, verify Vercel-side project settings and protection state too
+5. only then make product/code changes
 
 ## Important files
 - `HANDOFF.md`
@@ -42,11 +49,12 @@ When resuming this project, first verify reality before coding:
 1. Verify the visible codebase is complete enough to work on
 2. Verify `.env.local` and refresh dependencies are intact
 3. Validate the refresh pipeline before changing logic or cadence again
+4. If `ufcpickspro.com` work resumes, recover the Vercel-side project state directly
 
 ## Known issues / risks
 - visible workspace snapshot may not represent the full intended app state
 - important deployment state may currently live in Vercel rather than in the visible local files
-- John specifically recalls `ufcpickspro.com` plus password protection, but that state is not currently recoverable from the visible workspace snapshot alone
+- John specifically recalls `ufcpickspro.com` plus password protection, and live-site verification confirms Basic Auth, but the implementation details are not currently recoverable from the visible workspace snapshot alone
 - logs may be present without a clean restorable runtime state
 - refresh scheduling may be fixed while the underlying job still fails
 
@@ -54,6 +62,5 @@ When resuming this project, first verify reality before coding:
 1. Read this file
 2. Inspect `.env.local` and runtime config
 3. Inspect refresh scripts/jobs
-4. Run validation checks before changing anything
-jobs
-4. Run validation checks before changing anything
+4. If website state matters, inspect Vercel directly
+5. Run validation checks before changing anything
