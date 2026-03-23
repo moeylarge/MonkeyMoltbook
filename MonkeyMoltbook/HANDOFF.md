@@ -4,7 +4,7 @@ Updated: 2026-03-23 America/Los_Angeles
 
 ## Current phase
 
-**Phase 6 — hook validation**
+**Phase 7 — session limit**
 
 ## Objective
 
@@ -17,22 +17,21 @@ Build a high-retention mobile app where users swipe through AI agents and get an
 - completed Phase 3 local agent system
 - completed Phase 4 swipe flow
 - completed Phase 5 preload queue
-- completed **Phase 6 — hook validation**
-- replaced the earlier loose validation check with a scored validation system
-- validation now checks:
-  - word-count limit
-  - greeting rejection
-  - soft-open rejection
-  - hedging rejection
-  - generic-positive rejection
-  - punctuation strength
-  - directness / tension / accusation signals
-- each hook payload now includes a `validation` object with:
-  - `valid`
-  - `score`
-  - `reasons`
-- health stats now expose total local hooks and valid-hook counts
-- preload batches carry validation metadata too
+- completed Phase 6 hook validation
+- completed **Phase 7 — session limit**
+- added local session-threshold tracking in the app for:
+  - swipes
+  - replies
+- thresholds are currently locked to:
+  - 10 swipes
+  - 3 replies
+- added a minimal gate overlay that appears only after both thresholds are met
+- added editable reply input and local reply capture
+- kept the gate as a shell only:
+  - no billing
+  - no provider integration
+  - no external purchase flow
+- preserved the single-screen surface and avoided extra navigation
 
 ## Verified proof
 
@@ -40,22 +39,24 @@ Build a high-retention mobile app where users swipe through AI agents and get an
 - `GET /health` returned:
   - `ok: true`
   - `app: MonkeyMoltbook`
-  - `phase: Phase 6 — hook validation`
-  - `localAgentCount: 12`
-  - `totalHookCount: 36`
-  - `validHookCount: 10`
-- repeated `GET /hook` calls returned Phase 6 payloads with validation metadata
-- `GET /preload?count=3` returned preload payloads with validation metadata
+  - `phase: Phase 7 — session limit`
+  - `validHookCount: 31`
+- mobile app bundle exported successfully with:
+  - `npx expo export --platform ios --output-dir dist-phase7`
+- exported bundle proved the current mobile app compiles successfully after session-limit shell integration
 
 ## Important current truth
 
-- the validation layer is working
-- a focused roster-cleanup pass was completed after initial validation
-- cleanly valid hooks improved from **10 / 36** to **21 / 36**, then to **31 / 36** after a second targeted cleanup pass
-- the roster is now materially stronger and no longer the obvious weakest layer
-- only 5 hooks remain below the clean-pass threshold under current rules
-- some hooks still flow through as low-score near-pass candidates instead of empty-state failures
-- this is now strong enough to continue building without fake confidence
+- the core loop now has:
+  - live first hook
+  - rotating local agents
+  - swipe progression
+  - preload queue
+  - hook validation
+  - minimal session-limit shell
+- the paywall/gate is still only a placeholder shell for behavior testing
+- no billing or account flow exists yet
+- the hook layer is materially stronger now with **31 / 36** hooks passing clean validation
 
 ## Locked constraints currently being honored
 
@@ -64,18 +65,17 @@ Build a high-retention mobile app where users swipe through AI agents and get an
 - no social / voice / TTS / memory persistence
 - no extra screens
 - no menus / profiles / settings
-- no response system yet
-- no session logic yet
+- no real billing yet
 - no Moltbook fetch path yet
 
 ## Next step
 
-Start **Phase 7 — session limit / monetization trigger shell** only:
-- track swipe/reply thresholds locally
-- add the minimum gating shell only when thresholds are hit
-- do not add real billing or provider work yet
-- alternatively, if John wants stronger hook quality before gating, do a focused hook-roster upgrade pass first
+The strictly defined build phases from John’s original directive are now covered through Phase 7.
+Best next step is to choose one of these intentionally:
+1. tighten the remaining 5 weak hooks
+2. start the post-MVP response quality system
+3. add controlled Moltbook ingestion under normalization + timeout + source-ratio rules
 
 ## Stop conditions
 
-If session-limit logic starts bloating the UI or interfering with the core swipe loop, stop and fix that before moving forward.
+If the next phase starts diluting the instant swipe loop or adds visible friction, stop and correct that before continuing.

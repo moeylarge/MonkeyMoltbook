@@ -26,14 +26,21 @@ const DEFAULT_API_URL = Platform.select({
 
 const SWIPE_THRESHOLD = -80;
 const PRELOAD_TARGET = 3;
+const SESSION_LIMITS = {
+  swipes: 10,
+  replies: 3
+};
 
 export default function App() {
   const [agentName, setAgentName] = useState('Connecting...');
   const [hook, setHook] = useState('');
   const [status, setStatus] = useState('Opening socket...');
   const [swipeCount, setSwipeCount] = useState(0);
+  const [replyCount, setReplyCount] = useState(0);
+  const [draftReply, setDraftReply] = useState('');
   const [isLoadingNext, setIsLoadingNext] = useState(false);
   const [queueDepth, setQueueDepth] = useState(0);
+  const [gateVisible, setGateVisible] = useState(false);
   const wsUrl = useMemo(() => DEFAULT_WS_URL, []);
   const apiUrl = useMemo(() => DEFAULT_API_URL, []);
   const translateX = useRef(new Animated.Value(0)).current;
@@ -43,6 +50,10 @@ export default function App() {
 
   const updateQueueDepth = () => {
     setQueueDepth(preloadQueueRef.current.length);
+  };
+
+  const shouldShowGate = (nextSwipes, nextReplies) => {
+    return nextSwipes >= SESSION_LIMITS.swipes && nextReplies >= SESSION_LIMITS.replies;
   };
 
   const applyHookPayload = (payload, sourceLabel = 'live hook') => {
@@ -85,7 +96,7 @@ export default function App() {
   };
 
   const advanceFromQueue = async () => {
-    if (isLoadingNext) return;
+    if (isLoadingNext || gateVisible) return;
 
     setIsLoadingNext(true);
 
@@ -99,9 +110,15 @@ export default function App() {
       updateQueueDepth();
 
       if (nextPayload) {
+        const nextSwipes = swipeCount + 1;
         applyHookPayload(nextPayload, 'preloaded');
-        setSwipeCount((value) => value + 1);
+        setSwipeCount(nextSwipes);
         void fillPreloadQueue(PRELOAD_TARGET);
+
+        if (shouldShowGate(nextSwipes, replyCount)) {
+          setGateVisible(true);
+          setStatus('Session gate triggered');
+        }
       } else {
         setStatus('No next hook available');
       }
@@ -114,7 +131,7 @@ export default function App() {
   };
 
   const triggerSwipeAdvance = () => {
-    if (isLoadingNext) return;
+    if (isLoadingNext || gateVisible) return;
 
     Animated.timing(translateX, {
       toValue: -160,
@@ -125,10 +142,25 @@ export default function App() {
     });
   };
 
+  const submitReply = () => {
+    const trimmed = draftReply.trim();
+    if (!trimmed || gateVisible) return;
+
+    const nextReplies = replyCount + 1;
+    setReplyCount(nextReplies);
+    setDraftReply('');
+    setStatus('Reply captured');
+
+    if (shouldShowGate(swipeCount, nextReplies)) {
+      setGateVisible(true);
+      setStatus('Session gate triggered');
+    }
+  };
+
   const panResponder = useMemo(
     () =>
       PanResponder.create({
-        onMoveShouldSetPanResponder: (_event, gestureState) => Math.abs(gestureState.dx) > 12,
+        onMoveShouldSetPanResponder: (_event, gestureState) => !gateVisible && Math.abs(gestureState.dx) > 12,
         onPanResponderMove: (_event, gestureState) => {
           if (gestureState.dx < 0) {
             translateX.setValue(gestureState.dx);
@@ -146,7 +178,7 @@ export default function App() {
           resetCardPosition();
         }
       }),
-    [isLoadingNext]
+    [isLoadingNext, gateVisible, swipeCount, replyCount]
   );
 
   useEffect(() => {
@@ -201,6 +233,7 @@ export default function App() {
         <Text style={styles.agentName}>{agentName}</Text>
         <View style={styles.statsBlock}>
           <Text style={styles.counter}>Swipes {swipeCount}</Text>
+          <Text style={styles.counter}>Replies {replyCount}</Text>
           <Text style={styles.counter}>Queued {queueDepth}</Text>
         </View>
       </View>
@@ -216,15 +249,37 @@ export default function App() {
 
       <View style={styles.inputBar}>
         <TextInput
-          editable={false}
+          editable={!gateVisible}
+          value={draftReply}
+          onChangeText={setDraftReply}
           placeholder="Reply"
           placeholderTextColor="#666"
           style={styles.input}
         />
-        <Pressable onPress={triggerSwipeAdvance} style={styles.nextButton}>
-          <Text style={styles.nextButtonText}>{isLoadingNext ? 'Loading...' : 'Next'}</Text>
-        </Pressable>
+        <View style={styles.actionRow}>
+          <Pressable onPress={submitReply} style={styles.secondaryButton}>
+            <Text style={styles.secondaryButtonText}>Send</Text>
+          </Pressable>
+          <Pressable onPress={triggerSwipeAdvance} style={styles.nextButton}>
+            <Text style={styles.nextButtonText}>{isLoadingNext ? 'Loading...' : 'Next'}</Text>
+          </Pressable>
+        </View>
       </View>
+
+      {gateVisible ? (
+        <View style={styles.gateOverlay}>
+          <View style={styles.gateCard}>
+            <Text style={styles.gateTitle}>Keep going?</Text>
+            <Text style={styles.gateBody}>
+              You hit the engagement threshold: {swipeCount} swipes and {replyCount} replies.
+            </Text>
+            <Text style={styles.gateMeta}>Phase 7 shell only — no billing wired yet.</Text>
+            <Pressable onPress={() => setGateVisible(false)} style={styles.gateButton}>
+              <Text style={styles.gateButtonText}>Continue testing</Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -299,7 +354,27 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#222222'
   },
+  actionRow: {
+    flexDirection: 'row',
+    gap: 10
+  },
+  secondaryButton: {
+    flex: 1,
+    minHeight: 46,
+    borderRadius: 14,
+    backgroundColor: '#141414',
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  secondaryButtonText: {
+    color: '#D5D5D5',
+    fontSize: 15,
+    fontWeight: '700'
+  },
   nextButton: {
+    flex: 1,
     minHeight: 46,
     borderRadius: 14,
     backgroundColor: '#1C1C1C',
@@ -310,6 +385,50 @@ const styles = StyleSheet.create({
   },
   nextButtonText: {
     color: '#F5F5F5',
+    fontSize: 15,
+    fontWeight: '700'
+  },
+  gateOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.78)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24
+  },
+  gateCard: {
+    width: '100%',
+    borderRadius: 20,
+    backgroundColor: '#121212',
+    borderWidth: 1,
+    borderColor: '#292929',
+    padding: 22,
+    gap: 12
+  },
+  gateTitle: {
+    color: '#FFFFFF',
+    fontSize: 26,
+    fontWeight: '800'
+  },
+  gateBody: {
+    color: '#D6D6D6',
+    fontSize: 16,
+    lineHeight: 24
+  },
+  gateMeta: {
+    color: '#8C8C8C',
+    fontSize: 13,
+    lineHeight: 20
+  },
+  gateButton: {
+    minHeight: 48,
+    borderRadius: 14,
+    backgroundColor: '#222222',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 6
+  },
+  gateButtonText: {
+    color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '700'
   }

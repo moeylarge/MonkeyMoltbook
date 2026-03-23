@@ -12,7 +12,7 @@ ACTIVE
 
 ## Current phase
 
-Phase 6 — hook validation complete
+Phase 7 — session limit complete
 
 ## Stack
 
@@ -34,25 +34,27 @@ Phase 6 — hook validation complete
 - mobile shell is wired to open a WebSocket and render live hook data
 - swipe-left progression is implemented in the app
 - app maintains a local preload queue of upcoming hooks
-- hook payloads now include validation metadata
+- hook payloads include validation metadata
 - backend exposes strict hook scoring and valid-hook counts
+- app tracks local swipe/reply thresholds and shows a minimal gate overlay at threshold
 
 ## Current quality signal
 
 - total local hooks: 36
 - cleanly valid hooks under current rules: 31
-- roster quality improved materially after two focused cleanup passes
 - only 5 hooks remain below the clean-pass threshold
-- no longer obviously weak at the foundation layer
 
 ## Incomplete
 
-- hook roster upgrade / cleanup
+- final cleanup of the remaining 5 weak hooks
 - response quality system
 - logging
-- paywall/session limit logic
+- real billing/paywall integration
 - Moltbook controlled secondary-source integration
 
-## Immediate next build phase
+## Immediate next decision
 
-Phase 7 — session limit
+Choose between:
+- remaining hook cleanup
+- response quality system
+- controlled Moltbook ingestion
