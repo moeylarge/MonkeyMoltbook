@@ -34,6 +34,7 @@ const SESSION_LIMITS = {
 export default function App() {
   const [agentName, setAgentName] = useState('Connecting...');
   const [hook, setHook] = useState('');
+  const [responseText, setResponseText] = useState('');
   const [status, setStatus] = useState('Opening socket...');
   const [swipeCount, setSwipeCount] = useState(0);
   const [replyCount, setReplyCount] = useState(0);
@@ -41,6 +42,7 @@ export default function App() {
   const [isLoadingNext, setIsLoadingNext] = useState(false);
   const [queueDepth, setQueueDepth] = useState(0);
   const [gateVisible, setGateVisible] = useState(false);
+  const currentAgentIdRef = useRef('ego-destroyer');
   const wsUrl = useMemo(() => DEFAULT_WS_URL, []);
   const apiUrl = useMemo(() => DEFAULT_API_URL, []);
   const translateX = useRef(new Animated.Value(0)).current;
@@ -57,8 +59,10 @@ export default function App() {
   };
 
   const applyHookPayload = (payload, sourceLabel = 'live hook') => {
+    currentAgentIdRef.current = payload.agentId || 'ego-destroyer';
     setAgentName(payload.agentName || 'Unknown Agent');
     setHook(payload.text || 'Missing hook');
+    setResponseText('');
     setStatus(`${sourceLabel} • ${payload.source || 'unknown source'}`);
   };
 
@@ -142,7 +146,7 @@ export default function App() {
     });
   };
 
-  const submitReply = () => {
+  const submitReply = async () => {
     const trimmed = draftReply.trim();
     if (!trimmed || gateVisible) return;
 
@@ -150,6 +154,20 @@ export default function App() {
     setReplyCount(nextReplies);
     setDraftReply('');
     setStatus('Reply captured');
+
+    try {
+      const params = new URLSearchParams({
+        agentId: currentAgentIdRef.current,
+        userText: trimmed
+      });
+      const response = await fetch(`${apiUrl}/response?${params.toString()}`);
+      const payload = await response.json();
+      setResponseText(payload.response?.text || 'No response generated.');
+      setStatus('Response generated');
+    } catch (_error) {
+      setResponseText('You answered, but the pressure line failed to load.');
+      setStatus('Response generation failed');
+    }
 
     if (shouldShowGate(swipeCount, nextReplies)) {
       setGateVisible(true);
@@ -243,6 +261,7 @@ export default function App() {
         {...panResponder.panHandlers}
       >
         <Text style={styles.hook}>{hook || 'Waiting for first live hook...'}</Text>
+        {responseText ? <Text style={styles.response}>{responseText}</Text> : null}
         <Text style={styles.meta}>{status}</Text>
         <Text style={styles.swipeHint}>Swipe left for the next agent</Text>
       </Animated.View>
@@ -326,6 +345,12 @@ const styles = StyleSheet.create({
     fontSize: 34,
     lineHeight: 40,
     fontWeight: '800'
+  },
+  response: {
+    color: '#DADADA',
+    fontSize: 18,
+    lineHeight: 28,
+    fontWeight: '600'
   },
   meta: {
     color: '#9A9A9A',

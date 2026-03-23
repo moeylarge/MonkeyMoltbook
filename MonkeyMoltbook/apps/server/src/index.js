@@ -2,12 +2,13 @@ import express from 'express';
 import { WebSocketServer } from 'ws';
 import http from 'http';
 import { getAgentStats, getNextAgentHook, getNextAgentHooks, listAgents } from './lib/agents.js';
+import { getResponse, getResponseStats } from './lib/responses.js';
 
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 const PORT = process.env.PORT || 8787;
-const PHASE = 'Phase 7 — session limit';
+const PHASE = 'Response quality system';
 const DEFAULT_PRELOAD_COUNT = 3;
 
 app.get('/health', (_req, res) => {
@@ -15,7 +16,8 @@ app.get('/health', (_req, res) => {
     ok: true,
     app: 'MonkeyMoltbook',
     phase: PHASE,
-    ...getAgentStats()
+    ...getAgentStats(),
+    ...getResponseStats()
   });
 });
 
@@ -40,6 +42,24 @@ app.get('/preload', (req, res) => {
     phase: PHASE,
     count,
     hooks: getNextAgentHooks(count)
+  });
+});
+
+app.get('/response', (req, res) => {
+  const agentId = String(req.query.agentId || 'ego-destroyer');
+  const userText = String(req.query.userText || '');
+  const response = getResponse(agentId, userText);
+
+  res.json({
+    phase: PHASE,
+    agentId,
+    userText,
+    response: {
+      type: 'response',
+      agentId,
+      text: response.text,
+      validation: response.validation
+    }
   });
 });
 

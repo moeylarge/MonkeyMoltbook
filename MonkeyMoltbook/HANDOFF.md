@@ -4,7 +4,7 @@ Updated: 2026-03-23 America/Los_Angeles
 
 ## Current phase
 
-**Phase 7 — session limit**
+**Response quality system**
 
 ## Objective
 
@@ -18,20 +18,18 @@ Build a high-retention mobile app where users swipe through AI agents and get an
 - completed Phase 4 swipe flow
 - completed Phase 5 preload queue
 - completed Phase 6 hook validation
-- completed **Phase 7 — session limit**
-- added local session-threshold tracking in the app for:
-  - swipes
-  - replies
-- thresholds are currently locked to:
-  - 10 swipes
-  - 3 replies
-- added a minimal gate overlay that appears only after both thresholds are met
-- added editable reply input and local reply capture
-- kept the gate as a shell only:
-  - no billing
-  - no provider integration
-  - no external purchase flow
-- preserved the single-screen surface and avoided extra navigation
+- completed Phase 7 session-limit shell
+- completed **response quality system**
+- added per-agent response banks for all 12 archetypes
+- added response selection rules designed to avoid:
+  - agreement-only replies
+  - passive neutral replies
+  - weak generic follow-ups
+- added lightweight response validation with score + reasons
+- added `/response` endpoint to generate the next pressure/challenge line from the current agent
+- wired mobile reply submission to fetch and render the generated follow-up line in-app
+- kept everything local and deterministic
+- fixed two write-merge breakages during proof (`index.js` and `App.js`) and re-ran verification cleanly
 
 ## Verified proof
 
@@ -39,29 +37,24 @@ Build a high-retention mobile app where users swipe through AI agents and get an
 - `GET /health` returned:
   - `ok: true`
   - `app: MonkeyMoltbook`
-  - `phase: Phase 7 — session limit`
-  - `validHookCount: 31`
+  - `phase: Response quality system`
+  - `responseAgentCount: 12`
+- `GET /response?agentId=brutal-life-coach&userText=No%20I%20am%20just%20busy` returned a valid pressure response with validation metadata
 - mobile app bundle exported successfully with:
-  - `npx expo export --platform ios --output-dir dist-phase7`
-- exported bundle proved the current mobile app compiles successfully after session-limit shell integration
+  - `npx expo export --platform ios --output-dir dist-response-quality`
+- exported bundle proved the current mobile app compiles successfully after response-system integration
 
 ## Important current truth
 
-- the core loop now has:
-  - live first hook
-  - rotating local agents
-  - swipe progression
-  - preload queue
-  - hook validation
-  - minimal session-limit shell
-- the paywall/gate is still only a placeholder shell for behavior testing
-- no billing or account flow exists yet
-- the hook layer is materially stronger now with **31 / 36** hooks passing clean validation
+- the app now has a real post-hook behavior layer, not just opening lines
+- response generation is still template-driven/local, not model-driven
+- this is good for speed and control at the current stage
+- hook layer remains materially stronger at **31 / 36** clean-valid hooks
+- Moltbook is still not connected yet
 
 ## Locked constraints currently being honored
 
-- phase-by-phase execution only
-- no feature expansion
+- no feature expansion beyond current requested systems
 - no social / voice / TTS / memory persistence
 - no extra screens
 - no menus / profiles / settings
@@ -70,12 +63,12 @@ Build a high-retention mobile app where users swipe through AI agents and get an
 
 ## Next step
 
-The strictly defined build phases from John’s original directive are now covered through Phase 7.
-Best next step is to choose one of these intentionally:
-1. tighten the remaining 5 weak hooks
-2. start the post-MVP response quality system
-3. add controlled Moltbook ingestion under normalization + timeout + source-ratio rules
+Best next step is **controlled Moltbook ingestion**:
+- normalize remote agent data into the local schema
+- enforce timeout / caching / source-ratio rules
+- keep local as primary and Moltbook as secondary
+- do not let Moltbook degrade latency or hook quality
 
 ## Stop conditions
 
-If the next phase starts diluting the instant swipe loop or adds visible friction, stop and correct that before continuing.
+If Moltbook integration harms latency, quality, or deterministic fallback behavior, disable it and keep local primary.
