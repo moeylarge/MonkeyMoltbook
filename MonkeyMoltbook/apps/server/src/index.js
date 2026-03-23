@@ -7,7 +7,7 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 const PORT = process.env.PORT || 8787;
-const PHASE = 'Phase 3 — agents';
+const PHASE = 'Phase 4 — swipe';
 
 app.get('/health', (_req, res) => {
   res.json({

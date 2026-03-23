@@ -12,7 +12,7 @@ ACTIVE
 
 ## Current phase
 
-Phase 3 — agents complete
+Phase 4 — swipe complete
 
 ## Stack
 
@@ -32,11 +32,12 @@ Phase 3 — agents complete
 - WebSocket server accepts connections and sends boot payload
 - WebSocket server sends live rotating hook payloads
 - mobile shell is wired to open a WebSocket and render live hook data
-- Expo config validates
+- swipe-left progression is implemented in the app
+- next hook fetch triggers on swipe and on fallback button press
+- Expo mobile bundle export succeeds from the monorepo layout
 
 ## Incomplete
 
-- swipe engine
 - preload system
 - response quality system
 - logging
@@ -45,4 +46,4 @@ Phase 3 — agents complete
 
 ## Immediate next build phase
 
-Phase 4 — swipe
+Phase 5 — preload

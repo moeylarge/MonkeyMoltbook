@@ -2,7 +2,7 @@
   "name": "@monkeymoltbook/mobile",
   "version": "0.0.1",
   "private": true,
-  "main": "expo/AppEntry.js",
+  "main": "./App.js",
   "scripts": {
     "start": "expo start",
     "ios": "expo start --ios",

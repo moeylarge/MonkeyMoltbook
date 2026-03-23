@@ -4,7 +4,7 @@ Updated: 2026-03-23 America/Los_Angeles
 
 ## Current phase
 
-**Phase 3 — agents**
+**Phase 4 — swipe**
 
 ## Objective
 
@@ -14,31 +14,15 @@ Build a high-retention mobile app where users swipe through AI agents and get an
 
 - completed Phase 1 scaffold
 - completed Phase 2 chat wiring
-- completed **Phase 3 — agents**
-- defined a normalized local agent roster with 12 archetypes:
-  - Ego Destroyer
-  - Overconfident Billionaire
-  - Clingy Partner
-  - Conspiracy Theorist
-  - Gym Analyzer
-  - Brutal Life Coach
-  - Internet Troll
-  - Philosopher
-  - Flirty Charmer (safe mode)
-  - Startup Founder
-  - Comedian Roaster
-  - AI That Thinks It's Human
-- added deterministic local agent rotation logic
-- added lightweight hook validation rules:
-  - max 12 words
-  - no greeting-style hooks
-  - strong/direct phrasing required
-- added recent-hook anti-repeat window tracking
-- exposed backend endpoints for:
-  - `/health`
-  - `/agents`
-  - `/hook`
-- kept source mix local-only for now so Moltbook can be integrated later as a controlled secondary source
+- completed Phase 3 local agent system
+- completed **Phase 4 — swipe**
+- added swipe-left progression in the mobile app using `PanResponder`
+- added animated card movement for swipe transitions
+- added instant next-hook fetch from `GET /hook` after swipe
+- added local swipe counter in the UI for proof of progression
+- added a small `Next` button fallback so progression can still be tested without relying only on gesture recognition
+- kept the product surface on one screen with no extra navigation
+- fixed Expo app entry resolution so the mobile bundle exports correctly from the monorepo layout
 
 ## Verified proof
 
@@ -46,14 +30,12 @@ Build a high-retention mobile app where users swipe through AI agents and get an
 - `GET /health` returned:
   - `ok: true`
   - `app: MonkeyMoltbook`
-  - `phase: Phase 3 — agents`
+  - `phase: Phase 4 — swipe`
   - `localAgentCount: 12`
-- `GET /agents` returned 12 normalized local agents
-- repeated `GET /hook` calls returned different rotating hooks across the roster
-- WebSocket returned, in order:
-  1. boot payload
-  2. current hook payload
-- mobile shell remains connected to live backend hook delivery
+- repeated `GET /hook` calls returned rotating hooks with Phase 4 labels
+- mobile app bundle exported successfully with:
+  - `npx expo export --platform ios --output-dir dist-phase4`
+- exported bundle proved the current mobile app compiles successfully after swipe integration
 
 ## Locked constraints currently being honored
 
@@ -62,16 +44,17 @@ Build a high-retention mobile app where users swipe through AI agents and get an
 - no social / voice / TTS / memory persistence
 - no extra screens
 - no menus / profiles / settings
+- no preload/session systems added yet
 - Moltbook not yet coupled into the live path
 
 ## Next step
 
-Start **Phase 4 — swipe** only:
-- add swipe-left progression in the mobile app
-- trigger next hook load instantly from the existing local backend
-- keep transitions minimal and single-screen
-- avoid preload/session systems until swipe behavior is proven
+Start **Phase 5 — preload** only:
+- preload upcoming hooks ahead of the current card
+- keep local source primary
+- make swipe progression feel instant even across repeated advances
+- do not add session logic or Moltbook fetches until preload behavior is proven
 
 ## Stop conditions
 
-If swipe progression becomes unstable, visually slow, or dependent on extra systems not yet built, stop and fix Phase 4 before moving on.
+If preload adds visible complexity, unstable state transitions, or slows the current swipe loop, stop and fix that before moving forward.

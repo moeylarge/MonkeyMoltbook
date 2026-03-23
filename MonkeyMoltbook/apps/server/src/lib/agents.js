@@ -66,7 +66,7 @@ export function getNextAgentHook() {
     style: agent.style,
     text: selectNextHook(agent),
     source: agent.source,
-    phase: 'Phase 3 — agents'
+    phase: 'Phase 4 — swipe'
   };
 }
 
