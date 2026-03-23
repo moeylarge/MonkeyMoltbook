@@ -12,7 +12,7 @@ ACTIVE
 
 ## Current phase
 
-Phase 5 — preload complete
+Phase 6 — hook validation complete
 
 ## Stack
 
@@ -34,12 +34,18 @@ Phase 5 — preload complete
 - mobile shell is wired to open a WebSocket and render live hook data
 - swipe-left progression is implemented in the app
 - app maintains a local preload queue of upcoming hooks
-- next hook display can advance from the preload queue for faster repeated progression
-- Expo mobile bundle export succeeds from the monorepo layout
+- hook payloads now include validation metadata
+- backend exposes strict hook scoring and valid-hook counts
+
+## Current quality signal
+
+- total local hooks: 36
+- cleanly valid hooks under current rules: 10
+- current roster quality is not yet strong enough for final confidence
 
 ## Incomplete
 
-- hook validation hardening
+- hook roster upgrade / cleanup
 - response quality system
 - logging
 - paywall/session limit logic
@@ -47,4 +53,4 @@ Phase 5 — preload complete
 
 ## Immediate next build phase
 
-Phase 6 — hook validation
+Phase 7 — session limit

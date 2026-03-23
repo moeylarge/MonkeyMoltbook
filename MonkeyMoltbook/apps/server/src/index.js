@@ -7,7 +7,7 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 const PORT = process.env.PORT || 8787;
-const PHASE = 'Phase 5 — preload';
+const PHASE = 'Phase 6 — hook validation';
 const DEFAULT_PRELOAD_COUNT = 3;
 
 app.get('/health', (_req, res) => {

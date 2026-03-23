@@ -4,7 +4,7 @@ Updated: 2026-03-23 America/Los_Angeles
 
 ## Current phase
 
-**Phase 5 — preload**
+**Phase 6 — hook validation**
 
 ## Objective
 
@@ -16,15 +16,23 @@ Build a high-retention mobile app where users swipe through AI agents and get an
 - completed Phase 2 chat wiring
 - completed Phase 3 local agent system
 - completed Phase 4 swipe flow
-- completed **Phase 5 — preload**
-- added local preload queue behavior in the mobile app
-- queue target is kept at 3 upcoming hooks
-- first live hook still arrives through WebSocket on connect
-- upcoming hooks are refilled through a dedicated preload request path
-- swipe progression now advances primarily from the in-memory queue instead of waiting on a fresh network fetch each time
-- queue depth is visible in the UI for proof/debugging
-- kept the surface single-screen and avoided session logic, paywall logic, and Moltbook coupling
-- fixed a backend syntax break during proof and re-ran verification cleanly
+- completed Phase 5 preload queue
+- completed **Phase 6 — hook validation**
+- replaced the earlier loose validation check with a scored validation system
+- validation now checks:
+  - word-count limit
+  - greeting rejection
+  - soft-open rejection
+  - hedging rejection
+  - generic-positive rejection
+  - punctuation strength
+  - directness / tension / accusation signals
+- each hook payload now includes a `validation` object with:
+  - `valid`
+  - `score`
+  - `reasons`
+- health stats now expose total local hooks and valid-hook counts
+- preload batches carry validation metadata too
 
 ## Verified proof
 
@@ -32,13 +40,20 @@ Build a high-retention mobile app where users swipe through AI agents and get an
 - `GET /health` returned:
   - `ok: true`
   - `app: MonkeyMoltbook`
-  - `phase: Phase 5 — preload`
+  - `phase: Phase 6 — hook validation`
   - `localAgentCount: 12`
-- `GET /preload?count=3` returned a 3-hook preload batch successfully
-- preload payloads now carry correct Phase 5 labels
-- mobile app bundle exported successfully with:
-  - `npx expo export --platform ios --output-dir dist-phase5`
-- exported bundle proved the current mobile app compiles successfully after preload integration
+  - `totalHookCount: 36`
+  - `validHookCount: 10`
+- repeated `GET /hook` calls returned Phase 6 payloads with validation metadata
+- `GET /preload?count=3` returned preload payloads with validation metadata
+
+## Important current truth
+
+- the validation layer is working
+- the current local hook inventory is weaker than desired under stricter rules
+- only **10 / 36** hooks currently pass cleanly
+- some hooks still flow through as low-score near-pass candidates instead of empty-state failures
+- this is acceptable for now because the phase goal was to prove validation, not rewrite the entire hook inventory yet
 
 ## Locked constraints currently being honored
 
@@ -47,17 +62,18 @@ Build a high-retention mobile app where users swipe through AI agents and get an
 - no social / voice / TTS / memory persistence
 - no extra screens
 - no menus / profiles / settings
+- no response system yet
 - no session logic yet
 - no Moltbook fetch path yet
 
 ## Next step
 
-Start **Phase 6 — hook validation** only:
-- harden hook quality checks
-- reject weak/opening-line patterns more aggressively
-- keep current local roster but improve consistency enforcement
-- do not add response system or session logic until hook validation is proven
+Start **Phase 7 — session limit / monetization trigger shell** only:
+- track swipe/reply thresholds locally
+- add the minimum gating shell only when thresholds are hit
+- do not add real billing or provider work yet
+- alternatively, if John wants stronger hook quality before gating, do a focused hook-roster upgrade pass first
 
 ## Stop conditions
 
-If stronger validation starts collapsing too many valid hooks or causes unstable empty states, stop and fix that before moving forward.
+If session-limit logic starts bloating the UI or interfering with the core swipe loop, stop and fix that before moving forward.
