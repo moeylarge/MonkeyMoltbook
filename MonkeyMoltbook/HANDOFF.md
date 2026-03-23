@@ -4,7 +4,7 @@ Updated: 2026-03-23 America/Los_Angeles
 
 ## Current phase
 
-**Phase 1 — scaffold**
+**Phase 3 — agents**
 
 ## Objective
 
@@ -12,23 +12,33 @@ Build a high-retention mobile app where users swipe through AI agents and get an
 
 ## What was done
 
-- created new project root: `/Users/moey/.openclaw/workspace/MonkeyMoltbook`
-- created monorepo workspace structure:
-  - `apps/mobile`
-  - `apps/server`
-  - `packages/shared`
-  - `docs`
-- added locked MVP doc based on John’s directive
-- scaffolded Expo-based React Native mobile shell with:
-  - single-screen layout
-  - top agent name
-  - center chat area
-  - bottom input bar
-  - dark high-contrast visual baseline
-- scaffolded Node.js Express + WebSocket backend with `/health` and initial WS boot message
-- installed dependencies successfully
-- verified backend health endpoint returns success
-- verified Expo config resolves successfully
+- completed Phase 1 scaffold
+- completed Phase 2 chat wiring
+- completed **Phase 3 — agents**
+- defined a normalized local agent roster with 12 archetypes:
+  - Ego Destroyer
+  - Overconfident Billionaire
+  - Clingy Partner
+  - Conspiracy Theorist
+  - Gym Analyzer
+  - Brutal Life Coach
+  - Internet Troll
+  - Philosopher
+  - Flirty Charmer (safe mode)
+  - Startup Founder
+  - Comedian Roaster
+  - AI That Thinks It's Human
+- added deterministic local agent rotation logic
+- added lightweight hook validation rules:
+  - max 12 words
+  - no greeting-style hooks
+  - strong/direct phrasing required
+- added recent-hook anti-repeat window tracking
+- exposed backend endpoints for:
+  - `/health`
+  - `/agents`
+  - `/hook`
+- kept source mix local-only for now so Moltbook can be integrated later as a controlled secondary source
 
 ## Verified proof
 
@@ -36,12 +46,14 @@ Build a high-retention mobile app where users swipe through AI agents and get an
 - `GET /health` returned:
   - `ok: true`
   - `app: MonkeyMoltbook`
-  - `phase: Phase 2 — chat`
-- `GET /hook` returned the live first-hook payload
-- WebSocket connection returned, in order:
+  - `phase: Phase 3 — agents`
+  - `localAgentCount: 12`
+- `GET /agents` returned 12 normalized local agents
+- repeated `GET /hook` calls returned different rotating hooks across the roster
+- WebSocket returned, in order:
   1. boot payload
-  2. hook payload
-- `npx expo config --json` had already succeeded in `apps/mobile` during scaffold verification
+  2. current hook payload
+- mobile shell remains connected to live backend hook delivery
 
 ## Locked constraints currently being honored
 
@@ -50,15 +62,16 @@ Build a high-retention mobile app where users swipe through AI agents and get an
 - no social / voice / TTS / memory persistence
 - no extra screens
 - no menus / profiles / settings
+- Moltbook not yet coupled into the live path
 
 ## Next step
 
-Start **Phase 2 — chat** only:
-- wire mobile app to backend WebSocket
-- receive first boot/hook message in UI
-- keep response path text-only
-- preserve single-screen surface
+Start **Phase 4 — swipe** only:
+- add swipe-left progression in the mobile app
+- trigger next hook load instantly from the existing local backend
+- keep transitions minimal and single-screen
+- avoid preload/session systems until swipe behavior is proven
 
 ## Stop conditions
 
-If chat cannot be made deterministic enough for the current phase or dependencies fail repeatedly, stop and report exact blocker.
+If swipe progression becomes unstable, visually slow, or dependent on extra systems not yet built, stop and fix Phase 4 before moving on.
