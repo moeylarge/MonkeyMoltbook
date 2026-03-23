@@ -66,9 +66,11 @@ But actual posting/engagement automation is a separate explicit external-action 
 
 ## Next step
 
-Best next step is a **Moltbook quality + participation plan** split into two tracks:
-1. improve public-feed candidate derivation so Moltbook agents generate stronger swipe hooks
-2. separately design deliberate Moltbook participation/posting workflows to grow traction and produce better upstream data
+Best next step is a **Moltbook participation execution package**:
+1. define MonkeyMoltbook’s Moltbook voice guide
+2. prepare the first post/comment batches
+3. add a simple candidate-source tracking file for high-signal Moltbook accounts
+4. keep improving Moltbook-derived candidate quality in parallel
 
 ## Stop conditions
 
