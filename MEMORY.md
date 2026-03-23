@@ -1,98 +1,86 @@
 # MEMORY.md
 
-## FACEMAXX
+## Identity / continuity warning
 
-FACEMAXX is the current primary project and lives at `/Users/moey/.openclaw/workspace/facemaxx-mobile`.
+If persona/user identity matters, it must be written into `IDENTITY.md`, `USER.md`, daily memory files, or this file. Do not assume prior chat history alone is enough.
 
-As of 2026-03-20, FACEMAXX has progressed from recovery/state-loss mode into a prototype-complete, review-ready build.
+## Project memory system
 
-Completed layers:
-- core flow
-- breakdown engine
-- identity/progression framing
-- improvement engine
-- retention systems
-- viral/share systems
-- monetization framing
-- follow-up refinement pass
+Use this continuity split going forward:
+- `PROJECTS.md` → canonical index of all projects
+- `NOW.md` → only the current active project / resume point
+- `HANDOFF.md` → recovery path after UI/session/daemon failures
+- `MEMORY.md` → durable decisions worth keeping across sessions
+- project-local `HANDOFF.md` / `STATUS.md` → implementation-state truth close to the code
 
-Important upgrades completed on 2026-03-20:
-- timeline graph + best-version card
-- copy shifted toward optimization/potential framing
-- battle mode upgraded toward real two-face compare
-- multiple caption/share tones
-- image-derived local analysis replaced older seed/hash-only scoring behavior
+## LooksMaxx / FACEMAXX / LooksMaxxing
+
+LooksMaxx is the current primary project and lives at `/Users/moey/.openclaw/workspace/facemaxx-mobile`.
+
+Older notes may refer to the same project as **FACEMAXX** or **LooksMaxxing**.
+Current brand direction is now settled around **LooksMaxx**.
+
+### Durable state
+- the project has moved far beyond the original prototype shell
+- app now uses a real local analysis backend path by default for scans/battle analysis, with heuristic fallback when needed
 - battle mode now supports a real second uploaded image and second analysis pass
-- structured measurement vectors now exist in app scan records, including landmarks/ratios/symmetry/quality/confidence/rejection outputs
-- scans now create local training-style dataset export records for future model work
-- scans now also write file-based JSON sample exports through Expo file system
-- v2 docs now include roadmap, measurement schema, dataset schema, rating rubric, model plan, and training scaffold
+- structured measurement vectors exist in scan records
+- scans create local dataset-style export records and file-based JSON sample exports
+- app/product surface has been materially polished beyond early mock-flow stage
 
-Current recommendation:
-- FACEMAXX now also has a documented v2 roadmap for real measurement / dataset / model / calibration work
-- the workspace now includes a real labeling scaffold under `facemaxx-mobile/training/` with annotation schema/template, merge rules, status docs, raw/annotation/merged/review folders, a manifest builder script, an annotation merge script, and a first-batch rater packet
-- the chosen technical direction for the next serious engine upgrade is the fuller local stack: OpenCV + InsightFace + MediaPipe + FACEMAXX calibration, scaffolded under `facemaxx-mobile/analysis-backend/`
-- `analysis-backend/` now contains initial Python modules for preprocessing, detection/alignment, landmarks, calibration, FastAPI server, requirements, and usage docs, and the local backend environment installs successfully with a passing `/health` check
-- `/analyze` now works end-to-end against a real face test image: OpenCV preprocessing works, InsightFace detection works, MediaPipe landmark extraction works via the Tasks API, and FACEMAXX calibration returns a structured payload
-- FACEMAXX app now prefers the local backend endpoint for primary scans and battle-image analysis, while retaining heuristic fallback
-- response mapping was deepened so backend quality/detection/landmark results now influence UI explanations and stored measurement quality fields more directly
-- backend now emits richer ratio/symmetry-style measurements, and the app now uses more of those fields in stored measurements, identity copy, battle explanation, recommendation detail, and visible UI panels
-- archetype/recommendation logic is now more explicitly driven by measurement fields like jaw ratio, face ratio, symmetry, and backend quality/confidence signals
-- before attempting a deeply trained attractiveness model, use the roadmap files in `facemaxx-mobile/` to build the measurement schema, dataset, and v1 model pipeline
-- only add real monetization plumbing after validating the product loop
+### Backend direction
+- chosen local stack:
+  - OpenCV
+  - InsightFace
+  - MediaPipe
+  - local calibration layer
+- backend location: `facemaxx-mobile/analysis-backend/`
+- health endpoint: `http://127.0.0.1:8089/health`
+- `/analyze` has been verified end-to-end on a real face image
+- do **not** switch to a hosted third-party analysis API right now
 
-Recovery files to read first if context is lost:
+### Product direction
+- current top product priority is making the **$4.99 one-time Full Review** feel excellent
+- monthly Pro is a later step and should not launch until recurring-value features are real
+- use the app like a real product for a while; if something feels off twice, log it and then fix it
+
+### Current best next steps
+1. Continue visual review/polish of the live app
+2. Tighten weak copy/labels and remove trust-breaking or developer-ish UI
+3. Continue backend/app refinement so recommendations and battle reasoning become more measurement-driven and less hand-tuned
+4. Start collecting the first real consented participant/labeled sample batch when ready
+
+### Important docs
 - `PROJECTS.md`
 - `NOW.md`
 - `HANDOFF.md`
+- `facemaxx-mobile/HANDOFF.md`
+- `facemaxx-mobile/STATUS.md`
 - `facemaxx-mobile/REVIEW_CHECKLIST.md`
+- `facemaxx-mobile/analysis-backend/README.md`
+- `facemaxx-mobile/LOOKSMAXXING_V2_ROADMAP.md`
 
+## UFC betting engine / website
 
-End-of-context save:
-- FACEMAXX has moved far beyond the original prototype. The app now uses a real local analysis backend path by default for scans/battle analysis, with fallback to the older in-app heuristic path if the backend is unavailable.
-- Local backend stack chosen and working: OpenCV + InsightFace + MediaPipe + FACEMAXX calibration.
-- Backend location: `facemaxx-mobile/analysis-backend/`
-- Backend health endpoint: `http://127.0.0.1:8089/health`
-- Web app local preview: `http://127.0.0.1:19008/`
-- Proven backend status:
-  - OpenCV preprocessing works
-  - InsightFace detection works
-  - MediaPipe landmarks work via Tasks API
-  - `/analyze` returns a structured FACEMAXX payload end-to-end
-- App integration status:
-  - app now prefers backend analysis for main scans and battle image analysis
-  - richer backend measurements now feed stored measurement data, explanation copy, visible UI panels, battle reasoning, and recommendation detail
-  - backend measurement panel + geometry readout are visible in UI
-  - archetype/recommendation behavior is now more measurement-driven
-- Training/data pipeline status:
-  - structured measurement vectors exist in app scan records
-  - confidence/rejection logic exists
-  - scans create local dataset export records
-  - scans also write file-based JSON sample exports
-  - training scaffold exists under `facemaxx-mobile/training/`
-  - labeling workflow exists
-  - manifest builder exists
-  - annotation merge workflow exists
-  - first 25-sample batch packet exists
-  - incoming participant folder structure + Desktop shortcut exist
-- Easy-access training folder symlink: `~/Desktop/FACEMAXX-training`
-- Current important training/backend docs to read first in a new session:
-  - `facemaxx-mobile/FULL_STACK_INTEGRATION_PLAN.md`
-  - `facemaxx-mobile/FACEMAXX_V2_ROADMAP.md`
-  - `facemaxx-mobile/analysis-backend/README.md`
-  - `facemaxx-mobile/analysis-backend/USAGE.md`
-  - `facemaxx-mobile/training/STATUS.md`
-  - `facemaxx-mobile/training/FIRST_BATCH_PLAN.md`
-  - `facemaxx-mobile/REVIEW_CHECKLIST.md`
-- Best next steps after context reset:
-  1. Continue visual review/polish of the live app now that backend measurements are visible
-  2. Tighten any weak copy/labels revealed in visual review (especially upload/result/developer-ish labels)
-  3. Continue backend/app refinement so more measurement fields influence battle reasoning and recommendations
-  4. In parallel, start collecting the first real consented participant batch and place exports into `training/raw-exports/`
-- Most important recent commits near the current state:
-  - `f7b18e9` — fix MediaPipe integration and pass analyze test
-  - `3b70047` — connect app scans to local analysis backend
-  - `91ff585` — deepen backend response mapping in app
-  - `28bd2a3` — enrich backend measurements and app mapping
-  - `ed3edc3` — surface backend measurements in UI
-  - `1ddaa56` — make archetype and recommendations more measurement-driven
+- visible project path: `/Users/moey/.openclaw/workspace/ufc-operator-web`
+- related path: `/Users/moey/.openclaw/workspace/ufc-analytics`
+- refresh cadence was intentionally changed to every 12 hours
+- stale fast job was disabled
+- caveat: env/config and real runtime state should be verified before resuming work
+- local continuity file: `ufc-operator-web/HANDOFF.md`
+
+## Social Clip OS
+
+- path: `/Users/moey/.openclaw/workspace/social-clip-os`
+- project exists and currently has a documented Kick lower-third workflow
+- continuity is thinner here than in LooksMaxx
+- if resumed, start with `social-clip-os/HANDOFF.md` and `social-clip-os/templates/kick/README.md`
+
+## Recovery rule
+
+After context loss, future-me should be able to answer within about 60 seconds:
+1. what projects exist
+2. which one is active
+3. where the code lives
+4. what changed recently
+5. what should happen next

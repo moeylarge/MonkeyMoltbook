@@ -1,44 +1,93 @@
 # PROJECTS.md
 
-This is the canonical project list for fast recovery after resets, daemon issues, or context loss.
+This is the canonical project index for fast recovery after resets, daemon issues, or context loss.
 
 ## Operating rules
 
 - Do **not** create cron jobs, heartbeat loops, or autonomous execution loops unless Moey explicitly asks.
-- Use `NOW.md` and `HANDOFF.md` to preserve active state before context switches.
+- Use root files for cross-project continuity:
+  - `PROJECTS.md` → what exists
+  - `NOW.md` → what is active right now
+  - `HANDOFF.md` → how to recover quickly
+  - `MEMORY.md` → durable decisions that should survive session loss
+- Keep project-specific state close to the code with local `HANDOFF.md` / `STATUS.md` files.
 - If a project seems missing, check both:
   - `/Users/moey/.openclaw/workspace`
   - `/Users/moey/.openclaw_old/workspace`
-- Commit meaningful workspace changes so project state survives session loss.
+- Commit meaningful workspace changes so project state survives resets.
 
 ## Active projects
 
-### 1) FACEMAXX
+### 1) LooksMaxx / FACEMAXX / LooksMaxxing
 - **Status:** ACTIVE / CURRENT PRIMARY FOCUS
-- **Type:** Mobile app
-- **Current phase:** Major prototype upgrades complete (camera capture + image/face-derived analysis + real second-image battle flow); next should be proof capture and final visual review
-- **Last known state:** Phase 2 prototype completed with hook → upload → scan → result → breakdown → simulation → paywall → improvement flow
-- **Last known path:** `/Users/moey/.openclaw_old/workspace/facemaxx-mobile`
-- **Important note:** `facemaxx-mobile/` is **not present** in the current workspace snapshot. Do not assume it is gone; it was found in `.openclaw_old/workspace/`.
-- **Next target:** restore/relocate the app into the active workspace, then continue Phase 3 (real image picker, local result generation, saved history, proof/polish)
+- **Type:** Mobile app + local analysis backend
+- **Path:** `/Users/moey/.openclaw/workspace/facemaxx-mobile`
+- **Purpose:** face-analysis / looks review product with scan flow, battle mode, progression, and premium review funnel
+- **Current state:**
+  - strongest-preserved project in the workspace
+  - app is in a strong local-build state, not just a mockup
+  - local analysis backend is real and connected to the app
+  - battle mode supports a real second-photo analysis
+  - brand direction is now settled around **LooksMaxx**
+- **Next step:** run a fresh visual/product review, tighten weak copy/labels, then continue backend/app refinement and first real sample collection
+- **Key docs:**
+  - `facemaxx-mobile/HANDOFF.md`
+  - `facemaxx-mobile/STATUS.md`
+  - `facemaxx-mobile/REVIEW_CHECKLIST.md`
+  - `facemaxx-mobile/analysis-backend/README.md`
+  - `facemaxx-mobile/LOOKSMAXXING_V2_ROADMAP.md`
+- **Risks / blockers:**
+  - scoring inconsistency across similar photos
+  - battle-mode trust/reasoning weirdness
+  - developer-ish labels leaking into UI
 
 ### 2) UFC betting engine / website
 - **Status:** PAUSED
 - **Type:** Website / data refresh system
-- **Current visible path:** `/Users/moey/.openclaw/workspace/ufc-operator-web`
-- **Current state:** workspace snapshot mostly contains logs, not the full app state
-- **Refresh note:** on 2026-03-20, the local LaunchAgent `com.moey.ufc-operator-live-odds` was changed from every 120 seconds to every 12 hours (`StartInterval = 43200`)
-- **Cleanup note:** stale fast job `com.moey.ufc-operator-live-odds-fast` was disabled because it referenced a missing script
-- **Caveat:** the main refresh job still references `.env.local`, so cadence is fixed but the refresh itself may still fail until the project/env is restored
+- **Path:** `/Users/moey/.openclaw/workspace/ufc-operator-web`
+- **Related path:** `/Users/moey/.openclaw/workspace/ufc-analytics`
+- **Purpose:** UFC-related betting/data workflow with refresh automation
+- **Current state:**
+  - project is present in the workspace, but current continuity suggests the visible snapshot may be incomplete/log-heavy
+  - refresh cadence was intentionally slowed down
+  - stale fast refresh job was disabled
+  - env/config should be verified before resuming work
+- **Next step:** verify real app state, `.env.local`, and refresh pipeline before changing anything else
+- **Key docs:**
+  - `ufc-operator-web/HANDOFF.md`
+- **Risks / blockers:**
+  - visible snapshot may not reflect the full intended app state
+  - refresh scheduling may be fixed while underlying job still fails
 
-### 3) Kids gaming skill app
+### 3) Social Clip OS
+- **Status:** BACKGROUND / PARTIALLY DOCUMENTED
+- **Type:** content clipping / overlay / template system
+- **Path:** `/Users/moey/.openclaw/workspace/social-clip-os`
+- **Purpose:** reusable clip-branding and content production system
+- **Current state:**
+  - project exists in active workspace
+  - Kick lower-third template flow exists under `templates/kick/`
+  - generator + preview + ffmpeg overlay workflow exists
+  - continuity is thinner than LooksMaxx and UFC
+- **Next step:** if resumed, generate fresh samples, inspect visual quality, and document the broader pipeline beyond the Kick template slice
+- **Key docs:**
+  - `social-clip-os/HANDOFF.md`
+  - `social-clip-os/templates/kick/README.md`
+- **Risks / blockers:**
+  - current implementation may still not be visually shippable
+  - broader project intent is not yet documented deeply enough
+
+### 4) Kids gaming skill app
 - **Status:** PAUSED / CONTINUITY LOST
 - **Type:** Mobile/web game app
-- **Last known state:** the project had progressed much further than early Phase 1, but the final completion-stage state was not preserved before a long-session freeze/reset
-- **Recovery note:** treat the previously completed state as unreliable unless the project files/proof are rediscovered; if resumed later, be ready to restart cleanly
+- **Current state:**
+  - earlier progress likely existed beyond the earliest phase notes
+  - final reliable completion-stage state was not preserved before a reset/freeze
 - **Rule:** do not resume automatically unless Moey asks
 
-### 4) KickChampz
+### 5) KickChampz
 - **Status:** BACKGROUND / STRATEGIC
 - **Type:** content business / clipping growth system
-- **Rule:** strategic project remains relevant, but it is not the current build focus unless Moey switches back to it
+- **Current state:**
+  - still strategically relevant
+  - not the current build focus unless Moey explicitly switches back to it
