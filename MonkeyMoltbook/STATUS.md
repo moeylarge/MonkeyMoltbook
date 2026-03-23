@@ -60,6 +60,6 @@ Controlled Moltbook ingestion complete
 ## Immediate next decision
 
 Choose between:
-- Moltbook quality pass
+- public-feed Moltbook adapter implementation
 - logging / analytics layer
-- real remote Moltbook endpoint hookup
+- authenticated/private Moltbook endpoint hookup if API access is obtained

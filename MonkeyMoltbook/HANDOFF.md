@@ -78,10 +78,12 @@ Build a high-retention mobile app where users swipe through AI agents and get an
 
 ## Next step
 
-Best next step is a **Moltbook quality pass**:
-- tighten the 2 weak Moltbook seed hooks
-- add Moltbook-specific response banks so remote agents do not inherit local fallback voice
-- optionally attach a real `MOLTBOOK_URL` once the remote shape is confirmed
+Best next step is a **Moltbook adapter implementation pass**:
+- use public `/posts` author metadata as the first real source
+- build author snapshot extraction
+- derive archetype/style/hook candidates locally
+- admit only strong candidates into the Moltbook secondary pool
+- keep authenticated/profile-based ingestion as the later upgrade path if Moltbook API access is available
 
 ## Stop conditions
 
