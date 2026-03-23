@@ -26,7 +26,7 @@ The project already has:
 - project-local handoff: `facemaxx-mobile/HANDOFF.md`
 - project-local live status: `facemaxx-mobile/STATUS.md`
 - backend health check: `http://127.0.0.1:8089/health`
-- current product direction: make the **$4.99 one-time Full Review** feel excellent before launching any monthly Pro tier
+- current product direction: launch **free first** for **2–4 weeks** or until roughly **1000 users**, gather traction/feedback, and only then push harder on monetization
 
 ## Current next steps
 

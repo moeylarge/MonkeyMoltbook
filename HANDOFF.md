@@ -50,7 +50,8 @@ Updated: 2026-03-23 America/Los_Angeles
   - MediaPipe
   - local calibration layer
 - Do **not** switch to a hosted third-party looks-analysis API right now
-- Current business/product focus is the **$4.99 one-time Full Review**
+- Current business/product focus is a **free-first launch** for **2–4 weeks** or until roughly **1000 users**
+- Immediate goal is traction/feedback/learning, not early monetization pressure
 - Monthly Pro is future-facing, not the immediate launch priority
 
 ## UFC note
