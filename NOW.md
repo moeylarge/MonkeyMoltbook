@@ -44,8 +44,8 @@ Execution mode is locked to John’s master build directive:
 
 ## Current next steps
 
-1. Phase 6 local persistence is now working
-2. Tighten persistence edge cases if needed, or open the next non-premium phase
+1. Phase 6 local persistence is now working and proven, including delete/clear edge cases
+2. Open the next non-premium refinement phase
 3. Keep premium billing untouched for now
 4. Preserve explicit mock fallback until the real path is robust
 5. Do not claim calibrated backend quality before proof

@@ -10,6 +10,12 @@ Phase 6 — Persistence
 - Implemented saved-analysis listing in `SavedScreen`
 - Implemented reopen flow from saved history back into the full results screen
 - Added saved-analysis cards with lead image, score, source, confidence, date, and summary
+- Added local persistence edge-case controls:
+  - delete single saved analysis
+  - clear all saved analyses
+- Added lightweight history/compare UX:
+  - comparison summary card
+  - simple latest-vs-previous delta labels
 - Kept premium billing untouched
 
 ## WHAT IS VERIFIED
@@ -25,18 +31,20 @@ Phase 6 — Persistence
   - completed analysis is saved
   - saved analyses list renders persisted entries
   - tapping a saved analysis reopens the full report successfully
+  - deleting a saved analysis works
+  - clearing all saved analyses works
 - The persisted flow still renders `REAL LOCAL ANALYSIS` when the real path succeeds
 
 ## WHAT IS UNVERIFIED
 - Native iOS/Android runtime remains unverified / environment-blocked on this machine
 - Real native device-library image picking is still unproven on device/simulator
 - Persistence is currently local-first only; no shared backend/user-account sync exists yet
-- Real ranking/feedback quality is still heuristic, not yet calibrated against real dating outcome data
+- Real ranking/feedback quality is still heuristic, not calibrated against real dating outcome data
 - Premium billing/unlock logic is still shell-only
 - Full native-device visual QA is not complete
 
 ## CURRENT BLOCKER
-No hard blocker. Phase 6 local persistence is functionally working and proven in the current environment.
+No hard blocker. Phase 6 local persistence is functionally working and proven in the current environment, including basic edge-case controls.
 
 ## NEXT EXACT STEP
-Tighten Phase 6 if needed with deletion/reset controls or persistence edge-case handling, otherwise open the next phase before premium: compare/history refinement or broader persistence polish.
+Open the next non-premium refinement phase: improve history/compare UX further if needed, or move to the phase after persistence while keeping premium untouched.

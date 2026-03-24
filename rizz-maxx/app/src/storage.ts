@@ -37,3 +37,13 @@ export async function getSavedAnalysis(id: string): Promise<SavedAnalysis | null
   const all = await listSavedAnalyses();
   return all.find((item) => item.id === id) ?? null;
 }
+
+export async function deleteSavedAnalysis(id: string): Promise<void> {
+  const all = await listSavedAnalyses();
+  const next = all.filter((item) => item.id !== id);
+  await AsyncStorage.setItem(ANALYSES_KEY, JSON.stringify(next));
+}
+
+export async function clearSavedAnalyses(): Promise<void> {
+  await AsyncStorage.removeItem(ANALYSES_KEY);
+}
