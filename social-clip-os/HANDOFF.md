@@ -49,11 +49,14 @@ Overlay onto a clip with ffmpeg:
 1. Generate and inspect fresh sample outputs to verify current visual quality
 2. Decide whether the lower-third style is good enough to keep or should be rebuilt
 3. If resumed seriously, document the broader Social Clip OS pipeline beyond the Kick template slice
+4. For `@KickChampz` X/Twitter operations, use the `ayeeye` app with default OAuth2 user explicitly set to `KickChampz`
+5. Before batch repost actions, keep the repost gating rule: only repost accounts with at least **1,000 followers** and content relevant to gaming / viral gaming clips
 
 ## Known issues / risks
 - continuity is currently thinner than UFC and LooksMaxx
 - project intent is only partially captured in root memory files
 - visual implementation may still not be polished enough for real use
+- X API auth under `ayeeye` also contains an invalid/stale OAuth2 user entry `rnewman1229`; if the default user drifts to that identity, write actions can intermittently fail with `401 Unauthorized`
 
 ## Recovery order
 1. Read this file
