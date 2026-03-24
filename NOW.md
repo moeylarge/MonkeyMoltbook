@@ -44,10 +44,10 @@ Execution mode is locked to John’s master build directive:
 
 ## Current next steps
 
-1. Keep broadening backend failure-case coverage and recovery behavior
-2. Continue tightening real ranking and feedback calibration
-3. Preserve explicit mock fallback until the real path is robust
-4. Keep persistence and premium billing untouched
+1. Begin Phase 6 — Persistence
+2. Save completed analyses and reopen prior reports
+3. Keep persistence focused; do not open premium billing yet
+4. Preserve explicit mock fallback until the real path is robust
 5. Do not claim calibrated backend quality before proof
 
 ## Secondary project state

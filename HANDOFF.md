@@ -50,10 +50,11 @@ Updated: 2026-03-23 America/Los_Angeles
    - `rizz-maxx/STATUS.md`
    - `rizz-maxx/app/src/analysisApi.ts`
    - `rizz-maxx/server/src/index.mjs`
-2. Keep broadening backend failure-case coverage and recovery behavior
-3. Continue tightening set-level ranking and feedback calibration from the live per-photo signals
-4. Preserve the explicit mock fallback until the real path is robust
-5. Do not touch persistence or premium billing yet
+2. Phase 5 is complete enough to move on
+3. Begin Phase 6 — Persistence
+4. Save completed analyses and reopen prior reports
+5. Do not touch premium billing yet
+6. Preserve the explicit mock fallback until the real path is robust
 
 ## Important project truths to not lose
 

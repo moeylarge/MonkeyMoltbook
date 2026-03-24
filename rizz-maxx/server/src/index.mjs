@@ -187,7 +187,12 @@ app.post('/v1/analyze-photo', upload.single('image'), async (req, res) => {
       return;
     }
 
-    const upstream = await upstreamRes.json();
+    const upstream = await upstreamRes.json().catch(() => null);
+    if (!upstream || typeof upstream !== 'object') {
+      res.status(502).json({ ok: false, error: 'invalid upstream response', detail: 'analysis backend returned malformed JSON' });
+      return;
+    }
+
     const mapped = deriveSignals(upstream);
 
     if (mapped.upstreamSummary.faceCount < 1) {

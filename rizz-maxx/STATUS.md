@@ -35,6 +35,7 @@ Phase 5 — Real Analysis Integration
   - timer cleanup in health/analyze paths
   - clearer adapter error responses
   - explicit 422 response for no-usable-face cases
+  - malformed-upstream-response handling
 - Cleaned the accidental `server/node_modules` git commit and added ignore protection for server dependencies
 - Kept persistence and billing untouched
 
@@ -52,19 +53,19 @@ Phase 5 — Real Analysis Integration
   - analyze action completes
   - results render
 - The proven app result path displayed `REAL LOCAL ANALYSIS`, confirming the app used the real adapter path rather than mock fallback during proof
-- After the latest app-side degraded/failure classification pass, the real in-app path was re-proven successfully and still rendered `REAL LOCAL ANALYSIS`
+- After the latest hardening pass, the real in-app path was re-proven successfully and still rendered `REAL LOCAL ANALYSIS`
 
 ## WHAT IS UNVERIFIED
 - Native iOS/Android runtime remains unverified / environment-blocked on this machine
 - Real native device-library image picking is still unproven on device/simulator
-- Real ranking/feedback quality is improved but still early and heuristic, not yet calibrated specifically for dating-photo ranking
-- Backend robustness is improved but not fully hardened yet
+- Real ranking/feedback quality is improved but still heuristic, not yet calibrated specifically for dating-photo ranking against real outcome data
+- Backend robustness is much better but not fully production-hardened yet
 - Saved persistence is still shell-only
 - Premium billing/unlock logic is still shell-only
 - Full native-device visual QA is not complete
 
 ## CURRENT BLOCKER
-No hard blocker. The real path is live, re-proven, and more robust than before. The main remaining gap is calibration quality and broader hardening, not connectivity.
+No hard blocker. Phase 5 is functionally complete enough to move on: the real path is live, re-proven, and meaningfully hardened. The main remaining improvement area is calibration, not core integration.
 
 ## NEXT EXACT STEP
-Keep broadening backend failure-case coverage and recovery behavior, then continue tightening ranking/feedback calibration before opening persistence.
+Open Phase 6 — Persistence: save completed analyses locally/remotely, list prior runs, and reopen previous reports without touching premium billing yet.
