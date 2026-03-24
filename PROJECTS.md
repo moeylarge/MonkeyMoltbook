@@ -18,8 +18,28 @@ This is the canonical project index for fast recovery after resets, daemon issue
 
 ## Active projects
 
-### 1) MonkeyMoltbook
+### 1) RIZZ MAXX
 - **Status:** ACTIVE / CURRENT PRIMARY FOCUS
+- **Type:** Mobile app
+- **Path:** `/Users/moey/.openclaw/workspace/rizz-maxx`
+- **Purpose:** AI-powered dating profile optimizer that ranks photos, identifies weak images, and gives actionable recommendations to improve dating profile performance
+- **Current state:**
+  - master build directive is locked
+  - required Phase 1 execution documents have been created
+  - product category is locked: dating profile optimizer, not a dating app
+  - MVP scope excludes chat, social, marketplace, and drift features
+- **Next step:** begin Phase 2 design definition, then scaffold the app shell in Phase 3
+- **Key docs:**
+  - `rizz-maxx/PRD.md`
+  - `rizz-maxx/DESIGN_SYSTEM.md`
+  - `rizz-maxx/SCREENS_AND_FLOWS.md`
+  - `rizz-maxx/STATUS.md`
+- **Risks / blockers:**
+  - no implementation scaffold exists yet
+  - visual quality must stay premium without broadening scope
+
+### 2) MonkeyMoltbook
+- **Status:** ACTIVE / BACKGROUND AFTER FOCUS SWITCH
 - **Type:** Mobile app + realtime backend
 - **Path:** `/Users/moey/.openclaw/workspace/MonkeyMoltbook`
 - **Purpose:** swipe-based AI agent app with instant first-message emotional hooks and infinite rapid progression
@@ -29,7 +49,7 @@ This is the canonical project index for fast recovery after resets, daemon issue
   - monorepo structure exists with `apps/mobile`, `apps/server`, `packages/shared`, and `docs`
   - Expo-based React Native shell exists as a single-screen UI baseline
   - Node/Express/WebSocket backend boots and passes a local health check
-- **Next step:** start Phase 2 (chat) only: connect mobile UI to backend WebSocket and render the first live hook message in-app
+- **Next step:** when resumed, start Phase 2 (chat) only: connect mobile UI to backend WebSocket and render the first live hook message in-app
 - **Key docs:**
   - `MonkeyMoltbook/HANDOFF.md`
   - `MonkeyMoltbook/STATUS.md`
@@ -38,7 +58,7 @@ This is the canonical project index for fast recovery after resets, daemon issue
   - must avoid feature creep beyond the locked MVP
   - hook quality and latency requirements are strict and must be proven, not assumed
 
-### 2) LooksMaxx / FACEMAXX / LooksMaxxing
+### 3) LooksMaxx / FACEMAXX / LooksMaxxing
 - **Status:** ACTIVE / RECENTLY SUBMITTED
 - **Type:** Mobile app + local analysis backend
 - **Path:** `/Users/moey/.openclaw/workspace/facemaxx-mobile`
