@@ -5,7 +5,8 @@
 2. `rizz-maxx/STATUS.md`
 3. `rizz-maxx/MASTER_LAUNCH_CHECKLIST.md`
 4. `rizz-maxx/APP_STORE_COMPLETION_CHECKLIST.md`
-5. `rizz-maxx/APP_STORE_METADATA_DRAFT.md`
+5. `rizz-maxx/APP_STORE_METADATA_FINAL.md`
+6. `rizz-maxx/APP_STORE_COMPLETION_CHECKLIST.md`
 
 ## Screenshot planning
 - `rizz-maxx/APP_STORE_SCREENSHOT_CHECKLIST.md`

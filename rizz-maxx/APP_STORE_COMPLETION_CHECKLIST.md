@@ -12,15 +12,12 @@ Not submitting today.
 ---
 
 ## A) Metadata
-- [x] working app name selected: `RizzMaxx`
-- [x] draft subtitle selected
-- [x] draft keywords selected
-- [x] draft promotional text written
-- [x] draft full App Store description written
-- [ ] confirm final app name
-- [ ] confirm final subtitle
-- [ ] confirm final keyword string
-- [ ] confirm final description text
+- [x] final app name selected: `RizzMaxx`
+- [x] final subtitle selected
+- [x] final keyword string selected
+- [x] final promotional text written
+- [x] final full App Store description written
+- [x] final metadata file created: `APP_STORE_METADATA_FINAL.md`
 
 ---
 
