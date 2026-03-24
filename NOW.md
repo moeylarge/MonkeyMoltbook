@@ -45,7 +45,7 @@ Execution mode is locked to John’s master build directive:
 ## Current next steps
 
 1. Tighten the real analysis layer
-2. Improve set-level ranking and feedback quality from the live per-photo signals
+2. Continue improving set-level ranking and feedback quality from the live per-photo signals
 3. Preserve explicit mock fallback until the real path is robust
 4. Keep persistence and premium billing untouched
 5. Do not claim calibrated backend quality before proof

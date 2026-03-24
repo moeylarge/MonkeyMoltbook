@@ -34,6 +34,57 @@ function toProfileStrength(raw) {
   return clamp(Math.round(raw), 1, 99);
 }
 
+function buildFeedback({ clarity, lighting, framing, confidenceSignal, styleSignal, faceCount }) {
+  const strengths = [];
+  const weaknesses = [];
+  const actions = [];
+
+  if (clarity >= 78) strengths.push('The face reads sharply enough to support a stronger first impression.');
+  else if (clarity >= 64) {
+    weaknesses.push('Clarity is acceptable, but not strong enough to carry a lead slot confidently.');
+    actions.push('Test a sharper version of this shot before trusting it as a lead.');
+  } else {
+    weaknesses.push('Clarity is weak for dating-profile use and costs the photo immediate trust.');
+    actions.push('Replace it with a cleaner, sharper photo with stronger facial detail.');
+  }
+
+  if (lighting >= 74) strengths.push('Lighting helps the photo feel more intentional and more usable.');
+  else if (lighting >= 60) {
+    weaknesses.push('Lighting is usable, but it still flattens some of the photo’s impact.');
+    actions.push('Try a brighter image with cleaner separation and less dullness.');
+  } else {
+    weaknesses.push('Lighting is dragging the image down and making the first impression weaker.');
+    actions.push('Use a better-lit photo with cleaner exposure on the face.');
+  }
+
+  if (framing >= 80) strengths.push('The framing keeps attention where it should be for profile use.');
+  else if (faceCount > 1) {
+    weaknesses.push('Multiple faces weaken the photo’s lead-photo value and make attention split.');
+    actions.push('Use a clearer solo shot if this is competing for a top slot.');
+  } else {
+    weaknesses.push('The framing is making the photo less immediate than your strongest option should be.');
+    actions.push('Use a tighter composition where your face lands faster.');
+  }
+
+  if (confidenceSignal >= 75) strengths.push('The facial read gives off stronger first-impression confidence.');
+  else {
+    weaknesses.push('The expression reads flatter or less confident than it should for a high-performing profile photo.');
+    actions.push('Choose a shot with more presence, cleaner eye contact, or stronger facial energy.');
+  }
+
+  if (styleSignal >= 72) strengths.push('Presentation signals are strong enough to support better profile positioning.');
+  else {
+    weaknesses.push('Presentation feels less intentional than the strongest version of your profile should feel.');
+    actions.push('Swap in a better-groomed, cleaner, or more composed photo.');
+  }
+
+  return {
+    strengths: strengths.slice(0, 3),
+    weaknesses: weaknesses.slice(0, 3),
+    actions: actions.slice(0, 4),
+  };
+}
+
 function deriveSignals(upstream) {
   const score = Number(upstream?.looksmaxxing?.score || 0);
   const confidence = Number(upstream?.looksmaxxing?.confidence || 0);
@@ -43,52 +94,15 @@ function deriveSignals(upstream) {
   const faceCount = Number(upstream?.detection?.faceCount || 0);
   const breakdown = upstream?.looksmaxxing?.breakdown || {};
 
-  const lighting = clamp(Math.round((brightness / 160) * 100), 1, 99);
+  const lighting = clamp(Math.round((brightness / 160) * 100 + contrast * 0.18), 1, 99);
   const clarity = clamp(Math.round((blurScore / 6) * 100), 1, 99);
-  const framing = faceCount === 1 ? 82 : faceCount > 1 ? 58 : 25;
-  const confidenceSignal = clamp(Math.round(((Number(breakdown.facialHarmony || 60) + Number(breakdown.eyes || 60)) / 2)), 1, 99);
-  const styleSignal = clamp(Math.round((Number(breakdown.hairFraming || 60) + Number(breakdown.skin || 60)) / 2), 1, 99);
+  const framing = faceCount === 1 ? 84 : faceCount > 1 ? 54 : 24;
+  const confidenceSignal = clamp(Math.round((Number(breakdown.facialHarmony || 60) * 0.55) + (Number(breakdown.eyes || 60) * 0.45)), 1, 99);
+  const styleSignal = clamp(Math.round((Number(breakdown.hairFraming || 60) * 0.4) + (Number(breakdown.skin || 60) * 0.35) + (Number(breakdown.jawline || 60) * 0.25)), 1, 99);
+  const leadStrength = clamp(Math.round((clarity * 0.25) + (lighting * 0.2) + (framing * 0.2) + (confidenceSignal * 0.2) + (styleSignal * 0.15)), 1, 99);
 
-  const profileStrength = toProfileStrength(score * 0.55 + clarity * 0.15 + lighting * 0.1 + confidenceSignal * 0.1 + styleSignal * 0.1);
-
-  const strengths = [];
-  const weaknesses = [];
-  const actions = [];
-
-  if (clarity >= 70) strengths.push('The face reads clearly enough to support a stronger first impression.');
-  else {
-    weaknesses.push('Clarity is weaker than it should be for a lead-photo candidate.');
-    actions.push('Use a sharper photo with cleaner detail and less softness.');
-  }
-
-  if (lighting >= 68) strengths.push('Lighting is good enough to help the photo feel more intentional.');
-  else {
-    weaknesses.push('The lighting is flattening the photo and costing you impact.');
-    actions.push('Replace it with a brighter image that gives your face cleaner separation.');
-  }
-
-  if (framing >= 75) strengths.push('The framing keeps the photo focused enough for profile use.');
-  else {
-    weaknesses.push('The framing is making the photo feel less usable as a dating-profile asset.');
-    actions.push('Use a tighter composition where your face is easier to read immediately.');
-  }
-
-  if (confidenceSignal >= 72) strengths.push('The expression and facial read suggest better first-impression confidence.');
-  else {
-    weaknesses.push('The expression reads flatter or less confident than your strongest possible lead.');
-    actions.push('Choose a shot with more presence, cleaner eye contact, or stronger facial energy.');
-  }
-
-  if (styleSignal < 68) {
-    weaknesses.push('Overall presentation feels less intentional than it needs to.');
-    actions.push('Swap in a better-groomed, cleaner, or more composed photo.');
-  } else {
-    strengths.push('Presentation signals are strong enough to support better profile positioning.');
-  }
-
-  if (!actions.length) {
-    actions.push('Keep this photo in the set and compare it against stronger alternatives before locking the order.');
-  }
+  const profileStrength = toProfileStrength(score * 0.35 + leadStrength * 0.4 + clarity * 0.1 + lighting * 0.08 + confidenceSignal * 0.07);
+  const feedback = buildFeedback({ clarity, lighting, framing, confidenceSignal, styleSignal, faceCount });
 
   return {
     profileStrength,
@@ -99,10 +113,11 @@ function deriveSignals(upstream) {
       framing,
       confidence: confidenceSignal,
       style: styleSignal,
+      leadStrength,
     },
-    strengths: strengths.slice(0, 3),
-    weaknesses: weaknesses.slice(0, 3),
-    actions: actions.slice(0, 3),
+    strengths: feedback.strengths,
+    weaknesses: feedback.weaknesses,
+    actions: feedback.actions,
     upstreamSummary: {
       confidence,
       faceCount,
