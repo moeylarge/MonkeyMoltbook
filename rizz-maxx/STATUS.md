@@ -1,23 +1,13 @@
 # STATUS.md
 
 ## CURRENT PHASE
-Phase 6 — Persistence + History Refinement
+Phase 7 — Compare / Retest Refinement
 
 ## WHAT IS DONE
-- Added local-first persistence using AsyncStorage
-- Added a persisted analysis model in `app/src/storage.ts`
-- Implemented automatic save of completed analyses from the results screen
-- Implemented saved-analysis listing in `SavedScreen`
-- Implemented reopen flow from saved history back into the full results screen
-- Added saved-analysis cards with lead image, score, source, confidence, date, and summary
-- Added local persistence edge-case controls:
-  - delete single saved analysis
-  - clear all saved analyses
-- Added history/compare refinement UX:
-  - comparison summary card
-  - compare details card
-  - history stats card
-  - simple latest-vs-previous delta labels
+- Added a dedicated compare screen for saved runs
+- Added explicit compare navigation from saved history
+- Added compare-specific UX that explains what changed between the latest two runs
+- Added latest-vs-previous run cards inside the compare view
 - Kept premium billing untouched
 
 ## WHAT IS VERIFIED
@@ -30,24 +20,22 @@ Phase 6 — Persistence + History Refinement
   - sample set loads
   - analyze action completes
   - results render
-  - completed analysis is saved
-  - saved analyses list renders persisted entries
-  - tapping a saved analysis reopens the full report successfully
-  - deleting a saved analysis works
-  - clearing all saved analyses works
-  - history stats and compare blocks render correctly
-- The persisted flow still renders `REAL LOCAL ANALYSIS` when the real path succeeds
+  - saved analyses list renders
+  - compare view opens successfully
+  - compare copy renders cleanly
+  - compare view returns back to saved history
+- The compare route still preserves honest source labeling when reopening reports
 
 ## WHAT IS UNVERIFIED
 - Native iOS/Android runtime remains unverified / environment-blocked on this machine
 - Real native device-library image picking is still unproven on device/simulator
-- Persistence is currently local-first only; no shared backend/user-account sync exists yet
+- Persistence is still local-first only; no shared backend/account sync exists yet
 - Real ranking/feedback quality is still heuristic, not calibrated against real dating outcome data
-- Premium billing/unlock logic is still shell-only
+- Premium billing/unlock logic is still untouched beyond shell level
 - Full native-device visual QA is not complete
 
 ## CURRENT BLOCKER
-No hard blocker. The non-premium persistence/history surface is now meaningfully complete for the current local-first scope.
+No hard blocker. The non-premium compare/retest loop is now materially more complete.
 
 ## NEXT EXACT STEP
-Open the next major phase after persistence/history, while continuing to keep premium untouched until explicitly opened.
+The next major unopened phase is premium/paywall work, unless you want one more pass on local-first polish before opening monetization.

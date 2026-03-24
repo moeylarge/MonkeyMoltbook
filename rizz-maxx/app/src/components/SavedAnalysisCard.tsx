@@ -7,7 +7,7 @@ type Props = {
   item: SavedAnalysis;
   comparisonLabel?: string;
   onPress: () => void;
-  onDelete: () => void;
+  onDelete?: () => void;
 };
 
 export function SavedAnalysisCard({ item, comparisonLabel, onPress, onDelete }: Props) {
@@ -28,7 +28,7 @@ export function SavedAnalysisCard({ item, comparisonLabel, onPress, onDelete }: 
           <Text style={styles.summary}>{item.summary}</Text>
         </View>
       </Pressable>
-      <SecondaryButton label={`Delete saved analysis ${item.id}`} onPress={onDelete} tone="danger" />
+      {onDelete ? <SecondaryButton label={`Delete saved analysis ${item.id}`} onPress={onDelete} tone="danger" /> : null}
     </View>
   );
 }

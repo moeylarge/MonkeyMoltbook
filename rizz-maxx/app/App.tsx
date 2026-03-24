@@ -8,6 +8,7 @@ import { ResultsScreen } from './src/screens/ResultsScreen';
 import { SavedScreen } from './src/screens/SavedScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 import { UploadScreen } from './src/screens/UploadScreen';
+import { CompareScreen } from './src/screens/CompareScreen';
 import { theme } from './src/theme';
 import { RootStackParamList } from './src/types';
 
@@ -45,6 +46,7 @@ export default function App() {
         <Stack.Screen name="Upload" component={UploadScreen} options={{ title: 'Upload photos' }} />
         <Stack.Screen name="Results" component={ResultsScreen} options={{ title: 'Results' }} />
         <Stack.Screen name="Saved" component={SavedScreen} options={{ title: 'Saved analyses' }} />
+        <Stack.Screen name="Compare" component={CompareScreen} options={{ title: 'Compare runs' }} />
         <Stack.Screen name="Premium" component={PremiumScreen} options={{ title: 'Premium' }} />
         <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
       </Stack.Navigator>

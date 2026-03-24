@@ -28,6 +28,7 @@ export type RootStackParamList = {
     savedId?: string;
   };
   Saved: undefined;
+  Compare: undefined;
   Premium: undefined;
   Settings: undefined;
 };

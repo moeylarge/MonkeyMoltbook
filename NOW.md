@@ -44,11 +44,11 @@ Execution mode is locked to John’s master build directive:
 
 ## Current next steps
 
-1. Phase 6 persistence/history is now working and proven for the local-first scope
-2. Open the next major phase after persistence/history
-3. Keep premium billing untouched for now
-4. Preserve explicit mock fallback until the real path is robust
-5. Do not claim calibrated backend quality before proof
+1. Phase 7 compare/retest refinement is now working in local-first form
+2. The next major unopened phase is premium/paywall work
+3. Keep explicit mock fallback until the real path is robust
+4. Do not claim calibrated backend quality before proof
+5. Native runtime proof is still deferred / environment-blocked on this machine
 
 ## Secondary project state
 

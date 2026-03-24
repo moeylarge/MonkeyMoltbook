@@ -18,7 +18,12 @@ export function CompareDetailsCard({ latest, previous }: Props) {
   }
 
   const delta = latest.score - previous.score;
-  const direction = delta > 0 ? 'improved' : delta < 0 ? 'dropped' : 'held flat';
+  const directionText =
+    delta > 0
+      ? `improved by ${Math.abs(delta)} point${Math.abs(delta) === 1 ? '' : 's'}`
+      : delta < 0
+        ? `dropped by ${Math.abs(delta)} point${Math.abs(delta) === 1 ? '' : 's'}`
+        : 'held flat';
   const changedLead = latest.bestPhotoId !== previous.bestPhotoId;
   const changedWeakest = latest.weakestPhotoId !== previous.weakestPhotoId;
 
@@ -26,8 +31,8 @@ export function CompareDetailsCard({ latest, previous }: Props) {
     <View style={styles.card}>
       <Text style={styles.title}>What changed</Text>
       <Text style={styles.body}>
-        Your latest saved run {direction} {delta === 0 ? '' : `by ${Math.abs(delta)} point${Math.abs(delta) === 1 ? '' : 's'}`}. 
-        {changedLead ? 'The lead-photo recommendation changed.' : 'The lead-photo recommendation stayed the same.'} 
+        Your latest saved run {directionText}.{' '}
+        {changedLead ? 'The lead-photo recommendation changed.' : 'The lead-photo recommendation stayed the same.'}{' '}
         {changedWeakest ? 'The weakest-photo slot changed too.' : 'The weakest-photo slot stayed the same.'}
       </Text>
     </View>

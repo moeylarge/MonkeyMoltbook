@@ -63,6 +63,8 @@ export function SavedScreen({ navigation }: Props) {
       <CompareSummaryCard latest={items[0]} previous={items[1]} />
       <CompareDetailsCard latest={items[0]} previous={items[1]} />
 
+      {items.length >= 2 ? <PrimaryButton label="Open compare view" onPress={() => navigation.navigate('Compare')} /> : null}
+
       {items.length === 0 ? (
         <InsightCard title="No saved analyses yet">
           <Text style={styles.body}>Run an analysis first, then it will appear here automatically.</Text>
