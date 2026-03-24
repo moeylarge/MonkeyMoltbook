@@ -46,7 +46,7 @@ Execution mode is locked to John’s master build directive:
 
 1. Launch-critical polish and screenshot/export work are now complete enough in the current proof environment
 2. Real billing / purchase flow integration remains intentionally deferred because launch strategy is free-first for the first few weeks
-3. Native runtime proof is still blocked on this machine because Xcode/Simulator tooling is missing
+3. Native runtime proof is still blocked on this machine because Xcode/Simulator tooling is missing and there are no paired nodes/devices available in this environment
 4. Keep explicit mock fallback until the real path is robust
 5. Best next moves are deeper calibration or native proof on a proper machine/device
 

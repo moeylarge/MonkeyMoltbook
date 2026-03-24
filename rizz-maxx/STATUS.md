@@ -27,10 +27,11 @@ Post-Launch Polish Follow-through
 - In the app web proof flow:
   - onboarding renders
   - upload renders
-  - result flow renders
+  - calibrated result flow renders
   - saved history renders
   - compare flow renders
-- Deeper ranking/feedback calibration changes did not break the current proof path
+- The deeper ranking/feedback calibration pass did not break the real analysis path and still produced `REAL LOCAL ANALYSIS`
+- Native runtime proof was attempted again and remains blocked: no paired nodes/devices are available in this environment, and this host still lacks `simctl` / Xcode / Simulator
 
 ## WHAT IS UNVERIFIED
 - Native iOS/Android runtime remains unverified / environment-blocked on this machine

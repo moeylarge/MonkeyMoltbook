@@ -59,6 +59,13 @@ function confidenceNumber(label: 'Low' | 'Medium' | 'High') {
   return label === 'High' ? 90 : label === 'Medium' ? 72 : 50;
 }
 
+function deriveSetConfidence(confidenceAverage: number, spread: number, failedCount: number, degradedCount: number) {
+  const adjusted = confidenceAverage - failedCount * 8 - degradedCount * 5 + Math.min(spread, 18) * 0.35;
+  if (adjusted >= 82) return 'High';
+  if (adjusted >= 64) return 'Medium';
+  return 'Low';
+}
+
 function summarizeScore(score: number, spread: number, failedCount: number, degradedCount: number) {
   if (score >= 84) {
     return failedCount > 0
@@ -159,18 +166,21 @@ export async function analyzePhotoSet(photos: PhotoItem[]): Promise<AnalysisResu
     const spread = best.weightedScore - weakest.weightedScore;
     const failedCount = results.filter((item) => item.hardFailure).length;
     const degradedCount = results.filter((item) => item.degraded).length;
+    const topTwoAverage = average(ranked.slice(0, Math.min(2, ranked.length)).map((item) => item.weightedScore));
 
     const strengths = uniqueKeepOrder([
       ...best.result!.strengths,
+      topTwoAverage >= 82 ? 'Your top two photos are strong enough to give the profile a cleaner opening impression.' : '',
       best.result!.upstreamSummary.faceWarning ? '' : 'Your strongest image earns the lead slot more clearly than the rest of the set.',
       spread >= 12 ? 'There is enough separation between the top and bottom of the set that cleanup should produce visible gains.' : '',
       failedCount > 0 ? 'The real pass still recovered enough signal to rank most of the set.' : '',
-    ]).slice(0, 3);
+    ]).slice(0, 4);
 
     const weaknesses = uniqueKeepOrder([
       ...weakest.result!.weaknesses,
       weakest.result!.upstreamSummary.faceCount < 1 ? 'At least one weak photo may not even read clearly enough to deserve profile space.' : '',
       spread < 8 ? 'The set is too flat to rely on ordering alone — stronger replacements matter.' : 'The bottom of the set is still doing enough damage to change how the whole profile reads.',
+      topTwoAverage < 76 ? 'The top of the set is not strong enough yet to carry the whole profile.' : '',
       ranked.length >= 4 ? 'Your weakest slot still changes the tone of the full profile.' : '',
       failedCount > 0 ? 'Some photos failed the real pass, so this ranking is useful but not fully complete.' : '',
       degradedCount > 0 ? 'One or more photos were treated as low-signal because no usable face read was found.' : '',
@@ -178,6 +188,7 @@ export async function analyzePhotoSet(photos: PhotoItem[]): Promise<AnalysisResu
 
     const actions = uniqueKeepOrder([
       ...weakest.result!.actions,
+      topTwoAverage < 76 ? 'Do not just fix the bottom of the set — improve the top two photos too.' : '',
       'Lead with the strongest photo and remove the weakest one before judging the set again.',
       spread < 8 ? 'Do not just reshuffle this set — test stronger replacement candidates.' : 'Use the top image as the benchmark for every replacement decision.',
       failedCount > 0 ? 'Re-run the failed photos after trimming file size or swapping in clearer images.' : '',
@@ -187,7 +198,7 @@ export async function analyzePhotoSet(photos: PhotoItem[]): Promise<AnalysisResu
     return {
       source: 'real',
       score,
-      confidence: confidenceAverage >= 85 ? 'High' : confidenceAverage >= 65 ? 'Medium' : 'Low',
+      confidence: deriveSetConfidence(confidenceAverage, spread, failedCount, degradedCount),
       summary: summarizeScore(score, spread, failedCount, degradedCount),
       bestPhotoId: best.photo.id,
       weakestPhotoId: weakest.photo.id,
