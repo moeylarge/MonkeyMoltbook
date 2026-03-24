@@ -44,9 +44,9 @@ Execution mode is locked to John’s master build directive:
 
 ## Current next steps
 
-1. Begin Phase 6 — Persistence
-2. Save completed analyses and reopen prior reports
-3. Keep persistence focused; do not open premium billing yet
+1. Phase 6 local persistence is now working
+2. Tighten persistence edge cases if needed, or open the next non-premium phase
+3. Keep premium billing untouched for now
 4. Preserve explicit mock fallback until the real path is robust
 5. Do not claim calibrated backend quality before proof
 

@@ -1,5 +1,6 @@
+import { useEffect, useMemo, useState } from 'react';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { AppShell } from '../components/AppShell';
 import { InsightCard } from '../components/InsightCard';
 import { ListBlock } from '../components/ListBlock';
@@ -9,18 +10,42 @@ import { PrimaryButton } from '../components/PrimaryButton';
 import { ResultsHero } from '../components/ResultsHero';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { TopPhotoSummary } from '../components/TopPhotoSummary';
+import { saveAnalysis } from '../storage';
 import { theme } from '../theme';
 import { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Results'>;
 
 export function ResultsScreen({ navigation, route }: Props) {
-  const { photos, result } = route.params;
+  const { photos, result, savedId } = route.params;
+  const [saveState, setSaveState] = useState<'idle' | 'saved' | 'error'>(savedId ? 'saved' : 'idle');
+
   const bestPhoto = photos.find((photo) => photo.id === result.bestPhotoId) ?? photos[0];
   const weakestPhoto = photos.find((photo) => photo.id === result.weakestPhotoId) ?? photos[photos.length - 1];
   const rankedPhotos = result.rankedPhotoIds
     .map((id) => photos.find((photo) => photo.id === id))
     .filter(Boolean);
+
+  const analysisId = useMemo(() => savedId ?? `analysis-${Date.now()}-${result.score}`, [savedId, result.score]);
+
+  useEffect(() => {
+    if (savedId) return;
+
+    saveAnalysis({
+      id: analysisId,
+      createdAt: new Date().toISOString(),
+      score: result.score,
+      confidence: result.confidence,
+      source: result.source,
+      summary: result.summary,
+      bestPhotoId: result.bestPhotoId,
+      weakestPhotoId: result.weakestPhotoId,
+      photos,
+      result,
+    })
+      .then(() => setSaveState('saved'))
+      .catch(() => setSaveState('error'));
+  }, [analysisId, photos, result, savedId]);
 
   return (
     <AppShell>
@@ -37,6 +62,16 @@ export function ResultsScreen({ navigation, route }: Props) {
         <MetricCard label="Photos" value={`${photos.length}`} />
         <MetricCard label="Move" value="Cut weak" tone="negative" />
       </View>
+
+      <InsightCard title="Persistence">
+        <Text style={styles.persistenceText}>
+          {saveState === 'saved'
+            ? 'This analysis is saved and can be reopened from history.'
+            : saveState === 'error'
+              ? 'Save failed in local persistence mode. The report is still visible in the current session.'
+              : 'Saving analysis...'}
+        </Text>
+      </InsightCard>
 
       <InsightCard title="Top signal">
         <TopPhotoSummary
@@ -83,7 +118,7 @@ export function ResultsScreen({ navigation, route }: Props) {
         <ListBlock items={result.actions} />
       </InsightCard>
 
-      <PrimaryButton label="View saved analyses shell" onPress={() => navigation.navigate('Saved')} />
+      <PrimaryButton label="View saved analyses" onPress={() => navigation.navigate('Saved')} />
     </AppShell>
   );
 }
@@ -93,6 +128,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: theme.spacing.md,
+  },
+  persistenceText: {
+    color: theme.colors.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
   },
   grid: {
     flexDirection: 'row',

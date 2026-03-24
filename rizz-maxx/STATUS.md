@@ -1,71 +1,42 @@
 # STATUS.md
 
 ## CURRENT PHASE
-Phase 5 — Real Analysis Integration
+Phase 6 — Persistence
 
 ## WHAT IS DONE
-- Built a real local analysis adapter service in `rizz-maxx/server`
-- Wired that adapter to the live local LooksMaxx backend running at `127.0.0.1:8089`
-- Mapped upstream face-analysis output into RIZZ MAXX framing:
-  - profile strength
-  - confidence label
-  - strengths
-  - weaknesses
-  - action plan
-- Added a real app-side analysis client in `app/src/analysisApi.ts`
-- Updated the upload/results flow so analysis now attempts the real local adapter first
-- Preserved an explicit mock fallback path if the real adapter is unavailable or fails
-- Updated results presentation so the source is labeled honestly:
-  - `REAL LOCAL ANALYSIS`
-  - or `MOCKED LOCAL ANALYSIS`
-- Tightened the real analysis layer by improving:
-  - per-photo trait mapping in the adapter
-  - lead-photo weighting
-  - set-level spread handling
-  - action/feedback synthesis
-  - partial-success handling across multi-photo analysis runs
-  - no-face / weak-face-read penalties and feedback
-  - degraded low-signal handling for photos that do not produce a usable face read
-  - app-side classification of degraded vs hard-failed photo analysis attempts
-- Hardened backend failure handling with:
-  - image-type validation
-  - empty-file validation
-  - upload size limits
-  - upstream timeout handling
-  - timer cleanup in health/analyze paths
-  - clearer adapter error responses
-  - explicit 422 response for no-usable-face cases
-  - malformed-upstream-response handling
-- Cleaned the accidental `server/node_modules` git commit and added ignore protection for server dependencies
-- Kept persistence and billing untouched
+- Added local-first persistence using AsyncStorage
+- Added a persisted analysis model in `app/src/storage.ts`
+- Implemented automatic save of completed analyses from the results screen
+- Implemented saved-analysis listing in `SavedScreen`
+- Implemented reopen flow from saved history back into the full results screen
+- Added saved-analysis cards with lead image, score, source, confidence, date, and summary
+- Kept premium billing untouched
 
 ## WHAT IS VERIFIED
-- The adapter server boots successfully on `127.0.0.1:8091`
-- Adapter health check succeeds
-- Adapter successfully analyzes a real test image through the live upstream backend
-- Invalid non-image uploads are rejected cleanly with a 400 response instead of crashing the path
 - TypeScript compile passes (`npx tsc --noEmit`)
 - Expo web export succeeds (`npx expo export --platform web`)
+- Real adapter health still succeeds
 - In the app web proof flow:
   - onboarding renders
   - upload renders
   - sample set loads
   - analyze action completes
   - results render
-- The proven app result path displayed `REAL LOCAL ANALYSIS`, confirming the app used the real adapter path rather than mock fallback during proof
-- After the latest hardening pass, the real in-app path was re-proven successfully and still rendered `REAL LOCAL ANALYSIS`
+  - completed analysis is saved
+  - saved analyses list renders persisted entries
+  - tapping a saved analysis reopens the full report successfully
+- The persisted flow still renders `REAL LOCAL ANALYSIS` when the real path succeeds
 
 ## WHAT IS UNVERIFIED
 - Native iOS/Android runtime remains unverified / environment-blocked on this machine
 - Real native device-library image picking is still unproven on device/simulator
-- Real ranking/feedback quality is improved but still heuristic, not yet calibrated specifically for dating-photo ranking against real outcome data
-- Backend robustness is much better but not fully production-hardened yet
-- Saved persistence is still shell-only
+- Persistence is currently local-first only; no shared backend/user-account sync exists yet
+- Real ranking/feedback quality is still heuristic, not yet calibrated against real dating outcome data
 - Premium billing/unlock logic is still shell-only
 - Full native-device visual QA is not complete
 
 ## CURRENT BLOCKER
-No hard blocker. Phase 5 is functionally complete enough to move on: the real path is live, re-proven, and meaningfully hardened. The main remaining improvement area is calibration, not core integration.
+No hard blocker. Phase 6 local persistence is functionally working and proven in the current environment.
 
 ## NEXT EXACT STEP
-Open Phase 6 — Persistence: save completed analyses locally/remotely, list prior runs, and reopen previous reports without touching premium billing yet.
+Tighten Phase 6 if needed with deletion/reset controls or persistence edge-case handling, otherwise open the next phase before premium: compare/history refinement or broader persistence polish.

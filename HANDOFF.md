@@ -50,11 +50,10 @@ Updated: 2026-03-23 America/Los_Angeles
    - `rizz-maxx/STATUS.md`
    - `rizz-maxx/app/src/analysisApi.ts`
    - `rizz-maxx/server/src/index.mjs`
-2. Phase 5 is complete enough to move on
-3. Begin Phase 6 — Persistence
-4. Save completed analyses and reopen prior reports
-5. Do not touch premium billing yet
-6. Preserve the explicit mock fallback until the real path is robust
+2. Phase 6 local persistence is now working
+3. Saved analyses can be listed and reopened from history
+4. Do not touch premium billing yet
+5. Preserve the explicit mock fallback until the real path is robust
 
 ## Important project truths to not lose
 

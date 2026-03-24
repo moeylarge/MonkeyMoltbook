@@ -25,6 +25,7 @@ export type RootStackParamList = {
   Results: {
     photos: PhotoItem[];
     result: AnalysisResult;
+    savedId?: string;
   };
   Saved: undefined;
   Premium: undefined;
