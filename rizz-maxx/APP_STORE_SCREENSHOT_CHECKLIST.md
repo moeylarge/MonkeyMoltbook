@@ -185,23 +185,25 @@ Position premium as deeper clarity, not fake exclusivity.
 
 ---
 
-## 7) Supporting proof screen
+## 7) Expanded results breakdown / action-plan proof screen
 ### Goal
-Choose the strongest missing surface that improves the full story.
+Show the app has useful depth beyond a single score.
 
-### Preferred options
-Choose one:
-- loading / trust framing screen
-- expanded results breakdown
-- premium detail card state
-- another polished proof-of-depth screen
+### Screen/source
+- expanded results breakdown / action-plan state
 
-### Selection rule
-Pick the screen that best answers:
+### Why this screen is locked
+It best answers:
 > why is this better than a generic photo rater?
 
+### Must show
+- what is working
+- what is costing the set value
+- what to do next
+
 ### Capture notes
-- this should strengthen the set, not duplicate an earlier screenshot
+- this should make the app feel strategic, not shallow
+- do not let it duplicate the main results hero shot
 
 ### Status
 - [ ] final iPhone capture done
@@ -252,9 +254,9 @@ Show premium clearly on a larger surface without dead empty space.
 ### Status
 - [ ] final iPad capture done
 
-## 7) iPad supporting proof screen
+## 7) iPad expanded results breakdown / action-plan proof screen
 ### Goal
-Mirror the supporting proof concept from phone, but optimize composition for tablet.
+Mirror the action-plan proof concept from phone, but use the larger canvas to increase readability and product depth.
 ### Status
 - [ ] final iPad capture done
 
