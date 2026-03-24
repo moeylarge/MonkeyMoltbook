@@ -46,9 +46,13 @@ function uniqueKeepOrder(items: string[]) {
   });
 }
 
+function confidenceNumber(label: 'Low' | 'Medium' | 'High') {
+  return label === 'High' ? 90 : label === 'Medium' ? 72 : 50;
+}
+
 export async function analyzePhotoSet(photos: PhotoItem[]): Promise<AnalysisResult> {
   try {
-    const perPhoto = await Promise.all(
+    const settled = await Promise.allSettled(
       photos.map(async (photo) => {
         const file = await photoUriToFile(photo);
         const form = new FormData();
@@ -62,11 +66,11 @@ export async function analyzePhotoSet(photos: PhotoItem[]): Promise<AnalysisResu
 
         const data = (await res.json()) as AdapterResponse;
         const weightedScore = Math.round(
-          data.profileStrength * 0.34 +
-            (data.traits.leadStrength || data.profileStrength) * 0.28 +
-            data.traits.clarity * 0.14 +
+          data.profileStrength * 0.32 +
+            (data.traits.leadStrength || data.profileStrength) * 0.32 +
+            data.traits.clarity * 0.13 +
             data.traits.lighting * 0.1 +
-            data.traits.framing * 0.08 +
+            data.traits.framing * 0.07 +
             data.traits.confidence * 0.04 +
             data.traits.style * 0.02,
         );
@@ -75,31 +79,37 @@ export async function analyzePhotoSet(photos: PhotoItem[]): Promise<AnalysisResu
       }),
     );
 
-    const ranked = [...perPhoto].sort((a, b) => b.weightedScore - a.weightedScore);
+    const fulfilled = settled.flatMap((entry) => (entry.status === 'fulfilled' ? [entry.value] : []));
+    if (fulfilled.length < Math.max(2, Math.ceil(photos.length / 2))) {
+      throw new Error('insufficient-real-results');
+    }
+
+    const ranked = [...fulfilled].sort((a, b) => b.weightedScore - a.weightedScore);
     const best = ranked[0];
     const weakest = ranked[ranked.length - 1];
     const score = average(ranked.map((item) => item.weightedScore));
-    const confidenceAverage = average(
-      ranked.map((item) => (item.result.confidenceLabel === 'High' ? 90 : item.result.confidenceLabel === 'Medium' ? 72 : 50)),
-    );
+    const confidenceAverage = average(ranked.map((item) => confidenceNumber(item.result.confidenceLabel)));
     const spread = best.weightedScore - weakest.weightedScore;
 
     const strengths = uniqueKeepOrder([
       ...best.result.strengths,
       'Your strongest image gives you a clearly better lead-photo candidate than the rest of the set.',
       spread >= 12 ? 'There is a visible difference between your strongest and weakest options, which makes cleanup worthwhile.' : '',
+      fulfilled.length < photos.length ? 'The real pass still recovered enough signal to rank most of the set.' : '',
     ]).slice(0, 3);
 
     const weaknesses = uniqueKeepOrder([
       ...weakest.result.weaknesses,
       spread < 8 ? 'The set is clustered too tightly to rely on ordering alone — better replacements matter.' : 'The bottom of the set is still creating avoidable drag compared with the top.',
       ranked.length >= 4 ? 'Your set quality is uneven enough that the weakest slot changes how the whole profile reads.' : '',
+      fulfilled.length < photos.length ? 'Some photos failed the real pass, so this ranking is usable but not fully complete.' : '',
     ]).slice(0, 3);
 
     const actions = uniqueKeepOrder([
       ...weakest.result.actions,
       'Lead with the strongest photo and remove the weakest one before judging the set again.',
       spread < 8 ? 'Test stronger replacement candidates instead of just reshuffling the same set.' : 'Use the top image as the benchmark for every replacement decision.',
+      fulfilled.length < photos.length ? 'Re-run the failed photos after trimming file size or swapping in cleaner images.' : '',
     ]).slice(0, 4);
 
     return {

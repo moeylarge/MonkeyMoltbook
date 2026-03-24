@@ -3,16 +3,26 @@ import cors from 'cors';
 import multer from 'multer';
 
 const app = express();
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 12 * 1024 * 1024,
+    files: 1,
+  },
+});
 const port = Number(process.env.PORT || 8091);
 const upstreamBase = process.env.RIZZ_ANALYSIS_UPSTREAM || 'http://127.0.0.1:8089';
+const upstreamTimeoutMs = Number(process.env.RIZZ_ANALYSIS_TIMEOUT_MS || 45000);
 
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 
 app.get('/health', async (_req, res) => {
   try {
-    const upstream = await fetch(`${upstreamBase}/health`);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5000);
+    const upstream = await fetch(`${upstreamBase}/health`, { signal: controller.signal });
+    clearTimeout(timer);
     const upstreamJson = await upstream.json();
     res.json({ ok: true, service: 'rizz-maxx-analysis-adapter', upstream: upstreamJson });
   } catch (error) {
@@ -132,14 +142,23 @@ app.post('/v1/analyze-photo', upload.single('image'), async (req, res) => {
     return;
   }
 
+  if (!req.file.mimetype?.startsWith('image/')) {
+    res.status(400).json({ ok: false, error: 'uploaded file must be an image' });
+    return;
+  }
+
   try {
     const form = new FormData();
     form.append('image', new Blob([req.file.buffer], { type: req.file.mimetype || 'application/octet-stream' }), req.file.originalname || 'upload.jpg');
 
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), upstreamTimeoutMs);
     const upstreamRes = await fetch(`${upstreamBase}/analyze`, {
       method: 'POST',
       body: form,
+      signal: controller.signal,
     });
+    clearTimeout(timer);
 
     if (!upstreamRes.ok) {
       const text = await upstreamRes.text();
@@ -161,8 +180,22 @@ app.post('/v1/analyze-photo', upload.single('image'), async (req, res) => {
       upstreamSummary: mapped.upstreamSummary,
     });
   } catch (error) {
-    res.status(500).json({ ok: false, error: 'analysis adapter failure', detail: String(error) });
+    const detail = String(error);
+    const timedOut = detail.includes('AbortError');
+    res.status(timedOut ? 504 : 500).json({
+      ok: false,
+      error: timedOut ? 'analysis upstream timeout' : 'analysis adapter failure',
+      detail,
+    });
   }
+});
+
+app.use((error, _req, res, _next) => {
+  if (error?.code === 'LIMIT_FILE_SIZE') {
+    res.status(413).json({ ok: false, error: 'image too large', detail: 'maximum upload size is 12MB' });
+    return;
+  }
+  res.status(500).json({ ok: false, error: 'unexpected adapter error', detail: String(error) });
 });
 
 app.listen(port, () => {

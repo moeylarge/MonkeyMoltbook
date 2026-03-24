@@ -52,8 +52,9 @@ Updated: 2026-03-23 America/Los_Angeles
    - `rizz-maxx/server/src/index.mjs`
 2. Tighten the real analysis layer only
 3. Improve set-level ranking and feedback quality from the live per-photo signals
-4. Preserve the explicit mock fallback until the real path is robust
-5. Do not touch persistence or premium billing yet
+4. Add more backend failure-case coverage and recovery behavior
+5. Preserve the explicit mock fallback until the real path is robust
+6. Do not touch persistence or premium billing yet
 
 ## Important project truths to not lose
 

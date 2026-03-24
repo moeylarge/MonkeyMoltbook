@@ -23,6 +23,12 @@ Phase 5 — Real Analysis Integration
   - lead-photo weighting
   - set-level spread handling
   - action/feedback synthesis
+  - partial-success handling across multi-photo analysis runs
+- Hardened backend failure handling with:
+  - image-type validation
+  - upload size limits
+  - upstream timeout handling
+  - clearer adapter error responses
 - Cleaned the accidental `server/node_modules` git commit and added ignore protection for server dependencies
 - Kept persistence and billing untouched
 
@@ -30,6 +36,7 @@ Phase 5 — Real Analysis Integration
 - The adapter server boots successfully on `127.0.0.1:8091`
 - Adapter health check succeeds
 - Adapter successfully analyzes a real test image through the live upstream backend
+- Invalid non-image uploads are rejected cleanly with a 400 response instead of crashing the path
 - TypeScript compile passes (`npx tsc --noEmit`)
 - Expo web export succeeds (`npx expo export --platform web`)
 - In the app web proof flow:
@@ -39,20 +46,19 @@ Phase 5 — Real Analysis Integration
   - analyze action completes
   - results render
 - The proven app result path displayed `REAL LOCAL ANALYSIS`, confirming the app used the real adapter path rather than mock fallback during proof
-- After tightening the analysis layer, the real in-app path was re-proven successfully and still rendered `REAL LOCAL ANALYSIS`
-- The `server/node_modules` cleanup is complete at the tracked RIZZ MAXX subtree level once the current analysis-layer edits are committed
+- After tightening ranking/feedback synthesis and backend handling, the real in-app path was re-proven successfully and still rendered `REAL LOCAL ANALYSIS`
 
 ## WHAT IS UNVERIFIED
 - Native iOS/Android runtime remains unverified / environment-blocked on this machine
 - Real native device-library image picking is still unproven on device/simulator
 - Real ranking/feedback quality is improved but still early and heuristic, not yet calibrated specifically for dating-photo ranking
-- Backend robustness is not fully hardened yet
+- Backend robustness is improved but not fully hardened yet
 - Saved persistence is still shell-only
 - Premium billing/unlock logic is still shell-only
 - Full native-device visual QA is not complete
 
 ## CURRENT BLOCKER
-No hard blocker. The real path is live and re-proven. The main remaining gap is quality calibration and hardening, not connectivity.
+No hard blocker. The real path is live, re-proven, and more robust than before. The main remaining gap is calibration quality and broader hardening, not connectivity.
 
 ## NEXT EXACT STEP
-Commit the current tightened analysis-layer changes, then continue improving real set-level ranking quality and feedback quality while preserving the explicit mock fallback until the real path is robust.
+Continue improving real ranking/feedback quality, then add more backend failure-case coverage and recovery behavior before opening persistence.
