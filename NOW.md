@@ -17,35 +17,32 @@ Execution mode is locked to John’s master build directive:
 - no speculative re-architecture
 - no retry loops past 3 failed fix attempts
 
-Implementation must not begin with major feature coding before the required execution docs exist.
-That requirement is now satisfied.
-
 ## Current truth
 
 - project path: `/Users/moey/.openclaw/workspace/rizz-maxx`
-- current completed phase: **Phase 1 — Product Definition**
-- required execution docs exist:
-  - `rizz-maxx/PRD.md`
-  - `rizz-maxx/DESIGN_SYSTEM.md`
-  - `rizz-maxx/SCREENS_AND_FLOWS.md`
-  - `rizz-maxx/USER_JOURNEY.md`
-  - `rizz-maxx/DATABASE_SCHEMA.md`
-  - `rizz-maxx/API_SPEC.md`
-  - `rizz-maxx/ANALYSIS_LOGIC.md`
-  - `rizz-maxx/BUILD_PLAN.md`
-  - `rizz-maxx/VALIDATION_PLAN.md`
-  - `rizz-maxx/STATUS.md`
+- current completed phase: **Phase 3 — App Skeleton**
+- required execution docs exist
+- concrete design-definition docs exist
+- implementation scaffold exists at `rizz-maxx/app`
+- root navigation is implemented
+- shell screens exist for:
+  - onboarding
+  - upload
+  - results
+  - saved analyses
+  - premium
+  - settings
+- shell proof completed via compile + Expo web export + browser navigation check
 - product category is locked: AI dating profile optimizer mobile app
 - MVP explicitly excludes swiping, chat, messaging, social graph, marketplace, and broad coaching features
-- no implementation scaffold exists yet
 
 ## Current next steps
 
-1. Begin **Phase 3 — App Skeleton**
-2. Scaffold the mobile app shell
-3. Wire the narrow navigation structure
-4. Render onboarding, upload, results, saved analyses, premium, and settings shells
-5. Keep implementation inside the locked design system and MVP scope
+1. Begin **Phase 4 — Upload + Analysis Flow**
+2. Implement real photo selection
+3. Render thumbnail preview, remove, and replace interactions
+4. Add analyze trigger and loading state
+5. Render results from a real or mocked local payload without touching persistence or billing yet
 
 ## Secondary project state
 
@@ -57,10 +54,6 @@ That requirement is now satisfied.
 ## Guardrails
 
 - Do **not** create cron jobs or loops unless John explicitly asks
-- Do **not** switch project category or broaden scope
-- Do **not** code beyond phase order
-- Update continuity files before major project switches or resets
-icitly asks
 - Do **not** switch project category or broaden scope
 - Do **not** code beyond phase order
 - Update continuity files before major project switches or resets

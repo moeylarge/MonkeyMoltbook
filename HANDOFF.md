@@ -30,22 +30,22 @@ Updated: 2026-03-23 America/Los_Angeles
 - Product category is locked: AI dating profile optimizer, not a dating app
 - Execution order is locked:
   - PLAN -> DESIGN -> BUILD -> RUN -> VERIFY -> PROVE
-- Current completed phase: **Phase 2 — Design Definition**
+- Current completed phase: **Phase 3 — App Skeleton**
 - Required execution docs now exist
 - Concrete layout/component/copy system docs now exist
-- No implementation scaffold exists yet
-- Immediate mode is **Phase 3 — App Skeleton**, not feature drift
+- Implementation scaffold now exists at `rizz-maxx/app`
+- Immediate mode is **Phase 4 — Upload + Analysis Flow**, not persistence/billing drift
 
 ## What to do next for RIZZ MAXX
 
 1. Read:
    - `rizz-maxx/STATUS.md`
-   - `rizz-maxx/SCREENS_AND_FLOWS.md`
-   - `rizz-maxx/DESIGN_SYSTEM.md`
-2. Begin Phase 2 only
-3. Convert design system into concrete screen layouts/component structure
-4. Lock the results-screen hierarchy and premium-gate presentation
-5. Then scaffold the app shell in Phase 3
+   - `rizz-maxx/app/App.tsx`
+   - `rizz-maxx/app/src/screens/`
+2. Begin Phase 4 only
+3. Implement real photo selection in the upload surface
+4. Add loading-state and result-rendering path
+5. Do not touch persistence or premium billing until upload/results flow is proven
 
 ## Important project truths to not lose
 
