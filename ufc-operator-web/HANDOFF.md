@@ -57,12 +57,13 @@ When resuming this project, first verify reality before coding:
 ## Current next steps
 1. Treat `ufc-operator-web-recovered` as the current working deploy folder unless disproven
 2. Fix the recovered project's sync path so it writes into `ufc-operator-web-recovered/public/data/website_bundle.json` instead of the stale `ufc-operator-web` target
-3. Verify whether yesterday's fight-result update landed locally but did not deploy
-4. Verify whether the deploy is correct on Vercel but the apex domain is serving stale or misrouted DNS
-5. Compare `www.ufcpickspro.com` vs `ufcpickspro.com` vs `ufc-operator-web.vercel.app` to see where the updated state actually exists
-6. Verify `.env.local` and refresh dependencies are intact
-7. Validate the refresh/data pipeline before changing logic again
-8. Recover the Vercel-side project state directly if website behavior still diverges from local truth
+3. Keep resolved bets above pending bets in the default performance history sort so the site surfaces meaningful recent results first
+4. Verify whether yesterday's fight-result update landed locally but did not deploy
+5. Verify whether the deploy is correct on Vercel but the apex domain is serving stale or misrouted DNS
+6. Compare `www.ufcpickspro.com` vs `ufcpickspro.com` vs `ufc-operator-web.vercel.app` to see where the updated state actually exists
+7. Verify `.env.local` and refresh dependencies are intact
+8. Validate the refresh/data pipeline before changing logic again
+9. Recover the Vercel-side project state directly if website behavior still diverges from local truth
 
 ## Known issues / risks
 - visible workspace snapshot may not represent the full intended app state
