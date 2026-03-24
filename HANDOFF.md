@@ -53,7 +53,8 @@ Updated: 2026-03-23 America/Los_Angeles
 2. Phase 9 premium entitlement state is now working
 3. Saved analyses can be listed, reopened, deleted, and cleared from history, with a dedicated compare view
 4. Premium now has a structured local entitlement flow with product selection, unlock, restore, and reset, but no real billing yet
-5. Preserve the explicit mock fallback until the real path is robust
+5. Real billing is intentionally deferred because launch strategy is free-first for the first few weeks
+6. Preserve the explicit mock fallback until the real path is robust
 
 ## Important project truths to not lose
 

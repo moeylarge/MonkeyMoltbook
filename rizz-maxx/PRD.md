@@ -56,6 +56,12 @@ A user who wants more matches and a stronger dating profile without guessing whi
 - replacement guidance
 - profile strategy suggestions
 
+## Launch monetization strategy
+- launch free-first for the first few weeks
+- do not make live billing/provider integration part of the immediate launch-critical path
+- keep premium product structure and entitlement logic in place so monetization can be turned on later without re-architecting the app
+- during the free-first window, prioritize product quality, trust, retention, and result quality over payment plumbing
+
 ## UX standard
 - premium
 - dark-mode friendly

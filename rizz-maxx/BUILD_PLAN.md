@@ -44,6 +44,7 @@ Create and lock core documents.
 - paywall screen
 - gated details
 - unlock persistence
+- note: real store/provider billing may be deferred during the free-first launch window
 
 ## Phase 8 — QA + proof
 - onboarding proof

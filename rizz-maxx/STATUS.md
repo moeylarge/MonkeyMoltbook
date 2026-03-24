@@ -35,7 +35,7 @@ Phase 9 — Premium Entitlement State
 - Full native-device visual QA is not complete
 
 ## CURRENT BLOCKER
-No hard blocker. Premium entitlement behavior is now implemented locally, but actual store billing and real purchase verification still do not exist.
+No hard blocker. Premium entitlement behavior is now implemented locally. Real store billing and purchase verification are intentionally deferred because launch strategy is free-first for the first few weeks.
 
 ## NEXT EXACT STEP
-If you want to keep going on monetization, the next real phase is actual store/provider billing integration and real entitlement verification. If not, the premium entitlement prototype is complete enough for local product proof.
+Do not treat billing as the next active phase. During the free-first launch window, focus on product quality, result quality, and launch polish. Reopen real billing/provider integration later when monetization is actually being turned on.
