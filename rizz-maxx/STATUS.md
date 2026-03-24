@@ -5,12 +5,14 @@ Post-Launch Polish Follow-through
 
 ## WHAT IS DONE
 - Tightened real ranking/feedback calibration another step in `app/src/analysisApi.ts`
+- Added stronger set-confidence derivation and top-of-set calibration logic
 - Sharpened launch-facing copy and result framing across onboarding, upload, loading, and results
 - Created launch artifact docs:
   - `LAUNCH_QA.md`
   - `LAUNCH_COPY_NOTES.md`
   - `SCREENSHOT_PLAN.md`
   - `LAUNCH_POLISH_SUMMARY.md`
+  - `NATIVE_PROOF_BLOCKER.md`
 - Captured real screenshot deliverables into `rizz-maxx/screenshots/`:
   - `01-onboarding.png`
   - `02-upload.png`
@@ -18,6 +20,7 @@ Post-Launch Polish Follow-through
   - `04-saved.png`
   - `05-compare.png`
 - Re-proved the main web flow after these changes
+- Proved native iOS simulator launch and completed a practical native smoke test pass with user-confirmed results
 
 ## WHAT IS VERIFIED
 - TypeScript compile passes (`npx tsc --noEmit`)
@@ -31,19 +34,29 @@ Post-Launch Polish Follow-through
   - saved history renders
   - compare flow renders
 - The deeper ranking/feedback calibration pass did not break the real analysis path and still produced `REAL LOCAL ANALYSIS`
-- Native runtime proof was attempted again and remains blocked: no paired nodes/devices are available in this environment, and this host still lacks `simctl` / Xcode / Simulator
+- Native iOS simulator launch is proven
+- Native smoke test is now complete enough for launch confidence:
+  - onboarding passed
+  - upload passed
+  - analysis passed
+  - results passed
+  - saved reopen passed
+  - compare passed
+  - premium screen/unlock state worked, while real purchase action remains intentionally unimplemented
 
 ## WHAT IS UNVERIFIED
-- Full native iOS smoke test is not complete yet
-- Native launch is now proven in iPhone 17 Pro Simulator, but the rest of the native flow (picker, analysis, history, premium) is not yet fully driven end-to-end in simulator
-- Real native device-library image picking is still unproven on device/simulator
+- Android runtime is still unverified
+- Real native device-library image picking is still only as proven as the simulator run and has not been validated on a physical device
 - Persistence is still local-first only; no shared backend/account sync exists yet
 - Real ranking/feedback quality is improved but still heuristic, not calibrated against real dating outcome data
 - Real payment processing / store integration is not implemented
-- Full native-device visual QA is not complete
+- Full native-device visual QA on physical hardware is not complete
 
 ## CURRENT BLOCKER
-No blocker for web/local polish work. Native runtime proof remains blocked by missing Apple simulator tooling on this machine.
+No hard blocker. The free-first launch candidate is much stronger now. The main remaining gaps are deeper calibration, physical-device validation, and real billing/provider integration later.
 
 ## NEXT EXACT STEP
-If native proof matters next, run the app on a real device or a machine with full Xcode/Simulator installed. Otherwise continue with deeper calibration or final launch asset refinement.
+Best next moves are:
+1. deeper ranking/feedback calibration from real-world testing data
+2. physical-device native proof/QA on an actual iPhone
+3. final launch asset refinement if needed

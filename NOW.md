@@ -20,35 +20,38 @@ Execution mode is locked to John’s master build directive:
 ## Current truth
 
 - project path: `/Users/moey/.openclaw/workspace/rizz-maxx`
-- current completed phase: **Phase 5 — Real Analysis Integration**
-- required execution docs exist
+- current state: **free-first launch candidate with strong core loop, persistence/history, compare flow, and premium prototype gate**
 - implementation scaffold exists at `rizz-maxx/app`
 - local adapter server exists at `rizz-maxx/server`
-- the app now supports:
-  - sample/set loading
-  - remove/reorder controls
-  - minimum-photo analysis gating
-  - loading state
-  - results rendering
-- real analysis integration now exists via:
+- real analysis integration exists via:
   - app client: `rizz-maxx/app/src/analysisApi.ts`
   - adapter service: `http://127.0.0.1:8091`
   - upstream backend: `http://127.0.0.1:8089/analyze`
 - the app preserves an explicit fallback boundary:
   - `REAL LOCAL ANALYSIS` when the adapter path succeeds
   - `MOCKED LOCAL ANALYSIS` when it fails
-- real-path proof succeeded in the app web flow
-- native simulator/device runtime proof remains unverified on this machine because simulator tooling is unavailable
+- launch-critical polish pass is complete enough in the current environment
+- screenshot deliverables exist in `rizz-maxx/screenshots/`
+- native iOS simulator launch is proven
+- native smoke test is complete enough for launch confidence:
+  - onboarding passed
+  - upload passed
+  - analysis passed
+  - results passed
+  - saved reopen passed
+  - compare passed
+  - premium screen/unlock state worked; real purchase action is intentionally unimplemented
+- real billing / purchase flow integration remains intentionally deferred because launch strategy is free-first for the first few weeks
 - product category is locked: AI dating profile optimizer mobile app
 - MVP explicitly excludes swiping, chat, messaging, social graph, marketplace, and broad coaching features
 
 ## Current next steps
 
-1. Launch-critical polish and screenshot/export work are now complete enough in the current proof environment
-2. Real billing / purchase flow integration remains intentionally deferred because launch strategy is free-first for the first few weeks
-3. Native runtime is now partially proven: the app launches in iPhone 17 Pro Simulator, but the full native smoke test is not complete yet
-4. Keep explicit mock fallback until the real path is robust
-5. Best next moves are deeper calibration or native proof on a proper machine/device
+1. deeper ranking/feedback calibration from real-world testing data
+2. physical-device native proof/QA on an actual iPhone
+3. final launch asset refinement if needed
+4. keep explicit mock fallback until the real path is robust
+5. do not claim calibrated backend quality before proof
 
 ## Secondary project state
 
