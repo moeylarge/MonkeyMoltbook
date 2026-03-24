@@ -17,6 +17,22 @@ export type SavedAnalysis = {
   result: AnalysisResult;
 };
 
+export type PremiumEntitlement = {
+  unlocked: boolean;
+  productId: 'rizz-maxx-premium-monthly' | 'rizz-maxx-premium-lifetime' | null;
+  status: 'locked' | 'active';
+  unlockedAt: string | null;
+  source: 'none' | 'prototype-purchase' | 'prototype-restore';
+};
+
+const DEFAULT_ENTITLEMENT: PremiumEntitlement = {
+  unlocked: false,
+  productId: null,
+  status: 'locked',
+  unlockedAt: null,
+  source: 'none',
+};
+
 export async function listSavedAnalyses(): Promise<SavedAnalysis[]> {
   const raw = await AsyncStorage.getItem(ANALYSES_KEY);
   if (!raw) return [];
@@ -49,15 +65,43 @@ export async function clearSavedAnalyses(): Promise<void> {
   await AsyncStorage.removeItem(ANALYSES_KEY);
 }
 
-export async function isPremiumUnlocked(): Promise<boolean> {
+export async function getPremiumEntitlement(): Promise<PremiumEntitlement> {
   const raw = await AsyncStorage.getItem(PREMIUM_KEY);
-  return raw === 'true';
+  if (!raw) return DEFAULT_ENTITLEMENT;
+  try {
+    const parsed = JSON.parse(raw) as PremiumEntitlement;
+    return { ...DEFAULT_ENTITLEMENT, ...parsed };
+  } catch {
+    return DEFAULT_ENTITLEMENT;
+  }
 }
 
-export async function setPremiumUnlocked(value: boolean): Promise<void> {
-  if (value) {
-    await AsyncStorage.setItem(PREMIUM_KEY, 'true');
-  } else {
-    await AsyncStorage.removeItem(PREMIUM_KEY);
+export async function setPremiumEntitlement(entitlement: PremiumEntitlement): Promise<void> {
+  await AsyncStorage.setItem(PREMIUM_KEY, JSON.stringify(entitlement));
+}
+
+export async function unlockPremiumPrototype(productId: PremiumEntitlement['productId']): Promise<PremiumEntitlement> {
+  const next: PremiumEntitlement = {
+    unlocked: true,
+    productId,
+    status: 'active',
+    unlockedAt: new Date().toISOString(),
+    source: 'prototype-purchase',
+  };
+  await setPremiumEntitlement(next);
+  return next;
+}
+
+export async function restorePremiumPrototype(): Promise<PremiumEntitlement> {
+  const current = await getPremiumEntitlement();
+  if (current.unlocked) {
+    const restored: PremiumEntitlement = { ...current, source: 'prototype-restore' };
+    await setPremiumEntitlement(restored);
+    return restored;
   }
+  return current;
+}
+
+export async function resetPremiumPrototype(): Promise<void> {
+  await AsyncStorage.removeItem(PREMIUM_KEY);
 }

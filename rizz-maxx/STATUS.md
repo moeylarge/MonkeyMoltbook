@@ -1,37 +1,41 @@
 # STATUS.md
 
 ## CURRENT PHASE
-Phase 8 — Premium Prototype Gate
+Phase 9 — Premium Entitlement State
 
 ## WHAT IS DONE
-- Added a real local premium unlock state in storage
-- Added a premium preview block on results
-- Added a gated premium details block on results
-- Upgraded the premium screen from shell-only to a real local unlock/reset prototype surface
-- Preserved honesty: this is premium prototype state, not real billing
+- Added a structured local premium entitlement model in storage
+- Added product selection for premium monthly vs lifetime in the premium screen
+- Added local purchase-state handling:
+  - unlock selected product
+  - restore entitlement state
+  - reset entitlement state
+- Preserved honesty: this is entitlement-state prototype logic, not real billing provider integration
+- Kept results gating wired to the entitlement state
 
 ## WHAT IS VERIFIED
 - TypeScript compile passes (`npx tsc --noEmit`)
 - Expo web export succeeds (`npx expo export --platform web`)
 - Real adapter health still succeeds
 - In the app web proof flow:
-  - results show the locked premium preview state
   - premium screen opens
-  - local premium unlock works
-  - unlock state persists across navigation
-  - unlocked premium details render back on the results screen
-- The premium prototype gate is now real at the local-state level
+  - product selection works
+  - unlock works
+  - restore path works against stored entitlement state
+  - reset path works
+  - unlocked entitlement still changes the results screen correctly
+- The premium local entitlement flow is now real enough for product proof without pretending billing exists
 
 ## WHAT IS UNVERIFIED
 - Native iOS/Android runtime remains unverified / environment-blocked on this machine
 - Real native device-library image picking is still unproven on device/simulator
 - Persistence is still local-first only; no shared backend/account sync exists yet
 - Real ranking/feedback quality is still heuristic, not calibrated against real dating outcome data
-- Real payment processing / subscription logic is not implemented
+- Real payment processing / subscription provider integration is not implemented
 - Full native-device visual QA is not complete
 
 ## CURRENT BLOCKER
-No hard blocker. The premium prototype gate is working locally, but real billing and monetization infrastructure do not exist yet.
+No hard blocker. Premium entitlement behavior is now implemented locally, but actual store billing and real purchase verification still do not exist.
 
 ## NEXT EXACT STEP
-If you want to keep going on monetization, the next real phase is actual billing/purchase flow design and integration. If not, the current premium prototype gate is complete enough for local product proof.
+If you want to keep going on monetization, the next real phase is actual store/provider billing integration and real entitlement verification. If not, the premium entitlement prototype is complete enough for local product proof.

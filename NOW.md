@@ -44,7 +44,7 @@ Execution mode is locked to John’s master build directive:
 
 ## Current next steps
 
-1. Phase 8 premium prototype gate is now working in local-first form
+1. Phase 9 premium entitlement state is now working in local-first form
 2. The next monetization phase would be real billing / purchase flow integration
 3. Keep explicit mock fallback until the real path is robust
 4. Do not claim calibrated backend quality before proof

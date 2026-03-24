@@ -12,7 +12,7 @@ import { PrimaryButton } from '../components/PrimaryButton';
 import { ResultsHero } from '../components/ResultsHero';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { TopPhotoSummary } from '../components/TopPhotoSummary';
-import { isPremiumUnlocked, saveAnalysis } from '../storage';
+import { getPremiumEntitlement, saveAnalysis } from '../storage';
 import { theme } from '../theme';
 import { RootStackParamList } from '../types';
 
@@ -32,7 +32,7 @@ export function ResultsScreen({ navigation, route }: Props) {
   const analysisId = useMemo(() => savedId ?? `analysis-${Date.now()}-${result.score}`, [savedId, result.score]);
 
   useEffect(() => {
-    isPremiumUnlocked().then(setPremiumUnlocked).catch(() => setPremiumUnlocked(false));
+    getPremiumEntitlement().then((entitlement) => setPremiumUnlocked(entitlement.unlocked)).catch(() => setPremiumUnlocked(false));
   }, []);
 
   useEffect(() => {
