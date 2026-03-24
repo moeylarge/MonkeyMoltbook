@@ -59,6 +59,23 @@ function confidenceNumber(label: 'Low' | 'Medium' | 'High') {
   return label === 'High' ? 90 : label === 'Medium' ? 72 : 50;
 }
 
+function summarizeScore(score: number, spread: number, failedCount: number, degradedCount: number) {
+  if (score >= 84) {
+    return failedCount > 0
+      ? 'The set has real upside and a strong core, but a few failed reads still make the result slightly incomplete.'
+      : 'The set has a real core. Your top photos are doing enough work that cleanup now matters more than experimentation.';
+  }
+  if (score >= 74) {
+    return degradedCount > 0
+      ? 'The profile has workable signal, but low-signal photos are softening the result more than they should.'
+      : 'You are close. The strongest photos are useful, but the weaker ones still dilute the first impression.';
+  }
+  if (spread < 8) {
+    return 'The set is too flat to rely on ordering alone. You need stronger replacements, not just reshuffling.';
+  }
+  return 'Right now the weak photos are still doing too much damage. The fastest gain is cutting drag before adding anything new.';
+}
+
 async function analyzeOnePhoto(photo: PhotoItem) {
   const file = await photoUriToFile(photo);
   const form = new FormData();
@@ -99,8 +116,8 @@ async function analyzeOnePhoto(photo: PhotoItem) {
     const facePenalty = data.upstreamSummary.faceCount < 1 ? 10 : data.upstreamSummary.faceCount > 1 ? 4 : 0;
     const warningPenalty = data.upstreamSummary.faceWarning ? 5 : 0;
     const weightedScore = Math.round(
-      data.profileStrength * 0.3 +
-        (data.traits.leadStrength || data.profileStrength) * 0.32 +
+      data.profileStrength * 0.28 +
+        (data.traits.leadStrength || data.profileStrength) * 0.34 +
         data.traits.clarity * 0.13 +
         data.traits.lighting * 0.1 +
         data.traits.framing * 0.07 +
@@ -145,38 +162,33 @@ export async function analyzePhotoSet(photos: PhotoItem[]): Promise<AnalysisResu
 
     const strengths = uniqueKeepOrder([
       ...best.result!.strengths,
-      best.result!.upstreamSummary.faceWarning ? '' : 'Your strongest image gives you a clearly better lead-photo candidate than the rest of the set.',
-      spread >= 12 ? 'There is a visible difference between your strongest and weakest options, which makes cleanup worthwhile.' : '',
+      best.result!.upstreamSummary.faceWarning ? '' : 'Your strongest image earns the lead slot more clearly than the rest of the set.',
+      spread >= 12 ? 'There is enough separation between the top and bottom of the set that cleanup should produce visible gains.' : '',
       failedCount > 0 ? 'The real pass still recovered enough signal to rank most of the set.' : '',
     ]).slice(0, 3);
 
     const weaknesses = uniqueKeepOrder([
       ...weakest.result!.weaknesses,
-      weakest.result!.upstreamSummary.faceCount < 1 ? 'At least one weak photo may not even be reliably readable as a profile image.' : '',
-      spread < 8 ? 'The set is clustered too tightly to rely on ordering alone — better replacements matter.' : 'The bottom of the set is still creating avoidable drag compared with the top.',
-      ranked.length >= 4 ? 'Your set quality is uneven enough that the weakest slot changes how the whole profile reads.' : '',
-      failedCount > 0 ? 'Some photos failed the real pass, so this ranking is usable but not fully complete.' : '',
-      degradedCount > 0 ? 'One or more photos were scored as low-signal because no usable face was detected.' : '',
+      weakest.result!.upstreamSummary.faceCount < 1 ? 'At least one weak photo may not even read clearly enough to deserve profile space.' : '',
+      spread < 8 ? 'The set is too flat to rely on ordering alone — stronger replacements matter.' : 'The bottom of the set is still doing enough damage to change how the whole profile reads.',
+      ranked.length >= 4 ? 'Your weakest slot still changes the tone of the full profile.' : '',
+      failedCount > 0 ? 'Some photos failed the real pass, so this ranking is useful but not fully complete.' : '',
+      degradedCount > 0 ? 'One or more photos were treated as low-signal because no usable face read was found.' : '',
     ]).slice(0, 4);
 
     const actions = uniqueKeepOrder([
       ...weakest.result!.actions,
       'Lead with the strongest photo and remove the weakest one before judging the set again.',
-      spread < 8 ? 'Test stronger replacement candidates instead of just reshuffling the same set.' : 'Use the top image as the benchmark for every replacement decision.',
-      failedCount > 0 ? 'Re-run the failed photos after trimming file size or swapping in cleaner images.' : '',
-      degradedCount > 0 ? 'Replace low-signal photos with clearer solo images before trusting the set.' : '',
+      spread < 8 ? 'Do not just reshuffle this set — test stronger replacement candidates.' : 'Use the top image as the benchmark for every replacement decision.',
+      failedCount > 0 ? 'Re-run the failed photos after trimming file size or swapping in clearer images.' : '',
+      degradedCount > 0 ? 'Replace low-signal photos with cleaner solo shots before trusting the score.' : '',
     ]).slice(0, 4);
 
     return {
       source: 'real',
       score,
       confidence: confidenceAverage >= 85 ? 'High' : confidenceAverage >= 65 ? 'Medium' : 'Low',
-      summary:
-        score >= 80
-          ? 'The real local analysis pass found a usable base. Your top image is doing real work, but tighter set discipline will still improve the profile.'
-          : score >= 70
-            ? 'The real local analysis pass found enough signal to work with, but weaker photos are still dragging down the profile.'
-            : 'The real local analysis pass found usable signal, but the current set is leaking too much value to trust as-is.',
+      summary: summarizeScore(score, spread, failedCount, degradedCount),
       bestPhotoId: best.photo.id,
       weakestPhotoId: weakest.photo.id,
       strengths,

@@ -51,10 +51,11 @@ Updated: 2026-03-23 America/Los_Angeles
    - `rizz-maxx/app/src/analysisApi.ts`
    - `rizz-maxx/server/src/index.mjs`
 2. The requested launch-critical pass (result quality, arc polish, focused QA, launch-facing copy) is now complete enough in the current environment
-3. Saved analyses can be listed, reopened, deleted, and cleared from history, with a dedicated compare view
+3. Screenshot deliverables now exist in `rizz-maxx/screenshots/`
 4. Premium now has a structured local entitlement flow with product selection, unlock, restore, and reset, but no real billing yet
 5. Real billing is intentionally deferred because launch strategy is free-first for the first few weeks
-6. Preserve the explicit mock fallback until the real path is robust
+6. Native runtime proof is still blocked on this machine because Xcode/Simulator tooling is missing
+7. Preserve the explicit mock fallback until the real path is robust
 
 ## Important project truths to not lose
 

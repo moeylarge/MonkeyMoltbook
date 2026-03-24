@@ -1,63 +1,48 @@
 # STATUS.md
 
 ## CURRENT PHASE
-Launch-Critical Polish Pass
+Post-Launch Polish Follow-through
 
 ## WHAT IS DONE
-- Tightened result quality framing:
-  - sharper hero messaging
-  - clearer best-photo / first-photo-to-remove emphasis
-  - stronger meaning block explaining what the score actually means
-  - stronger action-plan framing
-- Tightened upload -> result emotional arc:
-  - sharper onboarding promise
-  - sharper upload honesty framing
-  - stronger loading copy
-  - harder-hitting result hierarchy
-- Completed focused launch QA pass across:
-  - onboarding
-  - upload empty state
-  - below-minimum gating
-  - loaded upload set
-  - result surface
-  - saved-history behavior
-  - compare flow
-  - premium locked/unlocked UX
-- Prepared launch-facing content docs:
+- Tightened real ranking/feedback calibration another step in `app/src/analysisApi.ts`
+- Sharpened launch-facing copy and result framing across onboarding, upload, loading, and results
+- Created launch artifact docs:
   - `LAUNCH_QA.md`
   - `LAUNCH_COPY_NOTES.md`
-- Kept free-first strategy intact and billing deferred
+  - `SCREENSHOT_PLAN.md`
+  - `LAUNCH_POLISH_SUMMARY.md`
+- Captured real screenshot deliverables into `rizz-maxx/screenshots/`:
+  - `01-onboarding.png`
+  - `02-upload.png`
+  - `03-results.png`
+  - `04-saved.png`
+  - `05-compare.png`
+- Re-proved the main web flow after these changes
 
 ## WHAT IS VERIFIED
 - TypeScript compile passes (`npx tsc --noEmit`)
 - Expo web export succeeds (`npx expo export --platform web`)
 - Real adapter health still succeeds
+- Launch-facing screenshot files now exist in the workspace
 - In the app web proof flow:
-  - onboarding renders with tighter launch copy
-  - upload empty state renders cleanly
-  - below-minimum photo gating works
-  - sample set load works
-  - analyze action completes
-  - result hero / best-photo / weakest-photo / next-step hierarchy renders cleanly
+  - onboarding renders
+  - upload renders
+  - result flow renders
   - saved history renders
-  - compare view renders
-  - premium locked/unlocked state still renders cleanly
-- The product loop now presents more sharply and more coherently than before in the current proof environment
+  - compare flow renders
+- Deeper ranking/feedback calibration changes did not break the current proof path
 
 ## WHAT IS UNVERIFIED
 - Native iOS/Android runtime remains unverified / environment-blocked on this machine
+- Native runtime proof is still blocked because this host only has Command Line Tools and does not have `simctl`, `Xcode.app`, or `Simulator.app`
 - Real native device-library image picking is still unproven on device/simulator
 - Persistence is still local-first only; no shared backend/account sync exists yet
 - Real ranking/feedback quality is improved but still heuristic, not calibrated against real dating outcome data
 - Real payment processing / store integration is not implemented
 - Full native-device visual QA is not complete
-- Final exported App Store screenshot assets have not been generated as finished deliverables yet
 
 ## CURRENT BLOCKER
-No hard blocker for the free-first launch-critical pass in this environment. The main remaining gaps are native runtime proof, deeper calibration, and final launch asset generation.
+No blocker for web/local polish work. Native runtime proof remains blocked by missing Apple simulator tooling on this machine.
 
 ## NEXT EXACT STEP
-The requested launch-critical 1-4 pass is complete enough to report finished. After that, the best next moves are either:
-1. deeper ranking/feedback calibration, or
-2. final App Store screenshot/export work, or
-3. native runtime/device proof on a machine that can actually run it.
+If native proof matters next, run the app on a real device or a machine with full Xcode/Simulator installed. Otherwise continue with deeper calibration or final launch asset refinement.
