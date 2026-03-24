@@ -68,7 +68,7 @@ export function PremiumScreen({ navigation }: Props) {
 
       <PricingOptionCard
         title="RizzMaxx Pro"
-        price="$4.99/mo"
+        price="$9.99/mo"
         subtitle="Full analysis, lineup strategy, replacement guidance, re-testing, and saved progress."
         selected={selectedProduct === 'rizz-maxx-premium-monthly'}
         onPress={() => setSelectedProduct('rizz-maxx-premium-monthly')}
