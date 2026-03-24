@@ -64,10 +64,19 @@ When resuming this project, first verify reality before coding:
 - visible workspace snapshot may not represent the full intended app state
 - important deployment state may currently live in Vercel rather than in the visible local files
 - John specifically recalls `ufcpickspro.com` plus password protection, and live-site verification confirms Basic Auth, but the implementation details are not currently recoverable from the visible workspace snapshot alone
+- there is now a known live-state mismatch: yesterday's updated fight results are not currently visible on the live site
+- apex domain DNS is currently suspect because Vercel recommends changing root `A` to `216.150.1.1`
+- `www.ufcpickspro.com` and `ufc-operator-web.vercel.app` may be healthier than apex `ufcpickspro.com`
 - logs may be present without a clean restorable runtime state
 - refresh scheduling may be fixed while the underlying job still fails
 
 ## Recovery order
+1. Read this file
+2. Inspect `.env.local` and runtime config
+3. Inspect refresh scripts/jobs
+4. If website state matters, inspect Vercel directly
+5. Run validation checks before changing anything
+order
 1. Read this file
 2. Inspect `.env.local` and runtime config
 3. Inspect refresh scripts/jobs
