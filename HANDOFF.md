@@ -30,11 +30,12 @@ Updated: 2026-03-23 America/Los_Angeles
 - Product category is locked: AI dating profile optimizer, not a dating app
 - Execution order is locked:
   - PLAN -> DESIGN -> BUILD -> RUN -> VERIFY -> PROVE
-- Current completed phase: **Phase 3 — App Skeleton**
+- Current completed phase: **Phase 4 — Upload + Analysis Flow**
 - Required execution docs now exist
 - Concrete layout/component/copy system docs now exist
 - Implementation scaffold now exists at `rizz-maxx/app`
-- Immediate mode is **Phase 4 — Upload + Analysis Flow**, not persistence/billing drift
+- Upload flow now supports sample/set loading, remove/reorder, minimum-photo gating, loading state, and mocked-payload result rendering
+- Immediate mode is tightening Phase 4, not persistence/billing drift
 - Native simulator proof remains unverified on this machine because Apple simulator tooling (`simctl`) is unavailable
 
 ## What to do next for RIZZ MAXX

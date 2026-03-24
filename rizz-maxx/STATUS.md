@@ -1,55 +1,50 @@
 # STATUS.md
 
 ## CURRENT PHASE
-Phase 3 — App Skeleton
+Phase 4 — Upload + Analysis Flow
 
 ## WHAT IS DONE
-- Created a real Expo + TypeScript mobile app scaffold in `rizz-maxx/app`
-- Added a real native stack navigation setup
-- Implemented shared shell/theme components:
-  - `AppShell`
-  - `ScreenHeader`
-  - `InsightCard`
-  - `PrimaryButton`
-- Implemented shell screens for the approved RIZZ MAXX MVP surface set:
-  - onboarding
-  - upload
-  - results
-  - saved analyses
-  - premium
-  - settings
-- Wired navigation across those screens with no dead-end route in the current shell loop
-- Added web-compatible accessibility labels on primary CTA buttons to support proof-level navigation checks
-- Ran a broader screen-by-screen visual QA pass at a mobile-sized viewport
+- Added Phase 4 dependencies for image picking flow
+- Implemented a real upload-state screen in `UploadScreen`
+- Added a real photo-set state model
+- Added working remove and reorder controls for uploaded photos
+- Added minimum-photo gating for analysis (requires at least 4 photos)
+- Added an analysis loading state
+- Added a mocked local analysis builder to drive the results flow honestly without pretending the real analysis engine exists yet
+- Updated `ResultsScreen` to render:
+  - profile score
+  - confidence level
+  - summary
+  - best photo
+  - weakest photo
+  - ranked set
+  - strengths
+  - weaknesses
+  - action plan
+- Preserved persistence and billing as out of scope for this phase
 
 ## WHAT IS VERIFIED
-- The app compiles successfully (`npx tsc --noEmit`)
-- The app shell renders successfully through Expo web export (`npx expo export --platform web`)
-- Root navigation renders
-- Primary navigation structure exists
-- These shell screens render without crashing in the current proof path:
-  - onboarding
-  - upload
-  - results
-  - saved analyses
-  - premium
-  - settings
-- Navigation between all shell screens was exercised successfully in sequence
-- Mobile-sized viewport render was checked on multiple shell screens
-- No dead-end route was found in the current shell path
-- No broken shell-level mobile layout was observed in the screens checked
+- TypeScript compile passes (`npx tsc --noEmit`)
+- Expo web export succeeds (`npx expo export --platform web`)
+- Upload flow proof works in current web proof mode using a sample set
+- The upload screen can load a 4-photo sample set
+- Reorder controls respond
+- Remove controls respond
+- Analysis gating correctly blocks runs below 4 photos
+- Analysis loading path exists
+- Analyze action successfully navigates into results when 4 photos are present
+- Results render from the current uploaded set using a mocked local payload
 
 ## WHAT IS UNVERIFIED
-- Native iOS/Android runtime has not been directly proven in a simulator/device yet
-- On this machine, iOS simulator proof is currently blocked because `simctl` is unavailable in PATH / developer tooling is not present
-- Upload behavior is not implemented
-- Analysis flow is not implemented
-- Persistence is not implemented
-- Premium billing/unlock logic is not implemented
+- Native iOS/Android runtime remains unverified / environment-blocked on this machine
+- Real native device-library image picking has not been proven on a device/simulator yet
+- Real analysis engine/backend integration is not implemented yet
+- Saved persistence is still shell-only
+- Premium billing/unlock logic is still shell-only
 - Full native-device visual QA is not complete
 
 ## CURRENT BLOCKER
-No blocker for moving into Phase 4. The only unresolved Phase 3 proof gap is native simulator/device runtime proof, which cannot be completed on this machine right now because simulator tooling is unavailable.
+No blocker for the current web-proof Phase 4 path. The next major gap is replacing the mocked local result builder with a real analysis pipeline when that phase is opened.
 
 ## NEXT EXACT STEP
-Begin Phase 4 — Upload + Analysis Flow: implement real photo selection, thumbnail preview, remove/replace interactions, analyze trigger, loading state, and result rendering without touching persistence or premium billing yet.
+Tighten the Phase 4 surface: improve the upload grid UX, refine result-screen presentation, and prepare the boundary for real analysis integration without starting persistence or billing work.

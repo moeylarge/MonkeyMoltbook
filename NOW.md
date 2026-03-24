@@ -40,11 +40,11 @@ Execution mode is locked to John’s master build directive:
 
 ## Current next steps
 
-1. Begin **Phase 4 — Upload + Analysis Flow**
-2. Implement real photo selection
-3. Render thumbnail preview, remove, and replace interactions
-4. Add analyze trigger and loading state
-5. Render results from a real or mocked local payload without touching persistence or billing yet
+1. Tighten the current **Phase 4** surface
+2. Improve the upload grid and result-screen presentation
+3. Keep the mocked local analysis boundary clean
+4. Prepare for later real analysis integration
+5. Do not start persistence or premium billing work yet
 
 ## Secondary project state
 
@@ -56,6 +56,10 @@ Execution mode is locked to John’s master build directive:
 ## Guardrails
 
 - Do **not** create cron jobs or loops unless John explicitly asks
+- Do **not** switch project category or broaden scope
+- Do **not** code beyond phase order
+- Update continuity files before major project switches or resets
+nless John explicitly asks
 - Do **not** switch project category or broaden scope
 - Do **not** code beyond phase order
 - Update continuity files before major project switches or resets
