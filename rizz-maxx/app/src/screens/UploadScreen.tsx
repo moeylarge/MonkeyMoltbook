@@ -1,13 +1,16 @@
 import * as ImagePicker from 'expo-image-picker';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 import { AppShell } from '../components/AppShell';
+import { EmptyUploadState } from '../components/EmptyUploadState';
 import { InsightCard } from '../components/InsightCard';
 import { LoadingState } from '../components/LoadingState';
+import { MetricCard } from '../components/MetricCard';
 import { PhotoTile } from '../components/PhotoTile';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { ScreenHeader } from '../components/ScreenHeader';
+import { SectionPill } from '../components/SectionPill';
 import { buildMockAnalysis } from '../mockAnalysis';
 import { theme } from '../theme';
 import { PhotoItem, RootStackParamList } from '../types';
@@ -27,6 +30,16 @@ export function UploadScreen({ navigation }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const usingWeb = Platform.OS === 'web';
+  const canAnalyze = photos.length >= 4;
+
+  const photoStats = useMemo(() => {
+    const remaining = Math.max(0, 10 - photos.length);
+    return {
+      count: `${photos.length}`,
+      remaining: `${remaining}`,
+      ready: canAnalyze ? 'Ready' : 'Needs 4+',
+    };
+  }, [photos.length, canAnalyze]);
 
   const addSamplePhotos = () => {
     setError(null);
@@ -87,7 +100,7 @@ export function UploadScreen({ navigation }: Props) {
   };
 
   const handleAnalyze = async () => {
-    if (photos.length < 4) {
+    if (!canAnalyze) {
       setError('Add at least 4 photos before analysis.');
       return;
     }
@@ -105,14 +118,21 @@ export function UploadScreen({ navigation }: Props) {
     <AppShell>
       <ScreenHeader
         eyebrow="Upload"
-        title="Upload 4-10 photos"
-        subtitle="Phase 4 now uses a real selectable set, reorder controls, remove actions, and an analysis trigger."
+        title="Build the set you would actually post"
+        subtitle="This flow is now real at the surface level: load a set, reorder it, remove weak shots, and run the mocked analysis path."
       />
 
+      <View style={styles.metricsRow}>
+        <MetricCard label="Photos loaded" value={photoStats.count} tone="accent" />
+        <MetricCard label="Open slots" value={photoStats.remaining} />
+        <MetricCard label="Analysis state" value={photoStats.ready} tone={canAnalyze ? 'positive' : 'negative'} />
+      </View>
+
       <InsightCard title="Upload zone">
+        <SectionPill label={usingWeb ? 'WEB PROOF MODE' : 'DEVICE PICKER'} tone="accent" />
         <Text style={styles.helper}>
           {usingWeb
-            ? 'Web proof mode uses a sample photo set so the flow can be exercised honestly without native library access.'
+            ? 'Web proof mode loads a sample set so the full upload-to-results flow can be exercised honestly without native library access.'
             : 'Pick a real photo set from your device library.'}
         </Text>
         <PrimaryButton
@@ -135,12 +155,16 @@ export function UploadScreen({ navigation }: Props) {
 
       {photos.length > 0 ? (
         <InsightCard title={`Photo set · ${photos.length} of 10`}>
+          <Text style={styles.setIntro}>
+            Reorder the set until the strongest likely lead sits near the front. Remove anything that weakens trust.
+          </Text>
           <View style={styles.grid}>
             {photos.map((photo, index) => (
               <PhotoTile
                 key={photo.id}
                 photo={photo}
-                rankLabel={`#${index + 1}`}
+                rankLabel={index === 0 ? 'Lead candidate' : `#${index + 1}`}
+                badgeTone={index === 0 ? 'best' : 'default'}
                 onRemove={() => removePhoto(photo.id)}
                 onMoveLeft={() => movePhoto(index, -1)}
                 onMoveRight={() => movePhoto(index, 1)}
@@ -151,12 +175,7 @@ export function UploadScreen({ navigation }: Props) {
           </View>
         </InsightCard>
       ) : (
-        <InsightCard title="Current shell scope">
-          <Text style={styles.body}>• Empty upload state is real</Text>
-          <Text style={styles.body}>• Photo set can now be loaded</Text>
-          <Text style={styles.body}>• Reorder/remove controls are active</Text>
-          <Text style={styles.body}>• Analyze CTA now drives a real mocked result path</Text>
-        </InsightCard>
+        <EmptyUploadState />
       )}
 
       <PrimaryButton label="Analyze my profile" onPress={handleAnalyze} />
@@ -165,15 +184,19 @@ export function UploadScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
+  metricsRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+  },
   helper: {
     color: theme.colors.textSecondary,
     fontSize: 14,
     lineHeight: 20,
   },
-  body: {
-    color: theme.colors.textPrimary,
-    fontSize: 16,
-    lineHeight: 22,
+  setIntro: {
+    color: theme.colors.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
   },
   error: {
     color: theme.colors.negative,

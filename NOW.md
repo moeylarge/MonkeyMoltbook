@@ -40,11 +40,11 @@ Execution mode is locked to John’s master build directive:
 
 ## Current next steps
 
-1. Tighten the current **Phase 4** surface
-2. Improve the upload grid and result-screen presentation
-3. Keep the mocked local analysis boundary clean
-4. Prepare for later real analysis integration
-5. Do not start persistence or premium billing work yet
+1. Hold the current mocked-flow **Phase 4** boundary
+2. Decide whether to further polish the current UI surface or open real analysis integration
+3. Keep persistence and premium billing untouched
+4. Preserve explicit mocked-analysis labeling until a real engine exists
+5. Do not claim backend completion before proof
 
 ## Secondary project state
 

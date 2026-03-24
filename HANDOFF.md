@@ -34,8 +34,8 @@ Updated: 2026-03-23 America/Los_Angeles
 - Required execution docs now exist
 - Concrete layout/component/copy system docs now exist
 - Implementation scaffold now exists at `rizz-maxx/app`
-- Upload flow now supports sample/set loading, remove/reorder, minimum-photo gating, loading state, and mocked-payload result rendering
-- Immediate mode is tightening Phase 4, not persistence/billing drift
+- Upload flow now supports sample/set loading, remove/reorder, minimum-photo gating, loading state, mocked-payload result rendering, and tighter UI presentation
+- Immediate mode is holding the honest mocked Phase 4 boundary until John decides whether to polish further or open real analysis integration
 - Native simulator proof remains unverified on this machine because Apple simulator tooling (`simctl`) is unavailable
 
 ## What to do next for RIZZ MAXX

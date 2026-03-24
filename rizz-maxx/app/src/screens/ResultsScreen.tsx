@@ -2,9 +2,12 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { AppShell } from '../components/AppShell';
 import { InsightCard } from '../components/InsightCard';
+import { ListBlock } from '../components/ListBlock';
+import { MetricCard } from '../components/MetricCard';
 import { PhotoTile } from '../components/PhotoTile';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { ScreenHeader } from '../components/ScreenHeader';
+import { SectionPill } from '../components/SectionPill';
 import { theme } from '../theme';
 import { RootStackParamList } from '../types';
 
@@ -23,14 +26,20 @@ export function ResultsScreen({ navigation, route }: Props) {
       <ScreenHeader
         eyebrow="Results"
         title="Your profile result"
-        subtitle="This is a real Phase 4 flow using the current uploaded set and a mocked local analysis payload."
+        subtitle="This remains an honest mocked-analysis presentation: real uploaded set, mocked local scoring layer."
       />
 
       <View style={styles.scoreHero}>
+        <SectionPill label="MOCKED LOCAL ANALYSIS" tone="accent" />
         <Text style={styles.score}>{result.score}</Text>
         <Text style={styles.scoreLabel}>Profile strength</Text>
-        <Text style={styles.confidence}>{result.confidence} confidence</Text>
         <Text style={styles.scoreSub}>{result.summary}</Text>
+      </View>
+
+      <View style={styles.metricsRow}>
+        <MetricCard label="Confidence" value={result.confidence} tone="accent" />
+        <MetricCard label="Photos scored" value={`${photos.length}`} />
+        <MetricCard label="First action" value="Cleanup" tone="negative" />
       </View>
 
       <InsightCard title="Best first photo">
@@ -59,21 +68,15 @@ export function ResultsScreen({ navigation, route }: Props) {
       </InsightCard>
 
       <InsightCard title="Strengths">
-        {result.strengths.map((item) => (
-          <Text key={item} style={styles.body}>• {item}</Text>
-        ))}
+        <ListBlock items={result.strengths} tone="positive" />
       </InsightCard>
 
       <InsightCard title="Weaknesses">
-        {result.weaknesses.map((item) => (
-          <Text key={item} style={styles.body}>• {item}</Text>
-        ))}
+        <ListBlock items={result.weaknesses} tone="negative" />
       </InsightCard>
 
       <InsightCard title="Action plan">
-        {result.actions.map((item) => (
-          <Text key={item} style={styles.body}>• {item}</Text>
-        ))}
+        <ListBlock items={result.actions} />
       </InsightCard>
 
       <PrimaryButton label="View saved analyses shell" onPress={() => navigation.navigate('Saved')} />
@@ -101,15 +104,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
   },
-  confidence: {
-    color: theme.colors.accentBlue,
-    fontSize: 14,
-    fontWeight: '700',
-  },
   scoreSub: {
     color: theme.colors.textSecondary,
     fontSize: 15,
     lineHeight: 22,
+  },
+  metricsRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.md,
   },
   heroImage: {
     width: '100%',
