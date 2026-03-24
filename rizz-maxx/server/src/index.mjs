@@ -18,15 +18,17 @@ app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 
 app.get('/health', async (_req, res) => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5000);
+
   try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 5000);
     const upstream = await fetch(`${upstreamBase}/health`, { signal: controller.signal });
-    clearTimeout(timer);
     const upstreamJson = await upstream.json();
     res.json({ ok: true, service: 'rizz-maxx-analysis-adapter', upstream: upstreamJson });
   } catch (error) {
     res.status(503).json({ ok: false, service: 'rizz-maxx-analysis-adapter', error: String(error) });
+  } finally {
+    clearTimeout(timer);
   }
 });
 
@@ -44,10 +46,20 @@ function toProfileStrength(raw) {
   return clamp(Math.round(raw), 1, 99);
 }
 
-function buildFeedback({ clarity, lighting, framing, confidenceSignal, styleSignal, faceCount }) {
+function buildFeedback({ clarity, lighting, framing, confidenceSignal, styleSignal, faceCount, faceWarning }) {
   const strengths = [];
   const weaknesses = [];
   const actions = [];
+
+  if (faceCount < 1) {
+    weaknesses.push('No usable face was detected, so this photo is weak for dating-profile analysis.');
+    actions.push('Use a clearer solo photo where your face is fully visible.');
+  }
+
+  if (faceWarning) {
+    weaknesses.push('Face detection confidence is weak, which makes this image less reliable as a profile asset.');
+    actions.push('Swap in a cleaner image with a larger, easier-to-read face.');
+  }
 
   if (clarity >= 78) strengths.push('The face reads sharply enough to support a stronger first impression.');
   else if (clarity >= 64) {
@@ -90,8 +102,8 @@ function buildFeedback({ clarity, lighting, framing, confidenceSignal, styleSign
 
   return {
     strengths: strengths.slice(0, 3),
-    weaknesses: weaknesses.slice(0, 3),
-    actions: actions.slice(0, 4),
+    weaknesses: weaknesses.slice(0, 4),
+    actions: actions.slice(0, 5),
   };
 }
 
@@ -102,17 +114,20 @@ function deriveSignals(upstream) {
   const contrast = Number(upstream?.quality?.contrast || 0);
   const blurScore = Number(upstream?.quality?.blurScore || 0);
   const faceCount = Number(upstream?.detection?.faceCount || 0);
+  const faceWarning = upstream?.detection?.warning || null;
   const breakdown = upstream?.looksmaxxing?.breakdown || {};
 
   const lighting = clamp(Math.round((brightness / 160) * 100 + contrast * 0.18), 1, 99);
   const clarity = clamp(Math.round((blurScore / 6) * 100), 1, 99);
-  const framing = faceCount === 1 ? 84 : faceCount > 1 ? 54 : 24;
+  const framing = faceCount === 1 ? 84 : faceCount > 1 ? 54 : 18;
   const confidenceSignal = clamp(Math.round((Number(breakdown.facialHarmony || 60) * 0.55) + (Number(breakdown.eyes || 60) * 0.45)), 1, 99);
   const styleSignal = clamp(Math.round((Number(breakdown.hairFraming || 60) * 0.4) + (Number(breakdown.skin || 60) * 0.35) + (Number(breakdown.jawline || 60) * 0.25)), 1, 99);
   const leadStrength = clamp(Math.round((clarity * 0.25) + (lighting * 0.2) + (framing * 0.2) + (confidenceSignal * 0.2) + (styleSignal * 0.15)), 1, 99);
 
-  const profileStrength = toProfileStrength(score * 0.35 + leadStrength * 0.4 + clarity * 0.1 + lighting * 0.08 + confidenceSignal * 0.07);
-  const feedback = buildFeedback({ clarity, lighting, framing, confidenceSignal, styleSignal, faceCount });
+  const baseStrength = score * 0.35 + leadStrength * 0.4 + clarity * 0.1 + lighting * 0.08 + confidenceSignal * 0.07;
+  const penalty = faceCount < 1 ? 18 : faceCount > 1 ? 8 : 0;
+  const profileStrength = toProfileStrength(baseStrength - penalty);
+  const feedback = buildFeedback({ clarity, lighting, framing, confidenceSignal, styleSignal, faceCount, faceWarning });
 
   return {
     profileStrength,
@@ -131,6 +146,7 @@ function deriveSignals(upstream) {
     upstreamSummary: {
       confidence,
       faceCount,
+      faceWarning,
       upstreamScore: score,
     },
   };
@@ -147,18 +163,18 @@ app.post('/v1/analyze-photo', upload.single('image'), async (req, res) => {
     return;
   }
 
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), upstreamTimeoutMs);
+
   try {
     const form = new FormData();
     form.append('image', new Blob([req.file.buffer], { type: req.file.mimetype || 'application/octet-stream' }), req.file.originalname || 'upload.jpg');
 
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), upstreamTimeoutMs);
     const upstreamRes = await fetch(`${upstreamBase}/analyze`, {
       method: 'POST',
       body: form,
       signal: controller.signal,
     });
-    clearTimeout(timer);
 
     if (!upstreamRes.ok) {
       const text = await upstreamRes.text();
@@ -187,6 +203,8 @@ app.post('/v1/analyze-photo', upload.single('image'), async (req, res) => {
       error: timedOut ? 'analysis upstream timeout' : 'analysis adapter failure',
       detail,
     });
+  } finally {
+    clearTimeout(timer);
   }
 });
 

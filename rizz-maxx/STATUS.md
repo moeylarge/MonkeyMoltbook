@@ -24,10 +24,12 @@ Phase 5 — Real Analysis Integration
   - set-level spread handling
   - action/feedback synthesis
   - partial-success handling across multi-photo analysis runs
+  - no-face / weak-face-read penalties and feedback
 - Hardened backend failure handling with:
   - image-type validation
   - upload size limits
   - upstream timeout handling
+  - timer cleanup in health/analyze paths
   - clearer adapter error responses
 - Cleaned the accidental `server/node_modules` git commit and added ignore protection for server dependencies
 - Kept persistence and billing untouched
@@ -46,7 +48,7 @@ Phase 5 — Real Analysis Integration
   - analyze action completes
   - results render
 - The proven app result path displayed `REAL LOCAL ANALYSIS`, confirming the app used the real adapter path rather than mock fallback during proof
-- After tightening ranking/feedback synthesis and backend handling, the real in-app path was re-proven successfully and still rendered `REAL LOCAL ANALYSIS`
+- After the latest backend hardening and analysis-quality pass, the real in-app path was re-proven successfully and still rendered `REAL LOCAL ANALYSIS`
 
 ## WHAT IS UNVERIFIED
 - Native iOS/Android runtime remains unverified / environment-blocked on this machine
@@ -61,4 +63,4 @@ Phase 5 — Real Analysis Integration
 No hard blocker. The real path is live, re-proven, and more robust than before. The main remaining gap is calibration quality and broader hardening, not connectivity.
 
 ## NEXT EXACT STEP
-Continue improving real ranking/feedback quality, then add more backend failure-case coverage and recovery behavior before opening persistence.
+Continue broadening backend failure-case coverage and recovery behavior, then keep improving ranking/feedback calibration before opening persistence.
