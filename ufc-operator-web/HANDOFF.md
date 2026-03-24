@@ -56,14 +56,24 @@ When resuming this project, first verify reality before coding:
 
 ## Current next steps
 1. Treat `ufc-operator-web-recovered` as the current working deploy folder unless disproven
-2. Fix the recovered project's sync path so it writes into `ufc-operator-web-recovered/public/data/website_bundle.json` instead of the stale `ufc-operator-web` target
+2. Keep the recovered project's sync path pointing into `ufc-operator-web-recovered/public/data/website_bundle.json`
 3. Keep resolved bets above pending bets in the default performance history sort so the site surfaces meaningful recent results first
-4. Verify whether yesterday's fight-result update landed locally but did not deploy
-5. Verify whether the deploy is correct on Vercel but the apex domain is serving stale or misrouted DNS
-6. Compare `www.ufcpickspro.com` vs `ufcpickspro.com` vs `ufc-operator-web.vercel.app` to see where the updated state actually exists
-7. Verify `.env.local` and refresh dependencies are intact
-8. Validate the refresh/data pipeline before changing logic again
-9. Recover the Vercel-side project state directly if website behavior still diverges from local truth
+4. If live-site state drifts again, compare `www.ufcpickspro.com`, `ufcpickspro.com`, and `ufc-operator-web.vercel.app` before guessing at DNS vs deploy
+5. Verify `.env.local` / `.env.vercel.local` and refresh dependencies are intact
+6. Validate the refresh/data pipeline before changing logic again
+7. Recover the Vercel-side project state directly if website behavior diverges from local truth
+
+## Most recent completed work
+- corrected the recovered project's sync target so website bundle data writes into `ufc-operator-web-recovered/public/data/website_bundle.json`
+- deployed from `ufc-operator-web-recovered`
+- patched performance history sort so resolved bets show before pending bets
+- verified the March 21 card completeness issue was partly a display-order problem and partly a missing-ledger-row problem
+- backfilled missing ledger rows for fight IDs `7` and `12`
+- resolved those backfilled rows as:
+  - `7` → `loss`
+  - `12` → `win`
+- left fight `14` unresolved because the bout appeared canceled
+- user confirmed the site update looked correct after the fixes
 
 ## Known issues / risks
 - visible workspace snapshot may not represent the full intended app state
