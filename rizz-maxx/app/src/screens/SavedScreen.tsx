@@ -3,7 +3,9 @@ import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { StyleSheet, Text, View } from 'react-native';
 import { AppShell } from '../components/AppShell';
+import { CompareDetailsCard } from '../components/CompareDetailsCard';
 import { CompareSummaryCard } from '../components/CompareSummaryCard';
+import { HistoryStatsCard } from '../components/HistoryStatsCard';
 import { InsightCard } from '../components/InsightCard';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { SavedAnalysisCard } from '../components/SavedAnalysisCard';
@@ -34,7 +36,8 @@ export function SavedScreen({ navigation }: Props) {
       if (!previous) return null;
       const delta = item.score - previous.score;
       if (delta === 0) return 'No score change';
-      return `${delta > 0 ? '+' : ''}${delta} vs previous`;
+      const leadChanged = item.bestPhotoId !== previous.bestPhotoId;
+      return `${delta > 0 ? '+' : ''}${delta} vs previous${leadChanged ? ' · new lead' : ''}`;
     });
   }, [items]);
 
@@ -56,7 +59,9 @@ export function SavedScreen({ navigation }: Props) {
         subtitle="Phase 6 now persists completed reports locally, lets you reopen them, and gives lightweight trend comparison."
       />
 
+      <HistoryStatsCard items={items} />
       <CompareSummaryCard latest={items[0]} previous={items[1]} />
+      <CompareDetailsCard latest={items[0]} previous={items[1]} />
 
       {items.length === 0 ? (
         <InsightCard title="No saved analyses yet">

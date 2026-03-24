@@ -1,7 +1,7 @@
 # STATUS.md
 
 ## CURRENT PHASE
-Phase 6 — Persistence
+Phase 6 — Persistence + History Refinement
 
 ## WHAT IS DONE
 - Added local-first persistence using AsyncStorage
@@ -13,8 +13,10 @@ Phase 6 — Persistence
 - Added local persistence edge-case controls:
   - delete single saved analysis
   - clear all saved analyses
-- Added lightweight history/compare UX:
+- Added history/compare refinement UX:
   - comparison summary card
+  - compare details card
+  - history stats card
   - simple latest-vs-previous delta labels
 - Kept premium billing untouched
 
@@ -33,6 +35,7 @@ Phase 6 — Persistence
   - tapping a saved analysis reopens the full report successfully
   - deleting a saved analysis works
   - clearing all saved analyses works
+  - history stats and compare blocks render correctly
 - The persisted flow still renders `REAL LOCAL ANALYSIS` when the real path succeeds
 
 ## WHAT IS UNVERIFIED
@@ -44,7 +47,7 @@ Phase 6 — Persistence
 - Full native-device visual QA is not complete
 
 ## CURRENT BLOCKER
-No hard blocker. Phase 6 local persistence is functionally working and proven in the current environment, including basic edge-case controls.
+No hard blocker. The non-premium persistence/history surface is now meaningfully complete for the current local-first scope.
 
 ## NEXT EXACT STEP
-Open the next non-premium refinement phase: improve history/compare UX further if needed, or move to the phase after persistence while keeping premium untouched.
+Open the next major phase after persistence/history, while continuing to keep premium untouched until explicitly opened.

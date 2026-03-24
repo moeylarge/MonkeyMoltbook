@@ -50,8 +50,8 @@ Updated: 2026-03-23 America/Los_Angeles
    - `rizz-maxx/STATUS.md`
    - `rizz-maxx/app/src/analysisApi.ts`
    - `rizz-maxx/server/src/index.mjs`
-2. Phase 6 local persistence is now working
-3. Saved analyses can be listed, reopened, deleted, and cleared from history
+2. Phase 6 local persistence/history is now working
+3. Saved analyses can be listed, reopened, deleted, and cleared from history, with lightweight compare/history UX
 4. Do not touch premium billing yet
 5. Preserve the explicit mock fallback until the real path is robust
 
