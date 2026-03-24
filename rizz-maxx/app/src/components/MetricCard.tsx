@@ -25,7 +25,9 @@ export function MetricCard({ label, value, tone = 'default' }: Props) {
 
 const styles = StyleSheet.create({
   card: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 96,
     minHeight: 88,
     borderRadius: theme.radius.xl,
     padding: theme.spacing.lg,
@@ -48,6 +50,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     lineHeight: 28,
     fontWeight: '800',
+    flexWrap: 'wrap',
   },
   label: {
     color: theme.colors.textSecondary,

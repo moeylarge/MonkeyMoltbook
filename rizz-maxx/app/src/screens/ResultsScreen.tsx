@@ -1,13 +1,14 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { AppShell } from '../components/AppShell';
 import { InsightCard } from '../components/InsightCard';
 import { ListBlock } from '../components/ListBlock';
 import { MetricCard } from '../components/MetricCard';
 import { PhotoTile } from '../components/PhotoTile';
 import { PrimaryButton } from '../components/PrimaryButton';
+import { ResultsHero } from '../components/ResultsHero';
 import { ScreenHeader } from '../components/ScreenHeader';
-import { SectionPill } from '../components/SectionPill';
+import { TopPhotoSummary } from '../components/TopPhotoSummary';
 import { theme } from '../theme';
 import { RootStackParamList } from '../types';
 
@@ -29,27 +30,30 @@ export function ResultsScreen({ navigation, route }: Props) {
         subtitle="This remains an honest mocked-analysis presentation: real uploaded set, mocked local scoring layer."
       />
 
-      <View style={styles.scoreHero}>
-        <SectionPill label="MOCKED LOCAL ANALYSIS" tone="accent" />
-        <Text style={styles.score}>{result.score}</Text>
-        <Text style={styles.scoreLabel}>Profile strength</Text>
-        <Text style={styles.scoreSub}>{result.summary}</Text>
+      <ResultsHero score={result.score} summary={result.summary} />
+
+      <View style={styles.metricsGrid}>
+        <MetricCard label="Conf." value={result.confidence === 'Medium' ? 'Med' : result.confidence === 'High' ? 'High' : 'Low'} tone="accent" />
+        <MetricCard label="Photos" value={`${photos.length}`} />
+        <MetricCard label="Move" value="Cut weak" tone="negative" />
       </View>
 
-      <View style={styles.metricsRow}>
-        <MetricCard label="Confidence" value={result.confidence} tone="accent" />
-        <MetricCard label="Photos scored" value={`${photos.length}`} />
-        <MetricCard label="First action" value="Cleanup" tone="negative" />
-      </View>
-
-      <InsightCard title="Best first photo">
-        <Image source={{ uri: bestPhoto.uri }} style={styles.heroImage} />
-        <Text style={styles.body}>This image currently gives you the strongest lead-photo position in the set.</Text>
+      <InsightCard title="Top signal">
+        <TopPhotoSummary
+          uri={bestPhoto.uri}
+          title="This is your strongest lead-photo candidate"
+          body="It gives the set the best first-impression position right now and should anchor the profile unless a stronger replacement beats it later."
+          tone="positive"
+        />
       </InsightCard>
 
-      <InsightCard title="Weakest photo">
-        <Image source={{ uri: weakestPhoto.uri }} style={styles.heroImage} />
-        <Text style={styles.body}>This photo is creating the most drag and should be the first removal candidate.</Text>
+      <InsightCard title="Biggest drag">
+        <TopPhotoSummary
+          uri={weakestPhoto.uri}
+          title="This is the first removal candidate"
+          body="It creates the most drag in the current set and is the cleanest place to improve the profile fast."
+          tone="negative"
+        />
       </InsightCard>
 
       <InsightCard title="Ranked set">
@@ -85,44 +89,10 @@ export function ResultsScreen({ navigation, route }: Props) {
 }
 
 const styles = StyleSheet.create({
-  scoreHero: {
-    borderRadius: theme.radius.sheet,
-    padding: theme.spacing.xxxl,
-    backgroundColor: theme.colors.surfaceElevated,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    gap: theme.spacing.sm,
-  },
-  score: {
-    color: theme.colors.textPrimary,
-    fontSize: 56,
-    lineHeight: 60,
-    fontWeight: '800',
-  },
-  scoreLabel: {
-    color: theme.colors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  scoreSub: {
-    color: theme.colors.textSecondary,
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  metricsRow: {
+  metricsGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: theme.spacing.md,
-  },
-  heroImage: {
-    width: '100%',
-    aspectRatio: 1.12,
-    borderRadius: theme.radius.xl,
-    backgroundColor: theme.colors.surfaceElevated,
-  },
-  body: {
-    color: theme.colors.textPrimary,
-    fontSize: 16,
-    lineHeight: 22,
   },
   grid: {
     flexDirection: 'row',

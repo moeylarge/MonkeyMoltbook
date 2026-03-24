@@ -28,6 +28,8 @@ Phase 4 — Upload + Analysis Flow
   - stronger results hierarchy
   - cleaner strengths / weaknesses / action-plan rendering
   - explicit mocked-analysis labeling
+  - stronger top-signal / biggest-drag presentation
+  - mobile-friendly metric-card copy tightening after visual QA exposed cramped labels
 - Preserved persistence and billing as out of scope for this phase
 
 ## WHAT IS VERIFIED
@@ -42,6 +44,7 @@ Phase 4 — Upload + Analysis Flow
 - Analyze action successfully navigates into results when 4 photos are present
 - Results render from the current uploaded set using a mocked local payload
 - Tightened upload metrics and stronger results presentation render correctly in the proven flow
+- Mobile visual QA exposed cramped metric-card content, that issue was fixed, and the corrected result screen re-rendered cleanly
 
 ## WHAT IS UNVERIFIED
 - Native iOS/Android runtime remains unverified / environment-blocked on this machine
@@ -55,4 +58,4 @@ Phase 4 — Upload + Analysis Flow
 No blocker for the current web-proof Phase 4 path. The next major gap is replacing the mocked local result builder with a real analysis pipeline when that phase is opened.
 
 ## NEXT EXACT STEP
-Hold the current mocked-flow boundary, then decide whether to (1) further polish the Phase 4 UI surface or (2) open the next implementation phase for real analysis integration.
+Open the next implementation phase for real analysis integration while preserving the current honest mocked-flow boundary until the real engine is actually proven.

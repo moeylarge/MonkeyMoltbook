@@ -11,6 +11,7 @@ import { PhotoTile } from '../components/PhotoTile';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { SectionPill } from '../components/SectionPill';
+import { UploadTipsCard } from '../components/UploadTipsCard';
 import { buildMockAnalysis } from '../mockAnalysis';
 import { theme } from '../theme';
 import { PhotoItem, RootStackParamList } from '../types';
@@ -119,7 +120,7 @@ export function UploadScreen({ navigation }: Props) {
       <ScreenHeader
         eyebrow="Upload"
         title="Build the set you would actually post"
-        subtitle="This flow is now real at the surface level: load a set, reorder it, remove weak shots, and run the mocked analysis path."
+        subtitle="This flow is real at the surface level: load a set, reorder it, remove weak shots, and run the mocked analysis path."
       />
 
       <View style={styles.metricsRow}>
@@ -141,6 +142,8 @@ export function UploadScreen({ navigation }: Props) {
         />
       </InsightCard>
 
+      <UploadTipsCard />
+
       {error ? (
         <InsightCard title="Issue">
           <Text style={styles.error}>{error}</Text>
@@ -156,7 +159,7 @@ export function UploadScreen({ navigation }: Props) {
       {photos.length > 0 ? (
         <InsightCard title={`Photo set · ${photos.length} of 10`}>
           <Text style={styles.setIntro}>
-            Reorder the set until the strongest likely lead sits near the front. Remove anything that weakens trust.
+            Reorder until the strongest likely lead sits near the front. Remove anything that weakens trust or clarity.
           </Text>
           <View style={styles.grid}>
             {photos.map((photo, index) => (

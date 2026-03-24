@@ -40,10 +40,10 @@ Execution mode is locked to John’s master build directive:
 
 ## Current next steps
 
-1. Hold the current mocked-flow **Phase 4** boundary
-2. Decide whether to further polish the current UI surface or open real analysis integration
+1. Open the next implementation phase for real analysis integration
+2. Preserve the current honest mocked-flow boundary until the real engine is actually proven
 3. Keep persistence and premium billing untouched
-4. Preserve explicit mocked-analysis labeling until a real engine exists
+4. Preserve explicit mocked-analysis labeling until the real engine replaces it
 5. Do not claim backend completion before proof
 
 ## Secondary project state
