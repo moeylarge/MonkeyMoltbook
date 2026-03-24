@@ -20,31 +20,35 @@ Execution mode is locked to John’s master build directive:
 ## Current truth
 
 - project path: `/Users/moey/.openclaw/workspace/rizz-maxx`
-- current completed phase: **Phase 3 — App Skeleton**
+- current completed phase: **Phase 5 — Real Analysis Integration**
 - required execution docs exist
-- concrete design-definition docs exist
 - implementation scaffold exists at `rizz-maxx/app`
-- root navigation is implemented
-- shell screens exist for:
-  - onboarding
-  - upload
-  - results
-  - saved analyses
-  - premium
-  - settings
-- shell proof completed via compile + Expo web export + browser navigation check
-- broader mobile-sized visual QA pass completed for shell screens
+- local adapter server exists at `rizz-maxx/server`
+- the app now supports:
+  - sample/set loading
+  - remove/reorder controls
+  - minimum-photo analysis gating
+  - loading state
+  - results rendering
+- real analysis integration now exists via:
+  - app client: `rizz-maxx/app/src/analysisApi.ts`
+  - adapter service: `http://127.0.0.1:8091`
+  - upstream backend: `http://127.0.0.1:8089/analyze`
+- the app preserves an explicit fallback boundary:
+  - `REAL LOCAL ANALYSIS` when the adapter path succeeds
+  - `MOCKED LOCAL ANALYSIS` when it fails
+- real-path proof succeeded in the app web flow
 - native simulator/device runtime proof remains unverified on this machine because simulator tooling is unavailable
 - product category is locked: AI dating profile optimizer mobile app
 - MVP explicitly excludes swiping, chat, messaging, social graph, marketplace, and broad coaching features
 
 ## Current next steps
 
-1. Open the next implementation phase for real analysis integration
-2. Preserve the current honest mocked-flow boundary until the real engine is actually proven
-3. Keep persistence and premium billing untouched
-4. Preserve explicit mocked-analysis labeling until the real engine replaces it
-5. Do not claim backend completion before proof
+1. Tighten the real analysis layer
+2. Improve set-level ranking and feedback quality from the live per-photo signals
+3. Preserve explicit mock fallback until the real path is robust
+4. Keep persistence and premium billing untouched
+5. Do not claim calibrated backend quality before proof
 
 ## Secondary project state
 
@@ -56,10 +60,6 @@ Execution mode is locked to John’s master build directive:
 ## Guardrails
 
 - Do **not** create cron jobs or loops unless John explicitly asks
-- Do **not** switch project category or broaden scope
-- Do **not** code beyond phase order
-- Update continuity files before major project switches or resets
-nless John explicitly asks
 - Do **not** switch project category or broaden scope
 - Do **not** code beyond phase order
 - Update continuity files before major project switches or resets

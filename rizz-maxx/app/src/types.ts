@@ -7,6 +7,7 @@ export type PhotoItem = {
 };
 
 export type AnalysisResult = {
+  source: 'real' | 'mock';
   score: number;
   confidence: 'Low' | 'Medium' | 'High';
   summary: string;

@@ -14,8 +14,8 @@ Updated: 2026-03-23 America/Los_Angeles
    - `HANDOFF.md`
 3. Open the active project's local continuity files:
    - `rizz-maxx/STATUS.md`
-   - `rizz-maxx/PRD.md`
-   - `rizz-maxx/DESIGN_SYSTEM.md`
+   - `rizz-maxx/app/src/analysisApi.ts`
+   - `rizz-maxx/server/src/index.mjs`
 4. If OpenClaw itself seems unhealthy, check service status:
    - `openclaw gateway status`
    - if needed: `openclaw gateway start`
@@ -30,24 +30,29 @@ Updated: 2026-03-23 America/Los_Angeles
 - Product category is locked: AI dating profile optimizer, not a dating app
 - Execution order is locked:
   - PLAN -> DESIGN -> BUILD -> RUN -> VERIFY -> PROVE
-- Current completed phase: **Phase 4 — Upload + Analysis Flow**
+- Current completed phase: **Phase 5 — Real Analysis Integration**
 - Required execution docs now exist
-- Concrete layout/component/copy system docs now exist
-- Implementation scaffold now exists at `rizz-maxx/app`
-- Upload flow now supports sample/set loading, remove/reorder, minimum-photo gating, loading state, mocked-payload result rendering, and tighter UI presentation
-- Immediate mode is opening real analysis integration next while preserving the honest mocked Phase 4 boundary until the real engine is actually proven
+- Implementation scaffold exists at `rizz-maxx/app`
+- Local analysis adapter exists at `rizz-maxx/server`
+- App analysis path now works like this:
+  1. upload/select photos
+  2. app attempts real local adapter analysis at `127.0.0.1:8091`
+  3. adapter calls live upstream backend at `127.0.0.1:8089/analyze`
+  4. results are reframed into RIZZ MAXX output
+  5. if the real path fails, the app falls back explicitly to mock
+- Real-path proof succeeded in the app web flow and displayed `REAL LOCAL ANALYSIS`
 - Native simulator proof remains unverified on this machine because Apple simulator tooling (`simctl`) is unavailable
 
 ## What to do next for RIZZ MAXX
 
 1. Read:
    - `rizz-maxx/STATUS.md`
-   - `rizz-maxx/app/App.tsx`
-   - `rizz-maxx/app/src/screens/`
-2. Begin Phase 4 only
-3. Implement real photo selection in the upload surface
-4. Add loading-state and result-rendering path
-5. Do not touch persistence or premium billing until upload/results flow is proven
+   - `rizz-maxx/app/src/analysisApi.ts`
+   - `rizz-maxx/server/src/index.mjs`
+2. Tighten the real analysis layer only
+3. Improve set-level ranking and feedback quality from the live per-photo signals
+4. Preserve the explicit mock fallback until the real path is robust
+5. Do not touch persistence or premium billing yet
 
 ## Important project truths to not lose
 
@@ -55,7 +60,7 @@ Updated: 2026-03-23 America/Los_Angeles
 - It is not a dating app and must not drift into chat/social/marketplace features
 - The emotional loop is critical: judged -> empowered -> wants to improve -> wants deeper detail
 - Results should be framed around profile effectiveness and first-impression strength, not fake scientific certainty
-- The product must feel premium, modern, emotionally engaging, and App Store-ready
+- The real path is proven live, but quality/calibration is still early and should not be overstated
 
 ## Background project notes
 

@@ -27,10 +27,10 @@ export function ResultsScreen({ navigation, route }: Props) {
       <ScreenHeader
         eyebrow="Results"
         title="Your profile result"
-        subtitle="This remains an honest mocked-analysis presentation: real uploaded set, mocked local scoring layer."
+        subtitle="This result stays honest about its source: real local analysis when available, explicit mock fallback when it is not."
       />
 
-      <ResultsHero score={result.score} summary={result.summary} />
+      <ResultsHero score={result.score} summary={result.summary} source={result.source} />
 
       <View style={styles.metricsGrid}>
         <MetricCard label="Conf." value={result.confidence === 'Medium' ? 'Med' : result.confidence === 'High' ? 'High' : 'Low'} tone="accent" />

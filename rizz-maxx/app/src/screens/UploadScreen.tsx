@@ -12,7 +12,7 @@ import { PrimaryButton } from '../components/PrimaryButton';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { SectionPill } from '../components/SectionPill';
 import { UploadTipsCard } from '../components/UploadTipsCard';
-import { buildMockAnalysis } from '../mockAnalysis';
+import { analyzePhotoSet } from '../analysisApi';
 import { theme } from '../theme';
 import { PhotoItem, RootStackParamList } from '../types';
 
@@ -109,8 +109,8 @@ export function UploadScreen({ navigation }: Props) {
     setIsLoading(true);
     setError(null);
 
-    await new Promise((resolve) => setTimeout(resolve, 900));
-    const result = buildMockAnalysis(photos);
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    const result = await analyzePhotoSet(photos);
     setIsLoading(false);
     navigation.navigate('Results', { photos, result });
   };
@@ -120,7 +120,7 @@ export function UploadScreen({ navigation }: Props) {
       <ScreenHeader
         eyebrow="Upload"
         title="Build the set you would actually post"
-        subtitle="This flow is real at the surface level: load a set, reorder it, remove weak shots, and run the mocked analysis path."
+        subtitle="This flow is real at the surface level: load a set, reorder it, remove weak shots, and run either the real local analysis adapter or the explicit mock fallback."
       />
 
       <View style={styles.metricsRow}>

@@ -17,12 +17,13 @@ export function buildMockAnalysis(photos: PhotoItem[]): AnalysisResult {
   const spread = ranked[0].score - ranked[ranked.length - 1].score;
 
   return {
+    source: 'mock',
     score: average,
     confidence: photos.length >= 6 ? 'High' : photos.length >= 4 ? 'Medium' : 'Low',
     summary:
       average >= 80
-        ? 'You have real potential here. The top of the set is strong, but cleanup still matters.'
-        : 'There is enough here to work with, but the weaker photos are dragging down the overall impression.',
+        ? 'The mocked local pass sees potential here. The top of the set is strong, but cleanup still matters.'
+        : 'The mocked local pass sees enough here to work with, but the weaker photos are dragging down the overall impression.',
     bestPhotoId: best.id,
     weakestPhotoId: weakest.id,
     strengths: [

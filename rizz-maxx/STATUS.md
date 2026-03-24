@@ -1,61 +1,50 @@
 # STATUS.md
 
 ## CURRENT PHASE
-Phase 4 — Upload + Analysis Flow
+Phase 5 — Real Analysis Integration
 
 ## WHAT IS DONE
-- Added Phase 4 dependencies for image picking flow
-- Implemented a real upload-state screen in `UploadScreen`
-- Added a real photo-set state model
-- Added working remove and reorder controls for uploaded photos
-- Added minimum-photo gating for analysis (requires at least 4 photos)
-- Added an analysis loading state
-- Added a mocked local analysis builder to drive the results flow honestly without pretending the real analysis engine exists yet
-- Updated `ResultsScreen` to render:
-  - profile score
-  - confidence level
-  - summary
-  - best photo
-  - weakest photo
-  - ranked set
+- Built a real local analysis adapter service in `rizz-maxx/server`
+- Wired that adapter to the live local LooksMaxx backend running at `127.0.0.1:8089`
+- Mapped upstream face-analysis output into RIZZ MAXX framing:
+  - profile strength
+  - confidence label
   - strengths
   - weaknesses
   - action plan
-- Tightened the Phase 4 presentation layer with:
-  - upload metrics
-  - stronger empty upload state
-  - better set-building guidance
-  - stronger results hierarchy
-  - cleaner strengths / weaknesses / action-plan rendering
-  - explicit mocked-analysis labeling
-  - stronger top-signal / biggest-drag presentation
-  - mobile-friendly metric-card copy tightening after visual QA exposed cramped labels
-- Preserved persistence and billing as out of scope for this phase
+- Added a real app-side analysis client in `app/src/analysisApi.ts`
+- Updated the upload/results flow so analysis now attempts the real local adapter first
+- Preserved an explicit mock fallback path if the real adapter is unavailable or fails
+- Updated results presentation so the source is labeled honestly:
+  - `REAL LOCAL ANALYSIS`
+  - or `MOCKED LOCAL ANALYSIS`
+- Kept persistence and billing untouched
 
 ## WHAT IS VERIFIED
+- The adapter server boots successfully on `127.0.0.1:8091`
+- Adapter health check succeeds
+- Adapter successfully analyzes a real test image through the live upstream backend
 - TypeScript compile passes (`npx tsc --noEmit`)
 - Expo web export succeeds (`npx expo export --platform web`)
-- Upload flow proof works in current web proof mode using a sample set
-- The upload screen can load a 4-photo sample set
-- Reorder controls respond
-- Remove controls respond
-- Analysis gating correctly blocks runs below 4 photos
-- Analysis loading path exists
-- Analyze action successfully navigates into results when 4 photos are present
-- Results render from the current uploaded set using a mocked local payload
-- Tightened upload metrics and stronger results presentation render correctly in the proven flow
-- Mobile visual QA exposed cramped metric-card content, that issue was fixed, and the corrected result screen re-rendered cleanly
+- In the app web proof flow:
+  - onboarding renders
+  - upload renders
+  - sample set loads
+  - analyze action completes
+  - results render
+- The proven app result path displayed `REAL LOCAL ANALYSIS`, confirming the app used the real adapter path rather than mock fallback during proof
 
 ## WHAT IS UNVERIFIED
 - Native iOS/Android runtime remains unverified / environment-blocked on this machine
-- Real native device-library image picking has not been proven on a device/simulator yet
-- Real analysis engine/backend integration is not implemented yet
+- Real native device-library image picking is still unproven on device/simulator
+- Multi-photo analysis quality is still heuristic at the adapter layer and not yet calibrated specifically for dating-profile ranking
+- Full backend robustness/error handling is not complete
 - Saved persistence is still shell-only
 - Premium billing/unlock logic is still shell-only
 - Full native-device visual QA is not complete
 
 ## CURRENT BLOCKER
-No blocker for the current web-proof Phase 4 path. The next major gap is replacing the mocked local result builder with a real analysis pipeline when that phase is opened.
+No blocker for continued real-analysis integration. The main open gap is quality/calibration: the current real adapter is proven live, but it is still an early mapping layer rather than a tuned dating-photo ranking engine.
 
 ## NEXT EXACT STEP
-Open the next implementation phase for real analysis integration while preserving the current honest mocked-flow boundary until the real engine is actually proven.
+Tighten the real analysis layer: improve how per-photo real signals combine into set-level ranking, feedback, and action quality, then re-prove the real path without removing the explicit mock fallback.

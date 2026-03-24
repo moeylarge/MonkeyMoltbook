@@ -5,15 +5,16 @@ import { SectionPill } from './SectionPill';
 type Props = {
   score: number;
   summary: string;
+  source: 'real' | 'mock';
 };
 
-export function ResultsHero({ score, summary }: Props) {
+export function ResultsHero({ score, summary, source }: Props) {
   const tone = score >= 80 ? 'positive' : score >= 70 ? 'accent' : 'negative';
   const label = score >= 80 ? 'STRONG BASE' : score >= 70 ? 'SOLID, NEEDS CLEANUP' : 'LEAKING VALUE';
 
   return (
     <View style={styles.wrap}>
-      <SectionPill label="MOCKED LOCAL ANALYSIS" tone="accent" />
+      <SectionPill label={source === 'real' ? 'REAL LOCAL ANALYSIS' : 'MOCKED LOCAL ANALYSIS'} tone="accent" />
       <SectionPill label={label} tone={tone === 'accent' ? 'accent' : tone} />
       <Text style={styles.score}>{score}</Text>
       <Text style={styles.label}>Profile strength</Text>
