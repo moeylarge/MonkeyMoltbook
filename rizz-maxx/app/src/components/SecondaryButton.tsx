@@ -18,21 +18,22 @@ export function SecondaryButton({ label, onPress, style, tone = 'default' }: Pro
 
 const styles = StyleSheet.create({
   button: {
-    minHeight: 48,
-    borderRadius: theme.radius.lg,
+    minHeight: 52,
+    borderRadius: theme.radius.xl,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.surfaceLuxury,
     borderWidth: 1,
-    borderColor: theme.colors.border,
-    paddingHorizontal: theme.spacing.lg,
+    borderColor: theme.colors.borderSoft,
+    paddingHorizontal: theme.spacing.xl,
   },
   danger: {
-    backgroundColor: 'rgba(255,93,115,0.10)',
+    backgroundColor: 'rgba(200,30,58,0.12)',
   },
   label: {
     color: theme.colors.textPrimary,
     fontSize: 15,
     fontWeight: '700',
+    letterSpacing: 0.1,
   },
 });

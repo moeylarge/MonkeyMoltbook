@@ -22,17 +22,23 @@ export function PrimaryButton({ label, onPress, style }: Props) {
 
 const styles = StyleSheet.create({
   button: {
-    minHeight: 56,
-    borderRadius: theme.radius.lg,
+    minHeight: 60,
+    borderRadius: theme.radius.xl,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.accentViolet,
+    backgroundColor: theme.colors.negative,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.06)',
+    paddingHorizontal: theme.spacing.xl,
+    shadowColor: theme.colors.shadow,
+    shadowOpacity: 0.22,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 8 },
   },
   label: {
     color: theme.colors.textPrimary,
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '800',
+    letterSpacing: 0.2,
   },
 });

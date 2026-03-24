@@ -31,9 +31,9 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: theme.spacing.xxl,
-    paddingTop: theme.spacing.xxl,
-    paddingBottom: theme.spacing.xxxl,
+    paddingTop: theme.spacing.xxxl,
+    paddingBottom: theme.spacing.xxxxl,
     backgroundColor: theme.colors.background,
-    gap: theme.spacing.lg,
+    gap: theme.spacing.xl,
   },
 });

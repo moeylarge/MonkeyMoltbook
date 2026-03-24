@@ -54,20 +54,20 @@ export function SavedScreen({ navigation }: Props) {
   return (
     <AppShell>
       <ScreenHeader
-        eyebrow="History"
-        title="Saved analyses"
-        subtitle="Phase 6 now persists completed reports locally, lets you reopen them, and gives lightweight trend comparison."
+        eyebrow="Profile History"
+        title="Saved profile versions"
+        subtitle="Reopen older results, compare stronger sets against weaker ones, and track how the lineup evolves over time."
       />
 
       <HistoryStatsCard items={items} />
       <CompareSummaryCard latest={items[0]} previous={items[1]} />
       <CompareDetailsCard latest={items[0]} previous={items[1]} />
 
-      {items.length >= 2 ? <PrimaryButton label="Open compare view" onPress={() => navigation.navigate('Compare')} /> : null}
+      {items.length >= 2 ? <PrimaryButton label="Compare your latest two sets" onPress={() => navigation.navigate('Compare')} /> : null}
 
       {items.length === 0 ? (
-        <InsightCard title="No saved analyses yet">
-          <Text style={styles.body}>Run an analysis first, then it will appear here automatically.</Text>
+        <InsightCard title="No saved profile versions yet">
+          <Text style={styles.body}>Run an analysis first, then save and compare better lineups over time from here.</Text>
         </InsightCard>
       ) : (
         <>
@@ -80,12 +80,12 @@ export function SavedScreen({ navigation }: Props) {
               onDelete={() => handleDelete(item.id)}
             />
           ))}
-          <SecondaryButton label="Clear saved analyses" onPress={handleClear} tone="danger" />
+          <SecondaryButton label="Clear saved profile versions" onPress={handleClear} tone="danger" />
         </>
       )}
 
       <View style={styles.actions}>
-        <PrimaryButton label="Premium shell" onPress={() => navigation.navigate('Premium')} />
+        <PrimaryButton label="Open RizzMaxx Pro" onPress={() => navigation.navigate('Premium')} />
       </View>
     </AppShell>
   );

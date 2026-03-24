@@ -10,8 +10,8 @@ export function HistoryStatsCard({ items }: Props) {
   if (items.length === 0) {
     return (
       <View style={styles.card}>
-        <Text style={styles.title}>History stats</Text>
-        <Text style={styles.body}>No saved runs yet.</Text>
+        <Text style={styles.title}>Profile history</Text>
+        <Text style={styles.body}>No saved profile versions yet.</Text>
       </View>
     );
   }
@@ -22,11 +22,11 @@ export function HistoryStatsCard({ items }: Props) {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>History stats</Text>
+      <Text style={styles.title}>Profile history</Text>
       <View style={styles.row}>
         <View style={styles.metric}>
           <Text style={styles.value}>{items.length}</Text>
-          <Text style={styles.label}>Saved runs</Text>
+          <Text style={styles.label}>Saved versions</Text>
         </View>
         <View style={styles.metric}>
           <Text style={styles.value}>{best}</Text>

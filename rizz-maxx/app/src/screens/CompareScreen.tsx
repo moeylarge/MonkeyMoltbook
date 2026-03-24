@@ -31,34 +31,34 @@ export function CompareScreen({ navigation }: Props) {
     <AppShell>
       <ScreenHeader
         eyebrow="Compare"
-        title="Retest comparison"
-        subtitle="See what actually changed between your latest saved runs."
+        title="Re-test your lineup"
+        subtitle="See what changed between your latest two profile versions and whether the new set is actually stronger."
       />
 
       <CompareSummaryCard latest={latest} previous={previous} />
       <CompareDetailsCard latest={latest} previous={previous} />
 
       {!latest || !previous ? (
-        <InsightCard title="Not enough saved runs">
-          <Text style={styles.body}>Save at least two analyses to make the compare loop useful.</Text>
+        <InsightCard title="Not enough saved versions">
+          <Text style={styles.body}>Save at least two analyses to make re-testing and profile comparison useful.</Text>
         </InsightCard>
       ) : (
         <>
           <SavedAnalysisCard
             item={latest}
-            comparisonLabel="Latest run"
+            comparisonLabel="Latest version"
             onPress={() => navigation.navigate('Results', { photos: latest.photos, result: latest.result, savedId: latest.id })}
           />
           <SavedAnalysisCard
             item={previous}
-            comparisonLabel="Previous run"
+            comparisonLabel="Previous version"
             onPress={() => navigation.navigate('Results', { photos: previous.photos, result: previous.result, savedId: previous.id })}
           />
         </>
       )}
 
       <View style={styles.actions}>
-        <PrimaryButton label="Back to saved analyses" onPress={() => navigation.navigate('Saved')} />
+        <PrimaryButton label="Back to profile history" onPress={() => navigation.navigate('Saved')} />
       </View>
     </AppShell>
   );

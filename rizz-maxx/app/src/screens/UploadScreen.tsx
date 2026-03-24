@@ -120,8 +120,12 @@ export function UploadScreen({ navigation }: Props) {
       <ScreenHeader
         eyebrow="Upload"
         title="Build the set you would actually post"
-        subtitle="Load the real set, not the flattering set. The sharper the input truth, the sharper the result."
+        subtitle="Load the real set, not the ego set. Cleaner input creates a sharper result."
       />
+
+      <InsightCard title="Free preview first">
+        <Text style={styles.helper}>See the signal first. Unlock Pro only if you want the deeper strategy.</Text>
+      </InsightCard>
 
       <View style={styles.metricsRow}>
         <MetricCard label="Photos loaded" value={photoStats.count} tone="accent" />
@@ -129,15 +133,15 @@ export function UploadScreen({ navigation }: Props) {
         <MetricCard label="Analysis state" value={photoStats.ready} tone={canAnalyze ? 'positive' : 'negative'} />
       </View>
 
-      <InsightCard title="Upload zone">
-        <SectionPill label={usingWeb ? 'WEB PROOF MODE' : 'DEVICE PICKER'} tone="accent" />
+      <InsightCard title="Build your set">
+        <SectionPill label={usingWeb ? 'WEB PREVIEW' : 'PHOTO PICKER'} tone="accent" />
         <Text style={styles.helper}>
           {usingWeb
-            ? 'Web proof mode loads a sample set so the full upload-to-results flow can be exercised honestly without native library access.'
-            : 'Pick a real photo set from your device library.'}
+            ? 'Use a sample set to preview the full flow when native library access is unavailable.'
+            : 'Choose the photos you would seriously consider posting.'}
         </Text>
         <PrimaryButton
-          label={usingWeb ? 'Load sample photo set' : 'Pick photos'}
+          label={usingWeb ? 'Load sample set' : 'Pick photos'}
           onPress={handlePickImages}
         />
       </InsightCard>
@@ -151,10 +155,10 @@ export function UploadScreen({ navigation }: Props) {
       ) : null}
 
       {isLoading ? (
-        <InsightCard title="Analysis loading">
+        <InsightCard title="Analysis in progress">
           <LoadingState
-            label="Finding the photos that help you — and the ones that quietly hurt the profile."
-            sublabel="This is where the app decides what should lead, what should be cut, and what your next improvement move is."
+            label="Reading the photos that help your profile — and the ones that quietly weaken it."
+            sublabel="This is where your strongest opener, weakest cut, and next lineup move are being built." 
           />
         </InsightCard>
       ) : null}

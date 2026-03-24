@@ -12,7 +12,7 @@ export function CompareDetailsCard({ latest, previous }: Props) {
     return (
       <View style={styles.card}>
         <Text style={styles.title}>What changed</Text>
-        <Text style={styles.body}>Save at least two runs to compare profile movement.</Text>
+        <Text style={styles.body}>Save at least two runs to compare how your profile is moving over time.</Text>
       </View>
     );
   }
@@ -32,8 +32,8 @@ export function CompareDetailsCard({ latest, previous }: Props) {
       <Text style={styles.title}>What changed</Text>
       <Text style={styles.body}>
         Your latest saved run {directionText}.{' '}
-        {changedLead ? 'The lead-photo recommendation changed.' : 'The lead-photo recommendation stayed the same.'}{' '}
-        {changedWeakest ? 'The weakest-photo slot changed too.' : 'The weakest-photo slot stayed the same.'}
+        {changedLead ? 'This new lead photo beats your previous #1.' : 'Your lead photo stayed the same.'}{' '}
+        {changedWeakest ? 'You also changed the weakest-photo slot, which is a good sign of active cleanup.' : 'The weakest-photo slot stayed the same, so that may still need attention.'}
       </Text>
     </View>
   );

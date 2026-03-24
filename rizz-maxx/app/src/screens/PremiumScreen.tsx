@@ -1,92 +1,118 @@
 import { useEffect, useState } from 'react';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { StyleSheet, Text, View } from 'react-native';
+import { Linking, StyleSheet, Text, View } from 'react-native';
 import { AppShell } from '../components/AppShell';
 import { InsightCard } from '../components/InsightCard';
 import { PricingOptionCard } from '../components/PricingOptionCard';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { SecondaryButton } from '../components/SecondaryButton';
 import { ScreenHeader } from '../components/ScreenHeader';
-import { getPremiumEntitlement, PremiumEntitlement, resetPremiumPrototype, restorePremiumPrototype, unlockPremiumPrototype } from '../storage';
+import { BillingProductId, BillingState, getBillingState, getPlanLabel, getPlanStatusLabel, purchasePlan, restorePurchases } from '../billing';
 import { theme } from '../theme';
 import { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Premium'>;
 
-type ProductId = 'rizz-maxx-premium-monthly' | 'rizz-maxx-premium-lifetime';
+type ProductId = BillingProductId;
 
 export function PremiumScreen({ navigation }: Props) {
-  const [entitlement, setEntitlement] = useState<PremiumEntitlement | null>(null);
+  const [billing, setBilling] = useState<BillingState | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<ProductId>('rizz-maxx-premium-monthly');
-
-  const refresh = () => {
-    getPremiumEntitlement().then(setEntitlement).catch(() => setEntitlement(null));
-  };
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const [busyAction, setBusyAction] = useState<'purchase' | 'restore' | null>(null);
 
   useEffect(() => {
-    refresh();
+    getBillingState().then(setBilling).catch(() => setBilling(null));
   }, []);
 
-  const handleUnlock = async () => {
-    const next = await unlockPremiumPrototype(selectedProduct);
-    setEntitlement(next);
+  const handleUnlock = async (productId: ProductId = selectedProduct) => {
+    setBusyAction('purchase');
+    setFeedback('Opening secure purchase...');
+    const result = await purchasePlan(productId);
+    setBilling(result.state);
+    setSelectedProduct(productId);
+    setFeedback(result.message);
+    setBusyAction(null);
   };
 
   const handleRestore = async () => {
-    const next = await restorePremiumPrototype();
-    setEntitlement(next);
+    setBusyAction('restore');
+    setFeedback('Restoring purchases...');
+    const result = await restorePurchases();
+    setBilling(result.state);
+    setFeedback(result.message);
+    setBusyAction(null);
   };
 
-  const handleReset = async () => {
-    await resetPremiumPrototype();
-    refresh();
+  const handleManage = async () => {
+    if (!billing?.manageUrl) return;
+    await Linking.openURL(billing.manageUrl);
   };
-
-  const unlocked = entitlement?.unlocked ?? false;
 
   return (
     <AppShell>
       <ScreenHeader
-        eyebrow="Premium"
-        title="Unlock the full profile strategy"
-        subtitle="This phase adds local purchase-state and entitlement behavior, but still no real billing provider integration."
+        eyebrow="RIZZMAXX PRO"
+        title="Keep improving your profile over time."
+        subtitle="Full ranking, lineup strategy, replacement guidance, and re-testing for stronger profile versions."
       />
 
-      <InsightCard title="Premium state">
-        <Text style={styles.body}>
-          {unlocked
-            ? `Premium is active in local prototype mode${entitlement?.productId ? ` via ${entitlement.productId}` : ''}.`
-            : 'Premium is currently locked.'}
-        </Text>
+      <InsightCard title="Current plan">
+        <Text style={styles.body}>{billing ? `${getPlanLabel(billing.plan)} · ${getPlanStatusLabel(billing.plan)}` : 'Free Preview · Locked'}</Text>
+        {feedback ? <Text style={styles.note}>{feedback}</Text> : null}
+      </InsightCard>
+
+      <InsightCard title="Free preview first">
+        <Text style={styles.body}>See the signal first. Upgrade only if you want the deeper strategy and ongoing progress tools.</Text>
       </InsightCard>
 
       <PricingOptionCard
-        title="Premium Monthly"
-        price="$9.99"
-        subtitle="Use this as the default recurring option in prototype state."
+        title="RizzMaxx Pro"
+        price="$4.99/mo"
+        subtitle="Full analysis, lineup strategy, replacement guidance, re-testing, and saved progress."
         selected={selectedProduct === 'rizz-maxx-premium-monthly'}
         onPress={() => setSelectedProduct('rizz-maxx-premium-monthly')}
       />
       <PricingOptionCard
-        title="Premium Lifetime"
-        price="$49"
-        subtitle="Use this as the one-time unlock option in prototype state."
+        title="Lifetime Access"
+        price="$29.99"
+        subtitle="One payment. Full unlock. Permanent access."
         selected={selectedProduct === 'rizz-maxx-premium-lifetime'}
         onPress={() => setSelectedProduct('rizz-maxx-premium-lifetime')}
       />
 
-      <InsightCard title="Premium unlock preview">
-        <Text style={styles.body}>• Strongest 6-photo order</Text>
-        <Text style={styles.body}>• Deeper per-photo breakdown</Text>
-        <Text style={styles.body}>• Better replacement strategy</Text>
-        <Text style={styles.body}>• Stronger profile positioning guidance</Text>
+      <InsightCard title="Inside Pro">
+        <Text style={styles.body}>• full ranked photo order</Text>
+        <Text style={styles.body}>• strongest lead photo and first cut</Text>
+        <Text style={styles.body}>• best 6-photo lineup strategy</Text>
+        <Text style={styles.body}>• replacement guidance for weak photos</Text>
+        <Text style={styles.body}>• compare new sets against older ones</Text>
+        <Text style={styles.body}>• saved progress across profile versions</Text>
+      </InsightCard>
+
+      <InsightCard title="Why it is monthly">
+        <Text style={styles.body}>RizzMaxx Pro is for repeated improvement, not a one-time guess. Re-test new photos, compare stronger sets against weaker ones, and keep refining the lineup.</Text>
       </InsightCard>
 
       <View style={styles.actions}>
-        {!unlocked ? <PrimaryButton label="Unlock premium prototype" onPress={handleUnlock} /> : null}
-        <SecondaryButton label="Restore premium prototype" onPress={handleRestore} />
-        {unlocked ? <SecondaryButton label="Reset premium prototype" onPress={handleReset} tone="danger" /> : null}
-        <PrimaryButton label="Open settings shell" onPress={() => navigation.navigate('Settings')} />
+        {billing?.plan !== 'pro-monthly' ? (
+          <PrimaryButton
+            label={busyAction === 'purchase' && selectedProduct === 'rizz-maxx-premium-monthly' ? 'Opening purchase...' : 'Unlock RizzMaxx Pro'}
+            onPress={() => handleUnlock('rizz-maxx-premium-monthly')}
+            style={styles.unlockButton}
+          />
+        ) : null}
+        {billing?.plan !== 'lifetime' ? (
+          <SecondaryButton
+            label={busyAction === 'purchase' && selectedProduct === 'rizz-maxx-premium-lifetime' ? 'Opening purchase...' : 'Get Lifetime Access'}
+            onPress={() => handleUnlock('rizz-maxx-premium-lifetime')}
+            style={styles.lifetimeButton}
+          />
+        ) : null}
+        <Text style={styles.microcopy}>Sharper lineup. Better first impression. Faster results.</Text>
+        <SecondaryButton label={busyAction === 'restore' ? 'Restoring purchases...' : 'Restore purchases'} onPress={handleRestore} />
+        {billing?.plan === 'pro-monthly' ? <SecondaryButton label="Manage subscription" onPress={handleManage} /> : null}
+        <SecondaryButton label="Open settings" onPress={() => navigation.navigate('Settings')} style={styles.settingsButton} />
       </View>
     </AppShell>
   );
@@ -98,7 +124,29 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 22,
   },
+  note: {
+    color: theme.colors.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  microcopy: {
+    color: theme.colors.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
+  },
   actions: {
     gap: theme.spacing.md,
+  },
+  unlockButton: {
+    backgroundColor: theme.colors.negative,
+  },
+  lifetimeButton: {
+    minHeight: 52,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  settingsButton: {
+    backgroundColor: '#6EA8FF',
+    minHeight: 50,
   },
 });

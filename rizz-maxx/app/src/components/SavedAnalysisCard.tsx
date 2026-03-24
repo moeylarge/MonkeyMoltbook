@@ -16,7 +16,7 @@ export function SavedAnalysisCard({ item, comparisonLabel, onPress, onDelete }: 
 
   return (
     <View style={styles.card}>
-      <Pressable accessibilityRole="button" accessibilityLabel={`Open saved analysis ${item.id}`} onPress={onPress} style={styles.pressable}>
+      <Pressable accessibilityRole="button" accessibilityLabel={`Open saved profile version ${item.id}`} onPress={onPress} style={styles.pressable}>
         <Image source={{ uri: lead?.uri }} style={styles.image} />
         <View style={styles.body}>
           <View style={styles.row}>
@@ -26,6 +26,7 @@ export function SavedAnalysisCard({ item, comparisonLabel, onPress, onDelete }: 
           <Text style={styles.date}>{date}</Text>
           {comparisonLabel ? <Text style={styles.compare}>{comparisonLabel}</Text> : null}
           <Text style={styles.summary}>{item.summary}</Text>
+          <Text style={styles.detail}>Best lead locked from score {item.score}. Tap to reopen the full result.</Text>
         </View>
       </Pressable>
       {onDelete ? <SecondaryButton label={`Delete saved analysis ${item.id}`} onPress={onDelete} tone="danger" /> : null}
@@ -86,5 +87,10 @@ const styles = StyleSheet.create({
     color: theme.colors.textPrimary,
     fontSize: 14,
     lineHeight: 20,
+  },
+  detail: {
+    color: theme.colors.textSecondary,
+    fontSize: 12,
+    lineHeight: 18,
   },
 });

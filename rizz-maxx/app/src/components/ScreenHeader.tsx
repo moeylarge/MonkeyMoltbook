@@ -19,24 +19,27 @@ export function ScreenHeader({ eyebrow, title, subtitle }: Props) {
 
 const styles = StyleSheet.create({
   wrap: {
-    gap: theme.spacing.sm,
+    gap: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
   },
   eyebrow: {
     color: theme.colors.accentBlue,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 1.4,
   },
   title: {
     color: theme.colors.textPrimary,
-    fontSize: 30,
-    lineHeight: 36,
-    fontWeight: '700',
+    fontSize: 32,
+    lineHeight: 38,
+    fontWeight: '800',
+    letterSpacing: -0.4,
   },
   subtitle: {
     color: theme.colors.textSecondary,
-    fontSize: 16,
-    lineHeight: 22,
+    fontSize: 15,
+    lineHeight: 23,
+    maxWidth: 560,
   },
 });

@@ -11,8 +11,8 @@ export function CompareSummaryCard({ latest, previous }: Props) {
   if (!latest) {
     return (
       <View style={styles.card}>
-        <Text style={styles.title}>Comparison</Text>
-        <Text style={styles.body}>No saved trend exists yet. Run and save an analysis first.</Text>
+        <Text style={styles.title}>Profile progress</Text>
+        <Text style={styles.body}>No profile history exists yet. Run and save an analysis first.</Text>
       </View>
     );
   }
@@ -20,8 +20,8 @@ export function CompareSummaryCard({ latest, previous }: Props) {
   if (!previous) {
     return (
       <View style={styles.card}>
-        <Text style={styles.title}>Comparison</Text>
-        <Text style={styles.body}>You need at least two saved analyses before trend comparison becomes useful.</Text>
+        <Text style={styles.title}>Profile progress</Text>
+        <Text style={styles.body}>Save at least two analyses to see whether your lineup is actually improving.</Text>
       </View>
     );
   }
@@ -31,14 +31,14 @@ export function CompareSummaryCard({ latest, previous }: Props) {
 
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>Comparison</Text>
+      <Text style={styles.title}>Profile progress</Text>
       <Text style={styles.delta}>{delta === 0 ? 'No change' : `${improved ? '+' : ''}${delta} point${Math.abs(delta) === 1 ? '' : 's'}`}</Text>
       <Text style={styles.body}>
         {delta > 0
-          ? 'The newest set is scoring better than the previous saved run.'
+          ? 'Your newest saved set is performing better than the previous one.'
           : delta < 0
-            ? 'The newest set is scoring worse than the previous saved run and needs cleanup.'
-            : 'The latest save is effectively flat against the previous one.'}
+            ? 'Your newest saved set is underperforming the previous one and likely needs lineup cleanup.'
+            : 'Your latest saved set is flat against the previous version.'}
       </Text>
     </View>
   );

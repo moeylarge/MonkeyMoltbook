@@ -9,6 +9,7 @@ import { SavedScreen } from './src/screens/SavedScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 import { UploadScreen } from './src/screens/UploadScreen';
 import { CompareScreen } from './src/screens/CompareScreen';
+import { HeaderBackButton } from './src/components/HeaderBackButton';
 import { theme } from './src/theme';
 import { RootStackParamList } from './src/types';
 
@@ -33,21 +34,23 @@ export default function App() {
       <StatusBar style="light" />
       <Stack.Navigator
         initialRouteName="Onboarding"
-        screenOptions={{
+        screenOptions={({ navigation, route }) => ({
           headerShown: true,
           headerStyle: { backgroundColor: theme.colors.background },
           headerShadowVisible: false,
           headerTintColor: theme.colors.textPrimary,
           headerTitleStyle: { fontWeight: '700' },
           contentStyle: { backgroundColor: theme.colors.background },
-        }}
+          headerBackVisible: false,
+          headerLeft: route.name === 'Onboarding' ? undefined : () => <HeaderBackButton onPress={() => navigation.goBack()} />,
+        })}
       >
         <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ title: 'RIZZ MAXX' }} />
         <Stack.Screen name="Upload" component={UploadScreen} options={{ title: 'Upload photos' }} />
         <Stack.Screen name="Results" component={ResultsScreen} options={{ title: 'Results' }} />
-        <Stack.Screen name="Saved" component={SavedScreen} options={{ title: 'Saved analyses' }} />
-        <Stack.Screen name="Compare" component={CompareScreen} options={{ title: 'Compare runs' }} />
-        <Stack.Screen name="Premium" component={PremiumScreen} options={{ title: 'Premium' }} />
+        <Stack.Screen name="Saved" component={SavedScreen} options={{ title: 'Profile history' }} />
+        <Stack.Screen name="Compare" component={CompareScreen} options={{ title: 'Re-test' }} />
+        <Stack.Screen name="Premium" component={PremiumScreen} options={{ title: 'RizzMaxx Pro' }} />
         <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
       </Stack.Navigator>
     </NavigationContainer>

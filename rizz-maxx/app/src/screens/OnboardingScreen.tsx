@@ -1,9 +1,12 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { StyleSheet, Text, View } from 'react-native';
 import { AppShell } from '../components/AppShell';
+import { HeroCoverImage } from '../components/HeroCoverImage';
+import { HeroPreviewCard } from '../components/HeroPreviewCard';
 import { InsightCard } from '../components/InsightCard';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { ScreenHeader } from '../components/ScreenHeader';
+import { StartUploadCard } from '../components/StartUploadCard';
 import { theme } from '../theme';
 import { RootStackParamList } from '../types';
 
@@ -12,26 +15,33 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Onboarding'>;
 export function OnboardingScreen({ navigation }: Props) {
   return (
     <AppShell>
+      <HeroCoverImage />
+
+      <View style={styles.heroSpacer} />
+
       <ScreenHeader
         eyebrow="RIZZ MAXX"
-        title="Fix the photos that are quietly costing you matches."
-        subtitle="Find your strongest lead photo, cut the weak ones, and get a cleaner first impression fast."
+        title="One bad photo can quietly kill attraction before you ever get a chance."
+        subtitle="Upload your set and see what is helping — and what is costing you matches."
       />
 
-      <InsightCard title="What you get">
-        <Text style={styles.body}>• Best lead photo recommendation</Text>
-        <Text style={styles.body}>• Weak-photo cleanup guidance</Text>
-        <Text style={styles.body}>• Direct next steps to improve the profile</Text>
+      <PrimaryButton label="Upload photos now" onPress={() => navigation.navigate('Upload')} />
+
+      <Text style={styles.previewTag}>Free preview first. Unlock deeper strategy only if you want it.</Text>
+      <Text style={styles.bodyCopy}>RIZZ MAXX ranks your photos, finds your best opener, and shows where the lineup gets weaker.</Text>
+      <StartUploadCard />
+
+      <HeroPreviewCard />
+
+      <InsightCard title="Why people use it">
+        <Text style={styles.body}>• find the strongest lead photo fast</Text>
+        <Text style={styles.body}>• spot weak images before they drag the whole profile down</Text>
+        <Text style={styles.body}>• get direct next steps instead of guessing</Text>
       </InsightCard>
 
-      <InsightCard title="What this should feel like">
-        <Text style={styles.subtle}>
-          Fast, sharp, honest, and premium — not a toy score generator and not a boring utility app.
-        </Text>
-      </InsightCard>
-
-      <View style={styles.spacer} />
-      <PrimaryButton label="Optimize my profile" onPress={() => navigation.navigate('Upload')} />
+      <View style={styles.footerNote}>
+        <Text style={styles.subtle}>The sharper the input truth, the more useful the result.</Text>
+      </View>
     </AppShell>
   );
 }
@@ -42,13 +52,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 22,
   },
+  previewTag: {
+    color: theme.colors.accentBlue,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '700',
+    marginTop: theme.spacing.md,
+  },
+  bodyCopy: {
+    color: theme.colors.textSecondary,
+    fontSize: 15,
+    lineHeight: 22,
+    marginTop: theme.spacing.sm,
+  },
   subtle: {
     color: theme.colors.textSecondary,
     fontSize: 15,
     lineHeight: 22,
+    textAlign: 'center',
   },
-  spacer: {
-    flex: 1,
-    minHeight: theme.spacing.xxl,
+  heroSpacer: {
+    height: theme.spacing.hero,
+  },
+  footerNote: {
+    marginTop: theme.spacing.sm,
+    marginBottom: theme.spacing.lg,
   },
 });
