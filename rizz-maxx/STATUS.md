@@ -34,8 +34,8 @@ Post-Launch Polish Follow-through
 - Native runtime proof was attempted again and remains blocked: no paired nodes/devices are available in this environment, and this host still lacks `simctl` / Xcode / Simulator
 
 ## WHAT IS UNVERIFIED
-- Native iOS/Android runtime remains unverified / environment-blocked on this machine
-- Native runtime proof is still blocked because this host only has Command Line Tools and does not have `simctl`, `Xcode.app`, or `Simulator.app`
+- Full native iOS smoke test is not complete yet
+- Native launch is now proven in iPhone 17 Pro Simulator, but the rest of the native flow (picker, analysis, history, premium) is not yet fully driven end-to-end in simulator
 - Real native device-library image picking is still unproven on device/simulator
 - Persistence is still local-first only; no shared backend/account sync exists yet
 - Real ranking/feedback quality is improved but still heuristic, not calibrated against real dating outcome data

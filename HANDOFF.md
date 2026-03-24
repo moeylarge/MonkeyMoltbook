@@ -54,7 +54,7 @@ Updated: 2026-03-23 America/Los_Angeles
 3. Screenshot deliverables now exist in `rizz-maxx/screenshots/`
 4. Premium now has a structured local entitlement flow with product selection, unlock, restore, and reset, but no real billing yet
 5. Real billing is intentionally deferred because launch strategy is free-first for the first few weeks
-6. Native runtime proof is still blocked on this machine because Xcode/Simulator tooling is missing and there are no paired nodes/devices available in this environment
+6. Native runtime is now partially proven: the app launches in iPhone 17 Pro Simulator, but the full native smoke test is not complete yet
 7. Preserve the explicit mock fallback until the real path is robust
 
 ## Important project truths to not lose
