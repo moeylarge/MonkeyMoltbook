@@ -81,10 +81,18 @@ async function analyzeOnePhoto(photo: PhotoItem) {
           result: body.mapped,
           weightedScore: 10,
           degraded: true,
+          hardFailure: false,
           error: body.error || 'no usable face detected',
         };
       }
-      throw new Error(body.error || `adapter-${res.status}`);
+      return {
+        photo,
+        result: null,
+        weightedScore: 0,
+        degraded: false,
+        hardFailure: true,
+        error: body.error || `adapter-${res.status}`,
+      };
     }
 
     const data = (await res.json()) as AdapterResponse;
@@ -102,7 +110,16 @@ async function analyzeOnePhoto(photo: PhotoItem) {
         warningPenalty,
     );
 
-    return { photo, result: data, weightedScore, degraded: false, error: null };
+    return { photo, result: data, weightedScore, degraded: false, hardFailure: false, error: null };
+  } catch (error) {
+    return {
+      photo,
+      result: null,
+      weightedScore: 0,
+      degraded: false,
+      hardFailure: true,
+      error: String(error),
+    };
   } finally {
     clearTimeout(timer);
   }
@@ -110,32 +127,32 @@ async function analyzeOnePhoto(photo: PhotoItem) {
 
 export async function analyzePhotoSet(photos: PhotoItem[]): Promise<AnalysisResult> {
   try {
-    const settled = await Promise.allSettled(photos.map((photo) => analyzeOnePhoto(photo)));
+    const results = await Promise.all(photos.map((photo) => analyzeOnePhoto(photo)));
 
-    const fulfilled = settled.flatMap((entry) => (entry.status === 'fulfilled' ? [entry.value] : []));
-    if (fulfilled.length < Math.max(2, Math.ceil(photos.length / 2))) {
+    const successful = results.filter((entry) => entry.result);
+    if (successful.length < Math.max(2, Math.ceil(photos.length / 2))) {
       throw new Error('insufficient-real-results');
     }
 
-    const ranked = [...fulfilled].sort((a, b) => b.weightedScore - a.weightedScore);
+    const ranked = [...successful].sort((a, b) => b.weightedScore - a.weightedScore);
     const best = ranked[0];
     const weakest = ranked[ranked.length - 1];
     const score = average(ranked.map((item) => item.weightedScore));
-    const confidenceAverage = average(ranked.map((item) => confidenceNumber(item.result.confidenceLabel)));
+    const confidenceAverage = average(ranked.map((item) => confidenceNumber(item.result!.confidenceLabel)));
     const spread = best.weightedScore - weakest.weightedScore;
-    const failedCount = photos.length - fulfilled.length;
-    const degradedCount = fulfilled.filter((item) => item.degraded).length;
+    const failedCount = results.filter((item) => item.hardFailure).length;
+    const degradedCount = results.filter((item) => item.degraded).length;
 
     const strengths = uniqueKeepOrder([
-      ...best.result.strengths,
-      best.result.upstreamSummary.faceWarning ? '' : 'Your strongest image gives you a clearly better lead-photo candidate than the rest of the set.',
+      ...best.result!.strengths,
+      best.result!.upstreamSummary.faceWarning ? '' : 'Your strongest image gives you a clearly better lead-photo candidate than the rest of the set.',
       spread >= 12 ? 'There is a visible difference between your strongest and weakest options, which makes cleanup worthwhile.' : '',
       failedCount > 0 ? 'The real pass still recovered enough signal to rank most of the set.' : '',
     ]).slice(0, 3);
 
     const weaknesses = uniqueKeepOrder([
-      ...weakest.result.weaknesses,
-      weakest.result.upstreamSummary.faceCount < 1 ? 'At least one weak photo may not even be reliably readable as a profile image.' : '',
+      ...weakest.result!.weaknesses,
+      weakest.result!.upstreamSummary.faceCount < 1 ? 'At least one weak photo may not even be reliably readable as a profile image.' : '',
       spread < 8 ? 'The set is clustered too tightly to rely on ordering alone — better replacements matter.' : 'The bottom of the set is still creating avoidable drag compared with the top.',
       ranked.length >= 4 ? 'Your set quality is uneven enough that the weakest slot changes how the whole profile reads.' : '',
       failedCount > 0 ? 'Some photos failed the real pass, so this ranking is usable but not fully complete.' : '',
@@ -143,7 +160,7 @@ export async function analyzePhotoSet(photos: PhotoItem[]): Promise<AnalysisResu
     ]).slice(0, 4);
 
     const actions = uniqueKeepOrder([
-      ...weakest.result.actions,
+      ...weakest.result!.actions,
       'Lead with the strongest photo and remove the weakest one before judging the set again.',
       spread < 8 ? 'Test stronger replacement candidates instead of just reshuffling the same set.' : 'Use the top image as the benchmark for every replacement decision.',
       failedCount > 0 ? 'Re-run the failed photos after trimming file size or swapping in cleaner images.' : '',

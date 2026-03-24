@@ -26,6 +26,7 @@ Phase 5 — Real Analysis Integration
   - partial-success handling across multi-photo analysis runs
   - no-face / weak-face-read penalties and feedback
   - degraded low-signal handling for photos that do not produce a usable face read
+  - app-side classification of degraded vs hard-failed photo analysis attempts
 - Hardened backend failure handling with:
   - image-type validation
   - empty-file validation
@@ -51,7 +52,7 @@ Phase 5 — Real Analysis Integration
   - analyze action completes
   - results render
 - The proven app result path displayed `REAL LOCAL ANALYSIS`, confirming the app used the real adapter path rather than mock fallback during proof
-- After the latest backend hardening and degraded-photo handling pass, the real in-app path was re-proven successfully and still rendered `REAL LOCAL ANALYSIS`
+- After the latest app-side degraded/failure classification pass, the real in-app path was re-proven successfully and still rendered `REAL LOCAL ANALYSIS`
 
 ## WHAT IS UNVERIFIED
 - Native iOS/Android runtime remains unverified / environment-blocked on this machine

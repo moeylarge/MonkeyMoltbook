@@ -41,7 +41,7 @@ Updated: 2026-03-23 America/Los_Angeles
   4. results are reframed into RIZZ MAXX output
   5. if the real path fails, the app falls back explicitly to mock
 - Real-path proof succeeded in the app web flow and displayed `REAL LOCAL ANALYSIS`
-- After tightening set-level ranking and feedback synthesis, the real in-app path was re-proven successfully
+- After tightening set-level ranking, degraded-photo handling, and feedback synthesis, the real in-app path was re-proven successfully
 - Native simulator proof remains unverified on this machine because Apple simulator tooling (`simctl`) is unavailable
 
 ## What to do next for RIZZ MAXX
