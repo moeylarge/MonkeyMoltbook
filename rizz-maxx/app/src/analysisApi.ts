@@ -5,7 +5,7 @@ const ANALYSIS_BASE = 'http://127.0.0.1:8091';
 const ANALYSIS_TIMEOUT_MS = 60000;
 
 type AdapterResponse = {
-  ok: boolean;
+  ok?: boolean;
   profileStrength: number;
   confidenceLabel: 'Low' | 'Medium' | 'High';
   traits: {
@@ -25,6 +25,13 @@ type AdapterResponse = {
     faceWarning?: string | null;
     upstreamScore: number;
   };
+};
+
+type AdapterError = {
+  ok?: boolean;
+  error?: string;
+  detail?: string;
+  mapped?: AdapterResponse;
 };
 
 async function photoUriToFile(photo: PhotoItem): Promise<File> {
@@ -66,7 +73,19 @@ async function analyzeOnePhoto(photo: PhotoItem) {
       signal: controller.signal,
     });
 
-    if (!res.ok) throw new Error(`adapter-${res.status}`);
+    if (!res.ok) {
+      const body = (await res.json().catch(() => ({}))) as AdapterError;
+      if (res.status === 422 && body.mapped) {
+        return {
+          photo,
+          result: body.mapped,
+          weightedScore: 10,
+          degraded: true,
+          error: body.error || 'no usable face detected',
+        };
+      }
+      throw new Error(body.error || `adapter-${res.status}`);
+    }
 
     const data = (await res.json()) as AdapterResponse;
     const facePenalty = data.upstreamSummary.faceCount < 1 ? 10 : data.upstreamSummary.faceCount > 1 ? 4 : 0;
@@ -83,7 +102,7 @@ async function analyzeOnePhoto(photo: PhotoItem) {
         warningPenalty,
     );
 
-    return { photo, result: data, weightedScore };
+    return { photo, result: data, weightedScore, degraded: false, error: null };
   } finally {
     clearTimeout(timer);
   }
@@ -105,6 +124,7 @@ export async function analyzePhotoSet(photos: PhotoItem[]): Promise<AnalysisResu
     const confidenceAverage = average(ranked.map((item) => confidenceNumber(item.result.confidenceLabel)));
     const spread = best.weightedScore - weakest.weightedScore;
     const failedCount = photos.length - fulfilled.length;
+    const degradedCount = fulfilled.filter((item) => item.degraded).length;
 
     const strengths = uniqueKeepOrder([
       ...best.result.strengths,
@@ -119,6 +139,7 @@ export async function analyzePhotoSet(photos: PhotoItem[]): Promise<AnalysisResu
       spread < 8 ? 'The set is clustered too tightly to rely on ordering alone — better replacements matter.' : 'The bottom of the set is still creating avoidable drag compared with the top.',
       ranked.length >= 4 ? 'Your set quality is uneven enough that the weakest slot changes how the whole profile reads.' : '',
       failedCount > 0 ? 'Some photos failed the real pass, so this ranking is usable but not fully complete.' : '',
+      degradedCount > 0 ? 'One or more photos were scored as low-signal because no usable face was detected.' : '',
     ]).slice(0, 4);
 
     const actions = uniqueKeepOrder([
@@ -126,6 +147,7 @@ export async function analyzePhotoSet(photos: PhotoItem[]): Promise<AnalysisResu
       'Lead with the strongest photo and remove the weakest one before judging the set again.',
       spread < 8 ? 'Test stronger replacement candidates instead of just reshuffling the same set.' : 'Use the top image as the benchmark for every replacement decision.',
       failedCount > 0 ? 'Re-run the failed photos after trimming file size or swapping in cleaner images.' : '',
+      degradedCount > 0 ? 'Replace low-signal photos with clearer solo images before trusting the set.' : '',
     ]).slice(0, 4);
 
     return {

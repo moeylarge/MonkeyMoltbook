@@ -163,6 +163,11 @@ app.post('/v1/analyze-photo', upload.single('image'), async (req, res) => {
     return;
   }
 
+  if (req.file.size <= 0) {
+    res.status(400).json({ ok: false, error: 'image file is empty' });
+    return;
+  }
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), upstreamTimeoutMs);
 
@@ -184,6 +189,16 @@ app.post('/v1/analyze-photo', upload.single('image'), async (req, res) => {
 
     const upstream = await upstreamRes.json();
     const mapped = deriveSignals(upstream);
+
+    if (mapped.upstreamSummary.faceCount < 1) {
+      res.status(422).json({
+        ok: false,
+        error: 'no usable face detected',
+        detail: 'analysis could not find a clear face in the uploaded photo',
+        mapped,
+      });
+      return;
+    }
 
     res.json({
       ok: true,
