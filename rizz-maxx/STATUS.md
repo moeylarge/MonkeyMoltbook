@@ -1,7 +1,7 @@
 # STATUS.md
 
 ## CURRENT PHASE
-Post-Launch Polish Follow-through
+Launch Execution / App Store Submission Prep
 
 ## WHAT IS DONE
 - Tightened real ranking/feedback calibration another step in `app/src/analysisApi.ts`
@@ -60,3 +60,16 @@ Best next moves are:
 1. deeper ranking/feedback calibration from real-world testing data
 2. physical-device native proof/QA on an actual iPhone
 3. final launch asset refinement if needed
+the LLC today
+- We are waiting for the articles of incorporation to open the bank account
+- Current locked price points are:
+  - `$9.99`
+  - `$29.99`
+- John also confirmed recent proof of the app fully built in Expo
+
+## NEXT EXACT STEP
+Immediate next moves are:
+1. finish the RizzMaxx checklist
+2. complete the full iPhone screenshot set (7 total)
+3. complete the full iPad screenshot set (7 total)
+4. keep business setup moving once articles of incorporation arrive so bank account setup can follow
