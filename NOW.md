@@ -41,11 +41,11 @@ That requirement is now satisfied.
 
 ## Current next steps
 
-1. Begin **Phase 2 — Design Definition**
-2. Turn the design system into concrete screen layouts and component structure
-3. Lock result-screen hierarchy and premium gate presentation
-4. Then begin **Phase 3 — App Skeleton**
-5. Scaffold the mobile app shell without expanding MVP scope
+1. Begin **Phase 3 — App Skeleton**
+2. Scaffold the mobile app shell
+3. Wire the narrow navigation structure
+4. Render onboarding, upload, results, saved analyses, premium, and settings shells
+5. Keep implementation inside the locked design system and MVP scope
 
 ## Secondary project state
 
@@ -57,6 +57,10 @@ That requirement is now satisfied.
 ## Guardrails
 
 - Do **not** create cron jobs or loops unless John explicitly asks
+- Do **not** switch project category or broaden scope
+- Do **not** code beyond phase order
+- Update continuity files before major project switches or resets
+icitly asks
 - Do **not** switch project category or broaden scope
 - Do **not** code beyond phase order
 - Update continuity files before major project switches or resets

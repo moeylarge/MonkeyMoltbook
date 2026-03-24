@@ -26,9 +26,10 @@ This is the canonical project index for fast recovery after resets, daemon issue
 - **Current state:**
   - master build directive is locked
   - required Phase 1 execution documents have been created
+  - Phase 2 design-definition documents now exist
   - product category is locked: dating profile optimizer, not a dating app
   - MVP scope excludes chat, social, marketplace, and drift features
-- **Next step:** begin Phase 2 design definition, then scaffold the app shell in Phase 3
+- **Next step:** begin Phase 3 app skeleton and render shell screens inside the locked design system
 - **Key docs:**
   - `rizz-maxx/PRD.md`
   - `rizz-maxx/DESIGN_SYSTEM.md`
