@@ -35,6 +35,7 @@ Updated: 2026-03-23 America/Los_Angeles
 - Concrete layout/component/copy system docs now exist
 - Implementation scaffold now exists at `rizz-maxx/app`
 - Immediate mode is **Phase 4 — Upload + Analysis Flow**, not persistence/billing drift
+- Native simulator proof remains unverified on this machine because Apple simulator tooling (`simctl`) is unavailable
 
 ## What to do next for RIZZ MAXX
 

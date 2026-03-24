@@ -20,6 +20,7 @@ Phase 3 — App Skeleton
   - settings
 - Wired navigation across those screens with no dead-end route in the current shell loop
 - Added web-compatible accessibility labels on primary CTA buttons to support proof-level navigation checks
+- Ran a broader screen-by-screen visual QA pass at a mobile-sized viewport
 
 ## WHAT IS VERIFIED
 - The app compiles successfully (`npx tsc --noEmit`)
@@ -34,18 +35,21 @@ Phase 3 — App Skeleton
   - premium
   - settings
 - Navigation between all shell screens was exercised successfully in sequence
-- A mobile-sized viewport render was captured and visually checked for layout breakage on the onboarding screen
+- Mobile-sized viewport render was checked on multiple shell screens
+- No dead-end route was found in the current shell path
+- No broken shell-level mobile layout was observed in the screens checked
 
 ## WHAT IS UNVERIFIED
-- Native iOS/Android runtime has not been directly booted yet in a simulator/device in this phase
+- Native iOS/Android runtime has not been directly proven in a simulator/device yet
+- On this machine, iOS simulator proof is currently blocked because `simctl` is unavailable in PATH / developer tooling is not present
 - Upload behavior is not implemented
-- Analysis logic is not implemented in-app
+- Analysis flow is not implemented
 - Persistence is not implemented
 - Premium billing/unlock logic is not implemented
-- Full cross-screen mobile visual QA is not complete beyond shell-level proof
+- Full native-device visual QA is not complete
 
 ## CURRENT BLOCKER
-No blocker inside the app shell phase. The shell is built and proofed at the scaffold/navigation level, but deeper feature work has not started.
+No blocker for moving into Phase 4. The only unresolved Phase 3 proof gap is native simulator/device runtime proof, which cannot be completed on this machine right now because simulator tooling is unavailable.
 
 ## NEXT EXACT STEP
-Begin Phase 4 — Upload + Analysis Flow: implement real photo selection, thumbnail preview, remove/replace interactions, analyze trigger, loading state, and result payload rendering without touching persistence or premium billing logic yet.
+Begin Phase 4 — Upload + Analysis Flow: implement real photo selection, thumbnail preview, remove/replace interactions, analyze trigger, loading state, and result rendering without touching persistence or premium billing yet.

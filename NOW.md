@@ -33,6 +33,8 @@ Execution mode is locked to John’s master build directive:
   - premium
   - settings
 - shell proof completed via compile + Expo web export + browser navigation check
+- broader mobile-sized visual QA pass completed for shell screens
+- native simulator/device runtime proof remains unverified on this machine because simulator tooling is unavailable
 - product category is locked: AI dating profile optimizer mobile app
 - MVP explicitly excludes swiping, chat, messaging, social graph, marketplace, and broad coaching features
 
