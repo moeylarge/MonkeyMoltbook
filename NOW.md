@@ -44,9 +44,9 @@ Execution mode is locked to John’s master build directive:
 
 ## Current next steps
 
-1. Phase 9 premium entitlement state is now working in local-first form
-2. Real billing / purchase flow integration is intentionally deferred because launch strategy is free-first for the first few weeks
-3. Near-term focus should return to product quality, result quality, and launch polish
+1. The requested launch-critical pass is now complete enough in the current proof environment
+2. Real billing / purchase flow integration remains intentionally deferred because launch strategy is free-first for the first few weeks
+3. Best next moves are deeper calibration, final screenshot/export work, or native runtime proof on a proper machine
 4. Keep explicit mock fallback until the real path is robust
 5. Native runtime proof is still deferred / environment-blocked on this machine
 

@@ -14,19 +14,19 @@ export function OnboardingScreen({ navigation }: Props) {
     <AppShell>
       <ScreenHeader
         eyebrow="RIZZ MAXX"
-        title="Your dating profile is only as strong as your weakest photo."
-        subtitle="Rank your photos, pick your best lead, and see exactly what to fix."
+        title="Fix the photos that are quietly costing you matches."
+        subtitle="Find your strongest lead photo, cut the weak ones, and get a cleaner first impression fast."
       />
 
       <InsightCard title="What you get">
         <Text style={styles.body}>• Best lead photo recommendation</Text>
         <Text style={styles.body}>• Weak-photo cleanup guidance</Text>
-        <Text style={styles.body}>• A clearer path to a stronger profile</Text>
+        <Text style={styles.body}>• Direct next steps to improve the profile</Text>
       </InsightCard>
 
-      <InsightCard title="How it should feel">
+      <InsightCard title="What this should feel like">
         <Text style={styles.subtle}>
-          Fast, sharp, honest, and built like a premium consumer product — not a toy demo.
+          Fast, sharp, honest, and premium — not a toy score generator and not a boring utility app.
         </Text>
       </InsightCard>
 

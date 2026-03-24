@@ -6,9 +6,9 @@ export function UploadTipsCard() {
   return (
     <View style={styles.card}>
       <SectionPill label="SET-BUILDING RULE" tone="accent" />
-      <Text style={styles.title}>Do not optimize the set by hiding the bad photos.</Text>
+      <Text style={styles.title}>Do not protect the set from the truth.</Text>
       <Text style={styles.body}>
-        Load the shots you would actually use. If the weak ones never enter the set, the feedback becomes less honest.
+        Load the shots you would actually post. If the weak ones never enter the set, the feedback gets softer and less useful.
       </Text>
     </View>
   );

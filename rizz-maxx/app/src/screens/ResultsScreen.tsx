@@ -70,6 +70,16 @@ export function ResultsScreen({ navigation, route }: Props) {
         <MetricCard label="Move" value="Cut weak" tone="negative" />
       </View>
 
+      <InsightCard title="What this means">
+        <Text style={styles.meaningText}>
+          {result.score >= 80
+            ? 'You already have a usable core. The job now is protecting the lead and removing drag.'
+            : result.score >= 70
+              ? 'You are close, but the wrong photos are softening the profile. Cleanup matters more than quantity.'
+              : 'Right now the set is sending mixed signals. The fastest gains will come from cutting weak photos, not adding more noise.'}
+        </Text>
+      </InsightCard>
+
       <InsightCard title="Persistence">
         <Text style={styles.persistenceText}>
           {saveState === 'saved'
@@ -83,20 +93,20 @@ export function ResultsScreen({ navigation, route }: Props) {
       <PremiumPreviewCard unlocked={premiumUnlocked} />
       {premiumUnlocked ? <PremiumDetailsCard result={result} /> : null}
 
-      <InsightCard title="Top signal">
+      <InsightCard title="Best photo to lead with">
         <TopPhotoSummary
           uri={bestPhoto.uri}
           title="This is your strongest lead-photo candidate"
-          body="It gives the set the best first-impression position right now and should anchor the profile unless a stronger replacement beats it later."
+          body="This shot is doing the most work for your first impression right now. If you change one thing first, protect this slot."
           tone="positive"
         />
       </InsightCard>
 
-      <InsightCard title="Biggest drag">
+      <InsightCard title="First photo to remove">
         <TopPhotoSummary
           uri={weakestPhoto.uri}
-          title="This is the first removal candidate"
-          body="It creates the most drag in the current set and is the cleanest place to improve the profile fast."
+          title="This is the cleanest place to improve the set"
+          body="This photo is dragging down the profile harder than the others. If you cut one image first, cut this one."
           tone="negative"
         />
       </InsightCard>
@@ -116,15 +126,15 @@ export function ResultsScreen({ navigation, route }: Props) {
         </View>
       </InsightCard>
 
-      <InsightCard title="Strengths">
+      <InsightCard title="What is working">
         <ListBlock items={result.strengths} tone="positive" />
       </InsightCard>
 
-      <InsightCard title="Weaknesses">
+      <InsightCard title="What is costing you">
         <ListBlock items={result.weaknesses} tone="negative" />
       </InsightCard>
 
-      <InsightCard title="Action plan">
+      <InsightCard title="What to do next">
         <ListBlock items={result.actions} />
       </InsightCard>
 
@@ -141,6 +151,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: theme.spacing.md,
+  },
+  meaningText: {
+    color: theme.colors.textPrimary,
+    fontSize: 15,
+    lineHeight: 22,
   },
   persistenceText: {
     color: theme.colors.textSecondary,

@@ -11,6 +11,7 @@ type Props = {
 export function ResultsHero({ score, summary, source }: Props) {
   const tone = score >= 80 ? 'positive' : score >= 70 ? 'accent' : 'negative';
   const label = score >= 80 ? 'STRONG BASE' : score >= 70 ? 'SOLID, NEEDS CLEANUP' : 'LEAKING VALUE';
+  const kicker = score >= 80 ? 'You have something to build around.' : score >= 70 ? 'You are closer than the set currently looks.' : 'Right now the weak photos are winning.';
 
   return (
     <View style={styles.wrap}>
@@ -18,6 +19,7 @@ export function ResultsHero({ score, summary, source }: Props) {
       <SectionPill label={label} tone={tone === 'accent' ? 'accent' : tone} />
       <Text style={styles.score}>{score}</Text>
       <Text style={styles.label}>Profile strength</Text>
+      <Text style={styles.kicker}>{kicker}</Text>
       <Text style={styles.summary}>{summary}</Text>
     </View>
   );
@@ -43,6 +45,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 24,
     fontWeight: '700',
+  },
+  kicker: {
+    color: theme.colors.textPrimary,
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: '600',
   },
   summary: {
     color: theme.colors.textSecondary,

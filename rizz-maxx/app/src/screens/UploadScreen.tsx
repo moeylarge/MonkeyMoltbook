@@ -109,7 +109,7 @@ export function UploadScreen({ navigation }: Props) {
     setIsLoading(true);
     setError(null);
 
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    await new Promise((resolve) => setTimeout(resolve, 300));
     const result = await analyzePhotoSet(photos);
     setIsLoading(false);
     navigation.navigate('Results', { photos, result });
@@ -120,7 +120,7 @@ export function UploadScreen({ navigation }: Props) {
       <ScreenHeader
         eyebrow="Upload"
         title="Build the set you would actually post"
-        subtitle="This flow is real at the surface level: load a set, reorder it, remove weak shots, and run either the real local analysis adapter or the explicit mock fallback."
+        subtitle="Load the real set, not the flattering set. The sharper the input truth, the sharper the result."
       />
 
       <View style={styles.metricsRow}>
@@ -152,14 +152,17 @@ export function UploadScreen({ navigation }: Props) {
 
       {isLoading ? (
         <InsightCard title="Analysis loading">
-          <LoadingState label="Ranking your strongest first impression and building your improvement plan..." />
+          <LoadingState
+            label="Finding the photos that help you — and the ones that quietly hurt the profile."
+            sublabel="This is where the app decides what should lead, what should be cut, and what your next improvement move is."
+          />
         </InsightCard>
       ) : null}
 
       {photos.length > 0 ? (
         <InsightCard title={`Photo set · ${photos.length} of 10`}>
           <Text style={styles.setIntro}>
-            Reorder until the strongest likely lead sits near the front. Remove anything that weakens trust or clarity.
+            Reorder until the strongest likely lead sits near the front. Remove anything that weakens trust, clarity, or first-impression force.
           </Text>
           <View style={styles.grid}>
             {photos.map((photo, index) => (
