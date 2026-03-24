@@ -50,9 +50,9 @@ Updated: 2026-03-23 America/Los_Angeles
    - `rizz-maxx/STATUS.md`
    - `rizz-maxx/app/src/analysisApi.ts`
    - `rizz-maxx/server/src/index.mjs`
-2. Phase 7 compare/retest refinement is now working
+2. Phase 8 premium prototype gate is now working
 3. Saved analyses can be listed, reopened, deleted, and cleared from history, with a dedicated compare view
-4. Premium billing remains unopened beyond shell level
+4. Premium now has a real local unlock/reset prototype state, but no real billing yet
 5. Preserve the explicit mock fallback until the real path is robust
 
 ## Important project truths to not lose

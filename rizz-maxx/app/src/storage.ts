@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AnalysisResult, PhotoItem } from './types';
 
 const ANALYSES_KEY = 'rizz-maxx.saved-analyses.v1';
+const PREMIUM_KEY = 'rizz-maxx.premium-unlock.v1';
 
 export type SavedAnalysis = {
   id: string;
@@ -46,4 +47,17 @@ export async function deleteSavedAnalysis(id: string): Promise<void> {
 
 export async function clearSavedAnalyses(): Promise<void> {
   await AsyncStorage.removeItem(ANALYSES_KEY);
+}
+
+export async function isPremiumUnlocked(): Promise<boolean> {
+  const raw = await AsyncStorage.getItem(PREMIUM_KEY);
+  return raw === 'true';
+}
+
+export async function setPremiumUnlocked(value: boolean): Promise<void> {
+  if (value) {
+    await AsyncStorage.setItem(PREMIUM_KEY, 'true');
+  } else {
+    await AsyncStorage.removeItem(PREMIUM_KEY);
+  }
 }

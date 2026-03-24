@@ -6,11 +6,13 @@ import { InsightCard } from '../components/InsightCard';
 import { ListBlock } from '../components/ListBlock';
 import { MetricCard } from '../components/MetricCard';
 import { PhotoTile } from '../components/PhotoTile';
+import { PremiumDetailsCard } from '../components/PremiumDetailsCard';
+import { PremiumPreviewCard } from '../components/PremiumPreviewCard';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { ResultsHero } from '../components/ResultsHero';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { TopPhotoSummary } from '../components/TopPhotoSummary';
-import { saveAnalysis } from '../storage';
+import { isPremiumUnlocked, saveAnalysis } from '../storage';
 import { theme } from '../theme';
 import { RootStackParamList } from '../types';
 
@@ -19,6 +21,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Results'>;
 export function ResultsScreen({ navigation, route }: Props) {
   const { photos, result, savedId } = route.params;
   const [saveState, setSaveState] = useState<'idle' | 'saved' | 'error'>(savedId ? 'saved' : 'idle');
+  const [premiumUnlocked, setPremiumUnlocked] = useState(false);
 
   const bestPhoto = photos.find((photo) => photo.id === result.bestPhotoId) ?? photos[0];
   const weakestPhoto = photos.find((photo) => photo.id === result.weakestPhotoId) ?? photos[photos.length - 1];
@@ -27,6 +30,10 @@ export function ResultsScreen({ navigation, route }: Props) {
     .filter(Boolean);
 
   const analysisId = useMemo(() => savedId ?? `analysis-${Date.now()}-${result.score}`, [savedId, result.score]);
+
+  useEffect(() => {
+    isPremiumUnlocked().then(setPremiumUnlocked).catch(() => setPremiumUnlocked(false));
+  }, []);
 
   useEffect(() => {
     if (savedId) return;
@@ -73,6 +80,9 @@ export function ResultsScreen({ navigation, route }: Props) {
         </Text>
       </InsightCard>
 
+      <PremiumPreviewCard unlocked={premiumUnlocked} />
+      {premiumUnlocked ? <PremiumDetailsCard result={result} /> : null}
+
       <InsightCard title="Top signal">
         <TopPhotoSummary
           uri={bestPhoto.uri}
@@ -118,7 +128,10 @@ export function ResultsScreen({ navigation, route }: Props) {
         <ListBlock items={result.actions} />
       </InsightCard>
 
-      <PrimaryButton label="View saved analyses" onPress={() => navigation.navigate('Saved')} />
+      <View style={styles.actions}>
+        <PrimaryButton label="View saved analyses" onPress={() => navigation.navigate('Saved')} />
+        <PrimaryButton label="Open premium" onPress={() => navigation.navigate('Premium')} />
+      </View>
     </AppShell>
   );
 }
@@ -139,5 +152,8 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: theme.spacing.md,
     justifyContent: 'space-between',
+  },
+  actions: {
+    gap: theme.spacing.md,
   },
 });
