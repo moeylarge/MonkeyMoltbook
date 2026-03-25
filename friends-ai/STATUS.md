@@ -61,16 +61,23 @@ Begin identity lock with the live verified stack.
 5. Continue the sequence in `IDENTITY_LOCK_RUNBOOK.md`
 
 ## Key docs
-- `friends-ai/MASTER_BIBLE.md`
-- `friends-ai/PILOT_SCRIPT_NOT_A_COUPLE_V2.md`
-- `friends-ai/PRODUCTION_BEAT_SHEET_NOT_A_COUPLE.md`
-- `friends-ai/CAST_BIBLE.md`
-- `friends-ai/VISUAL_STYLE_GUIDE.md`
-- `friends-ai/PROMPT_PACK_V1.md`
-- `friends-ai/IDENTITY_LOCK_BATCH.md`
-- `friends-ai/DRIFT_REVIEW_FRAMEWORK.md`
-- `friends-ai/PRODUCTION_STACK_MAP_V1.md`
+- `friends-ai-pilot-assets/FINAL_QUALITY_REBUILD_SPEC.md`
+- `friends-ai-pilot-assets/FINAL_QUALITY_PROMPTS_V1.md`
+- `friends-ai-pilot-assets/MON_CHANCE_QUALITY_LOCK.md`
+- `friends-ai-pilot-assets/STRICT_SCENE_BY_SCENE_EXECUTION_PLAN.md`
+- `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/README.md`
+- `friends-ai/assembler/config/not-a-couple-v2-final-rebuild.json`
+- `friends-ai/HANDOFF.md`
+.md`
 - `friends-ai/TOOL_DECISION_MATRIX.md`
+- `friends-ai/API_ACCESS_TRACKER.md`
+- `friends-ai/IDENTITY_LOCK_RUNBOOK.md`
+- `friends-ai/FAL_IDENTITY_LOCK_MON_V1.md`
+- `friends-ai/FAL_IDENTITY_LOCK_CHANCE_V1.md`
+- `friends-ai/FAL_MON_REQUEST_V1.md`
+- `friends-ai/FAL_MON_REQUEST_V1.sh`
+- `friends-ai/HANDOFF.md`
+IX.md`
 - `friends-ai/API_ACCESS_TRACKER.md`
 - `friends-ai/IDENTITY_LOCK_RUNBOOK.md`
 - `friends-ai/FAL_IDENTITY_LOCK_MON_V1.md`

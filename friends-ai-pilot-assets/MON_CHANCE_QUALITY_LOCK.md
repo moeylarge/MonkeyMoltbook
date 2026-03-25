@@ -284,6 +284,13 @@ No pretending a maybe-pass is a pass.
 
 ## Immediate next action
 
-Proceed to **Attempt A — Nano Banana Pro** for Mon + Chance still-generation / refinement.
+Proceed to the deterministic workspace package in:
+- `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/`
+
+Use:
+- `fal-input/04-mon-chance-upload-ref.jpg` as the default upload reference
+- `hero-still-prompt-v2.md` for the next still-generation pass
+- `candidate_scorecard.md` to score each candidate before animation
+- `motion-prompt-v1.md` only after a still passes
 
 Do not touch shot 02–08 final generation until Mon + Chance is locked.

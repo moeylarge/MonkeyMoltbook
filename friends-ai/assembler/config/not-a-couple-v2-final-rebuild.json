@@ -1,0 +1,150 @@
+{
+  "slug": "not-a-couple-v2-final-rebuild",
+  "notes": "Strict 8-shot rebuild target. Do not use stretched legacy timings as final-grade defaults.",
+  "ambience": {
+    "mode": "generated-room-tone",
+    "volume": 0.018
+  },
+  "shots": [
+    {
+      "id": "01-central-peak-establish",
+      "type": "image",
+      "source": "/Users/moey/.openclaw/workspace/friends-ai-pilot-assets/upload-ready/01-central-peak-master-upload.jpg",
+      "duration": 3.6,
+      "zoom": "micro-in",
+      "status": "REGENERATE_BEFORE_FINAL"
+    },
+    {
+      "id": "02-couples-night-sign",
+      "type": "image",
+      "source": "/Users/moey/.openclaw/workspace/friends-ai-pilot-assets/upload-ready/02-couples-night-sign-upload.jpg",
+      "duration": 2.4,
+      "zoom": "micro-in",
+      "status": "REGENERATE_BEFORE_FINAL"
+    },
+    {
+      "id": "03-group-notices-sign",
+      "type": "video",
+      "source": "/Users/moey/.openclaw/workspace/friends-ai-pilot-assets/motion-clips/03-group-notices-sign-motion.mp4",
+      "duration": 4.2,
+      "status": "REFERENCE_ONLY_REGENERATE_BEFORE_FINAL"
+    },
+    {
+      "id": "04-mon-chance",
+      "type": "video",
+      "source": "/Users/moey/.openclaw/workspace/friends-ai-pilot-assets/motion-clips/04-mon-chance-motion.mp4",
+      "duration": 6.8,
+      "min_duration": 6.0,
+      "status": "HERO_SHOT_MUST_LOCK_UPSTREAM"
+    },
+    {
+      "id": "05-russ-rachelle",
+      "type": "video",
+      "source": "/Users/moey/.openclaw/workspace/friends-ai-pilot-assets/motion-clips/05-russ-rachelle-motion.mp4",
+      "duration": 6.8,
+      "min_duration": 6.0,
+      "status": "REFERENCE_ONLY_REGENERATE_BEFORE_FINAL"
+    },
+    {
+      "id": "06-jojo-fufu",
+      "type": "video",
+      "source": "/Users/moey/.openclaw/workspace/friends-ai-pilot-assets/motion-clips/06-jojo-fufu-motion.mp4",
+      "duration": 6.0,
+      "min_duration": 5.5,
+      "status": "REFERENCE_ONLY_REGENERATE_BEFORE_FINAL"
+    },
+    {
+      "id": "07-group-regather",
+      "type": "video",
+      "source": "/Users/moey/.openclaw/workspace/friends-ai-pilot-assets/motion-clips/08-group-regather-motion.mp4",
+      "duration": 5.6,
+      "min_duration": 5.0,
+      "status": "REFERENCE_ONLY_REGENERATE_BEFORE_FINAL"
+    },
+    {
+      "id": "08-final-spiral-button",
+      "type": "video",
+      "source": "/Users/moey/.openclaw/workspace/friends-ai-pilot-assets/motion-clips/09-group-couples-night-motion.mp4",
+      "duration": 7.2,
+      "min_duration": 6.5,
+      "status": "REFERENCE_ONLY_REGENERATE_BEFORE_FINAL"
+    }
+  ],
+  "dialogue": [
+    {
+      "character": "Jojo",
+      "shot_id": "02-couples-night-sign",
+      "text": "Couples Night?"
+    },
+    {
+      "character": "Fufu",
+      "shot_id": "03-group-notices-sign",
+      "text": "No, no — let's not pretend this isn't for us."
+    },
+    {
+      "character": "Chance",
+      "shot_id": "04-mon-chance",
+      "text": "You look tense for someone who's definitely not part of a couple."
+    },
+    {
+      "character": "Mon",
+      "shot_id": "04-mon-chance",
+      "text": "I'm tense because your face is doing that."
+    },
+    {
+      "character": "Russ",
+      "shot_id": "05-russ-rachelle",
+      "text": "Just so we're all being normal, I'd like to say this sign is weirdly aggressive."
+    },
+    {
+      "character": "Rachelle",
+      "shot_id": "05-russ-rachelle",
+      "text": "You say that like it personally invited you."
+    },
+    {
+      "character": "Fufu",
+      "shot_id": "06-jojo-fufu",
+      "text": "I can name two couples and one cover-up right now."
+    },
+    {
+      "character": "Jojo",
+      "shot_id": "06-jojo-fufu",
+      "text": "Why is that worse than if you named three couples?"
+    },
+    {
+      "character": "Mon",
+      "shot_id": "07-group-regather",
+      "text": "Can we not do this?"
+    },
+    {
+      "character": "Fufu",
+      "shot_id": "07-group-regather",
+      "text": "Too late."
+    },
+    {
+      "character": "Russ",
+      "shot_id": "07-group-regather",
+      "text": "No one said we were doing anything."
+    },
+    {
+      "character": "Fufu",
+      "shot_id": "08-final-spiral-button",
+      "text": "I'm just saying some people got tense very quickly."
+    },
+    {
+      "character": "Russ",
+      "shot_id": "08-final-spiral-button",
+      "text": "That could mean anything."
+    },
+    {
+      "character": "Rachelle",
+      "shot_id": "08-final-spiral-button",
+      "text": "It somehow didn't."
+    },
+    {
+      "character": "Chance",
+      "shot_id": "08-final-spiral-button",
+      "text": "Relax. If anyone asks, I'll claim Mon for the discount."
+    }
+  ]
+}

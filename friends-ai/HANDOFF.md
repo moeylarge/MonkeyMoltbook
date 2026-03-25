@@ -91,4 +91,9 @@ Recommended order:
 - preserve consistent geography for Central Peak, 2A, 2B, and hallway
 
 ## Resume line
+If resuming after a reset: do **not** re-brainstorm the series from scratch and do **not** keep extending the old 9-shot cut. Read the pilot quality docs first, then move directly into the Mon + Chance hero-lock package in `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/`.
+cozy, and emotionally readable
+- preserve consistent geography for Central Peak, 2A, 2B, and hallway
+
+## Resume line
 If resuming after a reset: do **not** re-brainstorm the series from scratch. Read the docs above and move directly into the Fal identity-lock flow starting with the Mon request script.
