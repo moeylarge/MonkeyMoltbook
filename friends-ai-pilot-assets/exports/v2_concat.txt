@@ -1,0 +1,15 @@
+file '../story-shots/01-central-peak-master.png'
+duration 5
+file '../story-shots/02-couples-night-sign.png'
+duration 4
+file '../story-shots/03-group-notices-sign.png'
+duration 6
+file '../story-shots/04-mon-chance.png'
+duration 9
+file '../story-shots/05-russ-rachelle.png'
+duration 9
+file '../story-shots/06-jojo-fufu.png'
+duration 9
+file '../story-shots/07-ensemble-payoff.png'
+duration 22
+file '../story-shots/07-ensemble-payoff.png'

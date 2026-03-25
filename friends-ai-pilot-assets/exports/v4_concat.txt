@@ -1,0 +1,10 @@
+file '../story-shots/01-central-peak-master.png'
+duration 5
+file '../story-shots/02-couples-night-sign.png'
+duration 4
+file '../motion-clips/03-group-notices-sign-motion.mp4'
+file '../motion-clips/04-mon-chance-motion.mp4'
+file '../motion-clips/05-russ-rachelle-motion.mp4'
+file '../motion-clips/06-jojo-fufu-motion.mp4'
+file '../motion-clips/07-ensemble-payoff-motion.mp4'
+file '../motion-clips/07-ensemble-payoff-motion.mp4'

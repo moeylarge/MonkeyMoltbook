@@ -1,0 +1,6 @@
+file '../motion-clips/09-group-couples-night-motion.mp4'
+file '../motion-clips/04-mon-chance-motion.mp4'
+file '../motion-clips/05-russ-rachelle-motion.mp4'
+file '../motion-clips/06-jojo-fufu-motion.mp4'
+file '../motion-clips/08-group-regather-motion.mp4'
+file '../motion-clips/07-ensemble-payoff-motion.mp4'
