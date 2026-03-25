@@ -81,10 +81,14 @@ Latest verified Mon + Chance truth:
 - one real direct still pass was completed and saved at `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-1.png`
 - payload audit saved at `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-1.json`
 - that direct pass is still a **REJECT** because Mon remains too soft/cute and the pair tension is not benchmark-grade yet
+- one more surgical direct pass was completed and saved at `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-2.png`
+- payload audit saved at `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-2.json`
+- that pass is also a **REJECT** because it drifted into explicit `Central Perk` / homage signage and Mon still does not fully clear the anti-softness character bar
 - immediate resume docs now live in:
   - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/deterministic-handoff-2026-03-25.md`
   - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/run-log-2026-03-25.md`
   - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/scorecards/mon-chance-direct-pass-1-scorecard-2026-03-25.md`
+  - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/scorecards/mon-chance-direct-pass-2-scorecard-2026-03-25.md`
 
 Recommended order:
 1. use `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/run_direct_still_pass.mjs`

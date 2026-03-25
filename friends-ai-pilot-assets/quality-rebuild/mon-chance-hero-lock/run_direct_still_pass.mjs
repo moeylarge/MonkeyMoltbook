@@ -6,9 +6,9 @@ const root = '/Users/moey/.openclaw/workspace';
 const heroDir = path.join(root, 'friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock');
 const envPath = path.join(root, 'friends-ai/.env');
 const refPath = path.join(heroDir, 'fal-input/04-mon-chance-upload-ref-close.jpg');
-const promptPath = path.join(heroDir, 'hero-still-prompt-v3.md');
+const promptPath = path.join(heroDir, 'hero-still-prompt-v4-surgical.md');
 const outDir = path.join(heroDir, 'outputs/2026-03-25');
-const stamp = '2026-03-25-direct-pass-1';
+const stamp = '2026-03-25-direct-pass-2';
 const outPath = path.join(outDir, `mon-chance-${stamp}.png`);
 const metaPath = path.join(outDir, `mon-chance-${stamp}.json`);
 
