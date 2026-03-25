@@ -4,9 +4,9 @@
 Deterministic rebuild package for converting Shot 03 into a **true six-character notice/reaction shot** under the same strict control discipline used for Shot 04 and Shot 08.
 
 ## Current verdict
-- shot-class status: **SECOND CLEAN-SOURCE PASS SPENT / REJECT**
-- current result: `outputs/2026-03-25/shot-03-group-notices-2026-03-25-direct-pass-2-cleanref.png`
-- scorecard: `scorecards/shot-03-direct-pass-2-cleanref-scorecard-2026-03-25.md`
+- shot-class status: **THIRD CONTROLLED STILL PASS SPENT / REJECT**
+- current result: `outputs/2026-03-25/shot-03-group-notices-2026-03-25-direct-pass-3-sharedeyeline.png`
+- scorecard: `scorecards/shot-03-direct-pass-3-sharedeyeline-scorecard-2026-03-25.md`
 
 ## Why this package exists
 The legacy asset labeled like Shot 03 is not the right structural anchor for the rebuild. It is a sign-centric insert, not the ensemble reaction image required by the final package.
@@ -22,7 +22,9 @@ Per `friends-ai-pilot-assets/MOTION_PHASE_HANDOFF.md`:
    - `references/03-group-notices-sign-upload-insert.jpg`
 3. Motion audit memory only:
    - `../../motion-clips/03-group-notices-sign-motion.mp4`
-4. Single-pass bound source actually used:
+4. Single-pass bound source actually used for pass 3:
+   - `fal-input/03-group-notices-upload-ref-shared-eyeline-v1-bound.jpg`
+5. Prior audit-memory bound source:
    - `fal-input/03-group-notices-upload-ref-final.jpg`
 
 ## Locked source rule
@@ -41,8 +43,8 @@ Before any future paid still pass, first prepare one bound-source reference that
 - Shot 04 still + motion are locked PASS
 - Shot 08 still is locked PASS / final still deliverable
 - Shot 08 motion is closed for now after the single controlled REJECT
-- Shot 03 clean-source still pass 2 has now been attempted and rejected
+- Shot 03 shared-eyeline-source still pass 3 has now been attempted and rejected
 
 ## Next approved action
-Do not re-use this clean-source geometry for another paid pass.
-Prepare a new six-character notice-frame source that already locks one shared off-frame notice direction across all six characters, then reopen Shot 03 from that new source only.
+Do not spend another paid still pass from this geometry.
+Prepare a more structural six-character notice-frame source that changes head / face orientation more decisively across the ensemble, then reopen Shot 03 only from that newly staged source.

@@ -118,8 +118,8 @@ Recommended order:
 2. treat `mon-chance-2026-03-25-direct-pass-4-cleanref.png` as the Mon + Chance hero-shot keeper
 3. keep `shot-08-final-spiral-2026-03-25-direct-pass-2-strongclean-v2.png` locked as the final Shot 08 still deliverable
 4. keep Shot 08 motion closed for now; do not run more motion variants unless John explicitly reopens motion strategy
-5. next move under the rebuild package is Shot 03 using `friends-ai-pilot-assets/quality-rebuild/shot-03-group-notices-sign/`
-6. do not spend a paid Shot 03 still pass until a structurally correct six-character notice-frame source image exists
+5. Shot 03 was reopened for one controlled shared-eyeline-source still retry under `friends-ai-pilot-assets/quality-rebuild/shot-03-group-notices-sign/` and the result was still **REJECT**
+6. do not spend another paid Shot 03 still pass from that geometry; prepare a more structural six-character notice-frame source image with stronger head / face orientation changes first
 7. preflight hold recorded at `friends-ai-pilot-assets/quality-rebuild/shot-03-group-notices-sign/scorecards/shot-03-preflight-gate-2026-03-25.md`
 8. two direct Veo 2 motion tests failed on face stability / tension preservation and remain audit memory only:
    - pass 1 clip: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-1-veo2.mp4`

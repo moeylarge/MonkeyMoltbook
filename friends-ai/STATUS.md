@@ -129,7 +129,7 @@ The Mon + Chance hero beat remains locked and passed for both still and motion. 
 3. Keep `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-3-kling-o1-reference.mp4` as the current Shot 04 motion keeper
 4. Keep `friends-ai-pilot-assets/quality-rebuild/shot-08-final-spiral-button/outputs/2026-03-25/shot-08-final-spiral-2026-03-25-direct-pass-2-strongclean-v2.png` as the locked final Shot 08 still deliverable
 5. Do not run more Shot 08 motion variants unless John explicitly reopens motion strategy
-6. Next rebuild priority is Shot 03. Use `friends-ai-pilot-assets/quality-rebuild/shot-03-group-notices-sign/` and prepare a true six-character notice-frame source before any paid still pass
+6. Shot 03 remains unresolved after one controlled shared-eyeline-source still retry; use `friends-ai-pilot-assets/quality-rebuild/shot-03-group-notices-sign/` and prepare a more structural six-character notice-frame source before any further paid still pass
 7. Respect the preflight hold recorded at `friends-ai-pilot-assets/quality-rebuild/shot-03-group-notices-sign/scorecards/shot-03-preflight-gate-2026-03-25.md`
 
 ## Key docs
