@@ -3,7 +3,6 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
 import { StatusBar } from 'expo-status-bar';
-import heic2any from 'heic2any';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { ComponentRef } from 'react';
 import {
@@ -737,6 +736,7 @@ async function processWebImageForUpload(uri: string, filename: string, mimeType?
   const sourceType = sourceBlob.type || mimeType || 'image/jpeg';
 
   if (sourceType === 'image/heic' || sourceType === 'image/heif' || /\.hei(c|f)$/i.test(filename)) {
+    const { default: heic2any } = await import('heic2any');
     const converted = await heic2any({ blob: sourceBlob, toType: 'image/jpeg', quality: 0.9 });
     workingBlob = Array.isArray(converted) ? converted[0] : converted;
   }
