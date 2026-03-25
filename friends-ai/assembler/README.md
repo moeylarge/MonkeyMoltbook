@@ -51,12 +51,16 @@ Output:
 ```bash
 python3 friends-ai/assembler/build_episode.py build \
   --episode friends-ai/assembler/config/not-a-couple-v1.json \
-  --voice-map friends-ai/assembler/config/voice-map-v1.json \
-  --tts
+  --voice-map friends-ai/assembler/config/voice-map-v2-picked.json \
+  --tts \
+  --auto-retime \
+  --clean-ambience \
+  --burn-subtitles
 ```
 
 Output:
 - `friends-ai/assembler/output/not-a-couple-v1-auto.mp4`
+- `friends-ai/assembler/build/not-a-couple-v1-auto/not-a-couple-v1-auto.srt`
 
 ## Design rule
 

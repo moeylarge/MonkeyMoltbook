@@ -1,0 +1,35 @@
+{
+  "notes": "Moet-selected locked temp voice set for autonomous execution. Chosen to preserve clean separation and avoid novelty drift.",
+  "characters": {
+    "Mon": {
+      "voice": "Shelley (English (US))",
+      "tts_rate": 180,
+      "intent": "clear, precise, controlled"
+    },
+    "Chance": {
+      "voice": "Eddy (English (US))",
+      "tts_rate": 176,
+      "intent": "dry, amused, understated"
+    },
+    "Russ": {
+      "voice": "Reed (English (US))",
+      "tts_rate": 182,
+      "intent": "warm, earnest, slightly anxious"
+    },
+    "Rachelle": {
+      "voice": "Sandy (English (US))",
+      "tts_rate": 182,
+      "intent": "polished, observant, lightly amused"
+    },
+    "Jojo": {
+      "voice": "Flo (English (US))",
+      "tts_rate": 186,
+      "intent": "warm, open, easygoing"
+    },
+    "Fufu": {
+      "voice": "Samantha",
+      "tts_rate": 194,
+      "intent": "bright, expressive, delighted by chaos"
+    }
+  }
+}

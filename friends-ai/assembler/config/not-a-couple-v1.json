@@ -65,90 +65,105 @@
   "dialogue": [
     {
       "character": "Jojo",
+      "shot_id": "02-couples-night-sign",
       "text": "Couples Night?",
       "start": 5.8,
       "tts_rate": 185
     },
     {
       "character": "Fufu",
+      "shot_id": "03-group-notices-sign",
       "text": "No, no — let's not pretend this isn't for us.",
       "start": 9.7,
       "tts_rate": 195
     },
     {
       "character": "Chance",
+      "shot_id": "04-mon-chance",
       "text": "You look tense for someone who's definitely not part of a couple.",
       "start": 15.6,
       "tts_rate": 178
     },
     {
       "character": "Mon",
+      "shot_id": "04-mon-chance",
       "text": "I'm tense because your face is doing that.",
       "start": 21.1,
       "tts_rate": 182
     },
     {
       "character": "Russ",
+      "shot_id": "05-russ-rachelle",
       "text": "Just so we're all being normal, I'd like to say this sign is weirdly aggressive.",
       "start": 24.8,
       "tts_rate": 182
     },
     {
       "character": "Rachelle",
+      "shot_id": "05-russ-rachelle",
       "text": "You say that like it personally invited you.",
       "start": 30.2,
       "tts_rate": 185
     },
     {
       "character": "Fufu",
+      "shot_id": "06-jojo-fufu",
       "text": "I can name two couples and one cover-up right now.",
       "start": 33.9,
       "tts_rate": 195
     },
     {
       "character": "Jojo",
+      "shot_id": "06-jojo-fufu",
       "text": "Why is that worse than if you named three couples?",
       "start": 38.0,
       "tts_rate": 185
     },
     {
       "character": "Mon",
+      "shot_id": "08-group-regather",
       "text": "Can we not do this?",
       "start": 43.3,
       "tts_rate": 182
     },
     {
       "character": "Fufu",
+      "shot_id": "08-group-regather",
       "text": "Too late.",
       "start": 45.0,
       "tts_rate": 198
     },
     {
       "character": "Russ",
+      "shot_id": "08-group-regather",
       "text": "No one said we were doing anything.",
       "start": 45.5,
       "tts_rate": 183
     },
     {
       "character": "Fufu",
+      "shot_id": "09-group-couples-night",
       "text": "I'm just saying some people got tense very quickly.",
       "start": 49.0,
       "tts_rate": 194
     },
     {
       "character": "Russ",
+      "shot_id": "09-group-couples-night",
       "text": "That could mean anything.",
       "start": 52.3,
       "tts_rate": 183
     },
     {
       "character": "Rachelle",
+      "shot_id": "09-group-couples-night",
       "text": "It somehow didn't.",
       "start": 54.1,
       "tts_rate": 184
     },
     {
       "character": "Chance",
+      "shot_id": "09-group-couples-night",
       "text": "Relax. If anyone asks, I'll claim Mon for the discount.",
       "start": 58.2,
       "tts_rate": 176

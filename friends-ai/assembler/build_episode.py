@@ -8,6 +8,7 @@ import subprocess
 import sys
 import wave
 from pathlib import Path
+from typing import Dict, List
 
 ROOT = Path("/Users/moey/.openclaw/workspace")
 ASSEMBLER_DIR = ROOT / "friends-ai" / "assembler"
@@ -155,6 +156,80 @@ def render_voice_auditions(args):
     print(f"Wrote audition pack to {out_dir}")
 
 
+def format_srt_time(seconds: float) -> str:
+    ms = max(0, int(round(seconds * 1000)))
+    h = ms // 3600000
+    ms %= 3600000
+    m = ms // 60000
+    ms %= 60000
+    s = ms // 1000
+    ms %= 1000
+    return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
+
+
+def normalize_dialogue_timeline(shots: List[dict], dialogue: List[dict], audio_inputs: List[dict], auto_retime: bool) -> List[dict]:
+    shots_by_id: Dict[str, dict] = {shot["id"]: shot for shot in shots}
+    shot_offsets = {}
+    cursor = 0.0
+    for shot in shots:
+        shot_offsets[shot["id"]] = cursor
+        cursor += float(shot["duration"])
+
+    dialogue = [dict(item) for item in dialogue]
+    audio_by_text = {(item["line"]["character"], item["line"]["text"]): item for item in audio_inputs}
+
+    if auto_retime:
+        grouped: Dict[str, List[dict]] = {}
+        for item in dialogue:
+            grouped.setdefault(item["shot_id"], []).append(item)
+
+        min_gap = 0.35
+        head_pad = 0.6
+        tail_pad = 0.9
+        for shot in shots:
+            items = grouped.get(shot["id"], [])
+            if not items:
+                continue
+            local_cursor = head_pad
+            for item in items:
+                key = (item["character"], item["text"])
+                dur = get_audio_duration(audio_by_text[key]["path"])
+                item["start"] = shot_offsets[shot["id"]] + local_cursor
+                item["end"] = item["start"] + dur
+                local_cursor += dur + min_gap
+            required = local_cursor - min_gap + tail_pad
+            if required > float(shot["duration"]):
+                shot["duration"] = round(required, 3)
+
+        shot_offsets = {}
+        cursor = 0.0
+        for shot in shots:
+            shot_offsets[shot["id"]] = cursor
+            cursor += float(shot["duration"])
+
+        for item in dialogue:
+            local = item["start"] - shot_offsets.get(item["shot_id"], 0)
+            item["start"] = shot_offsets[item["shot_id"]] + max(local, 0)
+            key = (item["character"], item["text"])
+            dur = get_audio_duration(audio_by_text[key]["path"])
+            item["end"] = item["start"] + dur
+    else:
+        for item in dialogue:
+            key = (item["character"], item["text"])
+            dur = get_audio_duration(audio_by_text[key]["path"])
+            item["end"] = float(item["start"]) + dur
+
+    return dialogue
+
+
+def write_srt(path: Path, dialogue: List[dict]):
+    with path.open("w") as f:
+        for idx, item in enumerate(dialogue, start=1):
+            f.write(f"{idx}\n")
+            f.write(f"{format_srt_time(item['start'])} --> {format_srt_time(item['end'])}\n")
+            f.write(f"{item['character']}: {item['text']}\n\n")
+
+
 def build_episode(args):
     ensure_dirs()
     episode = load_json(Path(args.episode))
@@ -187,8 +262,11 @@ def build_episode(args):
             continue
         audio_inputs.append({"line": line, "path": out_wav})
 
+    shots = [dict(shot) for shot in episode["shots"]]
+    dialogue_timeline = normalize_dialogue_timeline(shots, episode.get("dialogue", []), audio_inputs, args.auto_retime)
+
     segment_paths = []
-    for shot in episode["shots"]:
+    for shot in shots:
         segment_path = segments_dir / f"{shot['id']}.mp4"
         duration = float(shot["duration"])
         input_path = Path(shot["source"])
@@ -239,13 +317,13 @@ def build_episode(args):
         "-c:v", "libx264", "-pix_fmt", "yuv420p", str(video_no_audio)
     ])
 
-    total_duration = sum(float(s["duration"]) for s in episode["shots"])
+    total_duration = sum(float(s["duration"]) for s in shots)
 
     ambience_path = None
     if episode.get("ambience"):
         source = Path(episode["ambience"]["source"])
         ambience_path = audio_dir / "ambience.wav"
-        volume = str(episode["ambience"].get("volume", 0.16))
+        volume = str(episode["ambience"].get("volume", 0.025 if args.clean_ambience else 0.04))
         run([
             "ffmpeg", "-y", "-stream_loop", "-1", "-i", str(source), "-t", f"{total_duration:.3f}",
             "-af", f"volume={volume}", "-ar", str(SAMPLE_RATE), "-ac", "1", str(ambience_path)
@@ -262,8 +340,10 @@ def build_episode(args):
     else:
         input_index = 0
 
+    timeline_by_key = {(item['character'], item['text']): item for item in dialogue_timeline}
     for item in audio_inputs:
-        delay_ms = int(float(item["line"]["start"]) * 1000)
+        line_timing = timeline_by_key[(item['line']['character'], item['line']['text'])]
+        delay_ms = int(float(line_timing["start"]) * 1000)
         mix_inputs += ["-i", str(item["path"])]
         label = f"[{input_index}:a]"
         out_label = f"[a{input_index}]"
@@ -284,9 +364,23 @@ def build_episode(args):
     else:
         create_silence(mixed_audio, total_duration)
 
+    srt_path = base / f"{episode['slug']}.srt"
+    write_srt(srt_path, dialogue_timeline)
+
     out_path = Path(args.out) if args.out else OUTPUT_DIR / f"{episode['slug']}.mp4"
+    if args.burn_subtitles:
+        subtitled_video = base / f"{episode['slug']}-subtitled.mp4"
+        run([
+            "ffmpeg", "-y", "-i", str(video_no_audio),
+            "-vf", f"subtitles={str(srt_path).replace(':', '\\:')}:force_style='Fontsize=18,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=2,Shadow=0,MarginV=40'",
+            str(subtitled_video)
+        ])
+        final_video_input = subtitled_video
+    else:
+        final_video_input = video_no_audio
+
     run([
-        "ffmpeg", "-y", "-i", str(video_no_audio), "-i", str(mixed_audio),
+        "ffmpeg", "-y", "-i", str(final_video_input), "-i", str(mixed_audio),
         "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
         "-shortest", str(out_path)
     ])
@@ -296,7 +390,10 @@ def build_episode(args):
         "output": str(out_path),
         "video_only": str(video_no_audio),
         "mixed_audio": str(mixed_audio),
+        "subtitles": str(srt_path),
         "tts": bool(args.tts),
+        "auto_retime": bool(args.auto_retime),
+        "burn_subtitles": bool(args.burn_subtitles),
         "voice_map": str(args.voice_map) if args.voice_map else None,
     }
     with (base / "manifest.json").open("w") as f:
@@ -328,6 +425,9 @@ def main():
     p_build.add_argument("--episode", required=True)
     p_build.add_argument("--voice-map")
     p_build.add_argument("--tts", action="store_true")
+    p_build.add_argument("--auto-retime", action="store_true")
+    p_build.add_argument("--clean-ambience", action="store_true")
+    p_build.add_argument("--burn-subtitles", action="store_true")
     p_build.add_argument("--out")
     p_build.set_defaults(func=build_episode)
 
