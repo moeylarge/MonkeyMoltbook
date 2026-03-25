@@ -53,4 +53,6 @@ Create the two execution docs that turn the stack map into a real production pla
 - `friends-ai/IDENTITY_LOCK_BATCH.md`
 - `friends-ai/DRIFT_REVIEW_FRAMEWORK.md`
 - `friends-ai/PRODUCTION_STACK_MAP_V1.md`
+- `friends-ai/TOOL_DECISION_MATRIX.md`
+- `friends-ai/API_ACCESS_TRACKER.md`
 - `friends-ai/HANDOFF.md`

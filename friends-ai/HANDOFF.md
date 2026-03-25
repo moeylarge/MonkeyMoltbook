@@ -30,6 +30,8 @@ Read these first:
 7. `friends-ai/IDENTITY_LOCK_BATCH.md`
 8. `friends-ai/DRIFT_REVIEW_FRAMEWORK.md`
 9. `friends-ai/PRODUCTION_STACK_MAP_V1.md`
+10. `friends-ai/TOOL_DECISION_MATRIX.md`
+11. `friends-ai/API_ACCESS_TRACKER.md`
 
 ## What was completed
 - master concept architecture written down
@@ -60,3 +62,4 @@ Recommended order:
 
 ## Resume line
 If resuming after a reset: do **not** re-brainstorm the series from scratch. Read the docs above, finalize the production stack, then move into identity-lock generation.
+n.

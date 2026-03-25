@@ -12,8 +12,10 @@ This folder holds the source-of-truth documents for the Friends AI sitcom concep
 7. `IDENTITY_LOCK_BATCH.md`
 8. `DRIFT_REVIEW_FRAMEWORK.md`
 9. `PRODUCTION_STACK_MAP_V1.md`
-10. `STATUS.md`
-11. `HANDOFF.md`
+10. `TOOL_DECISION_MATRIX.md`
+11. `API_ACCESS_TRACKER.md`
+12. `STATUS.md`
+13. `HANDOFF.md`
 
 ## Current goal
-Finalize the production stack and access plan before generation gets expensive or chaotic, then run identity-lock generation with the drift review framework.
+Verify real tool/account access against the chosen stack, then move into identity-lock generation with drift review.
