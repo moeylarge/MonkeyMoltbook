@@ -81,20 +81,21 @@ Latest verified Mon + Chance truth:
 - one real direct still pass was completed and saved at `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-1.png`
 - payload audit saved at `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-1.json`
 - that direct pass is still a **REJECT** because Mon remains too soft/cute and the pair tension is not benchmark-grade yet
-- one more surgical direct pass was completed and saved at `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-2.png`
-- payload audit saved at `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-2.json`
-- that pass is also a **REJECT** because it drifted into explicit `Central Perk` / homage signage and Mon still does not fully clear the anti-softness character bar
+- one more surgical direct pass was completed and saved at `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-3.png`
+- payload audit saved at `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-3.json`
+- that pass is also a **REJECT**: Mon improved and reads more controlled, but the background still carries readable mirrored `Central Perk`-style homage signage, so Central Peak continuity still hard-fails
 - immediate resume docs now live in:
   - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/deterministic-handoff-2026-03-25.md`
   - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/run-log-2026-03-25.md`
   - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/scorecards/mon-chance-direct-pass-1-scorecard-2026-03-25.md`
   - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/scorecards/mon-chance-direct-pass-2-scorecard-2026-03-25.md`
+  - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/scorecards/mon-chance-direct-pass-3-scorecard-2026-03-25.md`
 
 Recommended order:
-1. use `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/run_direct_still_pass.mjs`
-2. keep `fal-input/04-mon-chance-upload-ref-close.jpg` as the only bound source image
-3. tighten prompt language specifically against Mon softness / cuteness drift
-4. run one more surgical direct still pass
+1. prepare a same-geometry close reference that removes or obscures the window-sign region from the bound source image
+2. keep using `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/run_direct_still_pass.mjs`
+3. keep a single-image deterministic bind
+4. rerun only after the source reference no longer carries the homage-sign memory
 5. only if it clears all gates, upscale or motion-test it
 
 ## Risks / cautions

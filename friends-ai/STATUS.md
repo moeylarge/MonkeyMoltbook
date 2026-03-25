@@ -48,8 +48,8 @@ Completed across the latest Mon + Chance rebuild pass:
 - one real direct still pass completed and saved:
   - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-1.png`
 - latest real Mon + Chance still verdict: **REJECT**
-- newest surgical direct pass saved at `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-2.png`
-- newest surgical direct pass failed because the image drifted into `Central Perk` / homage signage and Mon still reads slightly too soft for hero-lock quality
+- newest surgical direct pass saved at `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-3.png`
+- newest surgical direct pass improved Mon substantially, but still failed because the background preserved readable mirrored `Central Perk`-style homage signage, so Central Peak continuity still hard-fails
 
 ## Locked world rules
 - Central Peak is the core social hearth
@@ -95,5 +95,8 @@ IX.md`
 - `friends-ai/FAL_IDENTITY_LOCK_MON_V1.md`
 - `friends-ai/FAL_IDENTITY_LOCK_CHANCE_V1.md`
 - `friends-ai/FAL_MON_REQUEST_V1.md`
+- `friends-ai/FAL_MON_REQUEST_V1.sh`
+- `friends-ai/HANDOFF.md`
+REQUEST_V1.md`
 - `friends-ai/FAL_MON_REQUEST_V1.sh`
 - `friends-ai/HANDOFF.md`
