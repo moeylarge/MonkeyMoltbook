@@ -18,7 +18,8 @@ Automated episode builder for `Friends AI` using the current `Not a Couple` pilo
 - `build_episode.py` — main CLI
 - `providers.py` — voice provider abstraction layer
 - `config/not-a-couple-v1.json` — episode timeline / asset / dialogue spec
-- `config/voice-map-v2-picked.json` — locked character voice map
+- `config/voice-map-v2-picked.json` — locked `say` fallback map
+- `config/voice-map-v3-elevenlabs.json` — first-pass premium ElevenLabs cast map
 - `config/voice-providers-v5.json` — provider status / premium-ready notes
 
 ## Commands
@@ -51,7 +52,7 @@ python3 friends-ai/assembler/build_episode.py render-voice-auditions \
 Output:
 - `friends-ai/assembler/voices/auditions-v2/`
 
-### 4) Build the synthetic temp-voice cut
+### 4) Build the fallback `say` cut
 
 ```bash
 python3 friends-ai/assembler/build_episode.py build \
@@ -62,6 +63,18 @@ python3 friends-ai/assembler/build_episode.py build \
   --auto-retime \
   --clean-ambience \
   --burn-subtitles
+```
+
+### 4b) Build the premium ElevenLabs cut
+
+```bash
+python3 friends-ai/assembler/build_episode.py build \
+  --episode friends-ai/assembler/config/not-a-couple-v1.json \
+  --voice-map friends-ai/assembler/config/voice-map-v3-elevenlabs.json \
+  --provider elevenlabs \
+  --tts \
+  --auto-retime \
+  --clean-ambience
 ```
 
 Output:
@@ -93,12 +106,12 @@ The agent should handle:
 
 ## Current limits
 
-- premium providers are scaffolded but not authenticated on this host yet
+- ElevenLabs is now implemented, but cast tuning is still first-pass and should be refined by listening to results
 - subtitle burn-in falls back to sidecar SRT on this host because the installed ffmpeg lacks the `subtitles` filter
 - no episode-schema validation yet
 - queue mode exists, but multi-episode libraries/configs still need to be populated
 
-## v5 voice-provider rule
+## v5/v6 voice-provider rule
 
 The assembler now separates:
 - episode build logic

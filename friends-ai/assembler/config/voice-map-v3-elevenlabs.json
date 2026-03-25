@@ -1,0 +1,83 @@
+{
+  "notes": "First-pass ElevenLabs cast map chosen by Moet for stronger separation and less synthetic flatness. Fallback remains say in the provider layer if needed.",
+  "characters": {
+    "Mon": {
+      "provider": "elevenlabs",
+      "voice": "Sarah - Mature, Reassuring, Confident",
+      "voice_id": "EXAVITQu4vr4xnSDxMaL",
+      "model_id": "eleven_flash_v2_5",
+      "intent": "clear, precise, controlled",
+      "voice_settings": {
+        "stability": 0.55,
+        "similarity_boost": 0.76,
+        "style": 0.08,
+        "use_speaker_boost": true
+      }
+    },
+    "Chance": {
+      "provider": "elevenlabs",
+      "voice": "Roger - Laid-Back, Casual, Resonant",
+      "voice_id": "CwhRBWXzGAHq8TQ4Fs17",
+      "model_id": "eleven_flash_v2_5",
+      "intent": "dry, amused, understated",
+      "voice_settings": {
+        "stability": 0.46,
+        "similarity_boost": 0.74,
+        "style": 0.14,
+        "use_speaker_boost": true
+      }
+    },
+    "Russ": {
+      "provider": "elevenlabs",
+      "voice": "Will - Relaxed Optimist",
+      "voice_id": "bIHbv24MWmeRgasZH58o",
+      "model_id": "eleven_flash_v2_5",
+      "intent": "warm, earnest, slightly anxious",
+      "voice_settings": {
+        "stability": 0.4,
+        "similarity_boost": 0.72,
+        "style": 0.12,
+        "use_speaker_boost": true
+      }
+    },
+    "Rachelle": {
+      "provider": "elevenlabs",
+      "voice": "Lily - Velvety Actress",
+      "voice_id": "pFZP5JQG7iQjIQuC4Bku",
+      "model_id": "eleven_flash_v2_5",
+      "intent": "polished, observant, lightly amused",
+      "voice_settings": {
+        "stability": 0.58,
+        "similarity_boost": 0.78,
+        "style": 0.1,
+        "use_speaker_boost": true
+      }
+    },
+    "Jojo": {
+      "provider": "elevenlabs",
+      "voice": "Chris - Charming, Down-to-Earth",
+      "voice_id": "iP95p4xoKVk53GoZ742B",
+      "model_id": "eleven_flash_v2_5",
+      "intent": "warm, open, easygoing",
+      "voice_settings": {
+        "stability": 0.44,
+        "similarity_boost": 0.72,
+        "style": 0.13,
+        "use_speaker_boost": true
+      }
+    },
+    "Fufu": {
+      "provider": "elevenlabs",
+      "voice": "Laura - Enthusiast, Quirky Attitude",
+      "voice_id": "FGY2WhTYpPnrIDTdsKH5",
+      "model_id": "eleven_flash_v2_5",
+      "intent": "bright, expressive, delighted by chaos",
+      "voice_settings": {
+        "stability": 0.34,
+        "similarity_boost": 0.71,
+        "style": 0.28,
+        "use_speaker_boost": true
+      }
+    }
+  }
+}
