@@ -95,10 +95,17 @@ Saved keeper result:
 - scorecard: `scorecards/mon-chance-direct-pass-4-cleanref-scorecard-2026-03-25.md`
 
 Verdict:
-- **PASS / KEEPER**
+- **PASS / KEEPER** for the still only
 - browser pass = failure-memory only because binding was untrustworthy
 - direct cleaned-reference pass = approved hero-lock still
-- valid for upscale or motion testing
+- motion path status: current direct Veo 2 image-to-video path is **REJECTED for this shot** after two failed audits
+
+Latest motion audit assets:
+- pass 1 clip: `motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-1-veo2.mp4`
+- pass 1 scorecard: `scorecards/mon-chance-motion-pass-1-veo2-scorecard-2026-03-25.md`
+- pass 2 minimal clip: `motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-2-veo2-minimal.mp4`
+- pass 2 minimal scorecard: `scorecards/mon-chance-motion-pass-2-veo2-minimal-scorecard-2026-03-25.md`
+- latest review contact sheet: `review/motion-pass-2/contact-sheet.jpg`
 
 Resume from:
 - `deterministic-handoff-2026-03-25.md`

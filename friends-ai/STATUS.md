@@ -65,7 +65,19 @@ Completed across the latest Mon + Chance rebuild pass:
 - motion scorecard saved at:
   - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/scorecards/mon-chance-motion-pass-1-veo2-scorecard-2026-03-25.md`
 - latest real Mon + Chance motion verdict: **REJECT**
-- failure reason: Mon face drift and softened tension make the clip worse than the locked still, despite acceptable background continuity
+- motion audit history now includes two real direct Veo 2 tests:
+  - pass 1: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-1-veo2.mp4`
+  - pass 2 minimal retry: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-2-veo2-minimal.mp4`
+- latest motion payload audit saved at:
+  - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-2-veo2-minimal.json`
+- latest motion review frames saved at:
+  - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/review/motion-pass-2/frame-01.jpg`
+  - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/review/motion-pass-2/frame-02.jpg`
+  - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/review/motion-pass-2/frame-03.jpg`
+  - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/review/motion-pass-2/contact-sheet.jpg`
+- latest motion scorecard saved at:
+  - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/scorecards/mon-chance-motion-pass-2-veo2-minimal-scorecard-2026-03-25.md`
+- failure reason: even the shorter stricter minimal-motion retry still caused facial/expression drift and weakened the locked still's tension
 
 ## Locked world rules
 - Central Peak is the core social hearth
@@ -80,13 +92,15 @@ Completed across the latest Mon + Chance rebuild pass:
 - premise: Couples Night at Central Peak causes immediate social/romantic chaos
 
 ## Immediate next action
-The Mon + Chance hero still remains locked, but the first direct motion test failed.
+The Mon + Chance hero still remains locked, and the second controlled direct Veo 2 retry also failed.
 
 1. Keep `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/fal-input/04-mon-chance-upload-ref-close-cleaned.jpg` as the approved bound still reference for this beat
 2. Keep `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-4-cleanref.png` as the hero still keeper
-3. Treat `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-1-veo2.mp4` as a failed motion audit, not a keeper clip
-4. Next reopen motion-path selection / motion prompting only
-5. Do not reopen still-generation unless repeated downstream motion failure proves the still itself is the blocker
+3. Treat both direct Veo 2 clips as failed motion audits, not keeper clips:
+   - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-1-veo2.mp4`
+   - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-2-veo2-minimal.mp4`
+4. Consider the current direct Veo 2 image-to-video path rejected for this shot
+5. Next test one materially different motion path with stronger still-preservation controls; do not reopen still-generation unless a different path also proves the still itself is the blocker
 
 ## Key docs
 - `friends-ai-pilot-assets/FINAL_QUALITY_REBUILD_SPEC.md`

@@ -102,12 +102,15 @@ Latest verified Mon + Chance truth:
 Recommended order:
 1. preserve `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/fal-input/04-mon-chance-upload-ref-close-cleaned.jpg` as the approved bound still reference for this beat
 2. treat `mon-chance-2026-03-25-direct-pass-4-cleanref.png` as the Mon + Chance hero-shot keeper
-3. the first direct motion test is now complete and failed on face stability / tension preservation:
-   - clip: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-1-veo2.mp4`
-   - scorecard: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/scorecards/mon-chance-motion-pass-1-veo2-scorecard-2026-03-25.md`
-4. keep this motion clip as audit memory only, not a keeper
-5. do not reopen still-generation loops unless repeated downstream motion/upscale failure proves the still itself is the blocker
-6. next reopen motion-path selection / motion prompting only
+3. two direct motion tests are now complete and both failed on face stability / tension preservation:
+   - pass 1 clip: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-1-veo2.mp4`
+   - pass 1 scorecard: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/scorecards/mon-chance-motion-pass-1-veo2-scorecard-2026-03-25.md`
+   - pass 2 clip: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-2-veo2-minimal.mp4`
+   - pass 2 scorecard: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/scorecards/mon-chance-motion-pass-2-veo2-minimal-scorecard-2026-03-25.md`
+4. keep both motion clips as audit memory only, not keepers
+5. treat the current direct Veo 2 image-to-video path as rejected for this shot
+6. do not reopen still-generation loops unless a materially different motion path also fails and proves the still itself is the blocker
+7. next test one materially different motion path with stronger still-preservation controls
 
 ## Risks / cautions
 - much of the strategic title discussion was intentionally aggressive around discoverability; keep the actual creative execution structurally original enough to avoid devolving into direct-copy scene design
