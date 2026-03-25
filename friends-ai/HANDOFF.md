@@ -66,7 +66,7 @@ Read these first:
   - `FAL_MON_REQUEST_V1.sh`
 
 ## Correct next step
-The live stack is now sufficiently verified to begin identity lock.
+The live stack is verified, and Mon + Chance hero-shot prep is now one step further along.
 
 Active stack:
 - Fal = stills / identity lock
@@ -74,15 +74,20 @@ Active stack:
 - HeyGen = talking-character
 - ElevenLabs = voices
 
+Latest verified Mon + Chance truth:
+- hero-lock package extended with tighter prompt control and upload-ready reference variants
+- one real FAL Nano Banana browser still pass was completed and saved at `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/mon-chance-nano-banana-pass-2026-03-25.png`
+- that pass is a **REJECT** due to wardrobe / character-family / scene drift
+- immediate resume docs now live in:
+  - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/deterministic-handoff-2026-03-25.md`
+  - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/run-log-2026-03-25.md`
+
 Recommended order:
-1. run `FAL_MON_REQUEST_V1.sh`
-2. review Mon using `DRIFT_REVIEW_FRAMEWORK.md`
-3. tighten if needed
-4. then generate Chance using `FAL_IDENTITY_LOCK_CHANCE_V1.md`
-5. review Chance
-6. continue through the sequence in `IDENTITY_LOCK_RUNBOOK.md`
-7. lock the lineup and locations
-8. then move into pilot masters
+1. use `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/fal-input/04-mon-chance-upload-ref-close.jpg`
+2. run one new still pass with `hero-still-prompt-v3.md`
+3. score it with `keeper-rubric-v2.md`
+4. only if it clears all gates, upscale or motion-test it
+5. otherwise do one surgical follow-up still pass, not a broad loop
 
 ## Risks / cautions
 - much of the strategic title discussion was intentionally aggressive around discoverability; keep the actual creative execution structurally original enough to avoid devolving into direct-copy scene design

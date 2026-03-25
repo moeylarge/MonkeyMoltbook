@@ -7,10 +7,10 @@ Friends AI
 Create a warm, cozy, ensemble comfort sitcom around six original animal-coded characters, a café called Central Peak, and two across-the-hall apartments, starting with a 4-minute pilot proof of concept.
 
 ## Current phase
-Identity-lock execution phase.
+Identity-lock / hero-shot execution phase.
 
 ## Current verified status
-Completed in this session:
+Completed across the latest Mon + Chance rebuild pass:
 - title direction locked as working title `Friends AI`
 - world geometry locked
 - cast and relationship engines locked
@@ -38,6 +38,13 @@ Completed in this session:
 - first Fal-ready Mon identity-lock prompt written
 - first Fal-ready Chance identity-lock prompt written
 - first direct Fal Mon request script and request notes written
+- Mon + Chance hero-lock package extended with stricter still-pass controls
+- three additional upload-ready Mon + Chance still variants prepared for browser generation
+- tighter Mon + Chance still prompt written: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/hero-still-prompt-v3.md`
+- faster pass/fail scoring doc written: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/keeper-rubric-v2.md`
+- one real FAL Nano Banana browser still pass completed and saved:
+  - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/mon-chance-nano-banana-pass-2026-03-25.png`
+- latest real Mon + Chance still verdict: **REJECT**
 
 ## Locked world rules
 - Central Peak is the core social hearth
@@ -52,13 +59,12 @@ Completed in this session:
 - premise: Couples Night at Central Peak causes immediate social/romantic chaos
 
 ## Immediate next action
-Begin identity lock with the live verified stack.
+Run one more surgical Mon + Chance still pass from the tightened hero-lock package.
 
-1. Run `FAL_MON_REQUEST_V1.sh`
-2. Score the Mon result with `DRIFT_REVIEW_FRAMEWORK.md`
-3. Tighten if needed
-4. Generate Chance using `FAL_IDENTITY_LOCK_CHANCE_V1.md`
-5. Continue the sequence in `IDENTITY_LOCK_RUNBOOK.md`
+1. Upload `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/fal-input/04-mon-chance-upload-ref-close.jpg`
+2. Use `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/hero-still-prompt-v3.md`
+3. Score the result with `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/keeper-rubric-v2.md`
+4. Only if it is a keeper, move to upscale / motion
 
 ## Key docs
 - `friends-ai-pilot-assets/FINAL_QUALITY_REBUILD_SPEC.md`

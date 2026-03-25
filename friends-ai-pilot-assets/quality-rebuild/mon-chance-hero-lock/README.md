@@ -13,7 +13,11 @@ The current Mon + Chance image concept is the strongest available starting point
    - `references/04-mon-chance-story-shot.png`
 2. Primary upload-ready seed/reference:
    - `fal-input/04-mon-chance-upload-ref.jpg`
-3. Current motion-review stills from prior attempts:
+3. Additional upload-ready variants prepared for stricter next-pass control:
+   - `fal-input/04-mon-chance-upload-ref-close.jpg`
+   - `fal-input/04-mon-chance-upload-ref-balanced.jpg`
+   - `fal-input/04-mon-chance-upload-ref-wide.jpg`
+4. Current motion-review stills from prior attempts:
    - `review/current-motion-thumb-output.jpg`
    - `review/current-motion-thumb-output-1.jpg`
    - `review/current-motion-thumb-output-2.jpg`
@@ -75,5 +79,20 @@ as defined in:
 - `friends-ai-pilot-assets/MON_CHANCE_QUALITY_LOCK.md`
 
 ## Recommended next prompt path
-Use `hero-still-prompt-v2.md` first.
+Use `hero-still-prompt-v3.md` first.
+Score with `keeper-rubric-v2.md`.
 Only animate a still that passes review.
+
+## Latest real pass status
+A real FAL browser still pass was completed on 2026-03-25.
+Saved result:
+- `outputs/mon-chance-nano-banana-pass-2026-03-25.png`
+
+Verdict:
+- **REJECT**
+- useful as failure memory only
+- do not motion-test it
+
+Resume from:
+- `deterministic-handoff-2026-03-25.md`
+- `run-log-2026-03-25.md`
