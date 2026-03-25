@@ -102,8 +102,12 @@ Latest verified Mon + Chance truth:
 Recommended order:
 1. preserve `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/fal-input/04-mon-chance-upload-ref-close-cleaned.jpg` as the approved bound still reference for this beat
 2. treat `mon-chance-2026-03-25-direct-pass-4-cleanref.png` as the Mon + Chance hero-shot keeper
-3. if needed, upscale this still or motion-test it
-4. do not reopen still-generation loops unless a downstream motion/upscale issue forces it
+3. the first direct motion test is now complete and failed on face stability / tension preservation:
+   - clip: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-1-veo2.mp4`
+   - scorecard: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/scorecards/mon-chance-motion-pass-1-veo2-scorecard-2026-03-25.md`
+4. keep this motion clip as audit memory only, not a keeper
+5. do not reopen still-generation loops unless repeated downstream motion/upscale failure proves the still itself is the blocker
+6. next reopen motion-path selection / motion prompting only
 
 ## Risks / cautions
 - much of the strategic title discussion was intentionally aggressive around discoverability; keep the actual creative execution structurally original enough to avoid devolving into direct-copy scene design
