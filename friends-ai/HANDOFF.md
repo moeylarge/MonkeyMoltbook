@@ -34,6 +34,9 @@ Read these first:
 11. `friends-ai/API_ACCESS_TRACKER.md`
 12. `friends-ai/IDENTITY_LOCK_RUNBOOK.md`
 13. `friends-ai/FAL_IDENTITY_LOCK_MON_V1.md`
+14. `friends-ai/FAL_IDENTITY_LOCK_CHANCE_V1.md`
+15. `friends-ai/FAL_MON_REQUEST_V1.md`
+16. `friends-ai/FAL_MON_REQUEST_V1.sh`
 
 ## What was completed
 - master concept architecture written down
@@ -55,7 +58,12 @@ Read these first:
   - HeyGen
   - ElevenLabs
 - active still-image backbone changed from Replicate to Fal after Replicate remained blocked and Fal passed funded API generation
-- first Fal-ready identity-lock prompt written: `FAL_IDENTITY_LOCK_MON_V1.md`
+- first Fal-ready identity-lock prompts written:
+  - `FAL_IDENTITY_LOCK_MON_V1.md`
+  - `FAL_IDENTITY_LOCK_CHANCE_V1.md`
+- first direct Fal Mon request artifacts written:
+  - `FAL_MON_REQUEST_V1.md`
+  - `FAL_MON_REQUEST_V1.sh`
 
 ## Correct next step
 The live stack is now sufficiently verified to begin identity lock.
@@ -67,13 +75,14 @@ Active stack:
 - ElevenLabs = voices
 
 Recommended order:
-1. begin with `FAL_IDENTITY_LOCK_MON_V1.md`
+1. run `FAL_MON_REQUEST_V1.sh`
 2. review Mon using `DRIFT_REVIEW_FRAMEWORK.md`
-3. then generate Chance using `FAL_IDENTITY_LOCK_CHANCE_V1.md`
-4. review Chance
-5. continue through the sequence in `IDENTITY_LOCK_RUNBOOK.md`
-6. lock the lineup and locations
-7. then move into pilot masters
+3. tighten if needed
+4. then generate Chance using `FAL_IDENTITY_LOCK_CHANCE_V1.md`
+5. review Chance
+6. continue through the sequence in `IDENTITY_LOCK_RUNBOOK.md`
+7. lock the lineup and locations
+8. then move into pilot masters
 
 ## Risks / cautions
 - much of the strategic title discussion was intentionally aggressive around discoverability; keep the actual creative execution structurally original enough to avoid devolving into direct-copy scene design
@@ -82,4 +91,4 @@ Recommended order:
 - preserve consistent geography for Central Peak, 2A, 2B, and hallway
 
 ## Resume line
-If resuming after a reset: do **not** re-brainstorm the series from scratch. Read the docs above and move directly into the Fal identity-lock flow starting with Mon.
+If resuming after a reset: do **not** re-brainstorm the series from scratch. Read the docs above and move directly into the Fal identity-lock flow starting with the Mon request script.

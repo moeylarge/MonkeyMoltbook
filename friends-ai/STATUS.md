@@ -37,6 +37,7 @@ Completed in this session:
 - Fal replaced Replicate as the still-image backbone after passing funded API generation
 - first Fal-ready Mon identity-lock prompt written
 - first Fal-ready Chance identity-lock prompt written
+- first direct Fal Mon request script and request notes written
 
 ## Locked world rules
 - Central Peak is the core social hearth
@@ -53,9 +54,11 @@ Completed in this session:
 ## Immediate next action
 Begin identity lock with the live verified stack.
 
-1. Generate Mon using `FAL_IDENTITY_LOCK_MON_V1.md`
-2. Score the result with `DRIFT_REVIEW_FRAMEWORK.md`
-3. Continue the sequence in `IDENTITY_LOCK_RUNBOOK.md`
+1. Run `FAL_MON_REQUEST_V1.sh`
+2. Score the Mon result with `DRIFT_REVIEW_FRAMEWORK.md`
+3. Tighten if needed
+4. Generate Chance using `FAL_IDENTITY_LOCK_CHANCE_V1.md`
+5. Continue the sequence in `IDENTITY_LOCK_RUNBOOK.md`
 
 ## Key docs
 - `friends-ai/MASTER_BIBLE.md`
@@ -71,5 +74,7 @@ Begin identity lock with the live verified stack.
 - `friends-ai/API_ACCESS_TRACKER.md`
 - `friends-ai/IDENTITY_LOCK_RUNBOOK.md`
 - `friends-ai/FAL_IDENTITY_LOCK_MON_V1.md`
+- `friends-ai/FAL_IDENTITY_LOCK_CHANCE_V1.md`
+- `friends-ai/FAL_MON_REQUEST_V1.md`
+- `friends-ai/FAL_MON_REQUEST_V1.sh`
 - `friends-ai/HANDOFF.md`
-`friends-ai/HANDOFF.md`
