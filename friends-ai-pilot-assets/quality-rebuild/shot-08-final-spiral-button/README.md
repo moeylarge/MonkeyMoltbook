@@ -1,18 +1,21 @@
 # Shot 08 — Final Spiral / Button Package
 
 ## Purpose
-Deterministic rebuild package for locking the **Shot 08 final ensemble still** before any motion attempt.
+Deterministic rebuild package for locking the **Shot 08 final ensemble still** and auditing exactly one controlled motion attempt.
 
 This folder exists so Shot 08 can be run without browser memory, vague prompt drift, or mixed-source confusion.
 
 ## Current verdict
 - still gate: **PASS / KEEPER** on 2026-03-25 direct pass 2
-- motion gate: **eligible for one controlled pass**
+- motion gate: **REJECT** on 2026-03-25 motion pass 1
 
-Latest audited result:
-- still output: `outputs/2026-03-25/shot-08-final-spiral-2026-03-25-direct-pass-2-strongclean-v2.png`
-- payload audit: `outputs/2026-03-25/shot-08-final-spiral-2026-03-25-direct-pass-2-strongclean-v2.json`
-- scorecard: `scorecards/shot-08-direct-pass-2-strongclean-v2-scorecard-2026-03-25.md`
+Latest audited results:
+- locked still output: `outputs/2026-03-25/shot-08-final-spiral-2026-03-25-direct-pass-2-strongclean-v2.png`
+- locked still payload audit: `outputs/2026-03-25/shot-08-final-spiral-2026-03-25-direct-pass-2-strongclean-v2.json`
+- locked still scorecard: `scorecards/shot-08-direct-pass-2-strongclean-v2-scorecard-2026-03-25.md`
+- motion output: `motion-clips/2026-03-25/shot-08-final-spiral-2026-03-25-motion-pass-1-kling-o1-reference.mp4`
+- motion payload audit: `motion-clips/2026-03-25/shot-08-final-spiral-2026-03-25-motion-pass-1-kling-o1-reference.json`
+- motion scorecard: `scorecards/shot-08-motion-pass-1-kling-o1-reference-scorecard-2026-03-25.md`
 
 ## Locked source rule
 Keeper still was produced from **one bound source image only**:
@@ -28,7 +31,13 @@ They are audit memory only.
    - `fal-input/08-final-spiral-upload-ref-strongclean-v2.jpg`
 3. Locked keeper still:
    - `outputs/2026-03-25/shot-08-final-spiral-2026-03-25-direct-pass-2-strongclean-v2.png`
-4. Legacy motion audit memory only:
+4. Motion audit artifacts from the single controlled pass:
+   - `fal-input/08-final-spiral-locked-still-square-pad.png`
+   - `review/motion-pass-1-kling-o1-reference/frame-01.jpg`
+   - `review/motion-pass-1-kling-o1-reference/frame-02.jpg`
+   - `review/motion-pass-1-kling-o1-reference/frame-03.jpg`
+   - `review/motion-pass-1-kling-o1-reference/contact-sheet.jpg`
+5. Legacy motion audit memory only:
    - `review/legacy-motion-audit/shot07-motion-frame-01.jpg`
    - `review/legacy-motion-audit/shot07-motion-frame-02.jpg`
    - `review/legacy-motion-audit/shot08-motion-frame-01.jpg`
@@ -58,19 +67,20 @@ Use rule:
 
 ## Directory roles
 - `references/` = canonical still anchors
-- `fal-input/` = upload-ready bound-source files for direct still generation
+- `fal-input/` = upload-ready bound-source files for direct still generation and motion carrier prep
 - `outputs/` = generated still results and payload audits
+- `motion-clips/` = one controlled motion attempt and its audit payload
 - `scorecards/` = hard pass/reject scoring records
-- `review/` = audit memory and failure review only
-- `motion-clips/` = only populate after the still passes
+- `review/` = audit memory and failure review
 
 ## Pass rule
 Do not run motion until the still clears the rubric in:
 - `keeper-rubric-v1.md`
 
-That still gate is now cleared by the direct pass 2 keeper.
+That still gate was cleared by the direct pass 2 keeper.
 
 ## Current resume point
-- still is now locked from direct pass 2
-- if continuing, package exactly one restrained motion pass from `outputs/2026-03-25/shot-08-final-spiral-2026-03-25-direct-pass-2-strongclean-v2.png`
-- keep the same six-character layout and anti-signage discipline
+- still remains locked from direct pass 2
+- one restrained motion pass has now been executed and scored **REJECT**
+- do not run more motion variants in this line unless John explicitly reopens motion strategy
+- use the locked still as the final Shot 08 deliverable

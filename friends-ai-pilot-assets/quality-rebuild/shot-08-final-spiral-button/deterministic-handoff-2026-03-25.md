@@ -46,8 +46,9 @@ After generation, score immediately:
 - only if it clears all three gates does it become `PASS / KEEPER`
 
 ## Motion rule
-The still now clears `PASS / KEEPER`.
-If continuing, run at most one restrained motion pass from the locked keeper still and preserve the same anti-signage discipline.
+The still clears `PASS / KEEPER` and remains the locked final still.
+One restrained motion pass has now been completed from the locked keeper still and scored `REJECT`.
+Do not run more motion variants in this line unless John explicitly reopens motion strategy.
 
 ## Audit finding before the run
 - best current geometry source is the old Shot 07 ensemble still
