@@ -98,9 +98,16 @@ Completed across the latest Mon + Chance rebuild pass:
   - `friends-ai-pilot-assets/quality-rebuild/shot-08-final-spiral-button/outputs/2026-03-25/shot-08-final-spiral-2026-03-25-direct-pass-1-cleanref.json`
 - Shot 08 scorecard saved at:
   - `friends-ai-pilot-assets/quality-rebuild/shot-08-final-spiral-button/scorecards/shot-08-direct-pass-1-cleanref-scorecard-2026-03-25.md`
-- latest Shot 08 still verdict: **REJECT**
-- Shot 08 rejection reason: readable-ish chalkboard copy and partial mirrored window-logo language were reconstructed, so the still did not clear the anti-homage cleanliness gate
-- Shot 08 motion status: **NOT ATTEMPTED** because the still gate failed
+- latest Shot 08 still verdict: **PASS / FINAL STILL LOCKED**
+- Shot 08 keeper still saved at:
+  - `friends-ai-pilot-assets/quality-rebuild/shot-08-final-spiral-button/outputs/2026-03-25/shot-08-final-spiral-2026-03-25-direct-pass-2-strongclean-v2.png`
+- Shot 08 keeper payload audit saved at:
+  - `friends-ai-pilot-assets/quality-rebuild/shot-08-final-spiral-button/outputs/2026-03-25/shot-08-final-spiral-2026-03-25-direct-pass-2-strongclean-v2.json`
+- Shot 08 keeper scorecard saved at:
+  - `friends-ai-pilot-assets/quality-rebuild/shot-08-final-spiral-button/scorecards/shot-08-direct-pass-2-strongclean-v2-scorecard-2026-03-25.md`
+- Shot 08 motion status: **REJECT / CLOSED FOR NOW**
+- Shot 08 motion rejection reason: the single controlled Kling O1 pass materially rewrote acting, posture, and identity hierarchy instead of gently animating the locked still
+- John approved keeping Shot 08 still locked as final and running no more Shot 08 motion variants unless motion strategy is explicitly reopened
 
 ## Locked world rules
 - Central Peak is the core social hearth
@@ -115,13 +122,15 @@ Completed across the latest Mon + Chance rebuild pass:
 - premise: Couples Night at Central Peak causes immediate social/romantic chaos
 
 ## Immediate next action
-The Mon + Chance hero beat remains locked and passed for both still and motion. Shot 08 has now been rebuilt into a deterministic package, but its first controlled still pass was rejected.
+The Mon + Chance hero beat remains locked and passed for both still and motion. Shot 08 still is now locked as the final still deliverable, and Shot 08 motion is closed for now after the single controlled reject.
 
 1. Keep `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/fal-input/04-mon-chance-upload-ref-close-cleaned.jpg` as the approved bound still reference for Shot 04
 2. Keep `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-4-cleanref.png` as the Shot 04 hero still keeper
 3. Keep `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-3-kling-o1-reference.mp4` as the current Shot 04 motion keeper
-4. Keep Shot 08 motion blocked; do not animate `friends-ai-pilot-assets/quality-rebuild/shot-08-final-spiral-button/outputs/2026-03-25/shot-08-final-spiral-2026-03-25-direct-pass-1-cleanref.png`
-5. Before any future Shot 08 rerun, prepare a stronger single-source cleaned still that fully removes the chalkboard and right-window sign structures rather than merely blurring them
+4. Keep `friends-ai-pilot-assets/quality-rebuild/shot-08-final-spiral-button/outputs/2026-03-25/shot-08-final-spiral-2026-03-25-direct-pass-2-strongclean-v2.png` as the locked final Shot 08 still deliverable
+5. Do not run more Shot 08 motion variants unless John explicitly reopens motion strategy
+6. Next rebuild priority is Shot 03. Use `friends-ai-pilot-assets/quality-rebuild/shot-03-group-notices-sign/` and prepare a true six-character notice-frame source before any paid still pass
+7. Respect the preflight hold recorded at `friends-ai-pilot-assets/quality-rebuild/shot-03-group-notices-sign/scorecards/shot-03-preflight-gate-2026-03-25.md`
 
 ## Key docs
 - `friends-ai-pilot-assets/FINAL_QUALITY_REBUILD_SPEC.md`
