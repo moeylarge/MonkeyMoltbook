@@ -1,8 +1,8 @@
 {
   "slug": "not-a-couple-v1-auto",
   "ambience": {
-    "source": "/System/Library/Sounds/Funk.aiff",
-    "volume": 0.04
+    "mode": "generated-room-tone",
+    "volume": 0.018
   },
   "shots": [
     {

@@ -2,13 +2,16 @@
 
 Automated episode builder for `Friends AI` using the current `Not a Couple` pilot as the reference format.
 
-## What v1 does
+## What v4 does
 
 - assembles a cut from approved stills and motion clips
 - places dialogue automatically from a timeline config
 - can generate synthetic temp voices with macOS `say`
 - can render one voice-approval sample per character
-- exports a finished mp4 without manual `.wav` handling
+- auto-retimes shots to spoken dialogue length
+- exports sidecar subtitles automatically
+- uses a neutral generated room-tone bed instead of the old system sound
+- supports batch/queue builds from one config file
 
 ## Core files
 
@@ -62,6 +65,16 @@ Output:
 - `friends-ai/assembler/output/not-a-couple-v1-auto.mp4`
 - `friends-ai/assembler/build/not-a-couple-v1-auto/not-a-couple-v1-auto.srt`
 
+### 5) Build a queue of episodes
+
+```bash
+python3 friends-ai/assembler/build_episode.py build-batch \
+  --batch friends-ai/assembler/config/batch-v1.json
+```
+
+Output:
+- builds every job listed in the batch file
+
 ## Design rule
 
 The human should only need to:
@@ -75,18 +88,16 @@ The agent should handle:
 - audio placement
 - export/rebuilds
 
-## Current v1 limits
+## Current limits
 
-- uses macOS `say` voices for temp dialogue, not a premium character-voice stack yet
-- uses a simple built-in ambience layer
-- no subtitle burn-in yet
-- no automatic dialogue retiming based on measured line duration yet
+- still uses macOS `say` voices for temp dialogue, not a premium character-voice stack yet
+- subtitle burn-in falls back to sidecar SRT on this host because the installed ffmpeg lacks the `subtitles` filter
 - no episode-schema validation yet
+- queue mode exists, but multi-episode libraries/configs still need to be populated
 
 ## Next upgrades
 
-- better ambience/music routing
-- subtitle / caption export
-- auto-retime shots from dialogue duration
 - higher-quality TTS backend after voice approval
-- batch episode configs / queue build mode
+- richer ambience presets / music routing
+- stricter schema validation
+- batch library growth beyond the pilot

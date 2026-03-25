@@ -82,6 +82,38 @@ def create_silence(path: Path, duration: float):
     ])
 
 
+def create_room_tone(path: Path, duration: float, volume: float = 0.018):
+    run([
+        "ffmpeg", "-y",
+        "-f", "lavfi", "-i", f"anoisesrc=color=pink:amplitude=0.08:sample_rate={SAMPLE_RATE}",
+        "-t", f"{duration:.3f}",
+        "-af", f"highpass=f=120,lowpass=f=1800,volume={volume}",
+        "-ac", "1", str(path)
+    ])
+
+
+def build_ambience_track(episode: dict, audio_dir: Path, total_duration: float, clean_ambience: bool):
+    ambience = episode.get("ambience")
+    if not ambience:
+        return None
+
+    mode = ambience.get("mode", "file")
+    ambience_path = audio_dir / "ambience.wav"
+
+    if mode == "generated-room-tone":
+        volume = float(ambience.get("volume", 0.018 if clean_ambience else 0.024))
+        create_room_tone(ambience_path, total_duration, volume=volume)
+        return ambience_path
+
+    source = Path(ambience["source"])
+    volume = str(ambience.get("volume", 0.025 if clean_ambience else 0.04))
+    run([
+        "ffmpeg", "-y", "-stream_loop", "-1", "-i", str(source), "-t", f"{total_duration:.3f}",
+        "-af", f"volume={volume}", "-ar", str(SAMPLE_RATE), "-ac", "1", str(ambience_path)
+    ])
+    return ambience_path
+
+
 def list_voices(_args):
     output = run_capture(["say", "-v", "?"])
     print(output)
@@ -319,15 +351,7 @@ def build_episode(args):
 
     total_duration = sum(float(s["duration"]) for s in shots)
 
-    ambience_path = None
-    if episode.get("ambience"):
-        source = Path(episode["ambience"]["source"])
-        ambience_path = audio_dir / "ambience.wav"
-        volume = str(episode["ambience"].get("volume", 0.025 if args.clean_ambience else 0.04))
-        run([
-            "ffmpeg", "-y", "-stream_loop", "-1", "-i", str(source), "-t", f"{total_duration:.3f}",
-            "-af", f"volume={volume}", "-ar", str(SAMPLE_RATE), "-ac", "1", str(ambience_path)
-        ])
+    ambience_path = build_ambience_track(episode, audio_dir, total_duration, args.clean_ambience)
 
     mix_inputs = []
     filter_parts = []
@@ -368,14 +392,20 @@ def build_episode(args):
     write_srt(srt_path, dialogue_timeline)
 
     out_path = Path(args.out) if args.out else OUTPUT_DIR / f"{episode['slug']}.mp4"
+    subtitle_burned = False
     if args.burn_subtitles:
         subtitled_video = base / f"{episode['slug']}-subtitled.mp4"
-        run([
-            "ffmpeg", "-y", "-i", str(video_no_audio),
-            "-vf", f"subtitles={str(srt_path).replace(':', '\\:')}:force_style='Fontsize=18,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=2,Shadow=0,MarginV=40'",
-            str(subtitled_video)
-        ])
-        final_video_input = subtitled_video
+        try:
+            run([
+                "ffmpeg", "-y", "-i", str(video_no_audio),
+                "-vf", f"subtitles=filename={srt_path.name}",
+                str(subtitled_video)
+            ], cwd=str(base))
+            final_video_input = subtitled_video
+            subtitle_burned = True
+        except subprocess.CalledProcessError:
+            print("WARNING: ffmpeg subtitles filter unavailable; exporting sidecar SRT only")
+            final_video_input = video_no_audio
     else:
         final_video_input = video_no_audio
 
@@ -393,13 +423,42 @@ def build_episode(args):
         "subtitles": str(srt_path),
         "tts": bool(args.tts),
         "auto_retime": bool(args.auto_retime),
-        "burn_subtitles": bool(args.burn_subtitles),
+        "burn_subtitles_requested": bool(args.burn_subtitles),
+        "burn_subtitles_succeeded": subtitle_burned,
         "voice_map": str(args.voice_map) if args.voice_map else None,
     }
     with (base / "manifest.json").open("w") as f:
         json.dump(manifest, f, indent=2)
 
     print(json.dumps(manifest, indent=2))
+
+
+def build_batch(args):
+    ensure_dirs()
+    batch = load_json(Path(args.batch))
+    results = []
+
+    class BuildArgs:
+        pass
+
+    for job in batch.get("jobs", []):
+        job_args = BuildArgs()
+        job_args.episode = job["episode"]
+        job_args.voice_map = job.get("voice_map")
+        job_args.tts = job.get("tts", False)
+        job_args.auto_retime = job.get("auto_retime", False)
+        job_args.clean_ambience = job.get("clean_ambience", False)
+        job_args.burn_subtitles = job.get("burn_subtitles", False)
+        job_args.out = job.get("out")
+        print(f"=== Building batch job: {job_args.episode} ===")
+        build_episode(job_args)
+        episode = load_json(Path(job_args.episode))
+        results.append({
+            "episode": episode["slug"],
+            "output": job_args.out or str(OUTPUT_DIR / f"{episode['slug']}.mp4")
+        })
+
+    print(json.dumps({"jobs": results}, indent=2))
 
 
 def main():
@@ -430,6 +489,10 @@ def main():
     p_build.add_argument("--burn-subtitles", action="store_true")
     p_build.add_argument("--out")
     p_build.set_defaults(func=build_episode)
+
+    p_batch = sub.add_parser("build-batch", help="Build a queue of episodes from one batch file")
+    p_batch.add_argument("--batch", required=True)
+    p_batch.set_defaults(func=build_batch)
 
     args = parser.parse_args()
     args.func(args)

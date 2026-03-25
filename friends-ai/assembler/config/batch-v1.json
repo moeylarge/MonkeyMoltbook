@@ -1,0 +1,12 @@
+{
+  "jobs": [
+    {
+      "episode": "/Users/moey/.openclaw/workspace/friends-ai/assembler/config/not-a-couple-v1.json",
+      "voice_map": "/Users/moey/.openclaw/workspace/friends-ai/assembler/config/voice-map-v2-picked.json",
+      "tts": true,
+      "auto_retime": true,
+      "clean_ambience": true,
+      "burn_subtitles": true
+    }
+  ]
+}
