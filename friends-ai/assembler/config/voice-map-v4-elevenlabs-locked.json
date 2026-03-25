@@ -1,0 +1,83 @@
+{
+  "notes": "v7 locked ElevenLabs cast map chosen by Moet after compact audition pass. Goal: stronger separation, cleaner ensemble readability, less theatrical drift.",
+  "characters": {
+    "Mon": {
+      "provider": "elevenlabs",
+      "voice": "Sarah - Mature, Reassuring, Confident",
+      "voice_id": "EXAVITQu4vr4xnSDxMaL",
+      "model_id": "eleven_flash_v2_5",
+      "intent": "clear, precise, controlled",
+      "voice_settings": {
+        "stability": 0.56,
+        "similarity_boost": 0.76,
+        "style": 0.07,
+        "use_speaker_boost": true
+      }
+    },
+    "Chance": {
+      "provider": "elevenlabs",
+      "voice": "Roger - Laid-Back, Casual, Resonant",
+      "voice_id": "CwhRBWXzGAHq8TQ4Fs17",
+      "model_id": "eleven_flash_v2_5",
+      "intent": "dry, amused, understated",
+      "voice_settings": {
+        "stability": 0.48,
+        "similarity_boost": 0.74,
+        "style": 0.12,
+        "use_speaker_boost": true
+      }
+    },
+    "Russ": {
+      "provider": "elevenlabs",
+      "voice": "Will - Relaxed Optimist",
+      "voice_id": "bIHbv24MWmeRgasZH58o",
+      "model_id": "eleven_flash_v2_5",
+      "intent": "warm, earnest, slightly anxious",
+      "voice_settings": {
+        "stability": 0.42,
+        "similarity_boost": 0.71,
+        "style": 0.1,
+        "use_speaker_boost": true
+      }
+    },
+    "Rachelle": {
+      "provider": "elevenlabs",
+      "voice": "Bella - Professional, Bright, Warm",
+      "voice_id": "hpp4J3VqNfWAUOO0d1Us",
+      "model_id": "eleven_flash_v2_5",
+      "intent": "polished, observant, lightly amused",
+      "voice_settings": {
+        "stability": 0.6,
+        "similarity_boost": 0.76,
+        "style": 0.05,
+        "use_speaker_boost": true
+      }
+    },
+    "Jojo": {
+      "provider": "elevenlabs",
+      "voice": "Chris - Charming, Down-to-Earth",
+      "voice_id": "iP95p4xoKVk53GoZ742B",
+      "model_id": "eleven_flash_v2_5",
+      "intent": "warm, open, easygoing",
+      "voice_settings": {
+        "stability": 0.44,
+        "similarity_boost": 0.72,
+        "style": 0.12,
+        "use_speaker_boost": true
+      }
+    },
+    "Fufu": {
+      "provider": "elevenlabs",
+      "voice": "Jessica - Playful, Bright, Warm",
+      "voice_id": "cgSgspJ2msm6clMCkdW9",
+      "model_id": "eleven_flash_v2_5",
+      "intent": "bright, expressive, delighted by chaos",
+      "voice_settings": {
+        "stability": 0.31,
+        "similarity_boost": 0.7,
+        "style": 0.31,
+        "use_speaker_boost": true
+      }
+    }
+  }
+}
