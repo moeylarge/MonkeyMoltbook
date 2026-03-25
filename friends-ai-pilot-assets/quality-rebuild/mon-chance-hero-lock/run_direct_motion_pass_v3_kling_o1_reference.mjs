@@ -89,7 +89,8 @@ async function main() {
     await sleep(5000);
   }
 
-  const data = await fetchJson(`https://queue.fal.run/fal-ai/kling-video/o1/reference-to-video/requests/${requestId}`, {
+  const responseUrl = submit.response_url || `https://queue.fal.run/fal-ai/kling-video/o1/reference-to-video/requests/${requestId}/response`;
+  const data = await fetchJson(responseUrl, {
     headers: { 'Authorization': `Key ${falKey}`, 'Accept': 'application/json' }
   });
 

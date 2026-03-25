@@ -100,15 +100,16 @@ Verdict:
 - direct cleaned-reference pass = approved hero-lock still
 - motion path status: current direct Veo 2 image-to-video path is **REJECTED for this shot** after two failed audits
 - next materially different motion path selected: **Kling O1 reference-to-video** via fal, because it offers stronger reference-conditioning than the rejected prompt-only Veo 2 path
-- current Kling O1 execution status: **BLOCKED** on 2026-03-25 by fal billing exhaustion before inference, so no clip was generated
+- current Kling O1 execution status: **PASS** on 2026-03-25 via one controlled reference-conditioned motion attempt from the locked still
 
 Latest motion audit assets:
 - pass 1 clip: `motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-1-veo2.mp4`
 - pass 1 scorecard: `scorecards/mon-chance-motion-pass-1-veo2-scorecard-2026-03-25.md`
 - pass 2 minimal clip: `motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-2-veo2-minimal.mp4`
 - pass 2 minimal scorecard: `scorecards/mon-chance-motion-pass-2-veo2-minimal-scorecard-2026-03-25.md`
+- pass 3 Kling O1 clip: `motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-3-kling-o1-reference.mp4`
 - pass 3 Kling O1 scorecard: `scorecards/mon-chance-motion-pass-3-kling-o1-reference-scorecard-2026-03-25.md`
-- latest review contact sheet: `review/motion-pass-2/contact-sheet.jpg`
+- latest review contact sheet: `review/motion-pass-3-kling-o1-reference/contact-sheet.jpg`
 
 Resume from:
 - `deterministic-handoff-2026-03-25.md`

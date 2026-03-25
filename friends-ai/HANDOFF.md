@@ -102,15 +102,18 @@ Latest verified Mon + Chance truth:
 Recommended order:
 1. preserve `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/fal-input/04-mon-chance-upload-ref-close-cleaned.jpg` as the approved bound still reference for this beat
 2. treat `mon-chance-2026-03-25-direct-pass-4-cleanref.png` as the Mon + Chance hero-shot keeper
-3. two direct motion tests are now complete and both failed on face stability / tension preservation:
+3. two direct Veo 2 motion tests failed on face stability / tension preservation and remain audit memory only:
    - pass 1 clip: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-1-veo2.mp4`
    - pass 1 scorecard: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/scorecards/mon-chance-motion-pass-1-veo2-scorecard-2026-03-25.md`
    - pass 2 clip: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-2-veo2-minimal.mp4`
    - pass 2 scorecard: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/scorecards/mon-chance-motion-pass-2-veo2-minimal-scorecard-2026-03-25.md`
-4. keep both motion clips as audit memory only, not keepers
-5. treat the current direct Veo 2 image-to-video path as rejected for this shot
-6. do not reopen still-generation loops unless a materially different motion path also fails and proves the still itself is the blocker
-7. next test one materially different motion path with stronger still-preservation controls
+4. one controlled Kling O1 reference-conditioned motion attempt is now complete and **PASS**:
+   - clip: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-3-kling-o1-reference.mp4`
+   - scorecard: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/scorecards/mon-chance-motion-pass-3-kling-o1-reference-scorecard-2026-03-25.md`
+   - review contact sheet: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/review/motion-pass-3-kling-o1-reference/contact-sheet.jpg`
+5. keep the locked still fixed; it did not need to be reopened
+6. treat the current direct Veo 2 image-to-video path as rejected for this shot
+7. current Mon + Chance hero beat now has a usable motion keeper; no GitHub skill / external workflow escalation is warranted from this result
 
 ## Risks / cautions
 - much of the strategic title discussion was intentionally aggressive around discoverability; keep the actual creative execution structurally original enough to avoid devolving into direct-copy scene design
