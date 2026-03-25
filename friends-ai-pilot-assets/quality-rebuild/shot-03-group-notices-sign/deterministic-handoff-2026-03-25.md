@@ -11,26 +11,31 @@ Shot 03 is the next shot to prepare.
 - it is the next highest-leverage story beat because it lights the fuse for the ensemble spiral
 - fixing Shot 03 improves the package more than jumping ahead to pair coverage shots
 
-## Source prepared for the single pass
+## Source prepared for the clean-source retry
 - bound source used: `fal-input/03-group-notices-upload-ref-final.jpg`
+- clean-source build artifact: `fal-input/03-group-notices-upload-ref-clean-v4-bound.jpg`
 - source basis: cropped six-character ensemble frame derived locally from the existing story package
-- source limitation: neutralization patches were required to suppress homage signage / insert contamination
+- source gain: readable homage signage / patch contamination was materially suppressed before the retry
+- remaining source limitation: the ensemble geometry still does not hard-lock one shared off-frame notice vector
 
-## Single still pass status
-- paid still pass attempted: **YES**
-- output: `outputs/2026-03-25/shot-03-group-notices-2026-03-25-direct-pass-1.png`
-- scorecard: `scorecards/shot-03-direct-pass-1-scorecard-2026-03-25.md`
-- result: **REJECT**
+## Still-pass status
+- pass 1 output: `outputs/2026-03-25/shot-03-group-notices-2026-03-25-direct-pass-1.png`
+- pass 1 scorecard: `scorecards/shot-03-direct-pass-1-scorecard-2026-03-25.md`
+- pass 1 result: **REJECT**
+- pass 2 clean-source output: `outputs/2026-03-25/shot-03-group-notices-2026-03-25-direct-pass-2-cleanref.png`
+- pass 2 clean-source scorecard: `scorecards/shot-03-direct-pass-2-cleanref-scorecard-2026-03-25.md`
+- pass 2 result: **REJECT**
 
-## Why the pass failed
-- the painted-over source neutralization zones carried directly into the result
-- the frame stayed too close to a cropped ensemble hold instead of becoming a clean first-notice beat
-- finish quality is not episode-ready under keeper standards
+## Why pass 2 still failed
+- the new clean source successfully removed the prior signage / artifact contamination
+- finish quality is materially cleaner and episode-ready
+- but the frame still does not lock a single shared off-frame notice direction across all six characters
+- the shot therefore still reads like a polished ensemble hold instead of the first unmistakable notice beat
 
 ## Current truth
 Shot 03 remains unresolved.
-The one controlled still pass from the currently prepared source has now been spent and rejected.
+The clean-source retry proved source cleanup alone is not enough; the next source must hard-bake the correct notice vector into the ensemble geometry before another paid still pass.
 
 ## Next single best action
-Do not loop on this source.
-Prepare one genuinely clean six-character Shot 03 notice-frame source image with no dead-zone paintovers, then reopen Shot 03 only after that corrected source is ready.
+Do not loop on this geometry.
+Prepare one new six-character Shot 03 notice-frame source image that already locks one shared off-frame notice direction across all six characters, then reopen Shot 03 only after that corrected source is ready.
