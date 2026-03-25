@@ -7,7 +7,7 @@ Friends AI
 Create a warm, cozy, ensemble comfort sitcom around six original animal-coded characters, a café called Central Peak, and two across-the-hall apartments, starting with a 4-minute pilot proof of concept.
 
 ## Current phase
-Identity-lock / hero-shot execution phase.
+Pilot-finish mode.
 
 ## Current verified status
 Completed across the latest Mon + Chance rebuild pass:
@@ -122,15 +122,18 @@ Completed across the latest Mon + Chance rebuild pass:
 - premise: Couples Night at Central Peak causes immediate social/romantic chaos
 
 ## Immediate next action
-The Mon + Chance hero beat remains locked and passed for both still and motion. Shot 08 still is now locked as the final still deliverable, and Shot 08 motion is closed for now after the single controlled reject.
+Friends AI is now in pilot-finish mode. The immediate job is no longer broad rebuild continuation; it is to finish the smallest benchmark-safe pilot cut from the assets already proven.
 
 1. Keep `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/fal-input/04-mon-chance-upload-ref-close-cleaned.jpg` as the approved bound still reference for Shot 04
 2. Keep `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-4-cleanref.png` as the Shot 04 hero still keeper
 3. Keep `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-3-kling-o1-reference.mp4` as the current Shot 04 motion keeper
 4. Keep `friends-ai-pilot-assets/quality-rebuild/shot-08-final-spiral-button/outputs/2026-03-25/shot-08-final-spiral-2026-03-25-direct-pass-2-strongclean-v2.png` as the locked final Shot 08 still deliverable
 5. Do not run more Shot 08 motion variants unless John explicitly reopens motion strategy
-6. Shot 03 remains unresolved after one controlled shared-eyeline-source still retry; use `friends-ai-pilot-assets/quality-rebuild/shot-03-group-notices-sign/` and prepare a more structural six-character notice-frame source before any further paid still pass
-7. Respect the preflight hold recorded at `friends-ai-pilot-assets/quality-rebuild/shot-03-group-notices-sign/scorecards/shot-03-preflight-gate-2026-03-25.md`
+6. Treat Shot 03 as structurally unresolved and non-mandatory for the immediate finish push; do not spend another paid still pass from the current geometry
+7. Restructure the pilot around the surviving proof path documented in `friends-ai/PILOT_FINISH_MODE_2026-03-25.md`
+8. Assemble the minimum viable finish cut first: Shot 01 -> Shot 02 -> Shot 04 -> Shot 05 -> Shot 06 -> optional Shot 07 bridge only if needed -> Shot 08 final still
+9. Use editorial timing, dialogue, and sound to carry the missing group-notice exposition instead of reopening broad generation work
+10. No GitHub skill / external workflow escalation is warranted unless John explicitly wants assembler/config implementation work
 
 ## Key docs
 - `friends-ai-pilot-assets/FINAL_QUALITY_REBUILD_SPEC.md`

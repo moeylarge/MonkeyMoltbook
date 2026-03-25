@@ -66,7 +66,7 @@ Read these first:
   - `FAL_MON_REQUEST_V1.sh`
 
 ## Correct next step
-The live stack is verified, and Mon + Chance hero-shot prep is now one step further along.
+The live stack is verified, but the project should no longer default to open-ended rebuild work. It is now in pilot-finish mode.
 
 Active stack:
 - Fal = stills / identity lock
@@ -116,23 +116,26 @@ Latest verified Shot 08 truth:
 Recommended order:
 1. preserve `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/fal-input/04-mon-chance-upload-ref-close-cleaned.jpg` as the approved bound still reference for this beat
 2. treat `mon-chance-2026-03-25-direct-pass-4-cleanref.png` as the Mon + Chance hero-shot keeper
-3. keep `shot-08-final-spiral-2026-03-25-direct-pass-2-strongclean-v2.png` locked as the final Shot 08 still deliverable
-4. keep Shot 08 motion closed for now; do not run more motion variants unless John explicitly reopens motion strategy
-5. Shot 03 was reopened for one controlled shared-eyeline-source still retry under `friends-ai-pilot-assets/quality-rebuild/shot-03-group-notices-sign/` and the result was still **REJECT**
-6. do not spend another paid Shot 03 still pass from that geometry; prepare a more structural six-character notice-frame source image with stronger head / face orientation changes first
-7. preflight hold recorded at `friends-ai-pilot-assets/quality-rebuild/shot-03-group-notices-sign/scorecards/shot-03-preflight-gate-2026-03-25.md`
-8. two direct Veo 2 motion tests failed on face stability / tension preservation and remain audit memory only:
+3. keep `mon-chance-2026-03-25-motion-pass-3-kling-o1-reference.mp4` as the current Shot 04 motion keeper
+4. keep `shot-08-final-spiral-2026-03-25-direct-pass-2-strongclean-v2.png` locked as the final Shot 08 still deliverable
+5. keep Shot 08 motion closed for now; do not run more motion variants unless John explicitly reopens motion strategy
+6. Shot 03 was reopened for one controlled shared-eyeline-source still retry under `friends-ai-pilot-assets/quality-rebuild/shot-03-group-notices-sign/` and the result was still **REJECT**
+7. do not spend another paid Shot 03 still pass from that geometry; solving it now requires a newly staged six-character source rather than another prompt tweak
+8. for the immediate finish push, treat Shot 03 as **skippable / restructurable**, not mandatory
+9. use the finish path in `friends-ai/PILOT_FINISH_MODE_2026-03-25.md`: Shot 01 -> Shot 02 -> Shot 04 -> Shot 05 -> Shot 06 -> optional Shot 07 bridge only if needed -> Shot 08 final still
+10. use editorial timing, dialogue, and sound to carry the missing group-notice exposition instead of reopening broad generation work
+11. two direct Veo 2 motion tests failed on face stability / tension preservation and remain audit memory only:
    - pass 1 clip: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-1-veo2.mp4`
    - pass 1 scorecard: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/scorecards/mon-chance-motion-pass-1-veo2-scorecard-2026-03-25.md`
    - pass 2 clip: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-2-veo2-minimal.mp4`
    - pass 2 scorecard: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/scorecards/mon-chance-motion-pass-2-veo2-minimal-scorecard-2026-03-25.md`
-9. one controlled Kling O1 reference-conditioned motion attempt is now complete and **PASS**:
+12. one controlled Kling O1 reference-conditioned motion attempt is now complete and **PASS**:
    - clip: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-3-kling-o1-reference.mp4`
    - scorecard: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/scorecards/mon-chance-motion-pass-3-kling-o1-reference-scorecard-2026-03-25.md`
    - review contact sheet: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/review/motion-pass-3-kling-o1-reference/contact-sheet.jpg`
-10. keep the locked still fixed; it did not need to be reopened
-11. treat the current direct Veo 2 image-to-video path as rejected for this shot
-7. current Mon + Chance hero beat now has a usable motion keeper; no GitHub skill / external workflow escalation is warranted from this result
+13. keep the locked still fixed; it did not need to be reopened
+14. treat the current direct Veo 2 image-to-video path as rejected for this shot
+15. no GitHub skill / external workflow escalation is warranted unless John explicitly wants assembler/config implementation work
 
 ## Risks / cautions
 - much of the strategic title discussion was intentionally aggressive around discoverability; keep the actual creative execution structurally original enough to avoid devolving into direct-copy scene design
