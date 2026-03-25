@@ -10,6 +10,8 @@ import wave
 from pathlib import Path
 from typing import Dict, List
 
+from providers import VoiceProviderError, get_provider
+
 ROOT = Path("/Users/moey/.openclaw/workspace")
 ASSEMBLER_DIR = ROOT / "friends-ai" / "assembler"
 TMP_DIR = ASSEMBLER_DIR / "tmp"
@@ -22,6 +24,14 @@ TARGET_W = 1080
 TARGET_H = 1080
 FPS = 30
 SAMPLE_RATE = 48000
+
+
+def resolve_voice_provider_name(voice_config: dict | None, cli_provider: str | None) -> str:
+    if cli_provider:
+        return cli_provider
+    if voice_config and voice_config.get("provider"):
+        return voice_config["provider"]
+    return "say"
 
 
 def run(cmd, **kwargs):
@@ -63,16 +73,12 @@ def sanitize(text: str) -> str:
     return safe[:80] or "line"
 
 
-def generate_tts(line, voice_name: str, out_wav: Path):
-    tmp_aiff = out_wav.with_suffix(".aiff")
-    text = line["text"]
-    rate = str(line.get("tts_rate", 185))
-    run(["say", "-v", voice_name, "-r", rate, "-o", str(tmp_aiff), text])
-    run([
-        "ffmpeg", "-y", "-i", str(tmp_aiff),
-        "-ar", str(SAMPLE_RATE), "-ac", "1", str(out_wav)
-    ])
-    tmp_aiff.unlink(missing_ok=True)
+def generate_tts(line, voice_config: dict, out_wav: Path, provider_name: str | None = None):
+    cfg = dict(voice_config)
+    if line.get("tts_rate") and not cfg.get("tts_rate"):
+        cfg["tts_rate"] = line["tts_rate"]
+    provider = get_provider(resolve_voice_provider_name(cfg, provider_name))
+    provider.synthesize(line["text"], cfg, out_wav)
 
 
 def create_silence(path: Path, duration: float):
@@ -134,12 +140,13 @@ def render_voice_samples(args):
 
     manifest = []
     for character, line in characters.items():
-        voice_name = voice_map["characters"][character]["voice"]
+        voice_cfg = dict(voice_map["characters"][character])
         out_wav = samples_dir / f"{character.lower()}-{sanitize(line['text'])}.wav"
-        generate_tts(line, voice_name, out_wav)
+        generate_tts(line, voice_cfg, out_wav, args.provider)
         manifest.append({
             "character": character,
-            "voice": voice_name,
+            "voice": voice_cfg.get("voice"),
+            "provider": resolve_voice_provider_name(voice_cfg, args.provider),
             "sample_line": line["text"],
             "file": str(out_wav),
         })
@@ -169,14 +176,16 @@ def render_voice_auditions(args):
         char_dir.mkdir(parents=True, exist_ok=True)
         line = dict(first_lines[character])
         for idx, option in enumerate(options, start=1):
-            line["tts_rate"] = option.get("tts_rate", line.get("tts_rate", 185))
-            slug = sanitize(option["voice"])
+            option_cfg = dict(option)
+            line["tts_rate"] = option_cfg.get("tts_rate", line.get("tts_rate", 185))
+            slug = sanitize(option_cfg["voice"])
             out_wav = char_dir / f"option-{idx}-{slug}.wav"
-            generate_tts(line, option["voice"], out_wav)
+            generate_tts(line, option_cfg, out_wav, args.provider)
             manifest.append({
                 "character": character,
                 "option": idx,
-                "voice": option["voice"],
+                "voice": option_cfg["voice"],
+                "provider": resolve_voice_provider_name(option_cfg, args.provider),
                 "tts_rate": line["tts_rate"],
                 "sample_line": line["text"],
                 "file": str(out_wav),
@@ -289,7 +298,10 @@ def build_episode(args):
             merged_line = dict(line)
             if char_cfg.get("tts_rate"):
                 merged_line["tts_rate"] = char_cfg["tts_rate"]
-            generate_tts(merged_line, char_cfg["voice"], out_wav)
+            try:
+                generate_tts(merged_line, char_cfg, out_wav, args.provider)
+            except VoiceProviderError as e:
+                raise SystemExit(f"TTS provider error for {line['character']}: {e}")
         else:
             continue
         audio_inputs.append({"line": line, "path": out_wav})
@@ -422,6 +434,7 @@ def build_episode(args):
         "mixed_audio": str(mixed_audio),
         "subtitles": str(srt_path),
         "tts": bool(args.tts),
+        "voice_provider": args.provider or "config/default",
         "auto_retime": bool(args.auto_retime),
         "burn_subtitles_requested": bool(args.burn_subtitles),
         "burn_subtitles_succeeded": subtitle_burned,
@@ -471,18 +484,21 @@ def main():
     p_samples = sub.add_parser("render-voice-samples", help="Render one approval sample per character")
     p_samples.add_argument("--episode", required=True)
     p_samples.add_argument("--voice-map", required=True)
+    p_samples.add_argument("--provider")
     p_samples.add_argument("--out-dir")
     p_samples.set_defaults(func=render_voice_samples)
 
     p_auditions = sub.add_parser("render-voice-auditions", help="Render multiple voice options per character")
     p_auditions.add_argument("--episode", required=True)
     p_auditions.add_argument("--candidates", required=True)
+    p_auditions.add_argument("--provider")
     p_auditions.add_argument("--out-dir")
     p_auditions.set_defaults(func=render_voice_auditions)
 
     p_build = sub.add_parser("build", help="Build an episode")
     p_build.add_argument("--episode", required=True)
     p_build.add_argument("--voice-map")
+    p_build.add_argument("--provider")
     p_build.add_argument("--tts", action="store_true")
     p_build.add_argument("--auto-retime", action="store_true")
     p_build.add_argument("--clean-ambience", action="store_true")

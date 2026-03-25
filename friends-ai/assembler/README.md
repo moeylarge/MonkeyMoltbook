@@ -16,8 +16,10 @@ Automated episode builder for `Friends AI` using the current `Not a Couple` pilo
 ## Core files
 
 - `build_episode.py` — main CLI
+- `providers.py` — voice provider abstraction layer
 - `config/not-a-couple-v1.json` — episode timeline / asset / dialogue spec
-- `config/voice-map-v1.json` — approved-or-pending voice map
+- `config/voice-map-v2-picked.json` — locked character voice map
+- `config/voice-providers-v5.json` — provider status / premium-ready notes
 
 ## Commands
 
@@ -55,6 +57,7 @@ Output:
 python3 friends-ai/assembler/build_episode.py build \
   --episode friends-ai/assembler/config/not-a-couple-v1.json \
   --voice-map friends-ai/assembler/config/voice-map-v2-picked.json \
+  --provider say \
   --tts \
   --auto-retime \
   --clean-ambience \
@@ -90,14 +93,28 @@ The agent should handle:
 
 ## Current limits
 
-- still uses macOS `say` voices for temp dialogue, not a premium character-voice stack yet
+- premium providers are scaffolded but not authenticated on this host yet
 - subtitle burn-in falls back to sidecar SRT on this host because the installed ffmpeg lacks the `subtitles` filter
 - no episode-schema validation yet
 - queue mode exists, but multi-episode libraries/configs still need to be populated
 
+## v5 voice-provider rule
+
+The assembler now separates:
+- episode build logic
+- character voice mapping
+- provider selection
+
+That means premium TTS can be plugged in later without rewriting the episode pipeline.
+
+Supported provider modes right now:
+- `say` — active
+- `openai` — scaffolded
+- `elevenlabs` — scaffolded
+
 ## Next upgrades
 
-- higher-quality TTS backend after voice approval
+- implement one premium provider fully once credentials are available
 - richer ambience presets / music routing
 - stricter schema validation
 - batch library growth beyond the pilot

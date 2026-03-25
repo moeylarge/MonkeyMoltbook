@@ -1,0 +1,19 @@
+{
+  "default_provider": "say",
+  "providers": {
+    "say": {
+      "status": "active",
+      "notes": "Current working fallback on this host"
+    },
+    "openai": {
+      "status": "scaffolded",
+      "env": ["OPENAI_API_KEY"],
+      "notes": "Premium-ready provider hook added; requires credentials and request implementation"
+    },
+    "elevenlabs": {
+      "status": "scaffolded",
+      "env": ["ELEVENLABS_API_KEY"],
+      "notes": "Premium-ready provider hook added; requires credentials and request implementation"
+    }
+  }
+}
