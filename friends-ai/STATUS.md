@@ -25,6 +25,9 @@ Completed in this session:
 - identity-lock execution batch written
 - drift review framework written
 - production stack map written
+- tool decision matrix written
+- API access tracker written
+- identity-lock runbook written
 
 ## Locked world rules
 - Central Peak is the core social hearth
@@ -39,9 +42,11 @@ Completed in this session:
 - premise: Couples Night at Central Peak causes immediate social/romantic chaos
 
 ## Immediate next action
-Create the two execution docs that turn the stack map into a real production plan:
+Verify actual tool/account access against:
 1. `TOOL_DECISION_MATRIX.md`
 2. `API_ACCESS_TRACKER.md`
+
+Then lock the real stack and execute `IDENTITY_LOCK_RUNBOOK.md`.
 
 ## Key docs
 - `friends-ai/MASTER_BIBLE.md`
@@ -55,4 +60,5 @@ Create the two execution docs that turn the stack map into a real production pla
 - `friends-ai/PRODUCTION_STACK_MAP_V1.md`
 - `friends-ai/TOOL_DECISION_MATRIX.md`
 - `friends-ai/API_ACCESS_TRACKER.md`
+- `friends-ai/IDENTITY_LOCK_RUNBOOK.md`
 - `friends-ai/HANDOFF.md`

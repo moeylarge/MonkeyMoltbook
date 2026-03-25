@@ -14,8 +14,9 @@ This folder holds the source-of-truth documents for the Friends AI sitcom concep
 9. `PRODUCTION_STACK_MAP_V1.md`
 10. `TOOL_DECISION_MATRIX.md`
 11. `API_ACCESS_TRACKER.md`
-12. `STATUS.md`
-13. `HANDOFF.md`
+12. `IDENTITY_LOCK_RUNBOOK.md`
+13. `STATUS.md`
+14. `HANDOFF.md`
 
 ## Current goal
-Verify real tool/account access against the chosen stack, then move into identity-lock generation with drift review.
+Verify real tool/account access against the chosen stack, then execute identity-lock generation via the runbook and drift review framework.
