@@ -225,12 +225,15 @@ def normalize_dialogue_timeline(shots: List[dict], dialogue: List[dict], audio_i
             grouped.setdefault(item["shot_id"], []).append(item)
 
         min_gap = 0.35
-        head_pad = 0.6
-        tail_pad = 0.9
+        default_head_pad = 0.6
+        default_tail_pad = 0.9
         for shot in shots:
             items = grouped.get(shot["id"], [])
             if not items:
                 continue
+            head_pad = float(shot.get("head_pad", default_head_pad))
+            tail_pad = float(shot.get("tail_pad", default_tail_pad))
+            min_duration = float(shot.get("min_duration", 2.0))
             local_cursor = head_pad
             for item in items:
                 key = (item["character"], item["text"])
@@ -238,9 +241,8 @@ def normalize_dialogue_timeline(shots: List[dict], dialogue: List[dict], audio_i
                 item["start"] = shot_offsets[shot["id"]] + local_cursor
                 item["end"] = item["start"] + dur
                 local_cursor += dur + min_gap
-            required = local_cursor - min_gap + tail_pad
-            if required > float(shot["duration"]):
-                shot["duration"] = round(required, 3)
+            required = max(min_duration, local_cursor - min_gap + tail_pad)
+            shot["duration"] = round(required, 3)
 
         shot_offsets = {}
         cursor = 0.0

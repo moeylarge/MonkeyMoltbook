@@ -53,13 +53,19 @@
       "id": "08-group-regather",
       "type": "video",
       "source": "/Users/moey/.openclaw/workspace/friends-ai-pilot-assets/motion-clips/08-group-regather-motion.mp4",
-      "duration": 10.0
+      "duration": 10.0,
+      "head_pad": 0.25,
+      "tail_pad": 0.45,
+      "min_duration": 4.8
     },
     {
       "id": "09-group-couples-night",
       "type": "video",
       "source": "/Users/moey/.openclaw/workspace/friends-ai-pilot-assets/motion-clips/09-group-couples-night-motion.mp4",
-      "duration": 7.0
+      "duration": 7.0,
+      "head_pad": 0.25,
+      "tail_pad": 0.55,
+      "min_duration": 6.2
     }
   ],
   "dialogue": [
