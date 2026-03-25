@@ -76,6 +76,16 @@ Active stack:
 
 Latest verified Mon + Chance truth:
 - hero-lock package extended with tighter prompt control and upload-ready reference variants
+
+Latest verified Shot 08 truth:
+- deterministic rebuild package now exists at `friends-ai-pilot-assets/quality-rebuild/shot-08-final-spiral-button/`
+- best existing ensemble geometry source is `friends-ai-pilot-assets/story-shots/07-ensemble-payoff.png`
+- a cleaned one-source upload reference was prepared at `friends-ai-pilot-assets/quality-rebuild/shot-08-final-spiral-button/fal-input/08-final-spiral-upload-ref-cleaned.jpg`
+- one controlled direct FAL still pass was completed and saved at `friends-ai-pilot-assets/quality-rebuild/shot-08-final-spiral-button/outputs/2026-03-25/shot-08-final-spiral-2026-03-25-direct-pass-1-cleanref.png`
+- payload audit saved at `friends-ai-pilot-assets/quality-rebuild/shot-08-final-spiral-button/outputs/2026-03-25/shot-08-final-spiral-2026-03-25-direct-pass-1-cleanref.json`
+- scorecard saved at `friends-ai-pilot-assets/quality-rebuild/shot-08-final-spiral-button/scorecards/shot-08-direct-pass-1-cleanref-scorecard-2026-03-25.md`
+- that still pass is a **REJECT** because readable-ish chalkboard copy and partial mirrored window-logo language were reconstructed into the image
+- motion was correctly **not attempted** because the still gate failed
 - browser pass 2 proved the playground was brittle because it retained stock example `image_urls` instead of binding the approved close reference
 - a clean direct FAL Nano Banana Pro edit path is now verified from this machine using `friends-ai/.env` + a one-image data-URI payload
 - one real direct still pass was completed and saved at `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-1.png`
@@ -102,7 +112,9 @@ Latest verified Mon + Chance truth:
 Recommended order:
 1. preserve `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/fal-input/04-mon-chance-upload-ref-close-cleaned.jpg` as the approved bound still reference for this beat
 2. treat `mon-chance-2026-03-25-direct-pass-4-cleanref.png` as the Mon + Chance hero-shot keeper
-3. two direct Veo 2 motion tests failed on face stability / tension preservation and remain audit memory only:
+3. keep Shot 08 in deterministic rebuild mode only; its current still attempt is **REJECT** and motion must remain blocked
+4. for the next future Shot 08 still rerun, first prepare a stronger source image that removes the chalkboard and right-window sign structures entirely before regeneration
+5. two direct Veo 2 motion tests failed on face stability / tension preservation and remain audit memory only:
    - pass 1 clip: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-1-veo2.mp4`
    - pass 1 scorecard: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/scorecards/mon-chance-motion-pass-1-veo2-scorecard-2026-03-25.md`
    - pass 2 clip: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-2-veo2-minimal.mp4`

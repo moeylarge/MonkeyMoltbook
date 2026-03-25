@@ -89,6 +89,18 @@ Completed across the latest Mon + Chance rebuild pass:
 - Kling O1 motion scorecard saved at:
   - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/scorecards/mon-chance-motion-pass-3-kling-o1-reference-scorecard-2026-03-25.md`
 - result: the materially different reference-conditioned Kling path clears the motion gate and is now the current motion keeper for this hero beat
+- Shot 08 deterministic rebuild package created at `friends-ai-pilot-assets/quality-rebuild/shot-08-final-spiral-button/`
+- Shot 08 best existing still anchor confirmed as `friends-ai-pilot-assets/story-shots/07-ensemble-payoff.png`
+- Shot 08 cleaned one-source upload reference prepared at `friends-ai-pilot-assets/quality-rebuild/shot-08-final-spiral-button/fal-input/08-final-spiral-upload-ref-cleaned.jpg`
+- one real direct Shot 08 still pass completed and saved:
+  - `friends-ai-pilot-assets/quality-rebuild/shot-08-final-spiral-button/outputs/2026-03-25/shot-08-final-spiral-2026-03-25-direct-pass-1-cleanref.png`
+- Shot 08 payload audit saved at:
+  - `friends-ai-pilot-assets/quality-rebuild/shot-08-final-spiral-button/outputs/2026-03-25/shot-08-final-spiral-2026-03-25-direct-pass-1-cleanref.json`
+- Shot 08 scorecard saved at:
+  - `friends-ai-pilot-assets/quality-rebuild/shot-08-final-spiral-button/scorecards/shot-08-direct-pass-1-cleanref-scorecard-2026-03-25.md`
+- latest Shot 08 still verdict: **REJECT**
+- Shot 08 rejection reason: readable-ish chalkboard copy and partial mirrored window-logo language were reconstructed, so the still did not clear the anti-homage cleanliness gate
+- Shot 08 motion status: **NOT ATTEMPTED** because the still gate failed
 
 ## Locked world rules
 - Central Peak is the core social hearth
@@ -103,15 +115,13 @@ Completed across the latest Mon + Chance rebuild pass:
 - premise: Couples Night at Central Peak causes immediate social/romantic chaos
 
 ## Immediate next action
-The Mon + Chance hero still remains locked, and the controlled Kling O1 reference-conditioned motion attempt now passes.
+The Mon + Chance hero beat remains locked and passed for both still and motion. Shot 08 has now been rebuilt into a deterministic package, but its first controlled still pass was rejected.
 
-1. Keep `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/fal-input/04-mon-chance-upload-ref-close-cleaned.jpg` as the approved bound still reference for this beat
-2. Keep `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-4-cleanref.png` as the hero still keeper
-3. Keep `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-3-kling-o1-reference.mp4` as the current motion keeper
-4. Keep both direct Veo 2 clips only as failed motion audits:
-   - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-1-veo2.mp4`
-   - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-2-veo2-minimal.mp4`
-5. Do not reopen still-generation for this beat; move forward from the locked still + passing Kling motion result
+1. Keep `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/fal-input/04-mon-chance-upload-ref-close-cleaned.jpg` as the approved bound still reference for Shot 04
+2. Keep `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-4-cleanref.png` as the Shot 04 hero still keeper
+3. Keep `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-3-kling-o1-reference.mp4` as the current Shot 04 motion keeper
+4. Keep Shot 08 motion blocked; do not animate `friends-ai-pilot-assets/quality-rebuild/shot-08-final-spiral-button/outputs/2026-03-25/shot-08-final-spiral-2026-03-25-direct-pass-1-cleanref.png`
+5. Before any future Shot 08 rerun, prepare a stronger single-source cleaned still that fully removes the chalkboard and right-window sign structures rather than merely blurring them
 
 ## Key docs
 - `friends-ai-pilot-assets/FINAL_QUALITY_REBUILD_SPEC.md`
