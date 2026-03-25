@@ -1,0 +1,142 @@
+{
+  "characters": {
+    "Mon": [
+      {
+        "provider": "elevenlabs",
+        "voice": "Sarah - Mature, Reassuring, Confident",
+        "voice_id": "EXAVITQu4vr4xnSDxMaL",
+        "model_id": "eleven_flash_v2_5",
+        "voice_settings": { "stability": 0.55, "similarity_boost": 0.76, "style": 0.08, "use_speaker_boost": true }
+      },
+      {
+        "provider": "elevenlabs",
+        "voice": "Bella - Professional, Bright, Warm",
+        "voice_id": "hpp4J3VqNfWAUOO0d1Us",
+        "model_id": "eleven_flash_v2_5",
+        "voice_settings": { "stability": 0.58, "similarity_boost": 0.74, "style": 0.06, "use_speaker_boost": true }
+      },
+      {
+        "provider": "elevenlabs",
+        "voice": "Alice - Clear, Engaging Educator",
+        "voice_id": "Xb7hH8MSUJpSbSDYk0k2",
+        "model_id": "eleven_flash_v2_5",
+        "voice_settings": { "stability": 0.6, "similarity_boost": 0.7, "style": 0.05, "use_speaker_boost": true }
+      }
+    ],
+    "Chance": [
+      {
+        "provider": "elevenlabs",
+        "voice": "Roger - Laid-Back, Casual, Resonant",
+        "voice_id": "CwhRBWXzGAHq8TQ4Fs17",
+        "model_id": "eleven_flash_v2_5",
+        "voice_settings": { "stability": 0.46, "similarity_boost": 0.74, "style": 0.14, "use_speaker_boost": true }
+      },
+      {
+        "provider": "elevenlabs",
+        "voice": "Chris - Charming, Down-to-Earth",
+        "voice_id": "iP95p4xoKVk53GoZ742B",
+        "model_id": "eleven_flash_v2_5",
+        "voice_settings": { "stability": 0.44, "similarity_boost": 0.72, "style": 0.11, "use_speaker_boost": true }
+      },
+      {
+        "provider": "elevenlabs",
+        "voice": "Eric - Smooth, Trustworthy",
+        "voice_id": "cjVigY5qzO86Huf0OWal",
+        "model_id": "eleven_flash_v2_5",
+        "voice_settings": { "stability": 0.5, "similarity_boost": 0.76, "style": 0.09, "use_speaker_boost": true }
+      }
+    ],
+    "Russ": [
+      {
+        "provider": "elevenlabs",
+        "voice": "Will - Relaxed Optimist",
+        "voice_id": "bIHbv24MWmeRgasZH58o",
+        "model_id": "eleven_flash_v2_5",
+        "voice_settings": { "stability": 0.4, "similarity_boost": 0.72, "style": 0.12, "use_speaker_boost": true }
+      },
+      {
+        "provider": "elevenlabs",
+        "voice": "Chris - Charming, Down-to-Earth",
+        "voice_id": "iP95p4xoKVk53GoZ742B",
+        "model_id": "eleven_flash_v2_5",
+        "voice_settings": { "stability": 0.42, "similarity_boost": 0.7, "style": 0.1, "use_speaker_boost": true }
+      },
+      {
+        "provider": "elevenlabs",
+        "voice": "River - Relaxed, Neutral, Informative",
+        "voice_id": "SAz9YHcvj6GT2YYXdXww",
+        "model_id": "eleven_flash_v2_5",
+        "voice_settings": { "stability": 0.48, "similarity_boost": 0.68, "style": 0.07, "use_speaker_boost": true }
+      }
+    ],
+    "Rachelle": [
+      {
+        "provider": "elevenlabs",
+        "voice": "Lily - Velvety Actress",
+        "voice_id": "pFZP5JQG7iQjIQuC4Bku",
+        "model_id": "eleven_flash_v2_5",
+        "voice_settings": { "stability": 0.58, "similarity_boost": 0.78, "style": 0.1, "use_speaker_boost": true }
+      },
+      {
+        "provider": "elevenlabs",
+        "voice": "Sarah - Mature, Reassuring, Confident",
+        "voice_id": "EXAVITQu4vr4xnSDxMaL",
+        "model_id": "eleven_flash_v2_5",
+        "voice_settings": { "stability": 0.6, "similarity_boost": 0.74, "style": 0.06, "use_speaker_boost": true }
+      },
+      {
+        "provider": "elevenlabs",
+        "voice": "Bella - Professional, Bright, Warm",
+        "voice_id": "hpp4J3VqNfWAUOO0d1Us",
+        "model_id": "eleven_flash_v2_5",
+        "voice_settings": { "stability": 0.6, "similarity_boost": 0.75, "style": 0.05, "use_speaker_boost": true }
+      }
+    ],
+    "Jojo": [
+      {
+        "provider": "elevenlabs",
+        "voice": "Chris - Charming, Down-to-Earth",
+        "voice_id": "iP95p4xoKVk53GoZ742B",
+        "model_id": "eleven_flash_v2_5",
+        "voice_settings": { "stability": 0.44, "similarity_boost": 0.72, "style": 0.13, "use_speaker_boost": true }
+      },
+      {
+        "provider": "elevenlabs",
+        "voice": "Roger - Laid-Back, Casual, Resonant",
+        "voice_id": "CwhRBWXzGAHq8TQ4Fs17",
+        "model_id": "eleven_flash_v2_5",
+        "voice_settings": { "stability": 0.42, "similarity_boost": 0.7, "style": 0.11, "use_speaker_boost": true }
+      },
+      {
+        "provider": "elevenlabs",
+        "voice": "Will - Relaxed Optimist",
+        "voice_id": "bIHbv24MWmeRgasZH58o",
+        "model_id": "eleven_flash_v2_5",
+        "voice_settings": { "stability": 0.41, "similarity_boost": 0.69, "style": 0.1, "use_speaker_boost": true }
+      }
+    ],
+    "Fufu": [
+      {
+        "provider": "elevenlabs",
+        "voice": "Laura - Enthusiast, Quirky Attitude",
+        "voice_id": "FGY2WhTYpPnrIDTdsKH5",
+        "model_id": "eleven_flash_v2_5",
+        "voice_settings": { "stability": 0.34, "similarity_boost": 0.71, "style": 0.28, "use_speaker_boost": true }
+      },
+      {
+        "provider": "elevenlabs",
+        "voice": "Jessica - Playful, Bright, Warm",
+        "voice_id": "cgSgspJ2msm6clMCkdW9",
+        "model_id": "eleven_flash_v2_5",
+        "voice_settings": { "stability": 0.32, "similarity_boost": 0.7, "style": 0.3, "use_speaker_boost": true }
+      },
+      {
+        "provider": "elevenlabs",
+        "voice": "Matilda - Knowledgable, Professional",
+        "voice_id": "XrExE9yKIg1WjnnlVkGX",
+        "model_id": "eleven_flash_v2_5",
+        "voice_settings": { "stability": 0.38, "similarity_boost": 0.68, "style": 0.2, "use_speaker_boost": true }
+      }
+    ]
+  }
+}
