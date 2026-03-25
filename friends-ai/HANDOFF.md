@@ -47,6 +47,7 @@ Read these first:
 - `TOOL_DECISION_MATRIX.md` written
 - `API_ACCESS_TRACKER.md` written
 - `IDENTITY_LOCK_RUNBOOK.md` written
+- machine-level access snapshot written: `ACCESS_VERIFICATION_SNAPSHOT_2026-03-24.md`
 
 ## Correct next step
 Verify real account/tool access against `TOOL_DECISION_MATRIX.md` and `API_ACCESS_TRACKER.md`, then execute `IDENTITY_LOCK_RUNBOOK.md`.
@@ -66,3 +67,4 @@ Recommended order:
 
 ## Resume line
 If resuming after a reset: do **not** re-brainstorm the series from scratch. Read the docs above, verify the stack/access state, then move directly into the identity-lock runbook.
+ook.

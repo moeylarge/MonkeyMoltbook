@@ -42,9 +42,10 @@ Completed in this session:
 - premise: Couples Night at Central Peak causes immediate social/romantic chaos
 
 ## Immediate next action
-Verify actual tool/account access against:
-1. `TOOL_DECISION_MATRIX.md`
-2. `API_ACCESS_TRACKER.md`
+Use the machine-level snapshot plus the stack docs to verify real tool/account access:
+1. `ACCESS_VERIFICATION_SNAPSHOT_2026-03-24.md`
+2. `TOOL_DECISION_MATRIX.md`
+3. `API_ACCESS_TRACKER.md`
 
 Then lock the real stack and execute `IDENTITY_LOCK_RUNBOOK.md`.
 
