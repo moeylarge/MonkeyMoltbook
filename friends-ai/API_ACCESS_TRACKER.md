@@ -24,18 +24,18 @@ Status labels:
 - notes: useful for style exploration, not the main automation path
 
 ## Flux via Replicate
-- role: repeatable still generation / identity lock
+- role: previously considered repeatable still generation / identity lock path
 - access type: API
-- status: `NEED_API_KEY`
+- status: `NOT_NEEDED_NOW`
 - billing likely needed: yes
-- notes: strongest candidate for controllable still generation if Replicate is chosen
+- notes: blocked by Cloudflare 1010 in the current environment; removed from active stack
 
 ## Flux via Fal
-- role: alternate repeatable still generation path
+- role: active repeatable still generation / identity lock path
 - access type: API
-- status: `OPTIONAL_LATER`
+- status: `HAVE`
 - billing likely needed: yes
-- notes: choose either Replicate or Fal first, do not wire both immediately unless needed
+- notes: authenticated and funded; now the active still-generation backbone for the project
 
 ## Kling
 - role: primary cinematic video generation

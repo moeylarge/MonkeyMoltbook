@@ -33,6 +33,7 @@ Read these first:
 10. `friends-ai/TOOL_DECISION_MATRIX.md`
 11. `friends-ai/API_ACCESS_TRACKER.md`
 12. `friends-ai/IDENTITY_LOCK_RUNBOOK.md`
+13. `friends-ai/FAL_IDENTITY_LOCK_MON_V1.md`
 
 ## What was completed
 - master concept architecture written down
@@ -48,16 +49,29 @@ Read these first:
 - `API_ACCESS_TRACKER.md` written
 - `IDENTITY_LOCK_RUNBOOK.md` written
 - machine-level access snapshot written: `ACCESS_VERIFICATION_SNAPSHOT_2026-03-24.md`
+- active live stack is now verified enough to start:
+  - Fal
+  - Kling
+  - HeyGen
+  - ElevenLabs
+- active still-image backbone changed from Replicate to Fal after Replicate remained blocked and Fal passed funded API generation
+- first Fal-ready identity-lock prompt written: `FAL_IDENTITY_LOCK_MON_V1.md`
 
 ## Correct next step
-Verify real account/tool access against `TOOL_DECISION_MATRIX.md` and `API_ACCESS_TRACKER.md`, then execute `IDENTITY_LOCK_RUNBOOK.md`.
+The live stack is now sufficiently verified to begin identity lock.
+
+Active stack:
+- Fal = stills / identity lock
+- Kling = motion
+- HeyGen = talking-character
+- ElevenLabs = voices
 
 Recommended order:
-1. verify which stack tools are already available
-2. fill missing access for the minimum viable impeccable stack
-3. lock the actual still / video / voice stack in practice
-4. run the identity-lock generation sequence from the runbook
-5. review for drift and tighten prompts before pilot-shot generation
+1. begin with `FAL_IDENTITY_LOCK_MON_V1.md`
+2. review Mon using `DRIFT_REVIEW_FRAMEWORK.md`
+3. continue through the sequence in `IDENTITY_LOCK_RUNBOOK.md`
+4. lock the lineup and locations
+5. then move into pilot masters
 
 ## Risks / cautions
 - much of the strategic title discussion was intentionally aggressive around discoverability; keep the actual creative execution structurally original enough to avoid devolving into direct-copy scene design
@@ -66,5 +80,4 @@ Recommended order:
 - preserve consistent geography for Central Peak, 2A, 2B, and hallway
 
 ## Resume line
-If resuming after a reset: do **not** re-brainstorm the series from scratch. Read the docs above, verify the stack/access state, then move directly into the identity-lock runbook.
-ook.
+If resuming after a reset: do **not** re-brainstorm the series from scratch. Read the docs above and move directly into the Fal identity-lock flow starting with Mon.

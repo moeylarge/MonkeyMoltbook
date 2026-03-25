@@ -7,7 +7,7 @@ Friends AI
 Create a warm, cozy, ensemble comfort sitcom around six original animal-coded characters, a café called Central Peak, and two across-the-hall apartments, starting with a 4-minute pilot proof of concept.
 
 ## Current phase
-Production stack selection / access-planning phase.
+Identity-lock execution phase.
 
 ## Current verified status
 Completed in this session:
@@ -28,6 +28,14 @@ Completed in this session:
 - tool decision matrix written
 - API access tracker written
 - identity-lock runbook written
+- machine-level access verification snapshot written
+- active live stack verified enough to start:
+  - Fal
+  - Kling
+  - HeyGen
+  - ElevenLabs
+- Fal replaced Replicate as the still-image backbone after passing funded API generation
+- first Fal-ready Mon identity-lock prompt written
 
 ## Locked world rules
 - Central Peak is the core social hearth
@@ -42,12 +50,11 @@ Completed in this session:
 - premise: Couples Night at Central Peak causes immediate social/romantic chaos
 
 ## Immediate next action
-Use the machine-level snapshot plus the stack docs to verify real tool/account access:
-1. `ACCESS_VERIFICATION_SNAPSHOT_2026-03-24.md`
-2. `TOOL_DECISION_MATRIX.md`
-3. `API_ACCESS_TRACKER.md`
+Begin identity lock with the live verified stack.
 
-Then lock the real stack and execute `IDENTITY_LOCK_RUNBOOK.md`.
+1. Generate Mon using `FAL_IDENTITY_LOCK_MON_V1.md`
+2. Score the result with `DRIFT_REVIEW_FRAMEWORK.md`
+3. Continue the sequence in `IDENTITY_LOCK_RUNBOOK.md`
 
 ## Key docs
 - `friends-ai/MASTER_BIBLE.md`
@@ -62,4 +69,5 @@ Then lock the real stack and execute `IDENTITY_LOCK_RUNBOOK.md`.
 - `friends-ai/TOOL_DECISION_MATRIX.md`
 - `friends-ai/API_ACCESS_TRACKER.md`
 - `friends-ai/IDENTITY_LOCK_RUNBOOK.md`
+- `friends-ai/FAL_IDENTITY_LOCK_MON_V1.md`
 - `friends-ai/HANDOFF.md`

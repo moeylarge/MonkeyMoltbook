@@ -85,7 +85,7 @@ Generate first-pass look exploration for:
 
 ### Output target
 For each character:
-- 2 to 4 strong exploratory variants max
+- 2 to 4 strong identity-lock variants max
 - do not overgenerate endlessly
 
 ### Review checkpoint A
@@ -291,3 +291,4 @@ After identity lock succeeds:
 4. then move into motion/video generation
 
 That is the correct handoff from still-canon work into actual pilot production.
+ot production.

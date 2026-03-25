@@ -321,18 +321,18 @@ This choice can stay unresolved until actual edit stage if John already has a pr
 # 4) WHAT IS ACTUALLY LOCKED VS STILL OPEN
 
 ## Locked enough to plan around
-- Midjourney as vibe tool
-- Flux API path as repeatable still path
+- Fal as the active repeatable still-image path
 - Kling + Runway as dual video lane
 - ElevenLabs as primary voice lane
-- Photoshop + Magnific for cleanup
-- Topaz for enhancement
+- HeyGen as currently working talking-character path
+- Photoshop + Magnific for cleanup later if added
+- Topaz for enhancement later if added
 
 ## Still open / requires test or user preference
-- Hedra vs HeyGen
+- Hedra vs HeyGen long-term
 - Suno vs Udio
 - Premiere vs Resolve
-- Replicate vs Fal for Flux access
+- whether Midjourney is worth adding later as a taste-only exploration tool
 
 ---
 
