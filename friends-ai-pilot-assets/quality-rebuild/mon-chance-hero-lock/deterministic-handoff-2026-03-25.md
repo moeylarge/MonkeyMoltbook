@@ -44,6 +44,22 @@ After generation, score immediately:
 ## Motion rule
 Do **not** click `Make Video` unless the still is scored `KEEPER`.
 
+## Motion resume note — 2026-03-25 late pass
+The still is now locked, and the rejected path is specifically the direct `fal-ai/veo2/image-to-video` route for this shot.
+
+The next materially different path is now identified and packaged:
+- engine: `fal-ai/kling-video/o1/reference-to-video`
+- prompt: `motion-prompt-v3-kling-o1-reference.md`
+- runner: `run_direct_motion_pass_v3_kling_o1_reference.mjs`
+- padded carrier for aspect-ratio compliance: `fal-input/04-mon-chance-locked-still-square-pad.png`
+
+Current blocker:
+- fal returned `HTTP 403 Forbidden` with `User is locked. Reason: Exhausted balance.` before inference
+
+Resume rule:
+- top up fal billing first
+- rerun the exact Kling O1 reference pass unchanged before trying any other motion engine or changing the still
+
 ## Current truth at handoff
 A real FAL browser pass was completed on 2026-03-25 and saved as:
 - `outputs/mon-chance-nano-banana-pass-2026-03-25.png`
