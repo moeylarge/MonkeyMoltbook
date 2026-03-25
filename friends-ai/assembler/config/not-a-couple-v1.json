@@ -1,0 +1,157 @@
+{
+  "slug": "not-a-couple-v1-auto",
+  "ambience": {
+    "source": "/System/Library/Sounds/Funk.aiff",
+    "volume": 0.04
+  },
+  "shots": [
+    {
+      "id": "01-central-peak",
+      "type": "image",
+      "source": "/Users/moey/.openclaw/workspace/friends-ai-pilot-assets/story-shots/01-central-peak-master.png",
+      "duration": 5.0,
+      "zoom": "slow-in"
+    },
+    {
+      "id": "02-couples-night-sign",
+      "type": "image",
+      "source": "/Users/moey/.openclaw/workspace/friends-ai-pilot-assets/story-shots/02-couples-night-sign.png",
+      "duration": 3.8,
+      "zoom": "micro-in"
+    },
+    {
+      "id": "03-group-notices-sign",
+      "type": "video",
+      "source": "/Users/moey/.openclaw/workspace/friends-ai-pilot-assets/motion-clips/03-group-notices-sign-motion.mp4",
+      "duration": 6.0
+    },
+    {
+      "id": "04-mon-chance",
+      "type": "video",
+      "source": "/Users/moey/.openclaw/workspace/friends-ai-pilot-assets/motion-clips/04-mon-chance-motion.mp4",
+      "duration": 9.0
+    },
+    {
+      "id": "05-russ-rachelle",
+      "type": "video",
+      "source": "/Users/moey/.openclaw/workspace/friends-ai-pilot-assets/motion-clips/05-russ-rachelle-motion.mp4",
+      "duration": 9.0
+    },
+    {
+      "id": "06-jojo-fufu",
+      "type": "video",
+      "source": "/Users/moey/.openclaw/workspace/friends-ai-pilot-assets/motion-clips/06-jojo-fufu-motion.mp4",
+      "duration": 9.0
+    },
+    {
+      "id": "07-ensemble-payoff",
+      "type": "video",
+      "source": "/Users/moey/.openclaw/workspace/friends-ai-pilot-assets/motion-clips/07-ensemble-payoff-motion.mp4",
+      "duration": 6.0
+    },
+    {
+      "id": "08-group-regather",
+      "type": "video",
+      "source": "/Users/moey/.openclaw/workspace/friends-ai-pilot-assets/motion-clips/08-group-regather-motion.mp4",
+      "duration": 10.0
+    },
+    {
+      "id": "09-group-couples-night",
+      "type": "video",
+      "source": "/Users/moey/.openclaw/workspace/friends-ai-pilot-assets/motion-clips/09-group-couples-night-motion.mp4",
+      "duration": 7.0
+    }
+  ],
+  "dialogue": [
+    {
+      "character": "Jojo",
+      "text": "Couples Night?",
+      "start": 5.8,
+      "tts_rate": 185
+    },
+    {
+      "character": "Fufu",
+      "text": "No, no — let's not pretend this isn't for us.",
+      "start": 9.7,
+      "tts_rate": 195
+    },
+    {
+      "character": "Chance",
+      "text": "You look tense for someone who's definitely not part of a couple.",
+      "start": 15.6,
+      "tts_rate": 178
+    },
+    {
+      "character": "Mon",
+      "text": "I'm tense because your face is doing that.",
+      "start": 21.1,
+      "tts_rate": 182
+    },
+    {
+      "character": "Russ",
+      "text": "Just so we're all being normal, I'd like to say this sign is weirdly aggressive.",
+      "start": 24.8,
+      "tts_rate": 182
+    },
+    {
+      "character": "Rachelle",
+      "text": "You say that like it personally invited you.",
+      "start": 30.2,
+      "tts_rate": 185
+    },
+    {
+      "character": "Fufu",
+      "text": "I can name two couples and one cover-up right now.",
+      "start": 33.9,
+      "tts_rate": 195
+    },
+    {
+      "character": "Jojo",
+      "text": "Why is that worse than if you named three couples?",
+      "start": 38.0,
+      "tts_rate": 185
+    },
+    {
+      "character": "Mon",
+      "text": "Can we not do this?",
+      "start": 43.3,
+      "tts_rate": 182
+    },
+    {
+      "character": "Fufu",
+      "text": "Too late.",
+      "start": 45.0,
+      "tts_rate": 198
+    },
+    {
+      "character": "Russ",
+      "text": "No one said we were doing anything.",
+      "start": 45.5,
+      "tts_rate": 183
+    },
+    {
+      "character": "Fufu",
+      "text": "I'm just saying some people got tense very quickly.",
+      "start": 49.0,
+      "tts_rate": 194
+    },
+    {
+      "character": "Russ",
+      "text": "That could mean anything.",
+      "start": 52.3,
+      "tts_rate": 183
+    },
+    {
+      "character": "Rachelle",
+      "text": "It somehow didn't.",
+      "start": 54.1,
+      "tts_rate": 184
+    },
+    {
+      "character": "Chance",
+      "text": "Relax. If anyone asks, I'll claim Mon for the discount.",
+      "start": 58.2,
+      "tts_rate": 176
+    }
+  ]
+}

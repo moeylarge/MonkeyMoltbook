@@ -1,0 +1,35 @@
+{
+  "notes": "Initial approval set for synthetic temp voices. Swap voices here after approval; no manual wav workflow required.",
+  "characters": {
+    "Mon": {
+      "voice": "Shelley (English (US))",
+      "tts_rate": 182,
+      "intent": "clear, precise, controlled"
+    },
+    "Chance": {
+      "voice": "Eddy (English (US))",
+      "tts_rate": 176,
+      "intent": "dry, amused, understated"
+    },
+    "Russ": {
+      "voice": "Reed (English (US))",
+      "tts_rate": 183,
+      "intent": "warm, earnest, slightly anxious"
+    },
+    "Rachelle": {
+      "voice": "Sandy (English (US))",
+      "tts_rate": 184,
+      "intent": "polished, observant, lightly amused"
+    },
+    "Jojo": {
+      "voice": "Flo (English (US))",
+      "tts_rate": 185,
+      "intent": "warm, open, easygoing"
+    },
+    "Fufu": {
+      "voice": "Samantha",
+      "tts_rate": 195,
+      "intent": "bright, expressive, delighted by chaos"
+    }
+  }
+}
