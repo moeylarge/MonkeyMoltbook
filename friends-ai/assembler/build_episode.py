@@ -317,7 +317,12 @@ def build_episode(args):
         kind = shot["type"]
         zoom = shot.get("zoom", "none")
         if kind == "video":
-            vf = f"scale={TARGET_W}:{TARGET_H}:force_original_aspect_ratio=decrease,pad={TARGET_W}:{TARGET_H}:(ow-iw)/2:(oh-ih)/2:black,fps={FPS},format=yuv420p"
+            source_duration = ffprobe_duration(input_path)
+            hold_duration = max(0.0, duration - source_duration)
+            vf = f"scale={TARGET_W}:{TARGET_H}:force_original_aspect_ratio=decrease,pad={TARGET_W}:{TARGET_H}:(ow-iw)/2:(oh-ih)/2:black,fps={FPS}"
+            if hold_duration > 0.02:
+                vf += f",tpad=stop_mode=clone:stop_duration={hold_duration:.3f}"
+            vf += ",format=yuv420p"
             run([
                 "ffmpeg", "-y", "-i", str(input_path), "-an",
                 "-vf", vf,
