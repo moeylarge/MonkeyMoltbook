@@ -44,6 +44,9 @@ Completed across the latest Mon + Chance rebuild pass:
 - faster pass/fail scoring doc written: `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/keeper-rubric-v2.md`
 - one real FAL Nano Banana browser still pass completed and saved:
   - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/mon-chance-nano-banana-pass-2026-03-25.png`
+- direct FAL still path now verified with the approved close reference bound as the only source image via API call
+- one real direct still pass completed and saved:
+  - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-1.png`
 - latest real Mon + Chance still verdict: **REJECT**
 
 ## Locked world rules
@@ -61,10 +64,11 @@ Completed across the latest Mon + Chance rebuild pass:
 ## Immediate next action
 Run one more surgical Mon + Chance still pass from the tightened hero-lock package.
 
-1. Upload `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/fal-input/04-mon-chance-upload-ref-close.jpg`
-2. Use `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/hero-still-prompt-v3.md`
-3. Score the result with `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/keeper-rubric-v2.md`
-4. Only if it is a keeper, move to upscale / motion
+1. Run `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/run_direct_still_pass.mjs`
+2. Keep `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/fal-input/04-mon-chance-upload-ref-close.jpg` as the only bound source image
+3. Tighten the prompt specifically against Mon softness / cuteness drift before the rerun
+4. Score the result with `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/keeper-rubric-v2.md`
+5. Only if it is a keeper, move to upscale / motion
 
 ## Key docs
 - `friends-ai-pilot-assets/FINAL_QUALITY_REBUILD_SPEC.md`

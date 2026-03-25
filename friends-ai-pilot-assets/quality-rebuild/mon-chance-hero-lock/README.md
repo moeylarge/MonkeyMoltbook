@@ -88,10 +88,17 @@ A real FAL browser still pass was completed on 2026-03-25.
 Saved result:
 - `outputs/mon-chance-nano-banana-pass-2026-03-25.png`
 
+A clean direct FAL still pass was also completed on 2026-03-25 using the approved close reference as the only bound source image.
+Saved result:
+- `outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-1.png`
+- `outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-1.json`
+- runner: `run_direct_still_pass.mjs`
+
 Verdict:
 - **REJECT**
-- useful as failure memory only
-- do not motion-test it
+- browser pass = failure-memory only because binding was untrustworthy
+- direct pass = trustworthy path proof, but still not benchmark-grade
+- do not motion-test either output
 
 Resume from:
 - `deterministic-handoff-2026-03-25.md`

@@ -76,18 +76,22 @@ Active stack:
 
 Latest verified Mon + Chance truth:
 - hero-lock package extended with tighter prompt control and upload-ready reference variants
-- one real FAL Nano Banana browser still pass was completed and saved at `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/mon-chance-nano-banana-pass-2026-03-25.png`
-- that pass is a **REJECT** due to wardrobe / character-family / scene drift
+- browser pass 2 proved the playground was brittle because it retained stock example `image_urls` instead of binding the approved close reference
+- a clean direct FAL Nano Banana Pro edit path is now verified from this machine using `friends-ai/.env` + a one-image data-URI payload
+- one real direct still pass was completed and saved at `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-1.png`
+- payload audit saved at `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-1.json`
+- that direct pass is still a **REJECT** because Mon remains too soft/cute and the pair tension is not benchmark-grade yet
 - immediate resume docs now live in:
   - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/deterministic-handoff-2026-03-25.md`
   - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/run-log-2026-03-25.md`
+  - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/scorecards/mon-chance-direct-pass-1-scorecard-2026-03-25.md`
 
 Recommended order:
-1. use `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/fal-input/04-mon-chance-upload-ref-close.jpg`
-2. run one new still pass with `hero-still-prompt-v3.md`
-3. score it with `keeper-rubric-v2.md`
-4. only if it clears all gates, upscale or motion-test it
-5. otherwise do one surgical follow-up still pass, not a broad loop
+1. use `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/run_direct_still_pass.mjs`
+2. keep `fal-input/04-mon-chance-upload-ref-close.jpg` as the only bound source image
+3. tighten prompt language specifically against Mon softness / cuteness drift
+4. run one more surgical direct still pass
+5. only if it clears all gates, upscale or motion-test it
 
 ## Risks / cautions
 - much of the strategic title discussion was intentionally aggressive around discoverability; keep the actual creative execution structurally original enough to avoid devolving into direct-copy scene design
