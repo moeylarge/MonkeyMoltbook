@@ -69,9 +69,11 @@ Active stack:
 Recommended order:
 1. begin with `FAL_IDENTITY_LOCK_MON_V1.md`
 2. review Mon using `DRIFT_REVIEW_FRAMEWORK.md`
-3. continue through the sequence in `IDENTITY_LOCK_RUNBOOK.md`
-4. lock the lineup and locations
-5. then move into pilot masters
+3. then generate Chance using `FAL_IDENTITY_LOCK_CHANCE_V1.md`
+4. review Chance
+5. continue through the sequence in `IDENTITY_LOCK_RUNBOOK.md`
+6. lock the lineup and locations
+7. then move into pilot masters
 
 ## Risks / cautions
 - much of the strategic title discussion was intentionally aggressive around discoverability; keep the actual creative execution structurally original enough to avoid devolving into direct-copy scene design

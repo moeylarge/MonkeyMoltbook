@@ -36,6 +36,7 @@ Completed in this session:
   - ElevenLabs
 - Fal replaced Replicate as the still-image backbone after passing funded API generation
 - first Fal-ready Mon identity-lock prompt written
+- first Fal-ready Chance identity-lock prompt written
 
 ## Locked world rules
 - Central Peak is the core social hearth
@@ -71,3 +72,4 @@ Begin identity lock with the live verified stack.
 - `friends-ai/IDENTITY_LOCK_RUNBOOK.md`
 - `friends-ai/FAL_IDENTITY_LOCK_MON_V1.md`
 - `friends-ai/HANDOFF.md`
+`friends-ai/HANDOFF.md`
