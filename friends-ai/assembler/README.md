@@ -35,7 +35,18 @@ python3 friends-ai/assembler/build_episode.py render-voice-samples \
 Output:
 - `friends-ai/assembler/voices/approval-samples/`
 
-### 3) Build the synthetic temp-voice cut
+### 3) Render multi-option audition packs per character
+
+```bash
+python3 friends-ai/assembler/build_episode.py render-voice-auditions \
+  --episode friends-ai/assembler/config/not-a-couple-v1.json \
+  --candidates friends-ai/assembler/config/voice-candidates-v2.json
+```
+
+Output:
+- `friends-ai/assembler/voices/auditions-v2/`
+
+### 4) Build the synthetic temp-voice cut
 
 ```bash
 python3 friends-ai/assembler/build_episode.py build \
@@ -73,5 +84,5 @@ The agent should handle:
 - better ambience/music routing
 - subtitle / caption export
 - auto-retime shots from dialogue duration
-- per-character voice comparison packs
 - higher-quality TTS backend after voice approval
+- batch episode configs / queue build mode

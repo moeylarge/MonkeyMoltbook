@@ -1,0 +1,34 @@
+{
+  "characters": {
+    "Mon": [
+      { "voice": "Shelley (English (US))", "tts_rate": 180 },
+      { "voice": "Sandy (English (US))", "tts_rate": 178 },
+      { "voice": "Eddy (English (UK))", "tts_rate": 176 }
+    ],
+    "Chance": [
+      { "voice": "Eddy (English (US))", "tts_rate": 176 },
+      { "voice": "Rocko (English (US))", "tts_rate": 174 },
+      { "voice": "Reed (English (US))", "tts_rate": 172 }
+    ],
+    "Russ": [
+      { "voice": "Reed (English (US))", "tts_rate": 182 },
+      { "voice": "Flo (English (US))", "tts_rate": 178 },
+      { "voice": "Daniel", "tts_rate": 176 }
+    ],
+    "Rachelle": [
+      { "voice": "Sandy (English (US))", "tts_rate": 182 },
+      { "voice": "Shelley (English (US))", "tts_rate": 180 },
+      { "voice": "Sandy (English (UK))", "tts_rate": 178 }
+    ],
+    "Jojo": [
+      { "voice": "Flo (English (US))", "tts_rate": 186 },
+      { "voice": "Reed (English (US))", "tts_rate": 184 },
+      { "voice": "Eddy (English (US))", "tts_rate": 182 }
+    ],
+    "Fufu": [
+      { "voice": "Samantha", "tts_rate": 194 },
+      { "voice": "Shelley (English (US))", "tts_rate": 196 },
+      { "voice": "Sandy (English (US))", "tts_rate": 198 }
+    ]
+  }
+}

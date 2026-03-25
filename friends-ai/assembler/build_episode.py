@@ -117,6 +117,44 @@ def render_voice_samples(args):
     print(f"Wrote voice approval samples to {samples_dir}")
 
 
+def render_voice_auditions(args):
+    ensure_dirs()
+    candidates = load_json(Path(args.candidates))
+    episode = load_json(Path(args.episode))
+    out_dir = Path(args.out_dir) if args.out_dir else VOICES_DIR / "auditions-v2"
+    if out_dir.exists():
+        shutil.rmtree(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    first_lines = {}
+    for line in episode["dialogue"]:
+        first_lines.setdefault(line["character"], line)
+
+    manifest = []
+    for character, options in candidates["characters"].items():
+        char_dir = out_dir / character.lower()
+        char_dir.mkdir(parents=True, exist_ok=True)
+        line = dict(first_lines[character])
+        for idx, option in enumerate(options, start=1):
+            line["tts_rate"] = option.get("tts_rate", line.get("tts_rate", 185))
+            slug = sanitize(option["voice"])
+            out_wav = char_dir / f"option-{idx}-{slug}.wav"
+            generate_tts(line, option["voice"], out_wav)
+            manifest.append({
+                "character": character,
+                "option": idx,
+                "voice": option["voice"],
+                "tts_rate": line["tts_rate"],
+                "sample_line": line["text"],
+                "file": str(out_wav),
+            })
+
+    with (out_dir / "manifest.json").open("w") as f:
+        json.dump(manifest, f, indent=2)
+
+    print(f"Wrote audition pack to {out_dir}")
+
+
 def build_episode(args):
     ensure_dirs()
     episode = load_json(Path(args.episode))
@@ -279,6 +317,12 @@ def main():
     p_samples.add_argument("--voice-map", required=True)
     p_samples.add_argument("--out-dir")
     p_samples.set_defaults(func=render_voice_samples)
+
+    p_auditions = sub.add_parser("render-voice-auditions", help="Render multiple voice options per character")
+    p_auditions.add_argument("--episode", required=True)
+    p_auditions.add_argument("--candidates", required=True)
+    p_auditions.add_argument("--out-dir")
+    p_auditions.set_defaults(func=render_voice_auditions)
 
     p_build = sub.add_parser("build", help="Build an episode")
     p_build.add_argument("--episode", required=True)
