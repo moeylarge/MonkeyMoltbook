@@ -43,4 +43,5 @@ Create `PROMPT_PACK_V1.md` from the current source-of-truth docs.
 - `friends-ai/PRODUCTION_BEAT_SHEET_NOT_A_COUPLE.md`
 - `friends-ai/CAST_BIBLE.md`
 - `friends-ai/VISUAL_STYLE_GUIDE.md`
+- `friends-ai/PROMPT_PACK_V1.md`
 - `friends-ai/HANDOFF.md`

@@ -33,9 +33,10 @@ Read these first:
 - shot-by-shot production beat sheet written
 - cast bible written
 - visual style guide written
+- `PROMPT_PACK_V1.md` written
 
 ## Correct next step
-Build the production prompt pack from the locked project docs.
+Start identity-lock generation from the production prompt pack.
 
 Recommended order:
 1. character look prompts
@@ -52,3 +53,4 @@ Recommended order:
 
 ## Resume line
 If resuming after a reset: do **not** re-brainstorm the series from scratch. Read the five docs above and move directly into prompt-pack production.
+n.
