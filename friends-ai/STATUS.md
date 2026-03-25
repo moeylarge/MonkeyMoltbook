@@ -47,9 +47,12 @@ Completed across the latest Mon + Chance rebuild pass:
 - direct FAL still path now verified with the approved close reference bound as the only source image via API call
 - one real direct still pass completed and saved:
   - `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-1.png`
-- latest real Mon + Chance still verdict: **REJECT**
-- newest surgical direct pass saved at `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-3.png`
-- newest surgical direct pass improved Mon substantially, but still failed because the background preserved readable mirrored `Central Perk`-style homage signage, so Central Peak continuity still hard-fails
+- latest real Mon + Chance still verdict: **PASS / KEEPER**
+- approved cleaned reference saved at `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/fal-input/04-mon-chance-upload-ref-close-cleaned.jpg`
+- keeper still saved at `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-4-cleanref.png`
+- payload audit saved at `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-4-cleanref.json`
+- keeper scorecard saved at `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/scorecards/mon-chance-direct-pass-4-cleanref-scorecard-2026-03-25.md`
+- the homage-sign blocker was resolved by cleaning the close reference before the deterministic direct rerun
 
 ## Locked world rules
 - Central Peak is the core social hearth
@@ -64,13 +67,13 @@ Completed across the latest Mon + Chance rebuild pass:
 - premise: Couples Night at Central Peak causes immediate social/romantic chaos
 
 ## Immediate next action
-Run one more surgical Mon + Chance still pass from the tightened hero-lock package.
+Treat the Mon + Chance hero still as locked and move to the next downstream quality-preserving step.
 
-1. Run `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/run_direct_still_pass.mjs`
-2. Keep `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/fal-input/04-mon-chance-upload-ref-close.jpg` as the only bound source image
-3. Tighten the prompt specifically against Mon softness / cuteness drift before the rerun
-4. Score the result with `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/keeper-rubric-v2.md`
-5. Only if it is a keeper, move to upscale / motion
+1. Keep `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/fal-input/04-mon-chance-upload-ref-close-cleaned.jpg` as the approved bound still reference for this beat
+2. Keep `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-4-cleanref.png` as the hero still keeper
+3. If the pipeline needs higher-res still quality, upscale this keeper
+4. Otherwise motion-test this keeper with the existing Mon + Chance motion prompt
+5. Do not reopen still-generation unless a downstream failure forces it
 
 ## Key docs
 - `friends-ai-pilot-assets/FINAL_QUALITY_REBUILD_SPEC.md`

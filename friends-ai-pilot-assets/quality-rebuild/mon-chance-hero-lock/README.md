@@ -6,17 +6,15 @@ Deterministic workspace package for locking the Mon + Chance hero shot before an
 This folder exists so the next generation pass does not depend on browser memory, vague prompt memory, or scattered references.
 
 ## Current verdict
-The current Mon + Chance image concept is the strongest available starting point in the workspace, but it is **not yet benchmark-grade**.
+The Mon + Chance hero still is now **benchmark-grade / keeper-approved** via the cleaned-reference deterministic pass on 2026-03-25.
 
 ### Strongest existing candidate assets
-1. Primary still reference:
+1. Canonical still reference:
    - `references/04-mon-chance-story-shot.png`
-2. Primary upload-ready seed/reference:
-   - `fal-input/04-mon-chance-upload-ref.jpg`
-3. Additional upload-ready variants prepared for stricter next-pass control:
-   - `fal-input/04-mon-chance-upload-ref-close.jpg`
-   - `fal-input/04-mon-chance-upload-ref-balanced.jpg`
-   - `fal-input/04-mon-chance-upload-ref-wide.jpg`
+2. Approved cleaned bound reference for deterministic reruns:
+   - `fal-input/04-mon-chance-upload-ref-close-cleaned.jpg`
+3. Hero-still keeper:
+   - `outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-4-cleanref.png`
 4. Current motion-review stills from prior attempts:
    - `review/current-motion-thumb-output.jpg`
    - `review/current-motion-thumb-output-1.jpg`
@@ -88,17 +86,19 @@ A real FAL browser still pass was completed on 2026-03-25.
 Saved result:
 - `outputs/mon-chance-nano-banana-pass-2026-03-25.png`
 
-A clean direct FAL still pass was also completed on 2026-03-25 using the approved close reference as the only bound source image.
-Saved result:
-- `outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-1.png`
-- `outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-1.json`
+Multiple deterministic direct FAL still passes were then completed on 2026-03-25, culminating in a cleaned-reference keeper run.
+Saved keeper result:
+- `outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-4-cleanref.png`
+- `outputs/2026-03-25/mon-chance-2026-03-25-direct-pass-4-cleanref.json`
 - runner: `run_direct_still_pass.mjs`
+- bound source: `fal-input/04-mon-chance-upload-ref-close-cleaned.jpg`
+- scorecard: `scorecards/mon-chance-direct-pass-4-cleanref-scorecard-2026-03-25.md`
 
 Verdict:
-- **REJECT**
+- **PASS / KEEPER**
 - browser pass = failure-memory only because binding was untrustworthy
-- direct pass = trustworthy path proof, but still not benchmark-grade
-- do not motion-test either output
+- direct cleaned-reference pass = approved hero-lock still
+- valid for upscale or motion testing
 
 Resume from:
 - `deterministic-handoff-2026-03-25.md`
