@@ -7,7 +7,7 @@ Friends AI
 Create a warm, cozy, ensemble comfort sitcom around six original animal-coded characters, a café called Central Peak, and two across-the-hall apartments, starting with a 4-minute pilot proof of concept.
 
 ## Current phase
-Identity-lock generation prep phase.
+Production stack selection / access-planning phase.
 
 ## Current verified status
 Completed in this session:
@@ -21,6 +21,10 @@ Completed in this session:
 - production beat sheet written
 - cast bible written
 - visual style guide written
+- prompt pack written
+- identity-lock execution batch written
+- drift review framework written
+- production stack map written
 
 ## Locked world rules
 - Central Peak is the core social hearth
@@ -35,7 +39,9 @@ Completed in this session:
 - premise: Couples Night at Central Peak causes immediate social/romantic chaos
 
 ## Immediate next action
-Create `PROMPT_PACK_V1.md` from the current source-of-truth docs.
+Create the two execution docs that turn the stack map into a real production plan:
+1. `TOOL_DECISION_MATRIX.md`
+2. `API_ACCESS_TRACKER.md`
 
 ## Key docs
 - `friends-ai/MASTER_BIBLE.md`
@@ -44,10 +50,7 @@ Create `PROMPT_PACK_V1.md` from the current source-of-truth docs.
 - `friends-ai/CAST_BIBLE.md`
 - `friends-ai/VISUAL_STYLE_GUIDE.md`
 - `friends-ai/PROMPT_PACK_V1.md`
-- `friends-ai/HANDOFF.md`
-d`
 - `friends-ai/IDENTITY_LOCK_BATCH.md`
-- `friends-ai/HANDOFF.md`
-L_STYLE_GUIDE.md`
-- `friends-ai/PROMPT_PACK_V1.md`
+- `friends-ai/DRIFT_REVIEW_FRAMEWORK.md`
+- `friends-ai/PRODUCTION_STACK_MAP_V1.md`
 - `friends-ai/HANDOFF.md`

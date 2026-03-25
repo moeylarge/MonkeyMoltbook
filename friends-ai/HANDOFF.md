@@ -26,6 +26,10 @@ Read these first:
 3. `friends-ai/PRODUCTION_BEAT_SHEET_NOT_A_COUPLE.md`
 4. `friends-ai/CAST_BIBLE.md`
 5. `friends-ai/VISUAL_STYLE_GUIDE.md`
+6. `friends-ai/PROMPT_PACK_V1.md`
+7. `friends-ai/IDENTITY_LOCK_BATCH.md`
+8. `friends-ai/DRIFT_REVIEW_FRAMEWORK.md`
+9. `friends-ai/PRODUCTION_STACK_MAP_V1.md`
 
 ## What was completed
 - master concept architecture written down
@@ -34,18 +38,19 @@ Read these first:
 - cast bible written
 - visual style guide written
 - `PROMPT_PACK_V1.md` written
+- `IDENTITY_LOCK_BATCH.md` written
+- `DRIFT_REVIEW_FRAMEWORK.md` written
+- `PRODUCTION_STACK_MAP_V1.md` written
 
 ## Correct next step
-Start identity-lock generation using `PROMPT_PACK_V1.md` and `IDENTITY_LOCK_BATCH.md`.
+Before large-scale generation, turn the stack map into a concrete decision matrix and access tracker.
 
 Recommended order:
-1. generate the 7 character looks
-2. generate the full cast lineup
-3. generate Central Peak
-4. generate apartment 2A
-5. generate apartment 2B
-6. generate the hallway
-7. review for drift and tighten prompts before pilot-shot generation
+1. create `TOOL_DECISION_MATRIX.md`
+2. create `API_ACCESS_TRACKER.md`
+3. decide the actual still / video / voice stack
+4. then begin identity-lock generation
+5. then review for drift and tighten prompts before pilot-shot generation
 
 ## Risks / cautions
 - much of the strategic title discussion was intentionally aggressive around discoverability; keep the actual creative execution structurally original enough to avoid devolving into direct-copy scene design
@@ -54,5 +59,4 @@ Recommended order:
 - preserve consistent geography for Central Peak, 2A, 2B, and hallway
 
 ## Resume line
-If resuming after a reset: do **not** re-brainstorm the series from scratch. Read the five docs above and move directly into prompt-pack production.
-n.
+If resuming after a reset: do **not** re-brainstorm the series from scratch. Read the docs above, finalize the production stack, then move into identity-lock generation.
