@@ -7,7 +7,7 @@ Friends AI
 Create a warm, cozy, ensemble comfort sitcom around six original animal-coded characters, a café called Central Peak, and two across-the-hall apartments, starting with a 4-minute pilot proof of concept.
 
 ## Current phase
-Concept architecture locked / pre-production documentation phase.
+Identity-lock generation prep phase.
 
 ## Current verified status
 Completed in this session:
@@ -43,5 +43,11 @@ Create `PROMPT_PACK_V1.md` from the current source-of-truth docs.
 - `friends-ai/PRODUCTION_BEAT_SHEET_NOT_A_COUPLE.md`
 - `friends-ai/CAST_BIBLE.md`
 - `friends-ai/VISUAL_STYLE_GUIDE.md`
+- `friends-ai/PROMPT_PACK_V1.md`
+- `friends-ai/HANDOFF.md`
+d`
+- `friends-ai/IDENTITY_LOCK_BATCH.md`
+- `friends-ai/HANDOFF.md`
+L_STYLE_GUIDE.md`
 - `friends-ai/PROMPT_PACK_V1.md`
 - `friends-ai/HANDOFF.md`

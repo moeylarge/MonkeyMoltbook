@@ -36,14 +36,16 @@ Read these first:
 - `PROMPT_PACK_V1.md` written
 
 ## Correct next step
-Start identity-lock generation from the production prompt pack.
+Start identity-lock generation using `PROMPT_PACK_V1.md` and `IDENTITY_LOCK_BATCH.md`.
 
 Recommended order:
-1. character look prompts
-2. set/location prompts
-3. recurring style/continuity prompts
-4. shot prompts for the pilot
-5. assembly/edit guidance
+1. generate the 7 character looks
+2. generate the full cast lineup
+3. generate Central Peak
+4. generate apartment 2A
+5. generate apartment 2B
+6. generate the hallway
+7. review for drift and tighten prompts before pilot-shot generation
 
 ## Risks / cautions
 - much of the strategic title discussion was intentionally aggressive around discoverability; keep the actual creative execution structurally original enough to avoid devolving into direct-copy scene design

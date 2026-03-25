@@ -9,8 +9,9 @@ This folder holds the source-of-truth documents for the Friends AI sitcom concep
 4. `CAST_BIBLE.md`
 5. `VISUAL_STYLE_GUIDE.md`
 6. `PROMPT_PACK_V1.md`
-7. `STATUS.md`
-8. `HANDOFF.md`
+7. `IDENTITY_LOCK_BATCH.md`
+8. `STATUS.md`
+9. `HANDOFF.md`
 
 ## Current goal
-Move from prompt-pack completion into identity-lock generation for the 4-minute pilot.
+Run the identity-lock generation batch cleanly before any full pilot-shot generation.
