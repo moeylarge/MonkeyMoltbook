@@ -14,11 +14,12 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.moey.looksmaxx",
-      "buildNumber": "1.0.0",
+      "buildNumber": "1.0.1",
       "infoPlist": {
         "NSCameraUsageDescription": "LooksMaxx uses the camera so you can capture a photo for your face analysis.",
         "NSPhotoLibraryUsageDescription": "LooksMaxx uses your photo library so you can upload a photo for your face analysis.",
-        "NSPhotoLibraryAddUsageDescription": "LooksMaxx may save generated share images to your photo library if you choose to export them."
+        "NSPhotoLibraryAddUsageDescription": "LooksMaxx may save generated share images to your photo library if you choose to export them.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -33,6 +34,11 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "cb9561a7-bca6-4106-8487-beafc2485072"
+      }
     }
   }
 }
