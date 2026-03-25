@@ -136,3 +136,26 @@ This is the canonical project index for fast recovery after resets, daemon issue
 - **Current state:**
   - still strategically relevant
   - not the current build focus unless Moey explicitly switches back to it
+
+### 6) Friends AI
+- **Status:** ACTIVE / CONCEPT ARCHITECTURE LOCKED
+- **Type:** AI sitcom / content series
+- **Path:** `/Users/moey/.openclaw/workspace/friends-ai`
+- **Purpose:** build a warm ensemble comfort sitcom around six original animal-coded characters, Central Peak café, and two across-the-hall apartments, beginning with a 4-minute pilot proof of concept
+- **Current state:**
+  - working title locked as `Friends AI`
+  - world geometry locked: Central Peak, apartment 2A, apartment 2B, shared hallway
+  - cast, relationship engines, supporting character Gunty, and pilot premise are now written into project docs
+  - master bible, pilot script v2, production beat sheet, cast bible, and visual style guide now exist in project files
+- **Next step:** create the production prompt pack from the locked concept docs
+- **Key docs:**
+  - `friends-ai/MASTER_BIBLE.md`
+  - `friends-ai/PILOT_SCRIPT_NOT_A_COUPLE_V2.md`
+  - `friends-ai/PRODUCTION_BEAT_SHEET_NOT_A_COUPLE.md`
+  - `friends-ai/CAST_BIBLE.md`
+  - `friends-ai/VISUAL_STYLE_GUIDE.md`
+  - `friends-ai/HANDOFF.md`
+- **Risks / blockers:**
+  - must preserve warmth and originality in execution even while using aggressive discoverability/title positioning
+  - concept can visually drift into cheap/cartoon/furry territory if prompt consistency is weak
+  - pilot production quality must prove chemistry, not just premise

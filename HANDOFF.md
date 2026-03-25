@@ -25,37 +25,38 @@ Updated: 2026-03-23 America/Los_Angeles
 
 ## Current truth
 
-- Primary active project: **RIZZ MAXX**
-- Project path: `/Users/moey/.openclaw/workspace/rizz-maxx`
-- Product category is locked: AI dating profile optimizer, not a dating app
-- Execution order is locked:
-  - PLAN -> DESIGN -> BUILD -> RUN -> VERIFY -> PROVE
-- Current completed phase: **Phase 5 — Real Analysis Integration**
-- Required execution docs now exist
-- Implementation scaffold exists at `rizz-maxx/app`
-- Local analysis adapter exists at `rizz-maxx/server`
-- App analysis path now works like this:
-  1. upload/select photos
-  2. app attempts real local adapter analysis at `127.0.0.1:8091`
-  3. adapter calls live upstream backend at `127.0.0.1:8089/analyze`
-  4. results are reframed into RIZZ MAXX output
-  5. if the real path fails, the app falls back explicitly to mock
-- Real-path proof succeeded in the app web flow and displayed `REAL LOCAL ANALYSIS`
-- After tightening set-level ranking, degraded-photo handling, and feedback synthesis, the real in-app path was re-proven successfully
-- Native simulator proof remains unverified on this machine because Apple simulator tooling (`simctl`) is unavailable
+- Primary active project: **FRIENDS AI**
+- Project path: `/Users/moey/.openclaw/workspace/friends-ai`
+- Current phase: **concept architecture locked / prompt-pack prep**
+- Working title is currently locked as `Friends AI`
+- Core world geometry is now locked and written down:
+  - `Central Peak`
+  - apartment `2A` = Mon + Rachelle
+  - apartment `2B` = Chance + Jojo
+  - Russ as constant across-the-hall presence
+  - hallway as active scene engine
+- Supporting café anchor `Gunty` is locked
+- Launch/test format is locked as a `4-minute pilot`
+- Pilot title is locked as `Not a Couple`
+- The project is no longer living only in chat; the source-of-truth docs now exist in project files
 
-## What to do next for RIZZ MAXX
+## What to do next for FRIENDS AI
 
-1. Read:
-   - `rizz-maxx/STATUS.md`
-   - `rizz-maxx/app/src/analysisApi.ts`
-   - `rizz-maxx/server/src/index.mjs`
-2. The requested launch-critical pass (result quality, arc polish, focused QA, launch-facing copy) is now complete enough in the current environment
-3. Screenshot deliverables now exist in `rizz-maxx/screenshots/`
-4. Premium now has a structured local entitlement flow with product selection, unlock, restore, and reset, but no real billing yet
-5. Real billing is intentionally deferred because launch strategy is free-first for the first few weeks
-6. Native runtime is now partially proven: the app launches in iPhone 17 Pro Simulator, but the full native smoke test is not complete yet
-7. Preserve the explicit mock fallback until the real path is robust
+1. Read in this order:
+   - `friends-ai/MASTER_BIBLE.md`
+   - `friends-ai/PILOT_SCRIPT_NOT_A_COUPLE_V2.md`
+   - `friends-ai/PRODUCTION_BEAT_SHEET_NOT_A_COUPLE.md`
+   - `friends-ai/CAST_BIBLE.md`
+   - `friends-ai/VISUAL_STYLE_GUIDE.md`
+   - `friends-ai/HANDOFF.md`
+2. Do **not** re-brainstorm the concept from scratch if those docs are present
+3. Build `PROMPT_PACK_V1.md` from the locked project docs
+4. Derive prompts in this order:
+   - characters
+   - sets / locations
+   - style / continuity rules
+   - pilot shot prompts
+5. Keep output premium, warm, cozy, and consistent; avoid cheap/cartoon/furry drift
 
 ## Important project truths to not lose
 
@@ -94,5 +95,31 @@ Use this order:
 1. Do not assume the project is gone
 2. Check gateway health
 3. Read continuity files
+4. Prefer a fresh session if the old one was very long
+5. Before major resets/restarts, update continuity files first
+ct state: **Waiting for Review**
+- do not restart launch prep unless Apple review changes state
+
+### UFC
+- local cadence change remains:
+  - `com.moey.ufc-operator-live-odds` every 12 hours
+  - `com.moey.ufc-operator-live-odds-fast` disabled
+- verify env and refresh pipeline before future work
+
+## Hard preferences from John
+
+- **No cron jobs unless explicitly requested**
+- **No autonomous loops**
+- avoid drift and category expansion
+
+## When the chat freezes
+
+Use this order:
+1. Do not assume the project is gone
+2. Check gateway health
+3. Read continuity files
+4. Prefer a fresh session if the old one was very long
+5. Before major resets/restarts, update continuity files first
+ files
 4. Prefer a fresh session if the old one was very long
 5. Before major resets/restarts, update continuity files first

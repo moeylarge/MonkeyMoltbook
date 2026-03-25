@@ -4,54 +4,50 @@ Updated: 2026-03-23 America/Los_Angeles
 
 ## Current active focus
 
-**RIZZ MAXX**
+**FRIENDS AI**
 
 ## Resume point
 
-RIZZ MAXX is now the current primary project.
+Friends AI is the current active focus.
 
-Execution mode is locked to John’s master build directive:
-- PLAN -> DESIGN -> BUILD -> RUN -> VERIFY -> PROVE
-- no category drift
-- no social/chat/marketplace features
-- no speculative re-architecture
-- no retry loops past 3 failed fix attempts
+Execution mode for this project is now:
+- lock concept architecture first
+- preserve warmth / comfort / repeatability
+- keep the world premium and emotionally legible
+- do not re-brainstorm from scratch when source-of-truth docs exist
+- move next into prompt-pack production from locked docs
 
 ## Current truth
 
-- project path: `/Users/moey/.openclaw/workspace/rizz-maxx`
-- current state: **free-first launch candidate with strong core loop, persistence/history, compare flow, and premium prototype gate**
-- implementation scaffold exists at `rizz-maxx/app`
-- local adapter server exists at `rizz-maxx/server`
-- real analysis integration exists via:
-  - app client: `rizz-maxx/app/src/analysisApi.ts`
-  - adapter service: `http://127.0.0.1:8091`
-  - upstream backend: `http://127.0.0.1:8089/analyze`
-- the app preserves an explicit fallback boundary:
-  - `REAL LOCAL ANALYSIS` when the adapter path succeeds
-  - `MOCKED LOCAL ANALYSIS` when it fails
-- launch-critical polish pass is complete enough in the current environment
-- screenshot deliverables exist in `rizz-maxx/screenshots/`
-- native iOS simulator launch is proven
-- native smoke test is complete enough for launch confidence:
-  - onboarding passed
-  - upload passed
-  - analysis passed
-  - results passed
-  - saved reopen passed
-  - compare passed
-  - premium screen/unlock state worked; real purchase action is intentionally unimplemented
-- real billing / purchase flow integration remains intentionally deferred because launch strategy is free-first for the first few weeks
-- product category is locked: AI dating profile optimizer mobile app
-- MVP explicitly excludes swiping, chat, messaging, social graph, marketplace, and broad coaching features
+- project path: `/Users/moey/.openclaw/workspace/friends-ai`
+- working title is currently locked as `Friends AI`
+- the world geometry is locked:
+  - `Central Peak`
+  - apartment `2A` = Mon + Rachelle
+  - apartment `2B` = Chance + Jojo
+  - Russ as constant across-the-hall presence
+  - hallway as active scene engine
+- the cast, relationship engines, and supporting café anchor `Gunty` are locked
+- the launch/test format is locked as a `4-minute pilot`
+- pilot title is locked as `Not a Couple`
+- the core project docs now exist in the workspace:
+  - `friends-ai/MASTER_BIBLE.md`
+  - `friends-ai/PILOT_SCRIPT_NOT_A_COUPLE_V2.md`
+  - `friends-ai/PRODUCTION_BEAT_SHEET_NOT_A_COUPLE.md`
+  - `friends-ai/CAST_BIBLE.md`
+  - `friends-ai/VISUAL_STYLE_GUIDE.md`
+  - `friends-ai/HANDOFF.md`
+  - `friends-ai/STATUS.md`
+- the concept architecture is now preserved in files instead of chat-only state
 
 ## Current next steps
 
-1. deeper ranking/feedback calibration from real-world testing data
-2. physical-device native proof/QA on an actual iPhone
-3. final launch asset refinement if needed
-4. keep explicit mock fallback until the real path is robust
-5. do not claim calibrated backend quality before proof
+1. build `PROMPT_PACK_V1.md`
+2. derive character look prompts from the cast + visual docs
+3. derive set/location prompts for Central Peak, 2A, 2B, and hallway
+4. derive recurring style/continuity prompts
+5. derive shot prompts for the pilot from the production beat sheet
+6. keep generation quality premium, warm, and consistent
 
 ## Secondary project state
 
