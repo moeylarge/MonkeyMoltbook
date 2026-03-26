@@ -79,6 +79,41 @@ function init() {
       form_version TEXT,
       consent_timestamp TEXT
     );
+
+    CREATE TABLE IF NOT EXISTS prospect_details (
+      lead_id INTEGER PRIMARY KEY,
+      business_name TEXT,
+      website TEXT,
+      public_phone TEXT,
+      public_business_email TEXT,
+      city TEXT,
+      state TEXT,
+      category TEXT,
+      source_platform TEXT,
+      source_url TEXT,
+      contact_page_url TEXT,
+      notes TEXT,
+      normalized_domain TEXT,
+      normalized_phone TEXT,
+      last_verified_at TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS buyer_routes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      lead_id INTEGER NOT NULL,
+      buyer_id TEXT NOT NULL,
+      buyer_name TEXT NOT NULL,
+      vertical TEXT NOT NULL,
+      handoff_type TEXT NOT NULL,
+      destination_url TEXT NOT NULL,
+      aff_id TEXT NOT NULL,
+      sub_id TEXT NOT NULL,
+      route_status TEXT NOT NULL,
+      routed_at TEXT NOT NULL,
+      conversion_status TEXT NOT NULL DEFAULT 'pending',
+      conversion_value TEXT NOT NULL DEFAULT '',
+      notes TEXT NOT NULL DEFAULT ''
+    );
   `);
 }
 
@@ -228,6 +263,23 @@ export function createMcaProspect(input: ProspectInput) {
   return leadId;
 }
 
+export function routeLeadToBuyer(input: {
+  leadId: number;
+  buyerId: string;
+  buyerName: string;
+  vertical: string;
+  handoffType: string;
+  destinationUrl: string;
+  affId: string;
+  subId: string;
+}) {
+  const now = new Date().toISOString();
+  db.prepare(`INSERT INTO buyer_routes (lead_id, buyer_id, buyer_name, vertical, handoff_type, destination_url, aff_id, sub_id, route_status, routed_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'routed', ?)`)
+    .run(input.leadId, input.buyerId, input.buyerName, input.vertical, input.handoffType, input.destinationUrl, input.affId, input.subId, now);
+  return true;
+}
+
 export function getDashboardMetrics() {
   const today = new Date().toISOString().slice(0, 10);
   const metrics = db.prepare(`
@@ -263,9 +315,11 @@ export function getLeadDetail(id: number) {
   const lead = db.prepare('SELECT * FROM leads WHERE id = ?').get(id);
   if (!lead) return null;
   const inbound = db.prepare('SELECT * FROM inbound_lead_details WHERE lead_id = ?').get(id);
+  const prospect = db.prepare('SELECT * FROM prospect_details WHERE lead_id = ?').get(id);
   const fields = db.prepare('SELECT field_key, field_value FROM lead_fields WHERE lead_id = ? ORDER BY field_key').all(id);
   const attribution = db.prepare('SELECT * FROM attribution_events WHERE lead_id = ? ORDER BY event_timestamp DESC').all(id);
   const scoring = db.prepare('SELECT * FROM scoring_snapshots WHERE lead_id = ? ORDER BY scored_at DESC LIMIT 1').get(id);
   const consent = db.prepare('SELECT * FROM consent_records WHERE lead_id = ? ORDER BY consent_timestamp DESC LIMIT 1').get(id);
-  return { lead, inbound, fields, attribution, scoring, consent };
+  const routes = db.prepare('SELECT * FROM buyer_routes WHERE lead_id = ? ORDER BY routed_at DESC').all(id);
+  return { lead, inbound, prospect, fields, attribution, scoring, consent, routes };
 }

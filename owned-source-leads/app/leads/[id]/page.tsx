@@ -81,6 +81,17 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           </tbody></table>
         </div>
       </div>
+
+      <div className="panel">
+        <div className="h2">Buyer Routes</div>
+        {detail.routes?.length ? (
+          <table className="table"><thead><tr><th>Buyer</th><th>AFF ID</th><th>subID</th><th>Destination</th><th>Status</th></tr></thead><tbody>
+            {detail.routes.map((route: any) => (
+              <tr key={route.id}><td>{route.buyer_name}</td><td>{route.aff_id}</td><td>{route.sub_id}</td><td>{route.destination_url}</td><td>{route.route_status}</td></tr>
+            ))}
+          </tbody></table>
+        ) : <div className="muted">No buyer route yet.</div>}
+      </div>
     </div>
   );
 }
