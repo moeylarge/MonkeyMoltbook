@@ -1,0 +1,15 @@
+{
+  "input": "data/us-roofing-prospects-v1-netnew-enriched.csv",
+  "output": "data/exports/us-roofing-prospects-v1-netnew-enriched-scored.csv",
+  "total_rows": 20,
+  "status_counts": {
+    "pass": 11,
+    "review": 9
+  },
+  "reason_counts": {
+    "missing_email": 9,
+    "missing_phone": 2,
+    "missing_contact_page": 3,
+    "notes_review": 1
+  }
+}

@@ -70,6 +70,16 @@ Rules:
 - `email-only.csv` = rows with email and missing phone
 - `excluded-missing-both.csv` = rows missing both phone and email
 
+All 3 sellable CSVs use the same minimized schema:
+- `business_name`
+- `website`
+- `public_phone`
+- `public_business_email`
+- `city`
+- `state`
+- `category`
+- `source_url`
+
 ### Run the resumable staged pipeline
 ```bash
 npm run prospects:pipeline -- \

@@ -6,9 +6,16 @@ from pathlib import Path
 
 ROOT = Path('/Users/moey/.openclaw/workspace/owned-source-leads')
 
-MASTER_FIELDS = ['business_name', 'website', 'public_phone', 'public_business_email', 'city', 'state']
-PHONE_FIELDS = ['business_name', 'website', 'public_phone', 'city', 'state']
-EMAIL_FIELDS = ['business_name', 'website', 'public_business_email', 'city', 'state']
+EXPORT_FIELDS = [
+    'business_name',
+    'website',
+    'public_phone',
+    'public_business_email',
+    'city',
+    'state',
+    'category',
+    'source_url',
+]
 
 
 def read_csv(path: Path):
@@ -61,10 +68,10 @@ def main():
     excluded_path = out_dir / f'{args.prefix}-excluded-missing-both.csv'
     summary_path = out_dir / f'{args.prefix}-contact-lists-summary.json'
 
-    write_csv(master_path, master, MASTER_FIELDS)
-    write_csv(phone_path, phone_only, PHONE_FIELDS)
-    write_csv(email_path, email_only, EMAIL_FIELDS)
-    write_csv(excluded_path, excluded, MASTER_FIELDS)
+    write_csv(master_path, master, EXPORT_FIELDS)
+    write_csv(phone_path, phone_only, EXPORT_FIELDS)
+    write_csv(email_path, email_only, EXPORT_FIELDS)
+    write_csv(excluded_path, excluded, EXPORT_FIELDS)
 
     summary = {
         'input': args.input,
