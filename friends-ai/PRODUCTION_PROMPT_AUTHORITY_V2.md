@@ -19,6 +19,9 @@ This prompt exists to prevent the exact failure modes already seen:
 - silent retries that blur state
 - tool switching mid-stage
 - motion before look-lock
+- bad lip sync that breaks performance believability
+- bad voice casting that breaks character fit
+- fake-looking continuous motion that feels synthetic instead of acted
 - reopening closed shots without an explicit decision
 - drifting from preproduction into paid generation without a gate
 
@@ -58,7 +61,10 @@ Do not continue past a gate without saying whether the result is PASS, REJECT, H
 > 7. **No tool switching mid-stage.** Once a stage starts in a chosen tool or model path, stay on that path until the stage is completed or explicitly aborted. Do not bounce between tools inside the same stage just because a result is weak.
 > 8. **Stop after each stage.** After each stage, report outcome, saved paths, risks, and next options, then stop for approval unless the user explicitly told you to continue through named downstream stages.
 > 9. **Closed means closed.** If a shot, model path, or motion line is marked closed, rejected, frozen, or locked in project state, do not reopen it without an explicit reopen instruction.
-> 10. **Anti-loop by design.** If the same failure repeats twice in substance, stop and diagnose the structural issue instead of continuing prompt tweaks.
+> 10. **Believable speech performance only.** For any spoken performance, lip timing, mouth shapes, jaw energy, eye focus, and head/face behavior must read as naturally synchronized to the intended line delivery. If sync is visibly late, floaty, mushy, over-wide, or puppet-like, mark REJECT.
+> 11. **Voice casting must fit character truth.** Never accept a voice just because it is technically clean. The voice must match the character’s age impression, emotional tone, social energy, and established Friends AI feel. If the casting feels misassigned, generic, stunt-y, or immersion-breaking, mark REJECT.
+> 12. **Motion must feel shot-real, not synthetic-continuous.** Continuous motion is not automatically a win. Reject motion that looks like fake glide, rubbery drift, AI float, endless micro-movement, or physically unmotivated continuity. Prefer motivated beats, natural settles, and editorially usable fragments over long fake-looking motion.
+> 13. **Anti-loop by design.** If the same failure repeats twice in substance, stop and diagnose the structural issue instead of continuing prompt tweaks.
 >
 > Your stage behavior must follow this exact contract:
 >
@@ -67,6 +73,7 @@ Do not continue past a gate without saying whether the result is PASS, REJECT, H
 > - Name the source-of-truth docs being used.
 > - Define the success bar.
 > - Define what would count as failure.
+> - For any spoken beat, explicitly define acceptable voice-casting logic and lip-sync realism before generation starts.
 > - Name the tool/model path to be used for this stage.
 > - Stop unless instructed to execute.
 >
@@ -90,6 +97,8 @@ Do not continue past a gate without saying whether the result is PASS, REJECT, H
 > - Only run after the still is already approved for that exact beat.
 > - Use the locked still/reference as the source of motion.
 > - Ask for minimal motion that preserves acting, face integrity, posture, and relationship geometry.
+> - For spoken shots, preserve believable lip sync and voice-performance alignment; if the mouth performance or vocal identity does not fit the character, mark REJECT.
+> - Reject fake-looking continuous motion, synthetic glide, rubber drift, or non-motivated micro-movement even if the clip is otherwise clean.
 > - If motion rewrites the beat rather than gently animating it, mark REJECT.
 > - Do not switch motion engines mid-stage unless the user explicitly approves a new stage path.
 > - Stop for approval.
@@ -145,4 +154,4 @@ Read in this order for production execution:
 ---
 
 ## One-line operational summary
-Use this file as the only production prompt authority: preproduction first, look-lock before motion, one shot and one stage at a time, explicit gates, no silent retries, no tool switching mid-stage, and stop after every stage for approval unless explicitly told to continue.
+Use this file as the only production prompt authority: preproduction first, look-lock before motion, one shot and one stage at a time, explicit gates, no silent retries, no tool switching mid-stage, reject bad lip sync / bad voice casting / fake continuous motion, and stop after every stage for approval unless explicitly told to continue.
