@@ -39,6 +39,41 @@ This project defines a functionality-first, loop-free system for generating hot 
 ## Prospect data pipeline
 Use the validator first, then the staged pipeline.
 
+## Multi-source discovery
+Discovery is now source-pluggable and feeds the same downstream validator/export flow.
+
+### Run the first production source: Google Maps-style discovery
+```bash
+npm run prospects:discover -- \
+  --sources google-maps \
+  --target 250 \
+  --city-limit 15 \
+  --pages-per-query 2 \
+  --fetch-site
+```
+
+Backwards-compatible roofing command:
+```bash
+npm run prospects:discover:roofing -- \
+  --target 250 \
+  --city-limit 15 \
+  --pages-per-query 2 \
+  --fetch-site
+```
+
+Optional extension-point invocation (currently stubbed, useful for manifesting planned source order):
+```bash
+npm run prospects:discover -- \
+  --sources google-maps yelp-seed browser-serp \
+  --target 250
+```
+
+Discovery writes the same minimized prospect rows expected by the existing pipeline, plus:
+- shared cross-run seen index: `data/state/discovery_seen_index.json`
+- resume checkpoint: `data/state/roofing_source_v2_resume.json`
+- manifest: `data/exports/roofing-source-v2-manifest.json`
+- notes: `data/roofing-source-v2-notes.md`
+
 ### Validate an existing CSV
 ```bash
 npm run prospects:validate -- \
@@ -56,21 +91,14 @@ This adds:
 - `has_contact_page`
 - `domain_status`
 
-### Export the 3 non-overlapping contact lists
+### Export one unified master CSV
 ```bash
-npm run prospects:export-lists -- \
+npm run prospects:export-master -- \
   --input data/exports/texas-roofing-prospects-v1-scored.csv \
-  --out-dir data/exports \
-  --prefix texas-roofing-prospects-v1
+  --output data/exports/texas-roofing-prospects-v1-master.csv
 ```
 
-Rules:
-- `master.csv` = rows with both phone + email
-- `phone-only.csv` = rows with phone and missing email
-- `email-only.csv` = rows with email and missing phone
-- `excluded-missing-both.csv` = rows missing both phone and email
-
-All 3 sellable CSVs use the same minimized schema:
+Master CSV schema:
 - `business_name`
 - `website`
 - `public_phone`

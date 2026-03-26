@@ -1,0 +1,15 @@
+{
+  "input": "data/exports/us-roofing-prospects-v1-netnew-enriched-scored.csv",
+  "output": "data/exports/us-roofing-prospects-v1-netnew-enriched-master.csv",
+  "row_count": 20,
+  "fields": [
+    "business_name",
+    "website",
+    "public_phone",
+    "public_business_email",
+    "city",
+    "state",
+    "category",
+    "source_url"
+  ]
+}

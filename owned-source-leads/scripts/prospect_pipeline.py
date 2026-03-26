@@ -11,7 +11,7 @@ DATA = ROOT / 'data'
 STAGING = DATA / 'staging'
 EXPORTS = DATA / 'exports'
 VALIDATOR = ROOT / 'scripts' / 'validate_prospect_csv.py'
-CONTACT_EXPORTER = ROOT / 'scripts' / 'export_contact_lists.py'
+MASTER_EXPORTER = ROOT / 'scripts' / 'export_master_csv.py'
 
 BASE_FIELDS = [
     'business_name', 'website', 'public_phone', 'public_business_email', 'city', 'state',
@@ -126,17 +126,14 @@ def split_exports(scored_csv: Path, run_name: str):
         write_csv(out_path, status_rows, fieldnames)
         outputs[status] = str(out_path)
 
+    master_path = EXPORTS / f'{run_name}-master.csv'
     subprocess.run([
-        str(CONTACT_EXPORTER),
+        str(MASTER_EXPORTER),
         '--input', str(scored_csv),
-        '--out-dir', str(EXPORTS),
-        '--prefix', run_name,
+        '--output', str(master_path),
     ], check=True)
-    outputs['master'] = str(EXPORTS / f'{run_name}-master.csv')
-    outputs['phone_only'] = str(EXPORTS / f'{run_name}-phone-only.csv')
-    outputs['email_only'] = str(EXPORTS / f'{run_name}-email-only.csv')
-    outputs['excluded_missing_both'] = str(EXPORTS / f'{run_name}-excluded-missing-both.csv')
-    outputs['contact_lists_summary'] = str(EXPORTS / f'{run_name}-contact-lists-summary.json')
+    outputs['master'] = str(master_path)
+    outputs['master_summary'] = str(EXPORTS / f'{run_name}-master-summary.json')
     return outputs
 
 

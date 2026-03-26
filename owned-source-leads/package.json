@@ -10,8 +10,10 @@
     "db:init:neon": "node scripts/init-neon.mjs",
     "prospects:validate": "python3 scripts/validate_prospect_csv.py",
     "prospects:enrich": "python3 scripts/enrich_contact_fields.py",
-    "prospects:export-lists": "python3 scripts/export_contact_lists.py",
-    "prospects:pipeline": "python3 scripts/prospect_pipeline.py"
+    "prospects:export-master": "python3 scripts/export_master_csv.py",
+    "prospects:pipeline": "python3 scripts/prospect_pipeline.py",
+    "prospects:discover": "python3 scripts/run_multi_source_discovery.py",
+    "prospects:discover:roofing": "python3 scripts/build_roofing_source_v2.py"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",
