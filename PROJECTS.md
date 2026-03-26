@@ -18,8 +18,37 @@ This is the canonical project index for fast recovery after resets, daemon issue
 
 ## Active projects
 
-### 1) RIZZ MAXX
+### 0) Owned-Source Hot Lead Generation System
 - **Status:** ACTIVE / CURRENT PRIMARY FOCUS
+- **Type:** Lead generation system / landing-page and qualification platform
+- **Path:** `/Users/moey/.openclaw/workspace/owned-source-leads`
+- **Purpose:** Generate owned-source hot leads for direct sale to Merchant Cash Advance buyers and Debt Settlement buyers through controlled landing pages, quizzes, calculators, intake forms, attribution, scoring, proof, and buyer-ready exports
+- **Current state:**
+  - Phase 1 strategy/foundation docs now exist
+  - owned-source strategy is defined
+  - MCA inbound engine is defined
+  - MCA prospecting engine is defined
+  - Debt inbound engine is defined
+  - data schema, scoring logic, buyer-readiness spec, dashboard wireframe, and operator workflow are defined
+- **Next step:** build the remaining Phase 1/2 docs, then implement datastore, attribution, scoring, dashboard, and first MCA inbound pages
+- **Key docs:**
+  - `owned-source-leads/docs/system-overview.md`
+  - `owned-source-leads/docs/owned-source-strategy.md`
+  - `owned-source-leads/docs/mca-inbound-engine.md`
+  - `owned-source-leads/docs/mca-prospecting-engine.md`
+  - `owned-source-leads/docs/debt-inbound-engine.md`
+  - `owned-source-leads/docs/data-schema.md`
+  - `owned-source-leads/docs/lead-scoring.md`
+  - `owned-source-leads/docs/buyer-readiness-spec.md`
+  - `owned-source-leads/docs/dashboard-wireframe-01.md`
+  - `owned-source-leads/docs/operator-workflow.md`
+- **Risks / blockers:**
+  - debt inbound requires conservative consent/disclosure handling and clean compliance posture
+  - prospecting quality can drift if review and dedupe rules are weak
+  - owned inbound must remain the priority over generic scraping
+
+### 1) RIZZ MAXX
+- **Status:** ACTIVE / BACKGROUND AFTER FOCUS SWITCH
 - **Type:** Mobile app
 - **Path:** `/Users/moey/.openclaw/workspace/rizz-maxx`
 - **Purpose:** AI-powered dating profile optimizer that ranks photos, identifies weak images, and gives actionable recommendations to improve dating profile performance
