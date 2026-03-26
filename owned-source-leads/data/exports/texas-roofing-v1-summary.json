@@ -1,0 +1,20 @@
+{
+  "input": "/Users/moey/.openclaw/workspace/owned-source-leads/data/staging/texas-roofing-v1-validation-input.csv",
+  "output": "/Users/moey/.openclaw/workspace/owned-source-leads/data/exports/texas-roofing-v1-scored.csv",
+  "total_rows": 500,
+  "status_counts": {
+    "review": 294,
+    "pass": 194,
+    "fail": 12
+  },
+  "reason_counts": {
+    "missing_contact_page": 68,
+    "missing_email": 274,
+    "notes_review": 45,
+    "notes_hard_fail": 9,
+    "missing_phone": 35,
+    "bad_phone": 1,
+    "bad_email": 1,
+    "domain_status:parked": 1
+  }
+}

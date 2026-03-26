@@ -35,3 +35,40 @@ This project defines a functionality-first, loop-free system for generating hot 
 1. verify MCA prospecting flow end-to-end
 2. add normalization/dedupe review actions
 3. build buyer routing/export layer
+
+## Prospect data pipeline
+Use the validator first, then the staged pipeline.
+
+### Validate an existing CSV
+```bash
+npm run prospects:validate -- \
+  --input data/texas-roofing-prospects-v1.csv \
+  --output data/exports/texas-roofing-prospects-v1-scored.csv \
+  --summary data/exports/texas-roofing-prospects-v1-summary.json
+```
+
+This adds:
+- `record_status` = `pass|review|fail`
+- `failure_reasons`
+- `quality_score`
+- `has_valid_phone`
+- `has_valid_email`
+- `has_contact_page`
+- `domain_status`
+
+### Run the resumable staged pipeline
+```bash
+npm run prospects:pipeline -- \
+  --input data/texas-roofing-prospects-v1.csv \
+  --run-name texas-roofing-v1
+```
+
+This writes:
+- `data/staging/discovered.ndjson`
+- `data/staging/canonical.ndjson`
+- `data/staging/enriched.ndjson`
+- `data/exports/<run>-scored.csv`
+- `data/exports/<run>-pass.csv`
+- `data/exports/<run>-review.csv`
+- `data/exports/<run>-fail.csv`
+- `data/exports/<run>-manifest.json`

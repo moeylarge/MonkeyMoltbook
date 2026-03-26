@@ -1,0 +1,20 @@
+{
+  "run_name": "texas-roofing-v1",
+  "created_at": "2026-03-26T22:26:32.940243+00:00",
+  "staging": {
+    "discovered": "/Users/moey/.openclaw/workspace/owned-source-leads/data/staging/discovered.ndjson",
+    "canonicalized": "/Users/moey/.openclaw/workspace/owned-source-leads/data/staging/canonical.ndjson",
+    "enriched": "/Users/moey/.openclaw/workspace/owned-source-leads/data/staging/enriched.ndjson"
+  },
+  "counts": {
+    "discovered": 500,
+    "canonicalized": 500,
+    "enriched": 500
+  },
+  "summary": "/Users/moey/.openclaw/workspace/owned-source-leads/data/exports/texas-roofing-v1-summary.json",
+  "exports": {
+    "pass": "/Users/moey/.openclaw/workspace/owned-source-leads/data/exports/texas-roofing-v1-pass.csv",
+    "review": "/Users/moey/.openclaw/workspace/owned-source-leads/data/exports/texas-roofing-v1-review.csv",
+    "fail": "/Users/moey/.openclaw/workspace/owned-source-leads/data/exports/texas-roofing-v1-fail.csv"
+  }
+}
