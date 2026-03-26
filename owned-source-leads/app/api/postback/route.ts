@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { recordConversion } from '@/lib/db';
+import { recordConversion } from '@/lib/db.runtime';
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const result = recordConversion({
+  const result = await recordConversion({
     buyerId: String(body.buyer_id || ''),
     subId: String(body.sub_id || ''),
     eventType: String(body.event_type || 'conversion'),

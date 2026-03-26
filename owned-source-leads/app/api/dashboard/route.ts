@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getDashboardMetrics } from '@/lib/db';
+import { getDashboardMetrics } from '@/lib/db.runtime';
 
 export async function GET() {
-  return NextResponse.json(getDashboardMetrics());
+  return NextResponse.json(await getDashboardMetrics());
 }

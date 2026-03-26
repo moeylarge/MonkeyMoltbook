@@ -1,8 +1,8 @@
-import { getLeadDetail } from '@/lib/db';
+import { getLeadDetail } from '@/lib/db.runtime';
 
 export default async function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const detail = getLeadDetail(Number(id));
+  const detail = await getLeadDetail(Number(id));
   if (!detail) return <div className="panel">Lead not found.</div>;
 
   return (

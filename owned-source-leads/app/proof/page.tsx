@@ -1,12 +1,12 @@
-import { getDashboardMetrics, getLeadDetail } from '@/lib/db';
+import { getDashboardMetrics, getLeadDetail } from '@/lib/db.runtime';
 import { getExportReadyLeads } from '@/lib/export';
 
-export default function ProofPage() {
-  const dashboard = getDashboardMetrics();
-  const lead3 = getLeadDetail(3);
-  const lead4 = getLeadDetail(4);
-  const lead6 = getLeadDetail(6);
-  const exportReady = getExportReadyLeads();
+export default async function ProofPage() {
+  const dashboard = await getDashboardMetrics();
+  const lead3 = await getLeadDetail(3);
+  const lead4 = await getLeadDetail(4);
+  const lead6 = await getLeadDetail(6);
+  const exportReady = await getExportReadyLeads();
 
   return (
     <div className="grid">

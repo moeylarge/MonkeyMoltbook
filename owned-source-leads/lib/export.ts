@@ -1,8 +1,8 @@
-import { listLeads } from './db';
+import { listLeads } from './db.runtime';
 
-export function getExportReadyLeads() {
-  const leads = listLeads();
-  return (leads as any[]).filter((lead) => lead.export_ready === 1);
+export async function getExportReadyLeads() {
+  const leads = await listLeads();
+  return (leads as any[]).filter((lead) => Number(lead.export_ready) === 1);
 }
 
 export function toBuyerReadyRecord(lead: any) {

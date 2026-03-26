@@ -12,7 +12,7 @@ export async function submitMcaLead(formData: FormData) {
   const utmCampaign = String(formData.get('utmCampaign') || 'mca-inbound');
 
   const fields = Object.fromEntries(Array.from(formData.entries()).map(([k, v]) => [k, String(v)]));
-  const leadId = createInboundLead({
+  const leadId = await createInboundLead({
     vertical: 'mca',
     sourceType: 'qualification_form',
     exactSourceDetail: pageUrl,
@@ -28,4 +28,5 @@ export async function submitMcaLead(formData: FormData) {
   });
 
   redirect(`/leads/${leadId}`);
+}
 }

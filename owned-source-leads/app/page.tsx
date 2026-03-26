@@ -1,8 +1,8 @@
 import Link from 'next/link';
-import { getDashboardMetrics } from '@/lib/db';
+import { getDashboardMetrics } from '@/lib/db.runtime';
 
-export default function DashboardPage() {
-  const { metrics, lastInboundSubmissionTime, lastCollectionTime, byPage, queue } = getDashboardMetrics();
+export default async function DashboardPage() {
+  const { metrics, lastInboundSubmissionTime, lastCollectionTime, byPage, queue } = await getDashboardMetrics();
   const cards = [
     ['New Leads Today', metrics.newLeadsToday ?? 0],
     ['Hot Leads Today', metrics.hotLeadsToday ?? 0],

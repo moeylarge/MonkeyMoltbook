@@ -1,7 +1,7 @@
 import { getExportReadyLeads, toBuyerReadyRecord } from '@/lib/export';
 
-export default function ExportPage() {
-  const leads = getExportReadyLeads().map(toBuyerReadyRecord);
+export default async function ExportPage() {
+  const leads = (await getExportReadyLeads()).map(toBuyerReadyRecord);
   return (
     <div className="panel">
       <div className="h2">Buyer-Ready Export View</div>

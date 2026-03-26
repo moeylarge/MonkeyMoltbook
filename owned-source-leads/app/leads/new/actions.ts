@@ -1,7 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { createInboundLead } from '@/lib/db';
+import { createInboundLead } from '@/lib/db.runtime';
 
 export async function submitTestLead(formData: FormData) {
   const vertical = String(formData.get('vertical')) as 'mca' | 'debt';

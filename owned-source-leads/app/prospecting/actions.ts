@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { createMcaProspect } from '@/lib/db';
 
 export async function submitProspect(formData: FormData) {
-  const leadId = createMcaProspect({
+  const leadId = await createMcaProspect({
     business_name: String(formData.get('business_name') || ''),
     website: String(formData.get('website') || ''),
     public_phone: String(formData.get('public_phone') || ''),
@@ -19,4 +19,5 @@ export async function submitProspect(formData: FormData) {
   });
 
   redirect(`/leads/${leadId}`);
+}
 }

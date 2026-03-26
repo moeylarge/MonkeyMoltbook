@@ -12,7 +12,7 @@ export async function submitDebtLead(formData: FormData) {
   const utmCampaign = String(formData.get('utmCampaign') || landingPageSlug);
 
   const fields = Object.fromEntries(Array.from(formData.entries()).map(([k, v]) => [k, String(v)]));
-  const leadId = createInboundLead({
+  const leadId = await createInboundLead({
     vertical: 'debt',
     sourceType: fields.calculator_completed === 'yes' ? 'calculator' : 'assessment_form',
     exactSourceDetail: pageUrl,
@@ -28,4 +28,5 @@ export async function submitDebtLead(formData: FormData) {
   });
 
   redirect(`/leads/${leadId}`);
+}
 }

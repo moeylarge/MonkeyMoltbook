@@ -1,9 +1,9 @@
-import { listLeads } from '@/lib/db';
+import { listLeads } from '@/lib/db.runtime';
 import { buyerProfiles } from '@/lib/buyers';
 import { routeLeadAction } from './actions';
 
-export default function RoutingPage() {
-  const leads = (listLeads() as any[]).slice(0, 20);
+export default async function RoutingPage() {
+  const leads = (await listLeads() as any[]).slice(0, 20);
   return (
     <div className="panel">
       <div className="h2">Buyer Routing</div>

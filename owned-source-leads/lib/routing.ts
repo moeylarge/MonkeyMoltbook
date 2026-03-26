@@ -22,7 +22,7 @@ export function routeLeadToBuyer(leadId: number, buyerId: string) {
   const subId = buildSubId(leadId, buyerId);
   const trackedUrl = buildTrackedUrl(buyer.destination_url, buyer.aff_id, subId);
 
-  routeLeadToBuyerDb({
+  await routeLeadToBuyerDb({
     leadId,
     buyerId: buyer.id,
     buyerName: buyer.name,
@@ -41,4 +41,5 @@ export function routeLeadToBuyer(leadId: number, buyerId: string) {
     subId,
     trackedUrl,
   };
+}
 }
