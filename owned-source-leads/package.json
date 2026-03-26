@@ -6,9 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:init:neon": "node scripts/init-neon.mjs"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
     "better-sqlite3": "^11.8.1",
     "next": "15.2.2",
     "react": "19.0.0",
