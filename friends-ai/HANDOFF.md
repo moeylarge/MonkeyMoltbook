@@ -66,7 +66,19 @@ Read these first:
   - `FAL_MON_REQUEST_V1.sh`
 
 ## Correct next step
-The live stack is verified, but the project should no longer default to open-ended rebuild work. It is now in pilot-finish mode.
+The live stack is verified, and the first lean finish export now exists. The project should stay in pilot-finish mode and avoid reopening broad rebuild work.
+
+New finish-cut checkpoint:
+- audited usable assets for Shots 01, 02, 04, 05, 06, optional 07, and 08 in `friends-ai/FINISH_CUT_AUDIT_2026-03-25.md`
+- wrote lean assembler config: `friends-ai/assembler/config/not-a-couple-v3-restructured-finish.json`
+- exported updated cut: `friends-ai/assembler/output/not-a-couple-v3-restructured-finish.mp4`
+- build artifacts + subtitles: `friends-ai/assembler/build/not-a-couple-v3-restructured-finish/`
+- actual cut path used: Shot 01 -> Shot 02 -> Shot 04 -> Shot 05 -> Shot 06 -> Shot 08
+- Shot 03 omitted intentionally
+- Shot 07 omitted intentionally in the first export
+- Shot 08 used as locked still, not motion
+- export uses temp `say` voices and generated room tone so the assembly can be judged immediately without new paid work
+
 
 Active stack:
 - Fal = stills / identity lock
