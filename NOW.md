@@ -1,4 +1,4 @@
-Updated: 2026-03-25 America/Los_Angeles
+Updated: 2026-03-26 America/Los_Angeles
 
 ## Current active focus
 
@@ -6,11 +6,12 @@ Updated: 2026-03-25 America/Los_Angeles
 
 ## Resume point
 
-This is now the top-priority build.
+This is still the top-priority build.
 
 Execution mode for this project is:
 - owned-source hot lead generation first
 - functionality before design
+- production verification before expansion
 - inbound pages first
 - loop-free module locking after verification
 - no vague theory and no random scraping drift
@@ -18,33 +19,18 @@ Execution mode for this project is:
 ## Current truth
 
 - project path: `/Users/moey/.openclaw/workspace/owned-source-leads`
-- Phase 1 core strategy docs now exist
-- owned-source strategy is defined
-- exact engine split is defined:
-  - MCA owned inbound
-  - MCA public-data prospecting
-  - Debt owned inbound
-- data schema is defined
-- scoring logic is defined
-- buyer-readiness spec is defined
-- first dashboard wireframe exists
-- first operator workflow exists
+- app is live on Vercel at `https://owned-source-leads-6.vercel.app`
+- local production build passes on Next.js 16.2.1
+- lead detail page is no longer the blocking issue from last night
+- postback flow has been verified end to end against production
+- project-local handoff now exists at `owned-source-leads/HANDOFF.md`
 
 ## Current next steps
 
-1. create remaining required docs:
-   - `deduplication-rules.md`
-   - `page-template-system.md`
-   - `funnel-map.md`
-   - `compliance-notes.md`
-   - `verification-checklist.md`
-2. build datastore
-3. build attribution layer
-4. build scoring layer
-5. build dashboard
-6. build lead detail view
-7. build export-ready structure
-8. build first MCA landing pages and qualification flow
+1. run traffic/testing/polish pass across the live app
+2. verify test intake and debt consent behavior on production
+3. tighten buyer integration if real buyer requirements are ready
+4. continue landing-page and traffic-readiness expansion from the verified production base
 
 ## Guardrails
 
