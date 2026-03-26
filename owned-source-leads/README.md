@@ -56,6 +56,20 @@ This adds:
 - `has_contact_page`
 - `domain_status`
 
+### Export the 3 non-overlapping contact lists
+```bash
+npm run prospects:export-lists -- \
+  --input data/exports/texas-roofing-prospects-v1-scored.csv \
+  --out-dir data/exports \
+  --prefix texas-roofing-prospects-v1
+```
+
+Rules:
+- `master.csv` = rows with both phone + email
+- `phone-only.csv` = rows with phone and missing email
+- `email-only.csv` = rows with email and missing phone
+- `excluded-missing-both.csv` = rows missing both phone and email
+
 ### Run the resumable staged pipeline
 ```bash
 npm run prospects:pipeline -- \

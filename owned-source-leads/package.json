@@ -9,6 +9,7 @@
     "lint": "next lint",
     "db:init:neon": "node scripts/init-neon.mjs",
     "prospects:validate": "python3 scripts/validate_prospect_csv.py",
+    "prospects:export-lists": "python3 scripts/export_contact_lists.py",
     "prospects:pipeline": "python3 scripts/prospect_pipeline.py"
   },
   "dependencies": {

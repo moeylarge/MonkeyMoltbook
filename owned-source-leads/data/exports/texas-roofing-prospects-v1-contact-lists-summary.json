@@ -1,0 +1,13 @@
+{
+  "input": "data/exports/texas-roofing-prospects-v1-scored.csv",
+  "master_count": 211,
+  "phone_only_count": 249,
+  "email_only_count": 4,
+  "excluded_missing_both_count": 36,
+  "outputs": {
+    "master": "data/exports/texas-roofing-prospects-v1-master.csv",
+    "phone_only": "data/exports/texas-roofing-prospects-v1-phone-only.csv",
+    "email_only": "data/exports/texas-roofing-prospects-v1-email-only.csv",
+    "excluded_missing_both": "data/exports/texas-roofing-prospects-v1-excluded-missing-both.csv"
+  }
+}
