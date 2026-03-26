@@ -1,6 +1,20 @@
 # FRIENDS AI
 ## PROMPT PACK V1
 
+> [!WARNING]
+> **DEPRECATED / SUPERSEDED FOR LIVE PRODUCTION**
+>
+> This file is no longer the authoritative production prompt for Friends AI.
+> It has been superseded by `friends-ai/PRODUCTION_PROMPT_AUTHORITY_V2.md`.
+>
+> Why it was superseded:
+> - this V1 doc encourages broad prompt-pack / batch / full-episode style execution
+> - the project now requires loop-safe, stage-gated production
+> - production must run preproduction first, then look-lock, then stills, then motion, then editorial
+> - production must stop after each stage for explicit approval unless told otherwise
+>
+> You may still reuse wording fragments from this file, but do **not** use it as the operating authority for current production runs.
+
 This document turns the locked concept docs into practical generation prompts for character design, set creation, continuity control, and pilot-shot production.
 
 Use this as the production bridge between:

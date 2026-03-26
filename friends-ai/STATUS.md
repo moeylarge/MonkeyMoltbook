@@ -7,7 +7,7 @@ Friends AI
 Create a warm, cozy, ensemble comfort sitcom around six original animal-coded characters, a café called Central Peak, and two across-the-hall apartments, starting with a 4-minute pilot proof of concept.
 
 ## Current phase
-Pilot-finish mode.
+Pilot-finish mode under stage-gated production authority.
 
 ## Current verified status
 Latest finish-cut assembly update:
@@ -147,6 +147,11 @@ Completed across the latest Mon + Chance rebuild pass:
 
 ## Immediate next action
 The first concrete lean finish export now exists. Next move is narrow: review the exported cut and decide whether it is ready to keep as the baseline proof cut or whether one editorial-only revision is needed.
+
+Production prompt authority:
+- authoritative file: `friends-ai/PRODUCTION_PROMPT_AUTHORITY_V2.md`
+- deprecated live-production file: `friends-ai/PROMPT_PACK_V1.md`
+- operating rule: preproduction first, look-lock before motion, one shot/stage at a time, explicit PASS/REJECT/HOLD gates, no silent retries, no tool switching mid-stage, stop after each stage unless explicitly told to continue
 
 1. Review `friends-ai/assembler/output/not-a-couple-v3-restructured-finish.mp4`
 2. Keep Shot 03 closed unless the finish review proves an unavoidable story gap

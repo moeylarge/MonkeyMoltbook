@@ -26,17 +26,18 @@ Read these first:
 3. `friends-ai/PRODUCTION_BEAT_SHEET_NOT_A_COUPLE.md`
 4. `friends-ai/CAST_BIBLE.md`
 5. `friends-ai/VISUAL_STYLE_GUIDE.md`
-6. `friends-ai/PROMPT_PACK_V1.md`
-7. `friends-ai/IDENTITY_LOCK_BATCH.md`
-8. `friends-ai/DRIFT_REVIEW_FRAMEWORK.md`
-9. `friends-ai/PRODUCTION_STACK_MAP_V1.md`
-10. `friends-ai/TOOL_DECISION_MATRIX.md`
-11. `friends-ai/API_ACCESS_TRACKER.md`
-12. `friends-ai/IDENTITY_LOCK_RUNBOOK.md`
-13. `friends-ai/FAL_IDENTITY_LOCK_MON_V1.md`
-14. `friends-ai/FAL_IDENTITY_LOCK_CHANCE_V1.md`
-15. `friends-ai/FAL_MON_REQUEST_V1.md`
-16. `friends-ai/FAL_MON_REQUEST_V1.sh`
+6. `friends-ai/PRODUCTION_PROMPT_AUTHORITY_V2.md` (**authoritative production prompt**)
+7. `friends-ai/PROMPT_PACK_V1.md` (**deprecated / superseded for live production**)
+8. `friends-ai/IDENTITY_LOCK_BATCH.md`
+9. `friends-ai/DRIFT_REVIEW_FRAMEWORK.md`
+10. `friends-ai/PRODUCTION_STACK_MAP_V1.md`
+11. `friends-ai/TOOL_DECISION_MATRIX.md`
+12. `friends-ai/API_ACCESS_TRACKER.md`
+13. `friends-ai/IDENTITY_LOCK_RUNBOOK.md`
+14. `friends-ai/FAL_IDENTITY_LOCK_MON_V1.md`
+15. `friends-ai/FAL_IDENTITY_LOCK_CHANCE_V1.md`
+16. `friends-ai/FAL_MON_REQUEST_V1.md`
+17. `friends-ai/FAL_MON_REQUEST_V1.sh`
 
 ## What was completed
 - master concept architecture written down
@@ -45,6 +46,7 @@ Read these first:
 - cast bible written
 - visual style guide written
 - `PROMPT_PACK_V1.md` written
+- `PRODUCTION_PROMPT_AUTHORITY_V2.md` written as the new single trusted loop-safe production authority
 - `IDENTITY_LOCK_BATCH.md` written
 - `DRIFT_REVIEW_FRAMEWORK.md` written
 - `PRODUCTION_STACK_MAP_V1.md` written
@@ -163,6 +165,13 @@ Recommended order:
 
 ## Resume line
 If resuming after a reset: do **not** re-brainstorm the series from scratch and do **not** keep extending the old 9-shot cut. Read the pilot quality docs first, then move directly into the Mon + Chance hero-lock package in `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/`.
+cozy, and emotionally readable
+- preserve consistent geography for Central Peak, 2A, 2B, and hallway
+
+## Resume line
+If resuming after a reset: do **not** re-brainstorm the series from scratch. Read the docs above and move directly into the Fal identity-lock flow starting with the Mon request script.
+arting with the Mon request script.
+Chance hero-lock package in `friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/`.
 cozy, and emotionally readable
 - preserve consistent geography for Central Peak, 2A, 2B, and hallway
 
