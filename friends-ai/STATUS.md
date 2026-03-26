@@ -23,6 +23,17 @@ Latest finish-cut assembly update:
 - Shot 08 motion remains closed / unused
 - exported runtime is ~41.2s with temp `say` voices and generated room tone
 
+Constrained polish pass after review:
+- polish config written at `friends-ai/assembler/config/not-a-couple-v3-restructured-finish-polish1.json`
+- polished export written at `friends-ai/assembler/output/not-a-couple-v3-restructured-finish-polish1.mp4`
+- polished build artifacts written under `friends-ai/assembler/build/not-a-couple-v3-restructured-finish-polish1/`
+- polished subtitles written at `friends-ai/assembler/build/not-a-couple-v3-restructured-finish-polish1/not-a-couple-v3-restructured-finish-polish1.srt`
+- supporting cleaned still written at `friends-ai/assembler/polish-assets/2026-03-25/05-russ-rachelle-upload-brandclean-v3.jpg`
+- Shot 05 now uses a cleaned still instead of the old motion clip, reducing visible character drift and suppressing the readable off-brand café mark in that beat
+- Shot 04 keeper motion and Shot 06 motion stay in place as the strongest current existing options
+- Shot 08 stays on the locked clean still, with the ending hold tightened modestly rather than reopening generation
+- polished runtime after auto-retime is ~44.5s with temp `say` voices and generated room tone
+
 Completed across the latest Mon + Chance rebuild pass:
 - title direction locked as working title `Friends AI`
 - world geometry locked

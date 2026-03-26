@@ -78,6 +78,12 @@ New finish-cut checkpoint:
 - Shot 07 omitted intentionally in the first export
 - Shot 08 used as locked still, not motion
 - export uses temp `say` voices and generated room tone so the assembly can be judged immediately without new paid work
+- one constrained polish pass was then completed without reopening structure:
+  - wrote polish config: `friends-ai/assembler/config/not-a-couple-v3-restructured-finish-polish1.json`
+  - wrote cleaned support still for Shot 05: `friends-ai/assembler/polish-assets/2026-03-25/05-russ-rachelle-upload-brandclean-v3.jpg`
+  - exported polished cut: `friends-ai/assembler/output/not-a-couple-v3-restructured-finish-polish1.mp4`
+  - build artifacts + subtitles: `friends-ai/assembler/build/not-a-couple-v3-restructured-finish-polish1/`
+  - constrained changes only: replaced Shot 05 motion with a cleaner still to reduce drift and hide the readable off-brand café mark, kept Shot 04 + Shot 06 motion as-is, and tightened the final Shot 08 hold without reopening generation
 
 
 Active stack:

@@ -1,0 +1,13 @@
+{
+  "episode": "not-a-couple-v3-restructured-finish-polish1",
+  "output": "/Users/moey/.openclaw/workspace/friends-ai/assembler/output/not-a-couple-v3-restructured-finish-polish1.mp4",
+  "video_only": "/Users/moey/.openclaw/workspace/friends-ai/assembler/build/not-a-couple-v3-restructured-finish-polish1/not-a-couple-v3-restructured-finish-polish1-video-only.mp4",
+  "mixed_audio": "/Users/moey/.openclaw/workspace/friends-ai/assembler/build/not-a-couple-v3-restructured-finish-polish1/not-a-couple-v3-restructured-finish-polish1-mix.wav",
+  "subtitles": "/Users/moey/.openclaw/workspace/friends-ai/assembler/build/not-a-couple-v3-restructured-finish-polish1/not-a-couple-v3-restructured-finish-polish1.srt",
+  "tts": true,
+  "voice_provider": "say",
+  "auto_retime": true,
+  "burn_subtitles_requested": true,
+  "burn_subtitles_succeeded": false,
+  "voice_map": "friends-ai/assembler/config/voice-map-v2-picked.json"
+}

@@ -50,6 +50,18 @@
 - voice mode: macOS `say` temp voices via `friends-ai/assembler/config/voice-map-v2-picked.json`
 - runtime: ~41.2s
 
+## Constrained polish pass assembled
+- config: `friends-ai/assembler/config/not-a-couple-v3-restructured-finish-polish1.json`
+- output mp4: `friends-ai/assembler/output/not-a-couple-v3-restructured-finish-polish1.mp4`
+- build dir: `friends-ai/assembler/build/not-a-couple-v3-restructured-finish-polish1/`
+- subtitles: `friends-ai/assembler/build/not-a-couple-v3-restructured-finish-polish1/not-a-couple-v3-restructured-finish-polish1.srt`
+- supporting cleaned still written at `friends-ai/assembler/polish-assets/2026-03-25/05-russ-rachelle-upload-brandclean-v3.jpg`
+- editorial changes only:
+  - replaced Shot 05 motion with a brand-clean still to reduce drift and avoid the readable off-brand café mark
+  - kept Shot 04 and Shot 06 motion as the strongest usable existing motion beats
+  - kept the locked Shot 08 still, but shortened the ending hold modestly rather than reopening generation
+- runtime after auto-retime: ~44.5s
+
 ## Shot usage decision
 Used:
 - 01 opener still

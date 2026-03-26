@@ -1,0 +1,118 @@
+{
+  "slug": "not-a-couple-v3-restructured-finish-polish1",
+  "notes": "Constrained polish pass: replace weaker Russ/Rachelle motion with brand-clean still, keep stronger Mon/Chance and Jojo/Fufu motion, and tighten final held group button.",
+  "ambience": {
+    "mode": "generated-room-tone",
+    "volume": 0.018
+  },
+  "shots": [
+    {
+      "id": "01-central-peak-establish",
+      "type": "image",
+      "source": "/Users/moey/.openclaw/workspace/friends-ai-pilot-assets/upload-ready/01-central-peak-master-upload.jpg",
+      "duration": 2.8,
+      "zoom": "micro-in"
+    },
+    {
+      "id": "02-couples-night-sign",
+      "type": "image",
+      "source": "/Users/moey/.openclaw/workspace/friends-ai-pilot-assets/upload-ready/02-couples-night-sign-upload.jpg",
+      "duration": 2.6,
+      "zoom": "micro-in"
+    },
+    {
+      "id": "04-mon-chance",
+      "type": "video",
+      "source": "/Users/moey/.openclaw/workspace/friends-ai-pilot-assets/quality-rebuild/mon-chance-hero-lock/motion-clips/2026-03-25/mon-chance-2026-03-25-motion-pass-3-kling-o1-reference.mp4",
+      "duration": 8.4
+    },
+    {
+      "id": "05-russ-rachelle",
+      "type": "image",
+      "source": "/Users/moey/.openclaw/workspace/friends-ai/assembler/polish-assets/2026-03-25/05-russ-rachelle-upload-brandclean-v3.jpg",
+      "duration": 8.4,
+      "zoom": "micro-in"
+    },
+    {
+      "id": "06-jojo-fufu",
+      "type": "video",
+      "source": "/Users/moey/.openclaw/workspace/friends-ai-pilot-assets/motion-clips/06-jojo-fufu-motion.mp4",
+      "duration": 6.8
+    },
+    {
+      "id": "08-final-spiral-button",
+      "type": "image",
+      "source": "/Users/moey/.openclaw/workspace/friends-ai-pilot-assets/quality-rebuild/shot-08-final-spiral-button/outputs/2026-03-25/shot-08-final-spiral-2026-03-25-direct-pass-2-strongclean-v2.png",
+      "duration": 10.8,
+      "zoom": "micro-in"
+    }
+  ],
+  "dialogue": [
+    {
+      "character": "Jojo",
+      "shot_id": "02-couples-night-sign",
+      "text": "Couples Night?",
+      "start": 3.25
+    },
+    {
+      "character": "Chance",
+      "shot_id": "04-mon-chance",
+      "text": "You look tense for someone who's definitely not part of a couple.",
+      "start": 5.85
+    },
+    {
+      "character": "Mon",
+      "shot_id": "04-mon-chance",
+      "text": "I'm tense because your face is doing that.",
+      "start": 10.15
+    },
+    {
+      "character": "Russ",
+      "shot_id": "05-russ-rachelle",
+      "text": "Just so we're all being normal, I'd like to say this sign is weirdly aggressive.",
+      "start": 14.25
+    },
+    {
+      "character": "Rachelle",
+      "shot_id": "05-russ-rachelle",
+      "text": "You say that like it personally invited you.",
+      "start": 19.62
+    },
+    {
+      "character": "Fufu",
+      "shot_id": "06-jojo-fufu",
+      "text": "I can name two couples and one cover-up right now.",
+      "start": 22.65
+    },
+    {
+      "character": "Jojo",
+      "shot_id": "06-jojo-fufu",
+      "text": "Why is that worse than if you named three couples?",
+      "start": 25.60
+    },
+    {
+      "character": "Fufu",
+      "shot_id": "08-final-spiral-button",
+      "text": "I'm just saying some people got tense very quickly.",
+      "start": 29.35
+    },
+    {
+      "character": "Russ",
+      "shot_id": "08-final-spiral-button",
+      "text": "That could mean anything.",
+      "start": 32.37
+    },
+    {
+      "character": "Rachelle",
+      "shot_id": "08-final-spiral-button",
+      "text": "It somehow didn't.",
+      "start": 34.38
+    },
+    {
+      "character": "Chance",
+      "shot_id": "08-final-spiral-button",
+      "text": "Relax. If anyone asks, I'll claim Mon for the discount.",
+      "start": 36.34
+    }
+  ]
+}
