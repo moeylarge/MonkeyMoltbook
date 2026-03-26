@@ -4,26 +4,29 @@ This project defines a functionality-first, loop-free system for generating hot 
 - Merchant Cash Advance buyers
 - Debt Settlement buyers
 
-## Phase 1 artifacts created
-- docs/system-overview.md
-- docs/owned-source-strategy.md
-- docs/mca-inbound-engine.md
-- docs/mca-prospecting-engine.md
-- docs/debt-inbound-engine.md
-- docs/data-schema.md
-- docs/lead-scoring.md
-- docs/buyer-readiness-spec.md
-- docs/operator-workflow.md
-- docs/dashboard-wireframe-01.md
+## Current state
+- Phase 1 strategy docs completed
+- Phase 2 foundation built
+- Phase 3 MCA inbound pages started
+
+## Live foundation
+- SQLite datastore
+- attribution event storage
+- scoring layer
+- dashboard UI
+- lead detail view UI
+- test intake page
+- JSON API routes
+
+## First MCA pages
+- /merchant-cash-advance
+- /do-i-qualify-for-mca
+- /same-day-business-funding
+- /merchant-cash-advance-restaurants
+- /merchant-cash-advance-los-angeles
 
 ## Immediate next build order
-1. page template system
-2. funnel map
-3. deduplication rules
-4. compliance notes
-5. verification checklist
-6. datastore implementation
-7. attribution layer
-8. scoring layer
-9. dashboard implementation
-10. first MCA inbound pages
+1. verify MCA page form flow end-to-end
+2. add first 3 MCA niche/city pages beyond the initial cluster if needed
+3. tighten qualification scoring on real submissions
+4. move to debt inbound pages after MCA verification
