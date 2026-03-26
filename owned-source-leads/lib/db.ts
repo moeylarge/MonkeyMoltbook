@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import { scoreInboundLead } from './scoring';
+import { normalizePhone, scoreMcaProspect, type ProspectInput } from './prospecting';
 
 const dbPath = path.join(process.cwd(), 'data', 'leads.db');
 const db = new Database(dbPath);
@@ -180,6 +181,51 @@ export function createInboundLead(input: {
     return leadId;
   });
   return tx();
+}
+
+export function createMcaProspect(input: ProspectInput) {
+  const now = new Date().toISOString();
+  const score = scoreMcaProspect(input);
+  const exportReady = score.temperature === 'hot' ? 1 : 0;
+  const leadResult = db.prepare(`INSERT INTO leads (vertical, lead_type, source_type, exact_source_detail, status, score, temperature, hot_explanation, scoring_version, export_ready, buyer_readiness_status, created_at, updated_at)
+    VALUES ('mca', 'prospecting', 'public_business_source', @exactSourceDetail, 'new', @score, @temperature, @hotExplanation, 'v1', @exportReady, @buyerReadinessStatus, @createdAt, @updatedAt)`)
+    .run({
+      exactSourceDetail: input.source_url,
+      score: score.score,
+      temperature: score.temperature,
+      hotExplanation: score.explanation,
+      exportReady,
+      buyerReadinessStatus: exportReady ? 'ready' : 'review_required',
+      createdAt: now,
+      updatedAt: now,
+    });
+
+  const leadId = Number(leadResult.lastInsertRowid);
+  db.prepare(`INSERT INTO prospect_details (lead_id, business_name, website, public_phone, public_business_email, city, state, category, source_platform, source_url, contact_page_url, notes, normalized_domain, normalized_phone, last_verified_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+    .run(
+      leadId,
+      input.business_name,
+      input.website ?? '',
+      input.public_phone ?? '',
+      input.public_business_email ?? '',
+      input.city ?? '',
+      input.state ?? '',
+      input.category ?? '',
+      input.source_platform,
+      input.source_url,
+      input.contact_page_url ?? '',
+      input.notes ?? '',
+      score.normalized_domain,
+      normalizePhone(input.public_phone),
+      now,
+    );
+
+  db.prepare(`INSERT INTO scoring_snapshots (lead_id, vertical, lead_type, final_score, final_temperature, explanation_text, reasons_json, scored_at)
+    VALUES (?, 'mca', 'prospecting', ?, ?, ?, ?, ?)`)
+    .run(leadId, score.score, score.temperature, score.explanation, JSON.stringify(score.reasons), now);
+
+  return leadId;
 }
 
 export function getDashboardMetrics() {

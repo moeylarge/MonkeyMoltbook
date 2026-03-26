@@ -39,11 +39,26 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
 
       <div className="panel">
         <div className="h2">Collected Fields</div>
-        <div className="kv">
-          {detail.fields.map((field: any) => (
-            <><div key={`${field.field_key}-k`} className="label">{field.field_key}</div><div key={`${field.field_key}-v`}>{field.field_value}</div></>
-          ))}
-        </div>
+        {detail.prospect ? (
+          <div className="kv">
+            <div className="label">business_name</div><div>{detail.prospect.business_name}</div>
+            <div className="label">website</div><div>{detail.prospect.website}</div>
+            <div className="label">public_phone</div><div>{detail.prospect.public_phone}</div>
+            <div className="label">public_business_email</div><div>{detail.prospect.public_business_email}</div>
+            <div className="label">city</div><div>{detail.prospect.city}</div>
+            <div className="label">state</div><div>{detail.prospect.state}</div>
+            <div className="label">category</div><div>{detail.prospect.category}</div>
+            <div className="label">source_platform</div><div>{detail.prospect.source_platform}</div>
+            <div className="label">contact_page_url</div><div>{detail.prospect.contact_page_url}</div>
+            <div className="label">normalized_domain</div><div>{detail.prospect.normalized_domain}</div>
+          </div>
+        ) : (
+          <div className="kv">
+            {detail.fields.map((field: any) => (
+              <><div key={`${field.field_key}-k`} className="label">{field.field_key}</div><div key={`${field.field_key}-v`}>{field.field_value}</div></>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="row">

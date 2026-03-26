@@ -32,6 +32,6 @@ This project defines a functionality-first, loop-free system for generating hot 
 - /monthly-payment-pressure-calculator
 
 ## Immediate next build order
-1. verify debt page form flow end-to-end
-2. add remaining debt landing pages if needed
-3. move to MCA prospecting after debt verification
+1. verify MCA prospecting flow end-to-end
+2. add normalization/dedupe review actions
+3. build buyer routing/export layer
