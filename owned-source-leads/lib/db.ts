@@ -280,6 +280,27 @@ export function routeLeadToBuyer(input: {
   return true;
 }
 
+export function recordConversion(input: {
+  buyerId: string;
+  subId: string;
+  eventType: string;
+  payoutValue?: string;
+  rawPayload?: string;
+}) {
+  const now = new Date().toISOString();
+  const route = db.prepare('SELECT * FROM buyer_routes WHERE buyer_id = ? AND sub_id = ? ORDER BY routed_at DESC LIMIT 1').get(input.buyerId, input.subId) as any;
+  if (!route) return null;
+
+  db.prepare('UPDATE buyer_routes SET conversion_status = ?, conversion_value = ? WHERE id = ?')
+    .run('converted', input.payoutValue ?? '', route.id);
+
+  db.prepare(`INSERT INTO conversion_events (buyer_route_id, buyer_id, sub_id, event_type, payout_value, raw_payload, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)`)
+    .run(route.id, input.buyerId, input.subId, input.eventType, input.payoutValue ?? '', input.rawPayload ?? '', now);
+
+  return { routeId: route.id, leadId: route.lead_id };
+}
+
 export function getDashboardMetrics() {
   const today = new Date().toISOString().slice(0, 10);
   const metrics = db.prepare(`

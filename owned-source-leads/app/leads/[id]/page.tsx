@@ -85,12 +85,23 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
       <div className="panel">
         <div className="h2">Buyer Routes</div>
         {detail.routes?.length ? (
-          <table className="table"><thead><tr><th>Buyer</th><th>AFF ID</th><th>subID</th><th>Destination</th><th>Status</th></tr></thead><tbody>
+          <table className="table"><thead><tr><th>Buyer</th><th>AFF ID</th><th>subID</th><th>Destination</th><th>Status</th><th>Conversion</th></tr></thead><tbody>
             {detail.routes.map((route: any) => (
-              <tr key={route.id}><td>{route.buyer_name}</td><td>{route.aff_id}</td><td>{route.sub_id}</td><td>{route.destination_url}</td><td>{route.route_status}</td></tr>
+              <tr key={route.id}><td>{route.buyer_name}</td><td>{route.aff_id}</td><td>{route.sub_id}</td><td>{route.destination_url}</td><td>{route.route_status}</td><td>{route.conversion_status} {route.conversion_value ? `(${route.conversion_value})` : ''}</td></tr>
             ))}
           </tbody></table>
         ) : <div className="muted">No buyer route yet.</div>}
+      </div>
+
+      <div className="panel">
+        <div className="h2">Conversion Events</div>
+        {detail.conversions?.length ? (
+          <table className="table"><thead><tr><th>Event</th><th>Buyer</th><th>subID</th><th>Payout</th><th>Time</th></tr></thead><tbody>
+            {detail.conversions.map((event: any) => (
+              <tr key={event.id}><td>{event.event_type}</td><td>{event.buyer_id}</td><td>{event.sub_id}</td><td>{event.payout_value || '—'}</td><td>{event.created_at}</td></tr>
+            ))}
+          </tbody></table>
+        ) : <div className="muted">No conversion events yet.</div>}
       </div>
     </div>
   );
