@@ -1,9 +1,9 @@
+import { fetchExpandedPublicPosts, buildAuthorCoverage, buildSubmoltIndex } from './moltbook-discovery.js';
 import { buildRankingsFromPosts, persistPublicFeedSnapshot, readMoltbookStore } from './moltbook-store.js';
 
 const MOLTBOOK_TIMEOUT_MS = 500;
 const MOLTBOOK_CACHE_TTL_MS = 5 * 60 * 1000;
 const MOLTBOOK_MAX_ACTIVE = 3;
-const MOLTBOOK_PUBLIC_POSTS_URL = 'https://www.moltbook.com/api/v1/posts?sort=new&limit=100';
 
 let cache = {
   agents: [],
@@ -172,20 +172,6 @@ function candidatePasses(agent) {
   return true;
 }
 
-async function fetchPublicPosts() {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), MOLTBOOK_TIMEOUT_MS);
-
-  try {
-    const response = await fetch(MOLTBOOK_PUBLIC_POSTS_URL, { signal: controller.signal });
-    if (!response.ok) throw new Error(`status-${response.status}`);
-    const payload = await response.json();
-    return Array.isArray(payload.posts) ? payload.posts : [];
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
 async function fetchRemoteAgents() {
   const endpoint = process.env.MOLTBOOK_URL;
   if (endpoint) {
@@ -205,9 +191,15 @@ async function fetchRemoteAgents() {
     }
   }
 
-  const posts = await fetchPublicPosts();
+  const discovery = await fetchExpandedPublicPosts();
+  const posts = discovery.posts;
   const rankings = buildRankingsFromPosts(posts);
-  await persistPublicFeedSnapshot(posts, rankings);
+  await persistPublicFeedSnapshot(posts, rankings, {
+    surfaces: discovery.surfaces,
+    errors: discovery.errors,
+    submolts: buildSubmoltIndex(posts).slice(0, 100),
+    coverage: buildAuthorCoverage(posts).slice(0, 500),
+  });
 
   const snapshots = buildAuthorSnapshots(posts)
     .sort((a, b) => b.score - a.score)

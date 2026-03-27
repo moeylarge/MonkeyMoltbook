@@ -17,6 +17,12 @@ function defaultStore() {
     rankings: [],
     snapshots: [],
     authorHistory: {},
+    discovery: {
+      surfaces: [],
+      errors: [],
+      submolts: [],
+      coverage: [],
+    },
   };
 }
 
@@ -144,7 +150,7 @@ export function buildRankingsFromPosts(posts) {
     .sort((a, b) => b.fitScore - a.fitScore || b.signalScore - a.signalScore);
 }
 
-export async function persistPublicFeedSnapshot(posts, rankings) {
+export async function persistPublicFeedSnapshot(posts, rankings, discovery = null) {
   const store = await readMoltbookStore();
   const fetchedAt = new Date().toISOString();
 
@@ -233,6 +239,14 @@ export async function persistPublicFeedSnapshot(posts, rankings) {
     rankings: rankings.slice(0, 50),
     snapshots,
     authorHistory,
+    discovery: discovery
+      ? {
+          surfaces: discovery.surfaces || [],
+          errors: discovery.errors || [],
+          submolts: discovery.submolts || [],
+          coverage: discovery.coverage || [],
+        }
+      : store.discovery || defaultStore().discovery,
   };
 
   await writeMoltbookStore(next);

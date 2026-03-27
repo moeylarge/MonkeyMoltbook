@@ -67,11 +67,26 @@ app.get('/moltbook/report', async (_req, res) => {
       admitCount: authors.filter((row) => row.label === 'admit').length,
       watchCount: authors.filter((row) => row.label === 'watch').length,
       rejectCount: authors.filter((row) => row.label === 'reject').length,
+      discoverySurfaces: intel.discovery?.surfaces ?? [],
+      discoveredSubmolts: (intel.discovery?.submolts ?? []).length,
+      coveredAuthors: (intel.discovery?.coverage ?? []).length,
     },
     topSources: authors.filter((row) => row.label !== 'reject').sort((a, b) => b.fitScore - a.fitScore).slice(0, 25),
     admits: authors.filter((row) => row.label === 'admit').sort((a, b) => b.fitScore - a.fitScore),
     watch: authors.filter((row) => row.label === 'watch').sort((a, b) => b.fitScore - a.fitScore).slice(0, 50),
     rejects: authors.filter((row) => row.label === 'reject').sort((a, b) => b.weakHits - a.weakHits).slice(0, 50),
+  });
+});
+
+app.get('/moltbook/discovery', async (_req, res) => {
+  const intel = await getMoltbookIntel();
+  res.json({
+    phase: PHASE,
+    lastFetchedAt: intel.lastFetchedAt,
+    surfaces: intel.discovery?.surfaces ?? [],
+    errors: intel.discovery?.errors ?? [],
+    submolts: intel.discovery?.submolts ?? [],
+    coverage: intel.discovery?.coverage ?? [],
   });
 });
 
