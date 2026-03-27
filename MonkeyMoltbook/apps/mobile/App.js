@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Animated,
   PanResponder,
   Platform,
   Pressable,
   SafeAreaView,
+  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
@@ -31,7 +33,46 @@ const SESSION_LIMITS = {
   replies: 3
 };
 
+function SummaryPill({ label, value }) {
+  return (
+    <View style={styles.summaryPill}>
+      <Text style={styles.summaryLabel}>{label}</Text>
+      <Text style={styles.summaryValue}>{value}</Text>
+    </View>
+  );
+}
+
+function AccountCard({ item }) {
+  return (
+    <View style={styles.intelCard}>
+      <View style={styles.intelCardTop}>
+        <Text style={styles.intelTitle}>{item.authorName}</Text>
+        <Text style={[styles.badge, item.label === 'admit' ? styles.badgeAdmit : item.label === 'watch' ? styles.badgeWatch : styles.badgeReject]}>
+          {item.label?.toUpperCase()}
+        </Text>
+      </View>
+      <Text style={styles.intelBody}>{item.description || item.reason}</Text>
+      <Text style={styles.intelMeta}>Fit {item.fitScore} · Signal {Math.round(item.signalScore || 0)} · Posts {item.postCount} · Comments {item.totalComments}</Text>
+      <Text style={styles.intelReason}>{item.reason}</Text>
+    </View>
+  );
+}
+
+function SubmoltCard({ item }) {
+  return (
+    <View style={styles.intelCard}>
+      <View style={styles.intelCardTop}>
+        <Text style={styles.intelTitle}>{item.name}</Text>
+        <Text style={[styles.badge, styles.badgeNeutral]}>{item.postCount} posts</Text>
+      </View>
+      <Text style={styles.intelMeta}>Avg score {Math.round(item.avgScorePerPost || 0)} · Avg comments {Math.round(item.avgCommentsPerPost || 0)} · Authors {item.authors?.length || 0}</Text>
+      {!!item.sampleTitles?.length && <Text style={styles.intelBody}>Why it matters: {item.sampleTitles[0]}</Text>}
+    </View>
+  );
+}
+
 export default function App() {
+  const [mode, setMode] = useState('intel');
   const [agentName, setAgentName] = useState('Connecting...');
   const [hook, setHook] = useState('');
   const [responseText, setResponseText] = useState('');
@@ -42,6 +83,11 @@ export default function App() {
   const [isLoadingNext, setIsLoadingNext] = useState(false);
   const [queueDepth, setQueueDepth] = useState(0);
   const [gateVisible, setGateVisible] = useState(false);
+  const [intelLoading, setIntelLoading] = useState(false);
+  const [intelReport, setIntelReport] = useState(null);
+  const [intelDiscovery, setIntelDiscovery] = useState(null);
+  const [search, setSearch] = useState('');
+  const [accountFilter, setAccountFilter] = useState('all');
   const currentAgentIdRef = useRef('ego-destroyer');
   const wsUrl = useMemo(() => DEFAULT_WS_URL, []);
   const apiUrl = useMemo(() => DEFAULT_API_URL, []);
@@ -175,6 +221,36 @@ export default function App() {
     }
   };
 
+  const refreshIntel = async () => {
+    setIntelLoading(true);
+    try {
+      await fetch(`${apiUrl}/moltbook/refresh`, { method: 'POST' });
+      const [reportRes, discoveryRes] = await Promise.all([
+        fetch(`${apiUrl}/moltbook/report`),
+        fetch(`${apiUrl}/moltbook/discovery`)
+      ]);
+      setIntelReport(await reportRes.json());
+      setIntelDiscovery(await discoveryRes.json());
+    } catch (_error) {
+      setIntelReport(null);
+      setIntelDiscovery(null);
+    } finally {
+      setIntelLoading(false);
+    }
+  };
+
+  const filteredAccounts = useMemo(() => {
+    const source = intelReport?.topSources || [];
+    return source.filter((item) => {
+      const matchesFilter = accountFilter === 'all' ? true : item.label === accountFilter;
+      const text = `${item.authorName} ${item.description} ${item.reason}`.toLowerCase();
+      const matchesSearch = !search.trim() || text.includes(search.trim().toLowerCase());
+      return matchesFilter && matchesSearch;
+    }).slice(0, 100);
+  }, [intelReport, accountFilter, search]);
+
+  const topSubmolts = useMemo(() => (intelDiscovery?.submolts || []).slice(0, 100), [intelDiscovery]);
+
   const panResponder = useMemo(
     () =>
       PanResponder.create({
@@ -198,6 +274,10 @@ export default function App() {
       }),
     [isLoadingNext, gateVisible, swipeCount, replyCount]
   );
+
+  useEffect(() => {
+    void refreshIntel();
+  }, []);
 
   useEffect(() => {
     const socket = new WebSocket(wsUrl);
@@ -244,9 +324,75 @@ export default function App() {
     };
   }, [wsUrl]);
 
+  if (mode === 'intel') {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="light-content" />
+        <View style={styles.modeRow}>
+          <Pressable style={[styles.modeButton, styles.modeButtonActive]} onPress={() => setMode('intel')}>
+            <Text style={styles.modeButtonText}>Intel</Text>
+          </Pressable>
+          <Pressable style={styles.modeButton} onPress={() => setMode('swipe')}>
+            <Text style={styles.modeButtonText}>Swipe</Text>
+          </Pressable>
+        </View>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <Text style={styles.pageTitle}>MonkeyMoltbook Intel</Text>
+          <Text style={styles.pageSubtitle}>Top 100 accounts, top submolts, and simplified Moltbook discovery.</Text>
+
+          <View style={styles.summaryRow}>
+            <SummaryPill label="Authors" value={intelReport?.summary?.authorCount ?? '—'} />
+            <SummaryPill label="Admit" value={intelReport?.summary?.admitCount ?? '—'} />
+            <SummaryPill label="Watch" value={intelReport?.summary?.watchCount ?? '—'} />
+            <SummaryPill label="Submolts" value={intelReport?.summary?.discoveredSubmolts ?? '—'} />
+          </View>
+
+          <Pressable onPress={refreshIntel} style={styles.refreshButton}>
+            <Text style={styles.refreshButtonText}>{intelLoading ? 'Refreshing…' : 'Refresh Intel'}</Text>
+          </Pressable>
+
+          <TextInput
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Search accounts"
+            placeholderTextColor="#666"
+            style={styles.searchInput}
+          />
+
+          <View style={styles.filterRow}>
+            {['all', 'admit', 'watch', 'reject'].map((value) => (
+              <Pressable
+                key={value}
+                onPress={() => setAccountFilter(value)}
+                style={[styles.filterChip, accountFilter === value && styles.filterChipActive]}
+              >
+                <Text style={styles.filterChipText}>{value.toUpperCase()}</Text>
+              </Pressable>
+            ))}
+          </View>
+
+          <Text style={styles.sectionTitle}>Top 100 Accounts</Text>
+          {intelLoading && !intelReport ? <ActivityIndicator color="#fff" /> : null}
+          {filteredAccounts.map((item) => <AccountCard key={item.authorId} item={item} />)}
+
+          <Text style={styles.sectionTitle}>Top 100 Submolts</Text>
+          {topSubmolts.map((item) => <SubmoltCard key={item.name} item={item} />)}
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
+      <View style={styles.modeRow}>
+        <Pressable style={styles.modeButton} onPress={() => setMode('intel')}>
+          <Text style={styles.modeButtonText}>Intel</Text>
+        </Pressable>
+        <Pressable style={[styles.modeButton, styles.modeButtonActive]} onPress={() => setMode('swipe')}>
+          <Text style={styles.modeButtonText}>Swipe</Text>
+        </Pressable>
+      </View>
       <View style={styles.topBar}>
         <Text style={styles.agentName}>{agentName}</Text>
         <View style={styles.statsBlock}>
@@ -307,6 +453,162 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0A0A0A'
+  },
+  modeRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 8,
+  },
+  modeButton: {
+    flex: 1,
+    minHeight: 40,
+    borderRadius: 12,
+    backgroundColor: '#141414',
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  modeButtonActive: {
+    backgroundColor: '#B91C1C'
+  },
+  modeButtonText: {
+    color: '#fff',
+    fontWeight: '700'
+  },
+  scrollContent: {
+    padding: 16,
+    gap: 12,
+    paddingBottom: 80
+  },
+  pageTitle: {
+    color: '#fff',
+    fontSize: 28,
+    fontWeight: '800'
+  },
+  pageSubtitle: {
+    color: '#AAA',
+    fontSize: 14,
+    lineHeight: 20
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10
+  },
+  summaryPill: {
+    minWidth: 76,
+    backgroundColor: '#141414',
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: '#242424'
+  },
+  summaryLabel: {
+    color: '#888',
+    fontSize: 12,
+    marginBottom: 4
+  },
+  summaryValue: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '800'
+  },
+  refreshButton: {
+    minHeight: 46,
+    borderRadius: 14,
+    backgroundColor: '#B91C1C',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  refreshButtonText: {
+    color: '#fff',
+    fontWeight: '800'
+  },
+  searchInput: {
+    backgroundColor: '#111111',
+    color: '#FFFFFF',
+    minHeight: 48,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#222222'
+  },
+  filterRow: {
+    flexDirection: 'row',
+    gap: 8,
+    flexWrap: 'wrap'
+  },
+  filterChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#333',
+    backgroundColor: '#121212'
+  },
+  filterChipActive: {
+    backgroundColor: '#262626'
+  },
+  filterChipText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700'
+  },
+  sectionTitle: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '800',
+    marginTop: 8
+  },
+  intelCard: {
+    backgroundColor: '#121212',
+    borderWidth: 1,
+    borderColor: '#242424',
+    borderRadius: 18,
+    padding: 14,
+    gap: 8
+  },
+  intelCardTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
+    alignItems: 'center'
+  },
+  intelTitle: {
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: '800',
+    flex: 1
+  },
+  badge: {
+    fontSize: 11,
+    fontWeight: '800',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    overflow: 'hidden',
+    color: '#fff'
+  },
+  badgeAdmit: { backgroundColor: '#166534' },
+  badgeWatch: { backgroundColor: '#92400E' },
+  badgeReject: { backgroundColor: '#7F1D1D' },
+  badgeNeutral: { backgroundColor: '#1F2937' },
+  intelBody: {
+    color: '#DDD',
+    lineHeight: 20
+  },
+  intelMeta: {
+    color: '#A3A3A3',
+    fontSize: 12
+  },
+  intelReason: {
+    color: '#888',
+    fontSize: 12,
+    lineHeight: 18
   },
   topBar: {
     paddingHorizontal: 20,
