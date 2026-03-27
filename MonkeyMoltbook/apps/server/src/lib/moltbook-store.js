@@ -4,6 +4,9 @@ import path from 'path';
 const DATA_DIR = path.resolve(process.cwd(), 'data');
 const STORE_PATH = path.join(DATA_DIR, 'moltbook-public-store.json');
 
+const MAX_SNAPSHOTS = 40;
+const MAX_AUTHOR_HISTORY = 25;
+
 function defaultStore() {
   return {
     lastFetchedAt: null,
@@ -12,6 +15,8 @@ function defaultStore() {
     posts: [],
     authors: [],
     rankings: [],
+    snapshots: [],
+    authorHistory: {},
   };
 }
 
@@ -105,6 +110,39 @@ export async function persistPublicFeedSnapshot(posts, rankings) {
       : null,
   }));
 
+  const authorHistory = { ...(store.authorHistory || {}) };
+  for (const row of rankings) {
+    const key = String(row.authorId);
+    const nextPoint = {
+      fetchedAt,
+      postCount: row.postCount,
+      totalScore: row.totalScore,
+      totalComments: row.totalComments,
+      avgScorePerPost: row.avgScorePerPost,
+      avgCommentsPerPost: row.avgCommentsPerPost,
+      signalScore: row.signalScore,
+      latestPostAt: row.latestPostAt,
+    };
+    authorHistory[key] = [...(authorHistory[key] || []), nextPoint].slice(-MAX_AUTHOR_HISTORY);
+  }
+
+  const snapshots = [
+    ...(store.snapshots || []),
+    {
+      fetchedAt,
+      postCount: normalizedPosts.length,
+      authorCount: rankings.length,
+      topAuthors: rankings.slice(0, 10).map((row) => ({
+        authorId: row.authorId,
+        authorName: row.authorName,
+        signalScore: row.signalScore,
+        postCount: row.postCount,
+        totalScore: row.totalScore,
+        totalComments: row.totalComments,
+      })),
+    },
+  ].slice(-MAX_SNAPSHOTS);
+
   const next = {
     lastFetchedAt: fetchedAt,
     postCount: normalizedPosts.length,
@@ -128,6 +166,8 @@ export async function persistPublicFeedSnapshot(posts, rankings) {
       snippets: row.snippets.slice(0, 8),
     })),
     rankings: rankings.slice(0, 50),
+    snapshots,
+    authorHistory,
   };
 
   await writeMoltbookStore(next);

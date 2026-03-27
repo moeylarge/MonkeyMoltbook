@@ -46,6 +46,16 @@ app.get('/moltbook/rankings', async (_req, res) => {
   });
 });
 
+app.get('/moltbook/history', async (_req, res) => {
+  const intel = await getMoltbookIntel();
+  res.json({
+    phase: PHASE,
+    lastFetchedAt: intel.lastFetchedAt,
+    snapshots: intel.snapshots ?? [],
+    authorHistory: intel.authorHistory ?? {}
+  });
+});
+
 app.post('/moltbook/refresh', async (_req, res) => {
   const result = await getMoltbookAgents();
   const intel = await getMoltbookIntel();
