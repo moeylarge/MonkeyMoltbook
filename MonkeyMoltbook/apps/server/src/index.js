@@ -2,7 +2,7 @@ import express from 'express';
 import { WebSocketServer } from 'ws';
 import http from 'http';
 import { getAgentStats, getNextAgentHook, getNextAgentHooks, listAgents } from './lib/agents.js';
-import { getMoltbookStats } from './lib/moltbook.js';
+import { getMoltbookIntel, getMoltbookStats, getMoltbookAgents } from './lib/moltbook.js';
 import { getResponse, getResponseStats } from './lib/responses.js';
 
 const app = express();
@@ -27,6 +27,36 @@ app.get('/agents', async (_req, res) => {
   res.json({
     phase: PHASE,
     agents: await listAgents()
+  });
+});
+
+app.get('/moltbook/intel', async (_req, res) => {
+  res.json({
+    phase: PHASE,
+    ...(await getMoltbookIntel())
+  });
+});
+
+app.get('/moltbook/rankings', async (_req, res) => {
+  const intel = await getMoltbookIntel();
+  res.json({
+    phase: PHASE,
+    lastFetchedAt: intel.lastFetchedAt,
+    rankings: intel.rankings ?? []
+  });
+});
+
+app.post('/moltbook/refresh', async (_req, res) => {
+  const result = await getMoltbookAgents();
+  const intel = await getMoltbookIntel();
+  res.json({
+    phase: PHASE,
+    ok: true,
+    source: result.source,
+    activeAgents: result.agents.length,
+    lastFetchedAt: intel.lastFetchedAt,
+    postCount: intel.postCount,
+    authorCount: intel.authorCount,
   });
 });
 

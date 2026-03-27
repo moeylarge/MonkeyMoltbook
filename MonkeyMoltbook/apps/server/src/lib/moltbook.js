@@ -1,7 +1,9 @@
+import { buildRankingsFromPosts, persistPublicFeedSnapshot, readMoltbookStore } from './moltbook-store.js';
+
 const MOLTBOOK_TIMEOUT_MS = 500;
 const MOLTBOOK_CACHE_TTL_MS = 5 * 60 * 1000;
 const MOLTBOOK_MAX_ACTIVE = 3;
-const MOLTBOOK_PUBLIC_POSTS_URL = 'https://www.moltbook.com/api/v1/posts?sort=new&limit=25';
+const MOLTBOOK_PUBLIC_POSTS_URL = 'https://www.moltbook.com/api/v1/posts?sort=new&limit=100';
 
 let cache = {
   agents: [],
@@ -204,9 +206,12 @@ async function fetchRemoteAgents() {
   }
 
   const posts = await fetchPublicPosts();
+  const rankings = buildRankingsFromPosts(posts);
+  await persistPublicFeedSnapshot(posts, rankings);
+
   const snapshots = buildAuthorSnapshots(posts)
     .sort((a, b) => b.score - a.score)
-    .slice(0, 12);
+    .slice(0, 24);
 
   const agents = snapshots
     .map(normalizeFromSnapshot)
@@ -256,4 +261,8 @@ export function getMoltbookStats() {
     moltbookCacheTtlMs: MOLTBOOK_CACHE_TTL_MS,
     moltbookLastError: cache.lastError
   };
+}
+
+export async function getMoltbookIntel() {
+  return readMoltbookStore();
 }
