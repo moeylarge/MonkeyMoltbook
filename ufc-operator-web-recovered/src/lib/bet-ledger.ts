@@ -2,6 +2,10 @@ import { Pool } from 'pg';
 
 let pool: Pool | null = null;
 
+function hasDatabase() {
+  return Boolean(process.env.DATABASE_URL);
+}
+
 function getPool() {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) throw new Error('Missing DATABASE_URL');
@@ -10,6 +14,7 @@ function getPool() {
 }
 
 export async function initBetLedgerDb() {
+  if (!hasDatabase()) return;
   const db = getPool();
   await db.query(`
     CREATE TABLE IF NOT EXISTS bets (
@@ -42,7 +47,7 @@ export async function initBetLedgerDb() {
 }
 
 export async function recordDisplayedBets(bets: any[]) {
-  if (!bets.length) return;
+  if (!bets.length || !hasDatabase()) return;
   await initBetLedgerDb();
   const db = getPool();
   const client = await db.connect();
@@ -87,6 +92,7 @@ export async function recordDisplayedBets(bets: any[]) {
 }
 
 export async function resolveBetResult(fightId: number, outcome: 'win' | 'loss') {
+  if (!hasDatabase()) return;
   await initBetLedgerDb();
   const db = getPool();
   await db.query(
@@ -105,6 +111,7 @@ export async function resolveBetResult(fightId: number, outcome: 'win' | 'loss')
 }
 
 export async function updateClosingLine(fightId: number, closingOdds: number) {
+  if (!hasDatabase()) return;
   await initBetLedgerDb();
   const db = getPool();
   const implied = closingOdds > 0 ? 100 / (closingOdds + 100) : Math.abs(closingOdds) / (Math.abs(closingOdds) + 100);
@@ -126,6 +133,7 @@ export async function updateClosingLine(fightId: number, closingOdds: number) {
 }
 
 export async function getBetHistory(sort: string = 'date') {
+  if (!hasDatabase()) return [];
   await initBetLedgerDb();
   const db = getPool();
   const sortMap: Record<string, string> = {
@@ -139,6 +147,18 @@ export async function getBetHistory(sort: string = 'date') {
 }
 
 export async function getPerformanceMetrics() {
+  if (!hasDatabase()) {
+    return {
+      totalUnits: 0,
+      totalBets: 0,
+      winRate: 0,
+      roi: 0,
+      averageClv: 0,
+      positiveClvRate: 0,
+      last10: { units: 0, roi: 0, winRate: 0 },
+      last30: { units: 0, roi: 0, winRate: 0 },
+    };
+  }
   await initBetLedgerDb();
   const db = getPool();
   const summary = await db.query(`
