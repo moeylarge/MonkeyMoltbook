@@ -113,6 +113,26 @@ app.get('/moltbook/growth', async (_req, res) => {
   });
 });
 
+app.get('/moltbook/rising', async (_req, res) => {
+  const intel = await getMoltbookIntel();
+  res.json({ phase: PHASE, lastFetchedAt: intel.lastFetchedAt, rising: intel.signals?.rising ?? [] });
+});
+
+app.get('/moltbook/hot', async (_req, res) => {
+  const intel = await getMoltbookIntel();
+  res.json({ phase: PHASE, lastFetchedAt: intel.lastFetchedAt, hot: intel.signals?.hot ?? [] });
+});
+
+app.get('/moltbook/topics', async (_req, res) => {
+  const intel = await getMoltbookIntel();
+  res.json({ phase: PHASE, lastFetchedAt: intel.lastFetchedAt, topics: intel.signals?.topicClusters ?? [] });
+});
+
+app.get('/moltbook/top-submolts', async (_req, res) => {
+  const intel = await getMoltbookIntel();
+  res.json({ phase: PHASE, lastFetchedAt: intel.lastFetchedAt, submolts: intel.signals?.topSubmolts ?? [] });
+});
+
 app.get('/moltbook/export/authors.csv', async (_req, res) => {
   const intel = await getMoltbookIntel();
   res.type('text/csv').send(authorsToCsv(intel.authors ?? []));
