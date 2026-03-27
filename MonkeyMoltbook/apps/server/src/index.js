@@ -2,7 +2,9 @@ import express from 'express';
 import { WebSocketServer } from 'ws';
 import http from 'http';
 import { getAgentStats, getNextAgentHook, getNextAgentHooks, listAgents } from './lib/agents.js';
+import { authorsToCsv, buildGrowthMetrics, snapshotsToCsv } from './lib/moltbook-export.js';
 import { getMoltbookIntel, getMoltbookStats, getMoltbookAgents } from './lib/moltbook.js';
+import { getSchedulerState, startScheduler, stopScheduler } from './lib/moltbook-scheduler.js';
 import { getResponse, getResponseStats } from './lib/responses.js';
 
 const app = express();
@@ -11,6 +13,19 @@ const wss = new WebSocketServer({ server });
 const PORT = process.env.PORT || 8787;
 const PHASE = 'Controlled Moltbook ingestion';
 const DEFAULT_PRELOAD_COUNT = 3;
+
+async function runMoltbookRefreshJob() {
+  const result = await getMoltbookAgents();
+  const intel = await getMoltbookIntel();
+  return {
+    ok: true,
+    source: result.source,
+    activeAgents: result.agents.length,
+    lastFetchedAt: intel.lastFetchedAt,
+    postCount: intel.postCount,
+    authorCount: intel.authorCount,
+  };
+}
 
 app.get('/health', async (_req, res) => {
   res.json({
@@ -90,17 +105,55 @@ app.get('/moltbook/discovery', async (_req, res) => {
   });
 });
 
-app.post('/moltbook/refresh', async (_req, res) => {
-  const result = await getMoltbookAgents();
+app.get('/moltbook/growth', async (_req, res) => {
   const intel = await getMoltbookIntel();
   res.json({
     phase: PHASE,
-    ok: true,
-    source: result.source,
-    activeAgents: result.agents.length,
-    lastFetchedAt: intel.lastFetchedAt,
-    postCount: intel.postCount,
-    authorCount: intel.authorCount,
+    ...buildGrowthMetrics(intel)
+  });
+});
+
+app.get('/moltbook/export/authors.csv', async (_req, res) => {
+  const intel = await getMoltbookIntel();
+  res.type('text/csv').send(authorsToCsv(intel.authors ?? []));
+});
+
+app.get('/moltbook/export/snapshots.csv', async (_req, res) => {
+  const intel = await getMoltbookIntel();
+  res.type('text/csv').send(snapshotsToCsv(intel.snapshots ?? []));
+});
+
+app.get('/moltbook/export/report.json', async (_req, res) => {
+  const intel = await getMoltbookIntel();
+  res.json({
+    phase: PHASE,
+    intel,
+    growth: buildGrowthMetrics(intel)
+  });
+});
+
+app.get('/moltbook/scheduler', (_req, res) => {
+  res.json({
+    phase: PHASE,
+    ...getSchedulerState()
+  });
+});
+
+app.post('/moltbook/scheduler/start', async (req, res) => {
+  const everyMs = Number(req.query.everyMs || 15 * 60 * 1000);
+  const state = startScheduler(runMoltbookRefreshJob, everyMs);
+  res.json({ phase: PHASE, ok: true, ...state });
+});
+
+app.post('/moltbook/scheduler/stop', (_req, res) => {
+  stopScheduler();
+  res.json({ phase: PHASE, ok: true, ...getSchedulerState() });
+});
+
+app.post('/moltbook/refresh', async (_req, res) => {
+  res.json({
+    phase: PHASE,
+    ...(await runMoltbookRefreshJob())
   });
 });
 
