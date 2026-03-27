@@ -38,6 +38,58 @@ function clip(text, max = 220) {
   return String(text || '').replace(/\s+/g, ' ').trim().slice(0, max);
 }
 
+function countMatches(text, patterns) {
+  const lower = String(text || '').toLowerCase();
+  return patterns.reduce((sum, pattern) => sum + (pattern.test(lower) ? 1 : 0), 0);
+}
+
+function classifyMonkeyFit(row) {
+  const combined = `${row.description || ''} ${row.titles.join(' ')} ${row.snippets.join(' ')}`;
+  const strongPatterns = [
+    /agent/, /ai/, /memory/, /identity/, /automation/, /prompt/, /system/, /tool/, /operator/, /protocol/, /architecture/, /reasoning/, /context/, /swarm/, /social/, /market/
+  ];
+  const weakPatterns = [
+    /mbc-20/, /mint/, /token/, /wang/, /hackai/, /bot grind/, /daily .* mint/, /bag/, /mbc20\.xyz/
+  ];
+
+  const strongHits = countMatches(combined, strongPatterns);
+  const weakHits = countMatches(combined, weakPatterns);
+  const fitScore = Math.max(0,
+    Math.round(
+      row.signalScore * 0.35 +
+      strongHits * 12 +
+      row.totalComments * 4 +
+      Math.min(row.postCount, 5) * 3 -
+      weakHits * 18
+    )
+  );
+
+  let label = 'watch';
+  let reason = 'Potential source worth monitoring, but not strong enough yet for immediate admission.';
+
+  if (weakHits >= 2 && strongHits === 0) {
+    label = 'reject';
+    reason = 'Mostly token/mint/noise behavior with weak MonkeyMoltbook relevance.';
+  } else if (fitScore >= 95) {
+    label = 'admit';
+    reason = 'High-signal source with strong fit for agent voice, identity, or social-intelligence extraction.';
+  } else if (fitScore >= 55) {
+    label = 'watch';
+    reason = 'Good candidate with some fit signal; keep tracking across future snapshots.';
+  } else {
+    label = 'reject';
+    reason = 'Low fit for MonkeyMoltbook despite public activity.';
+  }
+
+  return {
+    fitScore,
+    label,
+    reason,
+    strongHits,
+    weakHits,
+  };
+}
+
 export function buildRankingsFromPosts(posts) {
   const byAuthor = new Map();
 
@@ -72,18 +124,24 @@ export function buildRankingsFromPosts(posts) {
   }
 
   return [...byAuthor.values()]
-    .map((row) => ({
-      ...row,
-      avgScorePerPost: row.postCount ? row.totalScore / row.postCount : 0,
-      avgCommentsPerPost: row.postCount ? row.totalComments / row.postCount : 0,
-      signalScore:
-        row.totalScore * 1 +
-        row.totalComments * 1.5 +
-        row.postCount * 5 +
-        (row.isClaimed ? 50 : 0) +
-        Math.min(Number(row.karma || 0), 5000) * 0.02,
-    }))
-    .sort((a, b) => b.signalScore - a.signalScore);
+    .map((row) => {
+      const base = {
+        ...row,
+        avgScorePerPost: row.postCount ? row.totalScore / row.postCount : 0,
+        avgCommentsPerPost: row.postCount ? row.totalComments / row.postCount : 0,
+        signalScore:
+          row.totalScore * 1 +
+          row.totalComments * 1.5 +
+          row.postCount * 5 +
+          (row.isClaimed ? 50 : 0) +
+          Math.min(Number(row.karma || 0), 5000) * 0.02,
+      };
+      return {
+        ...base,
+        ...classifyMonkeyFit(base),
+      };
+    })
+    .sort((a, b) => b.fitScore - a.fitScore || b.signalScore - a.signalScore);
 }
 
 export async function persistPublicFeedSnapshot(posts, rankings) {
@@ -136,6 +194,8 @@ export async function persistPublicFeedSnapshot(posts, rankings) {
         authorId: row.authorId,
         authorName: row.authorName,
         signalScore: row.signalScore,
+        fitScore: row.fitScore,
+        label: row.label,
         postCount: row.postCount,
         totalScore: row.totalScore,
         totalComments: row.totalComments,
@@ -161,6 +221,11 @@ export async function persistPublicFeedSnapshot(posts, rankings) {
       avgScorePerPost: row.avgScorePerPost,
       avgCommentsPerPost: row.avgCommentsPerPost,
       signalScore: row.signalScore,
+      fitScore: row.fitScore,
+      label: row.label,
+      reason: row.reason,
+      strongHits: row.strongHits,
+      weakHits: row.weakHits,
       latestPostAt: row.latestPostAt,
       titles: row.titles.slice(0, 8),
       snippets: row.snippets.slice(0, 8),
