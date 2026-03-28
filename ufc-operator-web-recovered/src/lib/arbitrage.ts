@@ -9,6 +9,8 @@ type ExitPlanInput = {
   modelProbability: number | null;
   impliedProbabilityAtPick: number | null;
   currentImpliedProbability: number | null;
+  round?: number | null;
+  fightStatus?: string | null;
 };
 
 export type ExitPlan = {
@@ -29,6 +31,10 @@ export type ExitPlan = {
   decision: 'hold' | 'hedge' | 'watch';
   rationale: string;
 };
+
+function normalizeName(value: string | null | undefined) {
+  return (value ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
 
 function americanToProbability(odds: number | null | undefined) {
   if (odds == null || Number.isNaN(Number(odds)) || Number(odds) === 0) return null;
@@ -75,12 +81,15 @@ export function buildExitPlan(input: ExitPlanInput): ExitPlan {
   let decision: ExitPlan['decision'] = 'watch';
   let rationale = 'Waiting for a stronger in-fight swing before recommending action.';
 
-  if ((marketMovePct ?? 0) >= 12 && guaranteedProfitUnits != null && guaranteedProfitUnits > 0) {
+  const liveRound = Number(input.round ?? 0);
+  const liveActive = input.fightStatus === 'live' || input.fightStatus === 'between-rounds';
+
+  if (liveActive && liveRound >= 1 && (marketMovePct ?? 0) >= 12 && guaranteedProfitUnits != null && guaranteedProfitUnits > 0) {
     decision = 'hedge';
-    rationale = 'Live market moved strongly in your favor. Hedge now can lock profit on both sides.';
-  } else if ((marketMovePct ?? 0) >= 8 && reducedLossUnits != null && reducedLossUnits > -0.25 * input.stakeUnits) {
+    rationale = `Round ${liveRound}: live market moved strongly in your favor. Hedge now can lock profit on both sides.`;
+  } else if (liveActive && liveRound >= 1 && (marketMovePct ?? 0) >= 8 && reducedLossUnits != null && reducedLossUnits > -0.25 * input.stakeUnits) {
     decision = 'hedge';
-    rationale = 'Live market improved enough to reduce downside materially even if a full lock is not available.';
+    rationale = `Round ${liveRound}: live market improved enough to reduce downside materially even if a full lock is not available.`;
   } else if ((marketMovePct ?? 0) >= 4) {
     decision = 'watch';
     rationale = 'Momentum improved, but not enough yet for a clean hedge recommendation.';
@@ -109,19 +118,31 @@ export function buildExitPlan(input: ExitPlanInput): ExitPlan {
   };
 }
 
-export function buildArbitrageBoardRows(bets: any[], liveFights: any[]) {
+export function buildArbitrageBoardRows(bets: any[], liveFights: any[], roundState: Record<string, any> = {}) {
   const fightMap = new Map(liveFights.map((fight: any) => [Number(fight.fightId ?? fight.fight_id), fight]));
+  const fighterPairMap = new Map(
+    liveFights.map((fight: any) => {
+      const names = String(fight.fight ?? '')
+        .split(' vs ')
+        .map((name: string) => normalizeName(name))
+        .sort()
+        .join('|');
+      return [names, fight];
+    }),
+  );
 
   return bets
     .filter((bet: any) => bet.result === 'pending')
     .map((bet: any) => {
-      const live = fightMap.get(Number(bet.fight_id));
+      const pairKey = [normalizeName(bet.fighter_name), normalizeName(bet.opponent_name)].sort().join('|');
+      const live = fightMap.get(Number(bet.fight_id)) ?? fighterPairMap.get(pairKey);
       const draftkingsOdds = live?.rawSportsbookOdds?.find((row: any) => row.sportsbook === 'draftkings')?.pickedOdds ?? null;
       const fanduelOdds = live?.rawSportsbookOdds?.find((row: any) => row.sportsbook === 'fanduel')?.pickedOdds ?? null;
-      const opponentCurrentOdds = live?.selectedOdds != null && live?.pick === bet.fighter_name
-        ? null
-        : live?.selectedOdds ?? null;
+      const draftkingsOpponentOdds = live?.rawSportsbookOdds?.find((row: any) => row.sportsbook === 'draftkings')?.opponentOdds ?? null;
+      const fanduelOpponentOdds = live?.rawSportsbookOdds?.find((row: any) => row.sportsbook === 'fanduel')?.opponentOdds ?? null;
+      const opponentCurrentOdds = live?.selectedOpponentOdds ?? null;
 
+      const state = roundState[String(bet.fight_id)] ?? null;
       const plan = buildExitPlan({
         fighterName: bet.fighter_name,
         opponentName: bet.opponent_name,
@@ -133,6 +154,8 @@ export function buildArbitrageBoardRows(bets: any[], liveFights: any[]) {
         modelProbability: live?.modelProbability ?? bet.model_probability ?? null,
         impliedProbabilityAtPick: bet.implied_probability_at_pick ?? null,
         currentImpliedProbability: live?.selectedMarketProbability ?? null,
+        round: state?.round ?? null,
+        fightStatus: state?.status ?? null,
       });
 
       return {
@@ -147,7 +170,13 @@ export function buildArbitrageBoardRows(bets: any[], liveFights: any[]) {
         currentSportsbook: live?.selectedSportsbook ?? null,
         draftkingsOdds,
         fanduelOdds,
+        draftkingsOpponentOdds,
+        fanduelOpponentOdds,
         oddsFreshnessMinutes: live?.oddsFreshnessMinutes ?? null,
+        scheduledRounds: live?.scheduled_rounds ?? live?.scheduledRounds ?? null,
+        manualRound: state?.round ?? null,
+        manualStatus: state?.status ?? null,
+        manualNote: state?.note ?? null,
         plan,
       };
     });
