@@ -14,7 +14,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.moey.looksmaxx",
-      "buildNumber": "1.0.3",
+      "buildNumber": "1.0.4",
       "infoPlist": {
         "NSCameraUsageDescription": "LooksMaxx uses the camera so you can capture a photo for your face analysis.",
         "NSPhotoLibraryUsageDescription": "LooksMaxx uses your photo library so you can upload a photo for your face analysis.",
