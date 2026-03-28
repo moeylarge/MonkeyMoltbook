@@ -2,16 +2,18 @@ export const revalidate = 15;
 
 import { getBetHistory, getPerformanceMetrics } from '@/lib/bet-ledger';
 import { buildArbitrageBoardRows } from '@/lib/arbitrage';
+import { getManualRoundState } from '@/lib/manual-round-state';
 import { formatDateTime, formatNumber, formatPct, formatSigned, getPublicBettingFeed } from '@/lib/ufc-data';
 
 export default async function PerformancePage({ searchParams }: { searchParams?: Promise<{ sort?: string }> }) {
   const params = (await searchParams) ?? {};
-  const [performance, betHistory, feed] = await Promise.all([
+  const [performance, betHistory, feed, roundState] = await Promise.all([
     getPerformanceMetrics(),
     getBetHistory(params.sort ?? 'date'),
     getPublicBettingFeed(),
+    getManualRoundState(),
   ]);
-  const arbitrageRows = buildArbitrageBoardRows(betHistory, feed?.fights ?? []);
+  const arbitrageRows = buildArbitrageBoardRows(betHistory, feed?.fights ?? [], roundState);
 
   return (
     <div className="space-y-6">
@@ -41,9 +43,12 @@ export default async function PerformancePage({ searchParams }: { searchParams?:
 
       <section className="card p-5">
         <h2 className="mb-4 text-lg font-semibold text-white">Live arbitrage / hedge board</h2>
-        <p className="mb-4 max-w-3xl text-sm text-zinc-400">
+        <p className="mb-2 max-w-3xl text-sm text-zinc-400">
           This is the first pass of the live exit engine: compare entry odds vs current live line and decide whether to hold, watch, or hedge.
         </p>
+        <div className="mb-4 text-xs text-cyan-300">
+          Live odds updated: {formatDateTime(feed?.oddsTimestamp)} · freshness {feed?.oddsFreshnessMinutes ?? '—'} min
+        </div>
         {arbitrageRows.length ? (
           <div className="table-wrap">
             <table className="data-table min-w-[1400px] bg-zinc-950/40 text-sm">
@@ -52,6 +57,7 @@ export default async function PerformancePage({ searchParams }: { searchParams?:
                   <th>Fight</th>
                   <th>Entry</th>
                   <th>Live</th>
+                  <th>Opp live</th>
                   <th>Move</th>
                   <th>Decision</th>
                   <th>Lock profit</th>
@@ -65,10 +71,11 @@ export default async function PerformancePage({ searchParams }: { searchParams?:
                   <tr key={row.fightId}>
                     <td>
                       <div className="font-medium text-white">{row.fight}</div>
-                      <div className="mt-1 text-xs text-zinc-500">{row.sportsbookUsed} · freshness {row.oddsFreshnessMinutes ?? '—'} min</div>
+                      <div className="mt-1 text-xs text-zinc-500">{row.sportsbookUsed} · freshness {row.oddsFreshnessMinutes ?? '—'} min · rounds {row.scheduledRounds ?? '—'} · live state {row.manualStatus ?? 'unset'} R{row.manualRound ?? 0}</div>
                     </td>
                     <td>{row.entryOdds > 0 ? `+${row.entryOdds}` : row.entryOdds} · {formatNumber(row.stakeUnits, 2)}u</td>
                     <td>{row.currentOdds == null ? 'Pending live move' : row.currentOdds > 0 ? `+${row.currentOdds}` : row.currentOdds}</td>
+                    <td>{row.plan.hedgeBookReturnUnits == null && row.plan.hedgeStakeUnits == null ? (row.draftkingsOpponentOdds == null && row.fanduelOpponentOdds == null ? 'Missing' : (row.currentSportsbook === 'draftkings' ? row.draftkingsOpponentOdds : row.currentSportsbook === 'fanduel' ? row.fanduelOpponentOdds : null) > 0 ? `+${row.currentSportsbook === 'draftkings' ? row.draftkingsOpponentOdds : row.currentSportsbook === 'fanduel' ? row.fanduelOpponentOdds : null}` : (row.currentSportsbook === 'draftkings' ? row.draftkingsOpponentOdds : row.currentSportsbook === 'fanduel' ? row.fanduelOpponentOdds : '—')) : (row.currentSportsbook === 'draftkings' ? row.draftkingsOpponentOdds : row.currentSportsbook === 'fanduel' ? row.fanduelOpponentOdds : null) > 0 ? `+${row.currentSportsbook === 'draftkings' ? row.draftkingsOpponentOdds : row.currentSportsbook === 'fanduel' ? row.fanduelOpponentOdds : null}` : (row.currentSportsbook === 'draftkings' ? row.draftkingsOpponentOdds : row.currentSportsbook === 'fanduel' ? row.fanduelOpponentOdds : '—')}</td>
                     <td>{row.plan.marketMovePct == null ? '—' : formatSigned(row.plan.marketMovePct, 2, '%')}</td>
                     <td className="font-semibold text-white">{row.plan.decision.toUpperCase()}</td>
                     <td>{row.plan.guaranteedProfitUnits == null ? 'Need opponent live line' : `${formatSigned(row.plan.guaranteedProfitUnits, 2)}u`}</td>
