@@ -3,6 +3,7 @@ export const revalidate = 15;
 import { getBetHistory, getPerformanceMetrics } from '@/lib/bet-ledger';
 import { buildArbitrageBoardRows } from '@/lib/arbitrage';
 import { getManualRoundState } from '@/lib/manual-round-state';
+import { LiveBoard } from '@/components/live-board';
 import { formatDateTime, formatNumber, formatPct, formatSigned, getPublicBettingFeed } from '@/lib/ufc-data';
 
 export default async function PerformancePage({ searchParams }: { searchParams?: Promise<{ sort?: string }> }) {
@@ -31,6 +32,8 @@ export default async function PerformancePage({ searchParams }: { searchParams?:
         <div className="metric"><div className="text-sm text-zinc-400">Win rate</div><div className="mt-2 text-3xl font-semibold text-white">{formatPct(performance.winRate, 2)}</div></div>
         <div className="metric"><div className="text-sm text-zinc-400">Avg CLV</div><div className="mt-2 text-3xl font-semibold text-white">{formatPct(performance.averageClv, 2)}</div></div>
       </div>
+
+      <LiveBoard />
 
       <section className="card p-5">
         <h2 className="mb-4 text-lg font-semibold text-white">Rolling performance</h2>
