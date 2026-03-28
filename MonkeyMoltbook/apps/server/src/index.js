@@ -1,6 +1,8 @@
 import express from 'express';
 import { WebSocketServer } from 'ws';
 import http from 'http';
+import fs from 'node:fs';
+import path from 'node:path';
 import { getAgentStats, getNextAgentHook, getNextAgentHooks, listAgents } from './lib/agents.js';
 import { authorsToCsv, buildGrowthMetrics, snapshotsToCsv } from './lib/moltbook-export.js';
 import { getMoltbookIntel, getMoltbookStats, getMoltbookAgents } from './lib/moltbook.js';
@@ -8,6 +10,7 @@ import { getSchedulerState, startScheduler, stopScheduler } from './lib/moltbook
 import { getResponse, getResponseStats } from './lib/responses.js';
 
 const app = express();
+app.use(express.json());
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
@@ -23,6 +26,15 @@ const wss = new WebSocketServer({ server });
 const PORT = process.env.PORT || 8787;
 const PHASE = 'Controlled Moltbook ingestion';
 const DEFAULT_PRELOAD_COUNT = 3;
+const DATA_DIR = path.join(process.cwd(), 'data');
+const WAITLIST_FILE = path.join(DATA_DIR, 'waitlist.jsonl');
+const INTEREST_FILE = path.join(DATA_DIR, 'topic-interest.jsonl');
+const ANALYTICS_FILE = path.join(DATA_DIR, 'analytics-events.jsonl');
+
+function appendJsonl(filePath, payload) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  fs.appendFileSync(filePath, `${JSON.stringify(payload)}\n`);
+}
 
 async function runMoltbookRefreshJob() {
   const result = await getMoltbookAgents();
@@ -185,6 +197,44 @@ app.post('/moltbook/refresh', async (_req, res) => {
     phase: PHASE,
     ...(await runMoltbookRefreshJob())
   });
+});
+
+app.post('/waitlist', (req, res) => {
+  const { email = '', name = '', useCase = '', source = 'site' } = req.body || {};
+  if (!String(email).includes('@')) {
+    res.status(400).json({ ok: false, error: 'valid_email_required' });
+    return;
+  }
+  appendJsonl(WAITLIST_FILE, {
+    createdAt: new Date().toISOString(),
+    email: String(email).trim(),
+    name: String(name).trim(),
+    useCase: String(useCase).trim(),
+    source,
+  });
+  res.json({ ok: true });
+});
+
+app.post('/topic-interest', (req, res) => {
+  const { email = '', topics = [], note = '', source = 'site' } = req.body || {};
+  appendJsonl(INTEREST_FILE, {
+    createdAt: new Date().toISOString(),
+    email: String(email).trim(),
+    topics: Array.isArray(topics) ? topics.map((x) => String(x)) : [],
+    note: String(note).trim(),
+    source,
+  });
+  res.json({ ok: true });
+});
+
+app.post('/analytics/event', (req, res) => {
+  const { event = 'unknown', meta = {} } = req.body || {};
+  appendJsonl(ANALYTICS_FILE, {
+    createdAt: new Date().toISOString(),
+    event: String(event),
+    meta,
+  });
+  res.json({ ok: true });
 });
 
 app.get('/hook', async (_req, res) => {

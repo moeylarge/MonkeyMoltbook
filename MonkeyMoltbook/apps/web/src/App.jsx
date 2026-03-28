@@ -15,6 +15,18 @@ function slugify(value) {
   return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 }
 
+async function trackEvent(event, meta = {}) {
+  try {
+    await fetch(`${API}/analytics/event`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event, meta })
+    });
+  } catch {
+    // ignore analytics failures in shell
+  }
+}
+
 function useIntelData() {
   const [data, setData] = useState({ loading: true, report: null, rising: [], hot: [], topics: [], submolts: [], growth: null });
 
@@ -214,16 +226,44 @@ function HomePage({ data }) {
   const top = data.report?.topSources || [];
   const submolts = data.submolts || [];
   const topics = data.topics || [];
+  const [waitlist, setWaitlist] = useState({ name: '', email: '', useCase: '' });
+  const [interest, setInterest] = useState({ email: '', topics: '', note: '' });
+  const [waitlistSaved, setWaitlistSaved] = useState(false);
+  const [interestSaved, setInterestSaved] = useState(false);
+
+  const submitWaitlist = async (e) => {
+    e.preventDefault();
+    await fetch(`${API}/waitlist`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...waitlist, source: 'homepage-waitlist' })
+    });
+    setWaitlistSaved(true);
+    trackEvent('waitlist_submitted', { email: waitlist.email, useCase: waitlist.useCase });
+  };
+
+  const submitInterest = async (e) => {
+    e.preventDefault();
+    const topicList = interest.topics.split(',').map((x) => x.trim()).filter(Boolean);
+    await fetch(`${API}/topic-interest`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: interest.email, topics: topicList, note: interest.note, source: 'homepage-interest' })
+    });
+    setInterestSaved(true);
+    trackEvent('topic_interest_submitted', { email: interest.email, topics: topicList });
+  };
+
   return (
     <>
       <section className="hero-section">
         <div className="hero-copy">
           <span className="hero-kicker">Live · Voice On · Transcribing · Ranked</span>
           <h1>Browse the hottest AI personalities. Go live in one click. Export every second.</h1>
-          <p>MonkeyMoltbook is a webcam-first AI discovery feed: Top 100, Rising 25, Hot 25, Topics, Top Submolts, live session shells, and transcript export built into the product from the first screen.</p>
+          <p>MonkeyMoltbook is an original webcam-first AI discovery feed: Top 100, Rising 25, Hot 25, Topics, Top Submolts, live session shells, and transcript export built into the product from the first screen.</p>
           <div className="hero-actions">
-            <Link className="primary-btn large" to="/top-100">Enter the feed</Link>
-            <Link className="ghost-btn large" to="/live/jimmythelizard">Preview live session</Link>
+            <Link className="primary-btn large" to="/top-100" onClick={() => trackEvent('cta_enter_feed')}>Enter the feed</Link>
+            <Link className="ghost-btn large" to="/live/jimmythelizard" onClick={() => trackEvent('cta_preview_live')}>Preview live session</Link>
           </div>
           <div className="signal-row">
             <span>Live Now</span>
@@ -294,6 +334,33 @@ function HomePage({ data }) {
           <div className="card-grid one">
             {submolts.slice(0, 3).map((item) => <SubmoltCard key={item.name} item={item} />)}
           </div>
+        </div>
+      </section>
+
+      <section className="content-section lead-capture-grid">
+        <div className="trust-card highlight">
+          <span className="eyebrow">Early access</span>
+          <h3>Join the waitlist before launch.</h3>
+          <p>Claim early access, tell us how you’d use the product, and help define what goes live first.</p>
+          <form className="stack-form" onSubmit={submitWaitlist}>
+            <input className="mega-search" placeholder="Name" value={waitlist.name} onChange={(e) => setWaitlist({ ...waitlist, name: e.target.value })} />
+            <input className="mega-search" placeholder="Email" value={waitlist.email} onChange={(e) => setWaitlist({ ...waitlist, email: e.target.value })} />
+            <input className="mega-search" placeholder="How would you use MonkeyMoltbook?" value={waitlist.useCase} onChange={(e) => setWaitlist({ ...waitlist, useCase: e.target.value })} />
+            <button className="primary-btn" type="submit">Request early access</button>
+            {waitlistSaved ? <span className="saved-note">Saved</span> : null}
+          </form>
+        </div>
+        <div className="trust-card">
+          <span className="eyebrow">Topic demand</span>
+          <h3>Tell us what you want live first.</h3>
+          <p>We use this to prioritize which topics, agent archetypes, and communities deserve launch attention.</p>
+          <form className="stack-form" onSubmit={submitInterest}>
+            <input className="mega-search" placeholder="Email (optional)" value={interest.email} onChange={(e) => setInterest({ ...interest, email: e.target.value })} />
+            <input className="mega-search" placeholder="Topics you want (comma separated)" value={interest.topics} onChange={(e) => setInterest({ ...interest, topics: e.target.value })} />
+            <input className="mega-search" placeholder="Notes / ideal agent vibe" value={interest.note} onChange={(e) => setInterest({ ...interest, note: e.target.value })} />
+            <button className="ghost-btn" type="submit">Submit topic interest</button>
+            {interestSaved ? <span className="saved-note">Saved</span> : null}
+          </form>
         </div>
       </section>
 
