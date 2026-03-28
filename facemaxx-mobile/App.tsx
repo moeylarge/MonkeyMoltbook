@@ -198,10 +198,13 @@ type DatasetExportRecord = {
 const STORAGE_KEY = 'looksmaxxing.scanHistory.v1';
 const DATASET_EXPORT_KEY = 'looksmaxxing.datasetExports.v1';
 const PENDING_UPLOAD_KEY = 'looksmaxxing.pendingUpload.v1';
+const FACE_DATA_CONSENT_KEY = 'looksmaxxing.faceDataConsent.v1';
 const DATASET_EXPORT_DIR = `${FileSystem.documentDirectory ?? ''}looksmaxxing-dataset`;
 const BRAND_NAME = 'LooksMaxx';
+const APP_STORE_URL = 'https://apps.apple.com/us/app/id6761028187';
+const PRIVACY_POLICY_URL = 'https://looksmaxx-site.vercel.app/privacy';
 const BRAND_FACE_NAME = 'Clavicular';
-const BRAND_FACE_IMAGE: ImageSourcePropType = require('./assets/clavicular-brand.png');
+const BRAND_FACE_IMAGE: ImageSourcePropType = require('./training/Confident portrait of a young man.png');
 const BRAND_LOGO_IMAGE: ImageSourcePropType = require('./assets/looksmaxx-logo.png');
 const LOCAL_BACKEND_URL = 'http://127.0.0.1:8089';
 const LAN_BACKEND_URL = 'http://192.168.4.52:8089';
@@ -1621,7 +1624,7 @@ export default function App() {
 
   const handleNativeShare = async () => {
     if (!activeScan) return;
-    const message = `${shareCaption}\n\n${BRAND_NAME} gave me a ${activeScan.score} as ${activeScan.archetype} (${activeScan.tier}). Ceiling: ${activeScan.potential}.`;
+    const message = `${shareCaption}\n\n${BRAND_NAME} gave me a ${activeScan.score} as ${activeScan.archetype} (${activeScan.tier}). Ceiling: ${activeScan.potential}.\n\nGet your own ${BRAND_NAME} read: ${APP_STORE_URL}`;
     try {
       if (Platform.OS === 'web' && typeof navigator !== 'undefined') {
         const nav = navigator as Navigator & { share?: (data: { title?: string; text?: string; url?: string }) => Promise<void>; clipboard?: { writeText?: (text: string) => Promise<void> } };
@@ -1741,6 +1744,7 @@ export default function App() {
 
         setImageUri(nextImage.uri);
         setSelectedImage(nextImage);
+        setSelectedPhoto('Front selfie');
         if (Platform.OS !== 'web') {
           await persistPendingUpload(nextImage);
         }
@@ -1781,6 +1785,32 @@ export default function App() {
         await persistPendingUpload(nextImage);
         setSelectedPhoto('Front selfie');
         setScreen('upload');
+        return;
+      }
+
+      const fallback = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [4, 5],
+        quality: 0.8,
+      });
+      if (!fallback.canceled && fallback.assets?.[0]?.uri) {
+        const asset = fallback.assets[0];
+        const nextImage = {
+          uri: asset.uri,
+          width: asset.width,
+          height: asset.height,
+          fileSize: asset.fileSize,
+          mimeType: asset.mimeType,
+          originalUri: asset.uri,
+          originalMimeType: asset.mimeType,
+        };
+        setImageUri(asset.uri);
+        setSelectedImage(nextImage);
+        await persistPendingUpload(nextImage);
+        setSelectedPhoto('Front selfie');
+        setScreen('upload');
+        return;
       }
     } catch {
       Alert.alert('Capture failed', `${BRAND_NAME} could not capture the photo. Try again.`);
@@ -1790,6 +1820,8 @@ export default function App() {
   const pickBattleImage = async () => {
     try {
       setBattleBusy(true);
+      const consentGranted = await requestFaceDataConsent();
+      if (!consentGranted) return;
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
         Alert.alert('Permission needed', `Allow photo access so ${BRAND_NAME} can load a second face for battle mode.`);
@@ -1856,7 +1888,43 @@ export default function App() {
     setScreen('scan');
   };
 
+  const requestFaceDataConsent = async () => {
+    try {
+      const existing = await AsyncStorage.getItem(FACE_DATA_CONSENT_KEY);
+      if (existing === 'granted') return true;
+    } catch {
+      // ignore storage read errors and fall through to prompt
+    }
+
+    return await new Promise<boolean>((resolve) => {
+      Alert.alert(
+        'Face Data Consent',
+        `Your photo will be sent securely to our backend for facial analysis. Raw face photos are not stored after processing. Analysis results and scan history may be saved to your account. We do not share face photos with third-party AI providers. By tapping Continue, you consent to this processing.\n\nPrivacy Policy: ${PRIVACY_POLICY_URL}`,
+        [
+          { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+          {
+            text: 'Continue',
+            onPress: async () => {
+              try {
+                await AsyncStorage.setItem(FACE_DATA_CONSENT_KEY, 'granted');
+              } catch {
+                // ignore storage write errors
+              }
+              resolve(true);
+            },
+          },
+        ],
+      );
+    });
+  };
+
   const startScan = async () => {
+    if (!selectedImage?.uri && !imageUri) {
+      Alert.alert('Photo needed', `Choose or capture a photo first so ${BRAND_NAME} has something to scan.`);
+      return;
+    }
+    const consentGranted = await requestFaceDataConsent();
+    if (!consentGranted) return;
     const inputImage = selectedImage ?? { uri: imageUri };
     await runScanFlow(inputImage, selectedPhoto);
   };
@@ -1958,6 +2026,9 @@ export default function App() {
     <View style={styles.screenBlock}>
       <Text style={styles.sectionKick}>Enter the standard</Text>
       <Text style={styles.sectionTitle}>Choose a photo and see how your current presentation stacks up against the LooksMaxx standard.</Text>
+      <Pressable style={styles.primaryButton} onPress={startScan}>
+        <Text style={styles.primaryButtonText}>Run Scan</Text>
+      </Pressable>
 
       <View style={styles.uploadCard}>
         <Text style={styles.uploadTag}>{imageUri ? 'PHOTO READY' : 'WAITING FOR YOUR PHOTO'}</Text>
@@ -2000,14 +2071,11 @@ export default function App() {
         </View>
       </View>
 
-      <Pressable style={styles.secondaryButton} onPress={pickImage}>
-        <Text style={styles.secondaryButtonText}>{busyPicking ? 'Opening Photos…' : imageUri ? 'Change Library Photo' : 'Choose Photo from Library'}</Text>
+      <Pressable style={styles.primaryButton} onPress={pickImage}>
+        <Text style={styles.primaryButtonText}>{busyPicking ? 'Opening Photos…' : imageUri ? 'Change Library Photo' : 'Choose Photo from Library'}</Text>
       </Pressable>
-      <Pressable style={styles.secondaryButton} onPress={openCamera}>
-        <Text style={styles.secondaryButtonText}>{cameraButtonLabel}</Text>
-      </Pressable>
-      <Pressable style={styles.primaryButton} onPress={startScan}>
-        <Text style={styles.primaryButtonText}>Run Scan</Text>
+      <Pressable style={styles.primaryButton} onPress={openCamera}>
+        <Text style={styles.primaryButtonText}>{cameraButtonLabel}</Text>
       </Pressable>
     </View>
   );
@@ -2016,6 +2084,9 @@ export default function App() {
     <View style={styles.screenBlock}>
       <Text style={styles.sectionKick}>Capture for the standard</Text>
       <Text style={styles.sectionTitle}>Take a photo directly in the app for the cleanest possible read against the LooksMaxx standard.</Text>
+      <Pressable style={styles.primaryButton} onPress={capturePhoto}>
+        <Text style={styles.primaryButtonText}>Capture Face Photo</Text>
+      </Pressable>
       <View style={styles.cameraShell}>
         {cameraPermission?.granted ? (
           <CameraView ref={cameraRef} facing="front" style={styles.cameraView} />
@@ -2025,9 +2096,6 @@ export default function App() {
       </View>
       <Pressable style={styles.secondaryButton} onPress={() => setScreen('upload')}>
         <Text style={styles.secondaryButtonText}>Back to Upload</Text>
-      </Pressable>
-      <Pressable style={styles.primaryButton} onPress={capturePhoto}>
-        <Text style={styles.primaryButtonText}>Capture Face Photo</Text>
       </Pressable>
     </View>
   );
