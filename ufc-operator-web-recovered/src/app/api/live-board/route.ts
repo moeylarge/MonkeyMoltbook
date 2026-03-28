@@ -87,7 +87,7 @@ export async function GET() {
       const entryOdds = Number(bet.odds_at_pick);
       const currentOdds = live?.pickedOdds ?? null;
       const movement = currentOdds == null ? null : currentOdds - entryOdds;
-      const actionHint = currentOdds == null
+      const actionHint = currentOdds == null || movement == null
         ? 'watch'
         : currentOdds >= 1500 || currentOdds <= -5000
           ? 'completed / market closed'
