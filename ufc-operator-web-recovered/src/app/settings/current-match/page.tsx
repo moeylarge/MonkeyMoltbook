@@ -43,6 +43,7 @@ function fmtTime(value: string | null | undefined) {
 export default function CurrentMatchPage() {
   const [data, setData] = useState<LiveBoardResponse | null>(null);
   const [note, setNote] = useState('');
+  const [saveState, setSaveState] = useState<'idle' | 'saved'>('idle');
 
   useEffect(() => {
     let cancelled = false;
@@ -69,11 +70,14 @@ export default function CurrentMatchPage() {
   useEffect(() => {
     if (!noteKey) return;
     setNote(window.localStorage.getItem(noteKey) ?? '');
+    setSaveState('idle');
   }, [noteKey]);
 
-  const saveNote = (value: string) => {
-    setNote(value);
-    if (noteKey) window.localStorage.setItem(noteKey, value);
+  const saveNote = () => {
+    if (!noteKey) return;
+    window.localStorage.setItem(noteKey, note);
+    setSaveState('saved');
+    window.setTimeout(() => setSaveState('idle'), 1500);
   };
 
   return (
@@ -108,8 +112,21 @@ export default function CurrentMatchPage() {
                 className="min-h-28 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-white"
                 placeholder="What are we watching here? cardio, damage, line movement, hedge thoughts..."
                 value={note}
-                onChange={(e) => saveNote(e.target.value)}
+                onChange={(e) => {
+                  setNote(e.target.value);
+                  setSaveState('idle');
+                }}
               />
+              <div className="mt-3 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={saveNote}
+                  className="rounded-xl bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-500"
+                >
+                  Save note
+                </button>
+                {saveState === 'saved' ? <span className="text-xs text-emerald-300">Saved</span> : null}
+              </div>
             </div>
           </div>
         )}
