@@ -18,6 +18,12 @@ function sameUtcDate(a: Date, b: Date) {
     && a.getUTCDate() === b.getUTCDate();
 }
 
+function eventIsToday(event: any, now: Date) {
+  const commence = event?.commence_time ? new Date(event.commence_time) : null;
+  if (!commence || Number.isNaN(commence.getTime())) return false;
+  return sameUtcDate(commence, now);
+}
+
 async function fetchOddsApiPayload() {
   const apiKey = process.env.THE_ODDS_API_KEY || process.env.ODDS_API_KEY;
   if (!apiKey) throw new Error('Missing THE_ODDS_API_KEY or ODDS_API_KEY');
@@ -46,14 +52,12 @@ export async function GET() {
     ]);
 
     const now = new Date();
-    const pendingToday = bets.filter((bet: any) => {
-      if (bet.result !== 'pending') return false;
-      const ts = bet.timestamp_pick ? new Date(bet.timestamp_pick) : null;
-      return ts ? sameUtcDate(ts, now) : true;
-    });
+    const todaysEvents = payload.filter((event: any) => eventIsToday(event, now));
 
-    const rows = pendingToday.map((bet: any) => {
-      const event = payload.find((item: any) => {
+    const rows = bets
+      .filter((bet: any) => bet.result === 'pending')
+      .map((bet: any) => {
+      const event = todaysEvents.find((item: any) => {
         const home = normalizeName(item.home_team);
         const away = normalizeName(item.away_team);
         const fighter = normalizeName(bet.fighter_name);
@@ -92,7 +96,8 @@ export async function GET() {
         opponentOdds: live?.opponentOdds ?? null,
         updatedAt: live?.updatedAt ?? null,
       };
-    });
+    })
+      .filter((row: any) => row.currentOdds != null || row.opponentOdds != null);
 
     return NextResponse.json({
       ok: true,
