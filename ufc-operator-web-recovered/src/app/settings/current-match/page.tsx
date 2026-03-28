@@ -40,6 +40,13 @@ function fmtTime(value: string | null | undefined) {
   return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' });
 }
 
+function movementTone(value: number | null | undefined) {
+  if (value == null || Number.isNaN(Number(value))) return 'text-zinc-300 bg-zinc-800/70';
+  if (value > 0) return 'text-emerald-300 bg-emerald-500/15';
+  if (value < 0) return 'text-rose-300 bg-rose-500/15';
+  return 'text-zinc-300 bg-zinc-800/70';
+}
+
 export default function CurrentMatchPage() {
   const [data, setData] = useState<LiveBoardResponse | null>(null);
   const [note, setNote] = useState('');
@@ -94,6 +101,11 @@ export default function CurrentMatchPage() {
           <div className="text-sm text-zinc-400">No live/upcoming tracked match right now.</div>
         ) : (
           <div className="space-y-5 text-sm text-zinc-300">
+            <div className="flex items-center gap-3">
+              <span className="rounded-full bg-cyan-500/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-cyan-300">
+                Live now / up next
+              </span>
+            </div>
             <div><span className="text-zinc-500">Fight:</span> <span className="text-white">{row.fight}</span></div>
             <div><span className="text-zinc-500">Status:</span> <span className="text-white">live / upcoming</span></div>
             <div><span className="text-zinc-500">Pick:</span> <span className="text-white">{row.pick}</span></div>
@@ -103,8 +115,14 @@ export default function CurrentMatchPage() {
               <div className="text-zinc-500">Current live odds</div>
               <div className="mt-1 text-4xl font-bold text-red-400">{fmtOdds(row.currentOdds)}</div>
             </div>
-            <div><span className="text-zinc-500">Opponent odds:</span> <span className="text-white">{fmtOdds(row.opponentOdds)}</span></div>
-            <div><span className="text-zinc-500">Live odds movement:</span> <span className="text-white">{fmtMove(row.movement)}</span></div>
+            <div>
+              <div className="text-zinc-500">Opponent live odds</div>
+              <div className="mt-1 text-3xl font-bold text-white">{fmtOdds(row.opponentOdds)}</div>
+            </div>
+            <div>
+              <div className="text-zinc-500">Live odds movement</div>
+              <div className={`mt-1 inline-flex rounded-full px-3 py-1 text-lg font-semibold ${movementTone(row.movement)}`}>{fmtMove(row.movement)}</div>
+            </div>
             <div><span className="text-zinc-500">Action hint:</span> <span className="text-white">{row.actionHint}</span></div>
             <div><span className="text-zinc-500">Book:</span> <span className="text-white">{row.currentBook ?? '—'}</span></div>
             <div><span className="text-zinc-500">Last updated:</span> <span className="text-white">{fmtTime(row.updatedAt)}</span></div>
