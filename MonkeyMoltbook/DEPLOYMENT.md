@@ -10,8 +10,12 @@ This repo is prepared for a static Vercel deploy of the web app.
 - output directory: `apps/web/dist`
 
 ### Important
-The current web shell depends on the local backend at `http://127.0.0.1:8787` for live data.
-Before real public deployment, replace the hardcoded `API` base in `apps/web/src/App.jsx` with your production backend URL.
+The web shell uses `VITE_API_BASE_URL` for live data.
+
+Local example:
+- `apps/web/.env.example`
+
+Before real public deployment, set `VITE_API_BASE_URL` to your production backend URL in Vercel project environment variables.
 
 ## Private repo / backend minimum
 - keep this repo private
