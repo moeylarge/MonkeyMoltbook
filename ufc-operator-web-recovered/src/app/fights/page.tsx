@@ -1,7 +1,7 @@
 export const revalidate = 15;
 
 import Link from 'next/link';
-import { OddsFreshnessText, OddsRecommendationValue, OddsStatusNote } from '@/components/odds-integrity';
+import { OddsRecommendationValue, OddsStatusNote } from '@/components/odds-integrity';
 import { StatusBadge } from '@/components/status-badge';
 import { formatDateTime, formatPct, formatSigned, getPublicBettingFeed, isUpcomingFight } from '@/lib/ufc-data';
 
@@ -19,10 +19,6 @@ export default async function FightsPage() {
         <p className="mt-2 max-w-3xl text-sm text-zinc-400">
           Upcoming UFC fights only, sorted by highest edge first. This page answers one question only: is this a BET, PASS, or AVOID?
         </p>
-      </div>
-
-      <div className="text-xs text-zinc-500">
-        <OddsFreshnessText oddsTimestamp={feed?.oddsTimestamp} />
       </div>
 
       <div className="table-wrap">
