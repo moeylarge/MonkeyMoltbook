@@ -210,7 +210,17 @@ export function formatDateTime(value: string | null | undefined) {
 }
 
 export function isUpcomingFight(item: any) {
-  const eventDate = toDate(item?.event_date ?? item?.eventDate ?? item?.commence_time ?? item?.commenceTime);
+  const rawValue = item?.event_date ?? item?.eventDate ?? item?.commence_time ?? item?.commenceTime;
+  if (!rawValue) return true;
+
+  if (typeof rawValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(rawValue)) {
+    const now = new Date();
+    const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const eventLocal = new Date(`${rawValue}T00:00:00`).getTime();
+    return eventLocal >= todayLocal;
+  }
+
+  const eventDate = toDate(rawValue);
   if (!eventDate) return true;
   return eventDate.getTime() >= Date.now();
 }
