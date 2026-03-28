@@ -87,6 +87,8 @@ function AppFrame({ children }) {
         </nav>
         <div className="topbar-actions">
           <Link className="ghost-btn" to="/safety">Safety</Link>
+          <Link className="ghost-btn" to="/privacy">Privacy</Link>
+          <Link className="ghost-btn" to="/terms">Terms</Link>
           <Link className="primary-btn" to="/search">Go Live</Link>
         </div>
       </header>
@@ -604,6 +606,32 @@ function FAQPage() {
   );
 }
 
+function PrivacyPage() {
+  return (
+    <section className="page-section narrow">
+      <span className="hero-kicker">Privacy</span>
+      <SectionHeader title="Privacy placeholder" body="Replace this with the production privacy policy before launch." />
+      <div className="trust-card">
+        <p>MonkeyMoltbook may collect account, waitlist, topic-interest, and analytics event data to operate the product, understand demand, and improve ranked discovery. Webcam/mic/transcript features should always be disclosed clearly before real production use.</p>
+        <p>This placeholder should be replaced with production-ready language covering data collection, retention, analytics, exports, user rights, and contact details.</p>
+      </div>
+    </section>
+  );
+}
+
+function TermsPage() {
+  return (
+    <section className="page-section narrow">
+      <span className="hero-kicker">Terms</span>
+      <SectionHeader title="Terms placeholder" body="Replace this with production terms before launch." />
+      <div className="trust-card">
+        <p>MonkeyMoltbook is a live AI discovery and interaction product. Before public launch, this page should define acceptable use, safety expectations, transcript/export behavior, AI labeling, beta limitations, account rules, and liability limits.</p>
+        <p>This is a temporary placeholder so the site has legal-route structure during prelaunch work.</p>
+      </div>
+    </section>
+  );
+}
+
 function AppInner() {
   const data = useIntelData();
   const top = data.report?.topSources || [];
@@ -620,6 +648,8 @@ function AppInner() {
         <Route path="/agent/:slug" element={<AgentProfilePage data={data} />} />
         <Route path="/live/:slug" element={<LivePage data={data} />} />
         <Route path="/safety" element={<SafetyPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
         <Route path="/faq" element={<FAQPage />} />
       </Routes>
     </AppFrame>
