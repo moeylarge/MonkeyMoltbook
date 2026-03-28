@@ -116,31 +116,71 @@ If something feels off twice, log it and then fix it.
 - Share page now supports native share on phone and fallback copy/share behavior on web.
 - Important recent commits in this stretch: `84629d1`, `6953b92`, `d966753`, `4ee0e85`, `8cf4405`, `7b3354e`, `4158578`, `05a4ebe`, `1e1b189`, `70291d0`.
 
-## Session addendum — 2026-03-23 App Store submission completed
-- LooksMaxx iOS build succeeded through EAS after removing `expo-face-detector`, which had been breaking native iOS compilation with `EXLogError` / `EXLogWarn` build failures.
-- Important build-fix commit:
-  - `ec99812` — `Remove expo-face-detector to unblock iOS build`
-- Additional launch-prep commits from this session:
-  - `31cad88` — `Add LooksMaxx App Store web pages and submission pack`
-  - `accf390` — `Add deployable LooksMaxx static site for App Store URLs`
-- Live public URLs currently used in App Store Connect:
-  - marketing: `https://looksmaxx-site.vercel.app`
-  - privacy: `https://looksmaxx-site.vercel.app/privacy`
-  - support: `https://looksmaxx-site.vercel.app/support`
-- Draft screenshot folders created in project:
-  - `screenshots-draft/`
-  - `screenshots-appstore-1284x2778/`
-  - `screenshots-appstore-ipad-2064x2752/`
-- App Store Connect submission state reached successfully:
-  - build uploaded
-  - metadata filled
-  - iPhone screenshots uploaded
-  - iPad screenshots uploaded
-  - App Privacy completed
-  - Digital Services Act completed via non-trader / not distributing in EU path
-  - submission completed
-- Current App Store Connect status at end of session:
-  - **Waiting for Review**
-- Launch/review rule from here:
-  - stop changing submission settings unless Apple asks for something specific
-  - next work is only to react to Apple review outcome (approval or rejection notes)
+## Session addendum — 2026-03-27 App Store resubmission with real product fixes
+- Prior review history clarified:
+  - `1.0.0` was submitted on 2026-03-23 and Apple requested changes.
+  - an earlier `1.0.1` build from 2026-03-25 was approved, but it did **not** contain today's fixes.
+- Today's real app changes were made locally and verified in Expo before rebuild:
+  - moved the red primary CTA up so it is visible without scrolling on key flow pages
+  - added a real capture button on the camera page
+  - hardened photo upload/capture flow with fallback handling
+  - added LooksMaxx App Store link to the share text flow
+  - changed the icon/thumbnail direction to use the person image from the first page
+  - restored the first-page hero/person image explicitly using `training/Confident portrait of a young man.png`
+  - made library/camera action buttons use the same red primary style
+- App Store metadata cleanup performed today:
+  - created a new App Store version entry `1.0.1`
+  - public display name had to be set to **LooksMax Pro** because `LooksMaxx` alone was not available in App Store Connect
+  - replaced warped screenshots with corrected 1284×2778 uploads derived from fresh phone screenshots
+- Build/submission path issues resolved today:
+  - Expo free-tier queue/concurrency caused long stalls
+  - local Xcode archive path was blocked by signing/profile confusion and was intentionally abandoned
+  - Expo Starter plan was purchased so EAS could get a usable build slot
+  - App Store submission failures were diagnosed precisely:
+    - reused build number error on `1.0.1`
+    - closed app version error on `1.0.0`
+  - versioning was corrected in `app.json` to:
+    - app version `1.0.1`
+    - iOS build number `1.0.3`
+- Important versioning commits from today:
+  - `905390d` — `Bump iOS build number to 1.0.2`
+  - `0591ae2` — `Bump LooksMaxx to version 1.0.1 build 1.0.3`
+- Final verified App Store Connect state at end of today:
+  - version: **1.0.1**
+  - build: **1.0.3**
+  - status: **Waiting for Review**
+- Resume rule from here:
+  - do **not** rebuild or change App Store metadata again unless Apple requests changes or John explicitly reopens the submission
+  - next work for LooksMaxx is to wait for Apple review outcome and respond only if needed
+
+## Session addendum — 2026-03-28 App Review privacy fix + scoring spread investigation
+- Apple rejection details for `1.0.1 (1.0.3)` were reviewed in App Store Connect.
+- Real rejection substance was privacy / face-data disclosure, not just a generic completeness issue.
+- Response sent to App Review clarified:
+  - users may upload face photos
+  - photos are processed by the app's own backend
+  - raw face photos are not retained after processing
+  - analysis results / scan history may be stored with the account
+  - deletion requests can be sent to `moeylarge@gmail.com`
+- Privacy policy page was updated live at:
+  - `https://looksmaxx-site.vercel.app/privacy`
+- In-app face-data consent prompt was added before analysis in `App.tsx`.
+- New iOS build was created and resubmitted:
+  - version: `1.0.1`
+  - build: `1.0.4`
+  - App Store Connect state after resubmission: **Ready for Review**
+- Important scoring issue discovered from real-world use:
+  - multiple different people all received a score of `74` in the App Store version currently installed on phone
+  - diagnosis indicates backend score compression in `analysis-backend/calibrate.py`, not a simple frontend hardcoded-value bug
+- Backend scoring patch applied:
+  - widened final score spread while keeping sub-scores unchanged
+  - added `rawScore` to backend output for debugging
+  - commit: `c4d82dc` — `Widen LooksMaxx backend score spread`
+- Important caveat:
+  - the phone test was run on stale App Store version `1.0.0`, so it did **not** validate the new scoring patch
+  - Expo/simulator testing was attempted but was not the clean path for verifying real behavior
+- Correct resume point from here:
+  1. wait for Apple approval / availability of the newer app version
+  2. install the newer approved build on phone
+  3. retest score spread on 2–3 different faces
+  4. only if the spread still looks wrong, continue calibration tuning and then decide whether another submission is needed
