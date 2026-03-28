@@ -99,7 +99,10 @@ export default function CurrentMatchPage() {
             <div><span className="text-zinc-500">Pick:</span> <span className="text-white">{row.pick}</span></div>
             <div><span className="text-zinc-500">Entry odds:</span> <span className="text-white">{fmtOdds(row.entryOdds)}</span></div>
             <div><span className="text-zinc-500">Bet placed:</span> <span className="text-white">{fmtTime(row.betPlacedAt)}</span></div>
-            <div><span className="text-zinc-500">Current live odds:</span> <span className="text-white">{fmtOdds(row.currentOdds)}</span></div>
+            <div>
+              <div className="text-zinc-500">Current live odds</div>
+              <div className="mt-1 text-4xl font-bold text-red-400">{fmtOdds(row.currentOdds)}</div>
+            </div>
             <div><span className="text-zinc-500">Opponent odds:</span> <span className="text-white">{fmtOdds(row.opponentOdds)}</span></div>
             <div><span className="text-zinc-500">Live odds movement:</span> <span className="text-white">{fmtMove(row.movement)}</span></div>
             <div><span className="text-zinc-500">Action hint:</span> <span className="text-white">{row.actionHint}</span></div>
