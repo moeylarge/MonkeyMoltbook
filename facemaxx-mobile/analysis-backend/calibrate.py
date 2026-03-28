@@ -5,6 +5,17 @@ def clamp(value: float, minimum: float, maximum: float) -> float:
     return max(minimum, min(maximum, value))
 
 
+def widen_score(raw_score: float, quality_gate: float) -> float:
+    centered = raw_score - 70.0
+    if centered >= 0:
+        expanded = 72.0 + (centered * 1.55)
+    else:
+        expanded = 72.0 + (centered * 1.35)
+
+    quality_adjust = (quality_gate - 0.82) * 12.0
+    return clamp(expanded + quality_adjust, 35.0, 95.0)
+
+
 def run_calibration(pre: Dict[str, Any], det: Dict[str, Any], lm: Dict[str, Any]) -> Dict[str, Any]:
     brightness = float(pre.get("brightness", 128))
     contrast = float(pre.get("contrast", 32))
@@ -97,7 +108,7 @@ def run_calibration(pre: Dict[str, Any], det: Dict[str, Any], lm: Dict[str, Any]
     )
 
     raw_score = (jaw_signal + eye_signal + skin_signal + symmetry_signal + hair_signal + harmony_signal) / 6
-    score = round(clamp(50 + ((raw_score - 50) * quality_gate), 0, 100))
+    score = round(widen_score(raw_score, quality_gate))
     if rejection_reason:
         score = max(0, score - 8)
 
@@ -131,6 +142,7 @@ def run_calibration(pre: Dict[str, Any], det: Dict[str, Any], lm: Dict[str, Any]
         "rejectionReason": rejection_reason,
         "warnings": warnings,
         "qualityGate": round(quality_gate, 6),
+        "rawScore": round(raw_score, 6),
         "measurements": {
             "facialWidthHeightRatio": round(facial_width_height_ratio, 6),
             "interocularRatio": round(interocular_ratio, 6),
