@@ -396,8 +396,16 @@ function SearchPage({ data }) {
 function AgentProfilePage({ data }) {
   const { slug } = useParams();
   const top = data.report?.topSources || [];
-  const agent = top.find((x) => slugify(x.authorName) === slug) || top[0];
-  if (!agent) return <div className="page-section">Loading agent…</div>;
+  const normalizedSlug = slugify(slug);
+  const fallbackAgent = {
+    authorName: slug?.replace(/-/g, ' ') || 'Featured Agent',
+    description: 'A live-ready AI personality built for webcam-first interaction, ranked discovery, and transcript export.',
+    reason: 'Fallback profile while live ranking data catches up to the route.',
+    topics: ['live', 'voice', 'discovery'],
+    profileUrl: null,
+  };
+  const agent = top.find((x) => slugify(x.authorName) === normalizedSlug || slugify(x.authorName).includes(normalizedSlug) || normalizedSlug.includes(slugify(x.authorName)));
+  const resolvedAgent = agent || top[0] || fallbackAgent;
   return (
     <section className="page-section agent-profile">
       <div className="profile-hero">
@@ -408,18 +416,18 @@ function AgentProfilePage({ data }) {
             <span className="presence-pill">Voice persona</span>
             <span className="presence-pill">Transcript enabled</span>
           </div>
-          <h1>{agent.authorName}</h1>
-          <p>{agent.description || agent.reason}</p>
-          <div className="tag-row">{(agent.topics || ['live', 'voice', 'discovery']).map((tag) => <span key={tag} className="tag">{tag}</span>)}</div>
+          <h1>{resolvedAgent.authorName}</h1>
+          <p>{resolvedAgent.description || resolvedAgent.reason}</p>
+          <div className="tag-row">{(resolvedAgent.topics || ['live', 'voice', 'discovery']).map((tag) => <span key={tag} className="tag">{tag}</span>)}</div>
           <div className="metric-row large"><span>Ranked discovery</span><span>Voice style: live / bold</span><span>Transcript enabled</span></div>
           <div className="hero-actions">
-            <Link className="primary-btn large" to={`/live/${slug}`}>Start live session</Link>
-            {agent.profileUrl ? <a className="ghost-btn large" href={agent.profileUrl} target="_blank" rel="noreferrer">Open on Moltbook ↗</a> : null}
+            <Link className="primary-btn large" to={`/live/${slugify(resolvedAgent.authorName)}`}>Start live session</Link>
+            {resolvedAgent.profileUrl ? <a className="ghost-btn large" href={resolvedAgent.profileUrl} target="_blank" rel="noreferrer">Open on Moltbook ↗</a> : null}
           </div>
         </div>
         <div className="profile-card side">
           <h3>Why this matters</h3>
-          <p>{agent.reason}</p>
+          <p>{resolvedAgent.reason}</p>
           <h3>Capabilities</h3>
           <ul>
             <li>Webcam-ready conversation shell</li>
@@ -447,7 +455,7 @@ function LivePage({ data }) {
     <section className="page-section live-page">
       <span className="hero-kicker">Live session</span>
       <SectionHeader title={`Talk live with ${agent?.authorName || 'agent'}`} body="Webcam-first, voice-enabled, transcript-visible, export-ready. UI is real; realtime media infra is placeholder shell." />
-      <div className="live-layout">
+      <div className="live-layout live-layout-monkeyish">
         <div className="live-stage live-stage-upgraded">
           <div className="session-badge-row">
             <span className="presence-pill">Live webcam</span>
