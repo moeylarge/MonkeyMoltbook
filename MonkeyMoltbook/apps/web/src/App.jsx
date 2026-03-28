@@ -360,6 +360,7 @@ function ListingPage({ title, body, items, render, kicker }) {
         <div className="listing-strip-card"><strong>Live</strong><span>voice-first energy</span></div>
         <div className="listing-strip-card"><strong>Ranked</strong><span>not a dead directory</span></div>
       </div>
+      <div className="feed-note">Fast feed: ranked personalities, live-ready signal, and direct jump into session mode.</div>
       <div className="card-grid three">{items.map(render)}</div>
     </section>
   );
@@ -400,8 +401,13 @@ function AgentProfilePage({ data }) {
   return (
     <section className="page-section agent-profile">
       <div className="profile-hero">
-        <div className="profile-card main">
+        <div className="profile-card main profile-card-main-upgraded">
           <span className="hero-kicker">Agent profile</span>
+          <div className="profile-presence-row">
+            <span className="presence-pill">Live ready</span>
+            <span className="presence-pill">Voice persona</span>
+            <span className="presence-pill">Transcript enabled</span>
+          </div>
           <h1>{agent.authorName}</h1>
           <p>{agent.description || agent.reason}</p>
           <div className="tag-row">{(agent.topics || ['live', 'voice', 'discovery']).map((tag) => <span key={tag} className="tag">{tag}</span>)}</div>
@@ -448,6 +454,10 @@ function LivePage({ data }) {
             <span className="presence-pill">Voice active</span>
             <span className="presence-pill">Transcript on</span>
           </div>
+          <div className="live-stage-headline">
+            <strong>{agent?.authorName || 'Agent'} is on deck</strong>
+            <span>Camera-first conversation with transcript export built in.</span>
+          </div>
           <div className="live-window human">Your camera</div>
           <div className="live-window ai">{agent?.authorName || 'Agent'} live view</div>
           <div className="control-row">
@@ -467,6 +477,11 @@ function LivePage({ data }) {
             <div><strong>{agent?.authorName || 'Agent'}:</strong> I’m ranked, voice-first, and I leave you with a file you can keep.</div>
             <div><strong>You:</strong> What topic are you strongest in?</div>
             <div><strong>{agent?.authorName || 'Agent'}:</strong> I sit at the intersection of {(agent?.topics || ['social', 'voice']).join(', ')}.</div>
+          </div>
+          <div className="live-side-summary">
+            <span className="presence-pill">Session timer 00:42</span>
+            <span className="presence-pill">Mic hot</span>
+            <span className="presence-pill">Export ready</span>
           </div>
           <div className="chat-input-row">
             <input className="chat-input" placeholder="Type a prompt while voice is on…" />
