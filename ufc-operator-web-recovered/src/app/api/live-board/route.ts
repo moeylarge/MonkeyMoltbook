@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { NextResponse } from 'next/server';
 import { getBetHistory } from '@/lib/bet-ledger';
 
@@ -44,19 +46,23 @@ function findOutcome(outcomes: any[], fighterName: string) {
   return outcomes.find((outcome) => normalizeName(outcome.name) === normalizeName(fighterName)) ?? null;
 }
 
+function loadWebsiteBundle() {
+  const filePath = path.join(process.cwd(), 'public/data/website_bundle.json');
+  return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+}
+
 export async function GET() {
   try {
     const [bets, payload] = await Promise.all([
       getBetHistory('date'),
       fetchOddsApiPayload(),
     ]);
+    const bundle = loadWebsiteBundle();
 
     const now = new Date();
     const todaysEvents = payload.filter((event: any) => eventIsToday(event, now));
 
-    const rows = bets
-      .filter((bet: any) => bet.result === 'pending')
-      .map((bet: any) => {
+    const buildRow = (bet: any) => {
       const event = todaysEvents.find((item: any) => {
         const home = normalizeName(item.home_team);
         const away = normalizeName(item.away_team);
@@ -113,8 +119,27 @@ export async function GET() {
         movement,
         actionHint,
       };
-    })
+    };
+
+    const rows = bets
+      .filter((bet: any) => bet.result === 'pending')
+      .map(buildRow)
       .filter((row: any) => row.currentOdds != null || row.opponentOdds != null);
+
+    const preferredFight = (bundle?.publicBettingFeed?.fights || []).find((fight: any) => fight.fight === "Casey O'Neill vs Gabriella Fernandes");
+    if (preferredFight && !rows.some((row: any) => row.fight === preferredFight.fight)) {
+      const preferredRow = buildRow({
+        fighter_name: preferredFight.pick,
+        opponent_name: preferredFight.pick === "Casey O'Neill" ? 'Gabriella Fernandes' : "Casey O'Neill",
+        sportsbook_used: preferredFight.sportsbook,
+        odds_at_pick: preferredFight.odds,
+        bet_size_units: preferredFight.betSizeUnits ?? 0,
+        timestamp_pick: preferredFight.eventDate ?? null,
+      });
+      if (preferredRow.currentOdds != null || preferredRow.opponentOdds != null) {
+        rows.unshift(preferredRow);
+      }
+    }
 
     return NextResponse.json({
       ok: true,
