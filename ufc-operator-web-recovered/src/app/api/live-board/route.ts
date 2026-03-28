@@ -84,17 +84,33 @@ export async function GET() {
       const currentBook = preferred?.pickedOdds != null ? bet.sportsbook_used : fallback;
       const live = currentBook ? books[currentBook] : null;
 
+      const entryOdds = Number(bet.odds_at_pick);
+      const currentOdds = live?.pickedOdds ?? null;
+      const movement = currentOdds == null ? null : currentOdds - entryOdds;
+      const actionHint = currentOdds == null
+        ? 'watch'
+        : currentOdds >= 1500 || currentOdds <= -5000
+          ? 'completed / market closed'
+          : movement >= 100
+            ? 'improved — watch for value'
+            : movement <= -100
+              ? 'moved against us — watch closely'
+              : 'hold';
+
       return {
         fight: `${bet.fighter_name} vs ${bet.opponent_name}`,
         fighterName: bet.fighter_name,
         opponentName: bet.opponent_name,
+        pick: bet.fighter_name,
         sportsbookUsed: bet.sportsbook_used,
-        entryOdds: Number(bet.odds_at_pick),
+        entryOdds,
         stakeUnits: Number(bet.bet_size_units ?? 0),
         currentBook,
-        currentOdds: live?.pickedOdds ?? null,
+        currentOdds,
         opponentOdds: live?.opponentOdds ?? null,
         updatedAt: live?.updatedAt ?? null,
+        movement,
+        actionHint,
       };
     })
       .filter((row: any) => row.currentOdds != null || row.opponentOdds != null);

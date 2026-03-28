@@ -1,15 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 type Row = {
   fight: string;
   fighterName: string;
   opponentName: string;
+  pick: string;
   currentBook: string | null;
   currentOdds: number | null;
   opponentOdds: number | null;
   updatedAt: string | null;
+  entryOdds: number;
+  movement: number | null;
+  actionHint: string;
 };
 
 type LiveBoardResponse = {
@@ -23,6 +27,11 @@ function fmtOdds(value: number | null | undefined) {
   return value > 0 ? `+${value}` : `${value}`;
 }
 
+function fmtMove(value: number | null | undefined) {
+  if (value == null || Number.isNaN(Number(value))) return '—';
+  return value > 0 ? `+${value}` : `${value}`;
+}
+
 function fmtTime(value: string | null | undefined) {
   if (!value) return '—';
   const d = new Date(value);
@@ -32,6 +41,7 @@ function fmtTime(value: string | null | undefined) {
 
 export default function CurrentMatchPage() {
   const [data, setData] = useState<LiveBoardResponse | null>(null);
+  const [note, setNote] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -53,6 +63,17 @@ export default function CurrentMatchPage() {
   }, []);
 
   const row = data?.rows?.[0] ?? null;
+  const noteKey = useMemo(() => (row ? `current-match-note:${row.fight}` : null), [row]);
+
+  useEffect(() => {
+    if (!noteKey) return;
+    setNote(window.localStorage.getItem(noteKey) ?? '');
+  }, [noteKey]);
+
+  const saveNote = (value: string) => {
+    setNote(value);
+    if (noteKey) window.localStorage.setItem(noteKey, value);
+  };
 
   return (
     <div className="space-y-6">
@@ -67,13 +88,27 @@ export default function CurrentMatchPage() {
         ) : !row ? (
           <div className="text-sm text-zinc-400">No live/upcoming tracked match right now.</div>
         ) : (
-          <div className="space-y-3 text-sm text-zinc-300">
+          <div className="space-y-5 text-sm text-zinc-300">
             <div><span className="text-zinc-500">Fight:</span> <span className="text-white">{row.fight}</span></div>
             <div><span className="text-zinc-500">Status:</span> <span className="text-white">live / upcoming</span></div>
+            <div><span className="text-zinc-500">Pick:</span> <span className="text-white">{row.pick}</span></div>
+            <div><span className="text-zinc-500">Entry odds:</span> <span className="text-white">{fmtOdds(row.entryOdds)}</span></div>
             <div><span className="text-zinc-500">Current live odds:</span> <span className="text-white">{fmtOdds(row.currentOdds)}</span></div>
             <div><span className="text-zinc-500">Opponent odds:</span> <span className="text-white">{fmtOdds(row.opponentOdds)}</span></div>
+            <div><span className="text-zinc-500">Live odds movement:</span> <span className="text-white">{fmtMove(row.movement)}</span></div>
+            <div><span className="text-zinc-500">Action hint:</span> <span className="text-white">{row.actionHint}</span></div>
             <div><span className="text-zinc-500">Book:</span> <span className="text-white">{row.currentBook ?? '—'}</span></div>
             <div><span className="text-zinc-500">Last updated:</span> <span className="text-white">{fmtTime(row.updatedAt)}</span></div>
+
+            <div>
+              <div className="mb-2 text-zinc-500">Notes</div>
+              <textarea
+                className="min-h-28 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-white"
+                placeholder="What are we watching here? cardio, damage, line movement, hedge thoughts..."
+                value={note}
+                onChange={(e) => saveNote(e.target.value)}
+              />
+            </div>
           </div>
         )}
       </section>
