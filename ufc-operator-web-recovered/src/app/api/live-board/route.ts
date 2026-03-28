@@ -103,6 +103,7 @@ export async function GET() {
         opponentName: bet.opponent_name,
         pick: bet.fighter_name,
         sportsbookUsed: bet.sportsbook_used,
+        betPlacedAt: bet.timestamp_pick ?? null,
         entryOdds,
         stakeUnits: Number(bet.bet_size_units ?? 0),
         currentBook,
