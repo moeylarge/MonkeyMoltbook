@@ -7,6 +7,7 @@ import { getMoltbookIntel, getMoltbookStats, getMoltbookAgents } from './lib/mol
 import { getSchedulerState, startScheduler, stopScheduler } from './lib/moltbook-scheduler.js';
 import { getResponse, getResponseStats } from './lib/responses.js';
 import { isSupabaseStorageEnabled, persistMoltbookSnapshot } from './lib/supabase-storage.js';
+import { addAgentReply, addLiveMessage, createLiveSession, endLiveSession, exportTranscriptText, getLiveSession, listTranscript, liveSessionsEnabled, updateLivePresence } from './lib/live-sessions.js';
 
 export const app = express();
 app.use(express.json());
@@ -152,5 +153,27 @@ app.post('/analytics/event', (req, res) => { const { event = 'unknown', meta = {
 app.get('/hook', async (_req, res) => res.json(await getNextAgentHook()));
 app.get('/preload', async (req, res) => { const requested = Number.parseInt(req.query.count, 10); const count = Number.isFinite(requested) && requested > 0 ? Math.min(requested, DEFAULT_PRELOAD_COUNT) : DEFAULT_PRELOAD_COUNT; res.json({ phase: PHASE, count, hooks: await getNextAgentHooks(count) }); });
 app.get('/response', (req, res) => { const agentId = String(req.query.agentId || 'ego-destroyer'); const userText = String(req.query.userText || ''); const response = getResponse(agentId, userText); res.json({ phase: PHASE, agentId, userText, response: { type: 'response', agentId, text: response.text, validation: response.validation } }); });
+app.get('/live/enabled', (_req, res) => res.json({ phase: PHASE, enabled: liveSessionsEnabled() }));
+app.post('/live/session/create', async (req, res) => {
+  const { agentName = 'Agent', agentAuthorId = null, entrySource = 'direct', mode = 'free', ttsEnabled = true, transcriptEnabled = true } = req.body || {};
+  const created = await createLiveSession({ agentName, agentAuthorId, entrySource, mode, ttsEnabled, transcriptEnabled });
+  res.json({ phase: PHASE, ok: true, ...created });
+});
+app.get('/live/session/:id', async (req, res) => res.json({ phase: PHASE, ok: true, ...(await getLiveSession(req.params.id)) }));
+app.post('/live/session/:id/message', async (req, res) => {
+  const sessionId = req.params.id;
+  const text = String(req.body?.text || '');
+  const state = await getLiveSession(sessionId);
+  const userMessage = await addLiveMessage(sessionId, { role: 'user', messageType: 'typed', text });
+  const agentReply = await addAgentReply(sessionId, text, state?.session?.agent_name || 'Agent');
+  res.json({ phase: PHASE, ok: true, userMessage, agentReply });
+});
+app.post('/live/session/:id/presence', async (req, res) => res.json({ phase: PHASE, ok: true, presence: await updateLivePresence(req.params.id, req.body || {}) }));
+app.post('/live/session/:id/end', async (req, res) => res.json({ phase: PHASE, ok: true, session: await endLiveSession(req.params.id) }));
+app.get('/live/session/:id/transcript', async (req, res) => res.json({ phase: PHASE, ok: true, messages: await listTranscript(req.params.id) }));
+app.get('/live/session/:id/export', async (req, res) => {
+  const text = await exportTranscriptText(req.params.id);
+  res.type('text/plain').send(text);
+});
 
 export default app;

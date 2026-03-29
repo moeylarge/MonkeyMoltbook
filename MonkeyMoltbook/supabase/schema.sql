@@ -145,3 +145,51 @@ create table if not exists submolt_snapshots (
   captured_at timestamptz not null default now()
 );
 create index if not exists idx_submolt_snapshots_run_id on submolt_snapshots(run_id);
+
+create table if not exists sessions (
+  id uuid primary key default gen_random_uuid(),
+  user_id text,
+  guest_id text,
+  agent_author_id text,
+  agent_name text not null,
+  entry_source text,
+  mode text not null default 'free',
+  status text not null default 'created',
+  tts_enabled boolean not null default true,
+  stt_enabled boolean not null default false,
+  cam_enabled boolean not null default false,
+  mic_enabled boolean not null default true,
+  transcript_enabled boolean not null default true,
+  started_at timestamptz not null default now(),
+  ended_at timestamptz,
+  last_event_at timestamptz not null default now(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists idx_sessions_status on sessions(status);
+create index if not exists idx_sessions_agent_name on sessions(agent_name);
+
+create table if not exists session_messages (
+  id uuid primary key default gen_random_uuid(),
+  session_id uuid not null references sessions(id) on delete cascade,
+  role text not null,
+  message_type text not null,
+  text text not null,
+  meta jsonb,
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_session_messages_session_id on session_messages(session_id, created_at);
+
+create table if not exists session_presence (
+  id uuid primary key default gen_random_uuid(),
+  session_id uuid not null references sessions(id) on delete cascade,
+  user_cam_on boolean not null default false,
+  user_mic_on boolean not null default true,
+  tts_on boolean not null default true,
+  transcript_on boolean not null default true,
+  queue_position int,
+  battle_ready boolean not null default false,
+  updated_at timestamptz not null default now(),
+  unique (session_id)
+);
+create index if not exists idx_session_presence_session_id on session_presence(session_id);

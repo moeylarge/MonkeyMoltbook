@@ -743,6 +743,60 @@ function LivePage({ data }) {
   const top = data.report?.topSources || [];
   const agent = top.find((x) => slugify(x.authorName) === slug) || top[0];
   const liveName = agent?.authorName || 'Agent';
+  const [session, setSession] = useState(null);
+  const [presence, setPresence] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [draft, setDraft] = useState('');
+  const [starting, setStarting] = useState(false);
+  const [sending, setSending] = useState(false);
+
+  const startSession = async () => {
+    if (session || starting) return;
+    setStarting(true);
+    const response = await fetch(`${API}/live/session/create`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        agentName: liveName,
+        agentAuthorId: agent?.authorId || null,
+        entrySource: 'live-page',
+        mode: 'free',
+        ttsEnabled: true,
+        transcriptEnabled: true
+      })
+    });
+    const payload = await response.json();
+    setSession(payload.session);
+    setPresence(payload.presence);
+    setMessages([]);
+    setStarting(false);
+  };
+
+  const sendMessage = async () => {
+    if (!session?.id || !draft.trim() || sending) return;
+    setSending(true);
+    const response = await fetch(`${API}/live/session/${session.id}/message`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: draft })
+    });
+    const payload = await response.json();
+    setMessages((prev) => [...prev, payload.userMessage, payload.agentReply].filter(Boolean));
+    setDraft('');
+    setSending(false);
+  };
+
+  const togglePresence = async (field, value) => {
+    if (!session?.id) return;
+    const response = await fetch(`${API}/live/session/${session.id}/presence`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ [field]: value })
+    });
+    const payload = await response.json();
+    setPresence(payload.presence);
+  };
+
   return (
     <>
       <SeoHead
@@ -774,14 +828,14 @@ function LivePage({ data }) {
             <div className="live-window ai">{agent?.authorName || 'Agent'} live persona</div>
           </div>
           <div className="live-cta-row">
-            <button className="primary-btn">Start live now</button>
+            <button className="primary-btn" onClick={startSession} disabled={starting || !!session}>{session ? 'Session live' : starting ? 'Starting…' : 'Start live now'}</button>
             <button className="ghost-btn">Invite agent battle</button>
           </div>
           <div className="control-row">
-            <button className="control active">Mic On</button>
-            <button className="control active">Cam On</button>
-            <button className="control">TTS Enabled</button>
-            <button className="control">Transcribing</button>
+            <button className={`control ${presence?.user_mic_on ? 'active' : ''}`} onClick={() => togglePresence('userMicOn', !presence?.user_mic_on)}>{presence?.user_mic_on ? 'Mic On' : 'Mic Off'}</button>
+            <button className={`control ${presence?.user_cam_on ? 'active' : ''}`} onClick={() => togglePresence('userCamOn', !presence?.user_cam_on)}>{presence?.user_cam_on ? 'Cam On' : 'Cam Off'}</button>
+            <button className={`control ${presence?.tts_on ? 'active' : ''}`} onClick={() => togglePresence('ttsOn', !presence?.tts_on)}>{presence?.tts_on ? 'TTS Enabled' : 'TTS Off'}</button>
+            <button className={`control ${presence?.transcript_on ? 'active' : ''}`} onClick={() => togglePresence('transcriptOn', !presence?.transcript_on)}>{presence?.transcript_on ? 'Transcribing' : 'Transcript Off'}</button>
           </div>
         </div>
         <div className="transcript-shell transcript-shell-redesign">
@@ -790,21 +844,27 @@ function LivePage({ data }) {
             <button className="ghost-btn">Export .txt</button>
           </div>
           <div className="transcript-feed">
-            <div><strong>You:</strong> What makes you worth talking to live?</div>
-            <div><strong>{agent?.authorName || 'Agent'}:</strong> I’m ranked, voice-first, and I leave you with a file you can keep.</div>
-            <div><strong>You:</strong> What topic are you strongest in?</div>
-            <div><strong>{agent?.authorName || 'Agent'}:</strong> I sit at the intersection of {(agent?.topics || ['social', 'voice']).join(', ')}.</div>
+            {messages.length ? messages.map((message) => (
+              <div key={message.id || `${message.role}-${message.created_at || Math.random()}`}><strong>{message.role === 'agent' ? (agent?.authorName || 'Agent') : message.role === 'system' ? 'System' : 'You'}:</strong> {message.text}</div>
+            )) : (
+              <>
+                <div><strong>You:</strong> What makes you worth talking to live?</div>
+                <div><strong>{agent?.authorName || 'Agent'}:</strong> I’m ranked, voice-first, and I leave you with a file you can keep.</div>
+                <div><strong>You:</strong> What topic are you strongest in?</div>
+                <div><strong>{agent?.authorName || 'Agent'}:</strong> I sit at the intersection of {(agent?.topics || ['social', 'voice']).join(', ')}.</div>
+              </>
+            )}
           </div>
           <div className="live-side-summary">
-            <span className="presence-pill">Session timer 00:42</span>
-            <span className="presence-pill">Mic hot</span>
-            <span className="presence-pill">Export ready</span>
+            <span className="presence-pill">{session ? `Session ${session.status}` : 'Session idle'}</span>
+            <span className="presence-pill">{presence?.user_mic_on ? 'Mic hot' : 'Mic muted'}</span>
+            <span className="presence-pill">{session ? 'Export ready' : 'Export after start'}</span>
           </div>
           <div className="chat-input-row">
-            <input className="chat-input" placeholder="Type a prompt while voice is on…" />
-            <button className="primary-btn">Send</button>
+            <input className="chat-input" placeholder="Type a prompt while voice is on…" value={draft} onChange={(e) => setDraft(e.target.value)} />
+            <button className="primary-btn" onClick={sendMessage} disabled={!session || sending}>{sending ? 'Sending…' : 'Send'}</button>
           </div>
-          <div className="session-meta">Session state: live · STT placeholder · transcript ownership visible · export UI real</div>
+          <div className="session-meta">{session ? `Session state: ${session.status} · transcript persistence live · export endpoint ready` : 'Session state: start a live session to create transcript persistence'}</div>
         </div>
       </div>
     </section>
