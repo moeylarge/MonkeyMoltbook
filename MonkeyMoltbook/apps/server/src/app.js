@@ -6,7 +6,7 @@ import { authorsToCsv, buildGrowthMetrics, snapshotsToCsv } from './lib/moltbook
 import { getMoltbookIntel, getMoltbookStats, getMoltbookAgents } from './lib/moltbook.js';
 import { getSchedulerState, startScheduler, stopScheduler } from './lib/moltbook-scheduler.js';
 import { getResponse, getResponseStats } from './lib/responses.js';
-import { isSupabaseStorageEnabled } from './lib/supabase-storage.js';
+import { isSupabaseStorageEnabled, persistMoltbookSnapshot } from './lib/supabase-storage.js';
 
 export const app = express();
 app.use(express.json());
@@ -36,17 +36,45 @@ function appendJsonl(filePath, payload) {
 }
 
 async function runMoltbookRefreshJob(meta = {}) {
+  const mode = meta.mode || 'default';
+  const triggerSource = meta.source || 'manual';
   const result = await getMoltbookAgents();
   const intel = await getMoltbookIntel();
+
+  let storage = { enabled: isSupabaseStorageEnabled(), persisted: false };
+  if (storage.enabled) {
+    try {
+      const persisted = await persistMoltbookSnapshot({
+        mode,
+        triggerSource,
+        source: result.source,
+        intel
+      });
+      storage = {
+        enabled: true,
+        persisted: Boolean(persisted?.ok),
+        runId: persisted?.runId || null,
+        authorRows: persisted?.authorRows || 0
+      };
+    } catch (error) {
+      storage = {
+        enabled: true,
+        persisted: false,
+        error: String(error?.message || error)
+      };
+    }
+  }
+
   return {
     ok: true,
-    mode: meta.mode || 'default',
-    triggerSource: meta.source || 'manual',
+    mode,
+    triggerSource,
     source: result.source,
     activeAgents: result.agents.length,
     lastFetchedAt: intel.lastFetchedAt,
     postCount: intel.postCount,
     authorCount: intel.authorCount,
+    storage,
   };
 }
 
