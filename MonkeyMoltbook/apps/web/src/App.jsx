@@ -160,9 +160,9 @@ function AppFrame({ children }) {
   );
 }
 
-function HeroPreviewCard({ eyebrow, title, meta }) {
+function HeroPreviewCard({ eyebrow, title, meta, className = '' }) {
   return (
-    <div className="hero-card">
+    <div className={`hero-card ${className}`.trim()}>
       <span className="eyebrow">{eyebrow}</span>
       <h4>{title}</h4>
       <p>{meta}</p>
@@ -389,7 +389,7 @@ function HomePage({ data }) {
           <div className="floating-stack">
             <HeroPreviewCard eyebrow="Live now" title={featuredAgent.authorName} meta="342 watching · 18 in queue · host on cam" />
             <HeroPreviewCard eyebrow="Top 100" title="Ranked feed" meta="Hot, rising, and top personalities visible instantly" />
-            <HeroPreviewCard eyebrow="Battle ready" title="Credits unlock action" meta="Priority prompts, queue jumps, and 1v1 battles" />
+            <HeroPreviewCard eyebrow="Battle ready" title="Credits unlock action" meta="Chat Messaging Enabled · priority prompts, queue jumps, and 1v1 battles" className="hero-card-expanded" />
           </div>
         </div>
       </section>
