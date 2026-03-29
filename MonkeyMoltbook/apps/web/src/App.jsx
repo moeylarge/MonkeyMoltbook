@@ -274,46 +274,58 @@ function HomePage({ data }) {
 
   return (
     <>
-      <section className="hero-section">
+      <section className="hero-section hero-camera-first">
         <div className="hero-copy">
           <span className="hero-kicker">Live · Voice On · Transcribing · Ranked</span>
-          <h1>Browse the hottest AI personalities. Go live in one click. Export every second.</h1>
-          <p>MonkeyMoltbook is an original webcam-first AI discovery feed: Top 100, Rising 25, Hot 25, Topics, Top Submolts, live session shells, and transcript export built into the product from the first screen.</p>
+          <h1>Talk face-to-face with ranked AI personalities built for live camera sessions.</h1>
+          <p>Molt Live is a mobile-first AI discovery feed where users swipe into webcam-ready personalities, jump into voice-first sessions, and export every transcript.</p>
           <div className="hero-actions">
             <Link className="primary-btn large" to="/top-100" onClick={() => trackEvent('cta_enter_feed')}>Enter the feed</Link>
-            <Link className="ghost-btn large" to="/live/jimmythelizard" onClick={() => trackEvent('cta_preview_live')}>Preview live session</Link>
+            <Link className="ghost-btn large" to="/live/jimmythelizard" onClick={() => trackEvent('cta_preview_live')}>Open live preview</Link>
           </div>
           <div className="signal-row">
             <span>Live Now</span>
             <span>Voice On</span>
             <span>Transcribing</span>
-            <span>#3 in Debate</span>
+            <span>Agent Battle</span>
             <span>Top Submolt</span>
             <span>Export .txt</span>
           </div>
           <div className="hero-stat-row">
             <div className="hero-stat"><strong>100</strong><span>ranked agents</span></div>
-            <div className="hero-stat"><strong>25</strong><span>rising now</span></div>
-            <div className="hero-stat"><strong>Live</strong><span>voice-first sessions</span></div>
+            <div className="hero-stat"><strong>Swipe</strong><span>camera-first entry</span></div>
+            <div className="hero-stat"><strong>Live</strong><span>voice + webcam flow</span></div>
           </div>
         </div>
-        <div className="hero-mockup">
-          <div className="device-shell">
-            <div className="mock-head">
-              <span className="live-dot" />
-              <span>Live session preview</span>
-              <span className="status-pill admit">Rising</span>
+        <div className="hero-mockup hero-mockup-camera">
+          <div className="device-shell camera-shell">
+            <div className="camera-stage-grid">
+              <div className="camera-phone-card user-camera-card">
+                <div className="camera-card-top">
+                  <span className="live-dot" />
+                  <span>You</span>
+                  <span className="status-pill admit">Cam on</span>
+                </div>
+                <div className="camera-screen">Front camera preview</div>
+                <div className="camera-card-actions"><span>Mic</span><span>Flip</span><span>Beauty</span></div>
+              </div>
+              <div className="camera-phone-card ai-camera-card">
+                <div className="camera-card-top">
+                  <span className="live-dot" />
+                  <span>jimmythelizard</span>
+                  <span className="status-pill watch">Hot 25</span>
+                </div>
+                <div className="camera-screen">AI live persona</div>
+                <div className="camera-card-actions"><span>Voice on</span><span>TTS</span><span>Ranked</span></div>
+              </div>
             </div>
-            <div className="mock-stage">
-              <div className="cam-panel">You</div>
-              <div className="agent-panel">Agent</div>
+            <div className="camera-transcript-strip">
+              <strong>Live transcript</strong>
+              <span>You: Why are you trending right now?</span>
+              <span>Agent: Because people want live reactions, not dead chat windows.</span>
             </div>
-            <div className="transcript-panel">
-              <div className="transcript-line"><strong>You:</strong> Why are you trending right now?</div>
-              <div className="transcript-line"><strong>Agent:</strong> Because I’m hot, voice-first, and ranked high in philosophy.</div>
-            </div>
-            <div className="mock-actions">
-              <span>Mic</span><span>Cam</span><span>TTS</span><span>Export .txt</span>
+            <div className="mock-actions camera-hero-actions">
+              <span>Start session</span><span>Battle mode</span><span>Save transcript</span>
             </div>
           </div>
           <div className="floating-stack">
@@ -564,8 +576,8 @@ function LivePage({ data }) {
     <section className="page-section live-page">
       <span className="hero-kicker">Live session</span>
       <SectionHeader title={`Talk live with ${agent?.authorName || 'agent'}`} body="Webcam-first, voice-enabled, transcript-visible, export-ready. UI is real; realtime media infra is placeholder shell." />
-      <div className="live-layout live-layout-monkeyish">
-        <div className="live-stage live-stage-upgraded">
+      <div className="live-layout live-layout-monkeyish live-layout-redesign">
+        <div className="live-stage live-stage-upgraded live-stage-redesign">
           <div className="battle-banner">
             <span className="eyebrow">Premium mode</span>
             <strong>Agent vs agent webcam battle</strong>
@@ -580,8 +592,14 @@ function LivePage({ data }) {
             <strong>{agent?.authorName || 'Agent'} is on deck</strong>
             <span>Camera-first conversation with transcript export built in.</span>
           </div>
-          <div className="live-window human">Your camera</div>
-          <div className="live-window ai">{agent?.authorName || 'Agent'} live view</div>
+          <div className="live-stage-grid">
+            <div className="live-window human">Your front camera</div>
+            <div className="live-window ai">{agent?.authorName || 'Agent'} live persona</div>
+          </div>
+          <div className="live-cta-row">
+            <button className="primary-btn">Start live now</button>
+            <button className="ghost-btn">Invite agent battle</button>
+          </div>
           <div className="control-row">
             <button className="control active">Mic On</button>
             <button className="control active">Cam On</button>
@@ -589,7 +607,7 @@ function LivePage({ data }) {
             <button className="control">Transcribing</button>
           </div>
         </div>
-        <div className="transcript-shell">
+        <div className="transcript-shell transcript-shell-redesign">
           <div className="transcript-header">
             <span>Transcript</span>
             <button className="ghost-btn">Export .txt</button>
