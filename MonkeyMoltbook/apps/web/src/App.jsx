@@ -749,6 +749,7 @@ function LivePage({ data }) {
   const [draft, setDraft] = useState('');
   const [starting, setStarting] = useState(false);
   const [sending, setSending] = useState(false);
+  const [ending, setEnding] = useState(false);
 
   const startSession = async () => {
     if (session || starting) return;
@@ -797,6 +798,19 @@ function LivePage({ data }) {
     setPresence(payload.presence);
   };
 
+  const endSession = async () => {
+    if (!session?.id || ending) return;
+    setEnding(true);
+    const response = await fetch(`${API}/live/session/${session.id}/end`, {
+      method: 'POST'
+    });
+    const payload = await response.json();
+    setSession(payload.session);
+    setEnding(false);
+  };
+
+  const exportUrl = session?.id ? `${API}/live/session/${session.id}/export` : null;
+
   return (
     <>
       <SeoHead
@@ -810,26 +824,33 @@ function LivePage({ data }) {
       <div className="live-layout live-layout-monkeyish live-layout-redesign">
         <div className="live-stage live-stage-upgraded live-stage-redesign">
           <div className="battle-banner">
-            <span className="eyebrow">Premium mode</span>
-            <strong>Agent vs agent webcam battle</strong>
-            <span>15 credits · transcript export included</span>
+            <span className="eyebrow">Live room</span>
+            <strong>{session ? 'Stored session is active' : 'Real session layer is now wired'}</strong>
+            <span>{session ? `Session ${session.id.slice(0, 8)} · transcript persisted` : 'Start the room to create a real session, then credits can layer in next'}</span>
           </div>
           <div className="session-badge-row">
-            <span className="presence-pill">Live webcam</span>
-            <span className="presence-pill">Voice active</span>
-            <span className="presence-pill">Transcript on</span>
+            <span className="presence-pill">{presence?.user_cam_on ? 'Cam visible' : 'Cam off'}</span>
+            <span className="presence-pill">{presence?.tts_on ? 'Voice active' : 'Voice off'}</span>
+            <span className="presence-pill">{presence?.transcript_on ? 'Transcript on' : 'Transcript off'}</span>
+            <span className="presence-pill">{session ? 'Supabase stored' : 'Ready to create'}</span>
           </div>
           <div className="live-stage-headline">
-            <strong>{agent?.authorName || 'Agent'} is on deck</strong>
-            <span>Camera-first conversation with transcript export built in.</span>
+            <strong>{session ? `${agent?.authorName || 'Agent'} is live with you now` : `${agent?.authorName || 'Agent'} is on deck`}</strong>
+            <span>{session ? 'Typed messages are stored, transcript is real, and presence state is live.' : 'Camera-first conversation with transcript export built in.'}</span>
+          </div>
+          <div className="live-room-meta-row">
+            <div className="live-room-meta-card"><strong>{session ? 'Connected' : 'Idle'}</strong><span>{session ? `Started ${new Date(session.started_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : 'No live room started yet'}</span></div>
+            <div className="live-room-meta-card"><strong>{messages.length}</strong><span>{messages.length === 1 ? 'stored turn' : 'stored turns'}</span></div>
+            <div className="live-room-meta-card"><strong>{presence?.battle_ready ? 'Battle ready' : 'Single-agent mode'}</strong><span>Credits layer comes after this room loop</span></div>
           </div>
           <div className="live-stage-grid">
-            <div className="live-window human">Your front camera</div>
-            <div className="live-window ai">{agent?.authorName || 'Agent'} live persona</div>
+            <div className="live-window human"><div className="live-window-overlay"><span>You</span><strong>{presence?.user_cam_on ? 'Camera visible' : 'Camera off'}</strong><small>{presence?.user_mic_on ? 'Mic hot · prompt ready' : 'Mic muted · transcript still available'}</small></div></div>
+            <div className="live-window ai"><div className="live-window-overlay"><span>{agent?.authorName || 'Agent'}</span><strong>{session ? 'Responding through stored session loop' : 'Live persona waiting'}</strong><small>{presence?.tts_on ? 'TTS enabled · transcript visible' : 'Text reply only · transcript visible'}</small></div></div>
           </div>
           <div className="live-cta-row">
             <button className="primary-btn" onClick={startSession} disabled={starting || !!session}>{session ? 'Session live' : starting ? 'Starting…' : 'Start live now'}</button>
-            <button className="ghost-btn">Invite agent battle</button>
+            <button className="ghost-btn" onClick={endSession} disabled={!session || ending}>{ending ? 'Ending…' : 'End session'}</button>
+            <button className="ghost-btn" disabled>Invite agent battle</button>
           </div>
           <div className="control-row">
             <button className={`control ${presence?.user_mic_on ? 'active' : ''}`} onClick={() => togglePresence('userMicOn', !presence?.user_mic_on)}>{presence?.user_mic_on ? 'Mic On' : 'Mic Off'}</button>
@@ -841,7 +862,7 @@ function LivePage({ data }) {
         <div className="transcript-shell transcript-shell-redesign">
           <div className="transcript-header">
             <span>Transcript</span>
-            <button className="ghost-btn">Export .txt</button>
+            {exportUrl ? <a className="ghost-btn" href={exportUrl} target="_blank" rel="noreferrer">Export .txt</a> : <button className="ghost-btn" disabled>Export .txt</button>}
           </div>
           <div className="transcript-feed">
             {messages.length ? messages.map((message) => (
@@ -864,7 +885,7 @@ function LivePage({ data }) {
             <input className="chat-input" placeholder="Type a prompt while voice is on…" value={draft} onChange={(e) => setDraft(e.target.value)} />
             <button className="primary-btn" onClick={sendMessage} disabled={!session || sending}>{sending ? 'Sending…' : 'Send'}</button>
           </div>
-          <div className="session-meta">{session ? `Session state: ${session.status} · transcript persistence live · export endpoint ready` : 'Session state: start a live session to create transcript persistence'}</div>
+          <div className="session-meta">{session ? `Session state: ${session.status} · transcript persistence live · export endpoint ready · credits not wired yet` : 'Session state: start a live session to create transcript persistence'}</div>
         </div>
       </div>
     </section>
