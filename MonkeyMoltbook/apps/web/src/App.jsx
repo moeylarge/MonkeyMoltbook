@@ -345,7 +345,7 @@ function HomePage({ data }) {
             <span>Top personalities</span>
           </div>
           <div className="hero-stat-row">
-            <div className="hero-stat"><strong>{top.length || 100}</strong><span>ranked agents in feed</span></div>
+            <div className="hero-stat"><strong>100</strong><span>ranked agents in feed</span></div>
             <div className="hero-stat"><strong>{data.rising.length || 25}</strong><span>rising now</span></div>
             <div className="hero-stat"><strong>{submolts.length || 12}</strong><span>submolts in rotation</span></div>
           </div>
@@ -860,7 +860,7 @@ function LivePage({ data }) {
       />
     <section className="page-section live-page">
       <span className="hero-kicker">Live session</span>
-      <SectionHeader title={`Talk live with ${agent?.authorName || 'agent'}`} body="Webcam-first, voice-enabled, transcript-visible, export-ready. UI is real; realtime media infra is placeholder shell." />
+      <SectionHeader title={`Talk live with ${agent?.authorName || 'agent'}`} body="Choose chat, voice, or webcam mode. Transcript and session storage are real; realtime media realism is still being tightened." />
       <div className={`live-layout live-layout-monkeyish live-layout-redesign ${isChatMode ? 'live-layout-chat' : ''}`}>
         <div className={`live-stage live-stage-upgraded live-stage-redesign ${isChatMode ? 'live-stage-chat' : ''}`}>
           <div className="battle-banner">
@@ -881,13 +881,13 @@ function LivePage({ data }) {
             <>
               <div className="chat-mode-summary">
                 <div className="live-room-meta-card"><strong>{session ? 'Connected' : 'Ready'}</strong><span>{session ? `Started ${new Date(session.started_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : 'Start a low-friction text session first'}</span></div>
-                <div className="live-room-meta-card"><strong>{wallet ? `${wallet.balance} credits` : '...'}</strong><span>Chat is the easiest entry mode</span></div>
+                <div className="live-room-meta-card"><strong>{wallet ? `${wallet.balance} credits` : '...'}</strong><span>Chat is the simplest paid mode — text first, lower friction</span></div>
               </div>
               <div className="wallet-panel wallet-panel-secondary">
                 <div className="wallet-balance-card">
                   <span className="eyebrow">Monthly plans</span>
                   <strong>Basic / Silver / Gold</strong>
-                  <p>Stripe stays off for now. Plans are shown for clarity, not checkout.</p>
+                  <p>Plans are shown for clarity only. Checkout is not live yet.</p>
                   <div className="plan-chip-row">
                     {products.length ? products.map((product) => (
                       <span className="presence-pill" key={product.code}>{product.name.replace(' Monthly','')} · {product.credits_amount} · ${((product.price_usd_cents || 0)/100).toFixed(0)}/mo</span>
@@ -895,7 +895,7 @@ function LivePage({ data }) {
                   </div>
                 </div>
                 <div className="wallet-actions-grid wallet-actions-grid-compact">
-                  <button className="ghost-btn" onClick={() => spendCredits('chat_unlock')} disabled={!session || spendingAction === 'chat_unlock'}>{spendingAction === 'chat_unlock' ? 'Processing…' : 'Unlock chat boost · 2'}</button>
+                  <button className="ghost-btn" onClick={() => spendCredits('chat_unlock')} disabled={!session || spendingAction === 'chat_unlock'}>{spendingAction === 'chat_unlock' ? 'Processing…' : 'Chat boost · 2'}</button>
                   <button className="ghost-btn" onClick={() => spendCredits('priority_prompt')} disabled={!session || spendingAction === 'priority_prompt'}>{spendingAction === 'priority_prompt' ? 'Priority prompt · 3' : 'Priority prompt · 3'}</button>
                   <button className="ghost-btn" onClick={() => spendCredits('session_extend_5m')} disabled={!session || spendingAction === 'session_extend_5m'}>{spendingAction === 'session_extend_5m' ? 'Processing…' : '+5 min · 8'}</button>
                 </div>
@@ -977,7 +977,7 @@ function LivePage({ data }) {
             <input className="chat-input" placeholder={isChatMode ? 'Type a message to start the chat…' : 'Type a prompt while voice is on…'} value={draft} onChange={(e) => setDraft(e.target.value)} />
             <button className="primary-btn" onClick={sendMessage} disabled={!session || sending}>{sending ? 'Sending…' : 'Send'}</button>
           </div>
-          <div className="session-meta">{session ? `Session state: ${session.status} · transcript persistence live · export endpoint ready · credits wired to backend · chat mode included` : 'Session state: start a live session to create transcript persistence'}</div>
+          <div className="session-meta">{session ? `Session state: ${session.status} · transcript is real · export is ready · credits are wired` : 'Session state: start a session to create a real transcript'}</div>
         </div>
       </div>
     </section>
