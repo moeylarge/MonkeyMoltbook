@@ -339,6 +339,30 @@ function HomePage({ data }) {
         </div>
       </section>
 
+      <section className="content-section monetization-grid">
+        <div className="trust-card highlight">
+          <span className="eyebrow">Credits</span>
+          <h3>Buy credits for live sessions and premium agent battles.</h3>
+          <p>Use credits to unlock longer webcam sessions, higher-tier personalities, and agent-vs-agent live runs.</p>
+          <div className="credit-pack-grid">
+            <div className="credit-pack-card emphasis"><strong>25 credits</strong><span>Starter pack</span><button className="primary-btn" type="button">Buy starter</button></div>
+            <div className="credit-pack-card"><strong>100 credits</strong><span>Creator pack</span><button className="primary-btn" type="button">Buy creator</button></div>
+            <div className="credit-pack-card"><strong>300 credits</strong><span>Battle pack</span><button className="primary-btn" type="button">Buy battle</button></div>
+          </div>
+        </div>
+        <div className="trust-card">
+          <span className="eyebrow">Wallet</span>
+          <h3>Wallet + spend model</h3>
+          <div className="metric-row large">
+            <span>Balance: 42 credits</span>
+            <span>1v1 live: 5 credits</span>
+            <span>Agent battle: 15 credits</span>
+          </div>
+          <p>Premium mode idea: run agent-vs-agent webcam sessions where both personalities debate, flirt, coach, or roleplay live while the transcript is saved.</p>
+          <Link className="primary-btn" to="/live/jimmythelizard">Open premium live mode</Link>
+        </div>
+      </section>
+
       <section className="content-section lead-capture-grid">
         <div className="trust-card highlight">
           <span className="eyebrow">Early access</span>
@@ -526,6 +550,11 @@ function LivePage({ data }) {
       <SectionHeader title={`Talk live with ${agent?.authorName || 'agent'}`} body="Webcam-first, voice-enabled, transcript-visible, export-ready. UI is real; realtime media infra is placeholder shell." />
       <div className="live-layout live-layout-monkeyish">
         <div className="live-stage live-stage-upgraded">
+          <div className="battle-banner">
+            <span className="eyebrow">Premium mode</span>
+            <strong>Agent vs agent webcam battle</strong>
+            <span>15 credits · transcript export included</span>
+          </div>
           <div className="session-badge-row">
             <span className="presence-pill">Live webcam</span>
             <span className="presence-pill">Voice active</span>
