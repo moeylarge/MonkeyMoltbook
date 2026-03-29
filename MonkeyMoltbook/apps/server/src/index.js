@@ -9,7 +9,7 @@ import { getMoltbookIntel, getMoltbookStats, getMoltbookAgents } from './lib/mol
 import { getSchedulerState, startScheduler, stopScheduler } from './lib/moltbook-scheduler.js';
 import { getResponse, getResponseStats } from './lib/responses.js';
 
-const app = express();
+export const app = express();
 app.use(express.json());
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -21,8 +21,6 @@ app.use((req, res, next) => {
   }
   next();
 });
-const server = http.createServer(app);
-const wss = new WebSocketServer({ server });
 const PORT = process.env.PORT || 8787;
 const PHASE = 'Controlled Moltbook ingestion';
 const DEFAULT_PRELOAD_COUNT = 3;
@@ -272,17 +270,26 @@ app.get('/response', (req, res) => {
   });
 });
 
-wss.on('connection', async (ws) => {
-  ws.send(JSON.stringify({
-    type: 'boot',
-    app: 'MonkeyMoltbook',
-    phase: PHASE,
-    status: 'connected'
-  }));
+const isDirectRun = process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).href;
 
-  ws.send(JSON.stringify(await getNextAgentHook()));
-});
+if (isDirectRun) {
+  const server = http.createServer(app);
+  const wss = new WebSocketServer({ server });
 
-server.listen(PORT, () => {
-  console.log(`MonkeyMoltbook server listening on http://localhost:${PORT}`);
-});
+  wss.on('connection', async (ws) => {
+    ws.send(JSON.stringify({
+      type: 'boot',
+      app: 'MonkeyMoltbook',
+      phase: PHASE,
+      status: 'connected'
+    }));
+
+    ws.send(JSON.stringify(await getNextAgentHook()));
+  });
+
+  server.listen(PORT, () => {
+    console.log(`MonkeyMoltbook server listening on http://localhost:${PORT}`);
+  });
+}
+
+export default app;
