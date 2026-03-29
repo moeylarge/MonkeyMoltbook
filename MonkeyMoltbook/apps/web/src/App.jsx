@@ -884,21 +884,19 @@ function LivePage({ data }) {
                 <div className="live-room-meta-card"><strong>{wallet ? `${wallet.balance} credits` : '...'}</strong><span>Chat is the simplest paid mode — text first, lower friction</span></div>
               </div>
               <div className="wallet-panel wallet-panel-secondary">
-                <div className="wallet-balance-card">
-                  <span className="eyebrow">Monthly plans</span>
-                  <strong>Basic / Silver / Gold</strong>
-                  <p>Plans are shown for clarity only. Checkout is not live yet.</p>
-                  <div className="plan-chip-row">
-                    {products.length ? products.map((product) => (
-                      <span className="presence-pill" key={product.code}>{product.name.replace(' Monthly','')} · {product.credits_amount} · ${((product.price_usd_cents || 0)/100).toFixed(0)}/mo</span>
-                    )) : <span className="presence-pill">Loading plans…</span>}
+                {session ? (
+                  <div className="wallet-actions-grid wallet-actions-grid-compact">
+                    <button className="ghost-btn" onClick={() => spendCredits('chat_unlock')} disabled={spendingAction === 'chat_unlock'}>{spendingAction === 'chat_unlock' ? 'Processing…' : 'Chat boost · 2'}</button>
+                    <button className="ghost-btn" onClick={() => spendCredits('priority_prompt')} disabled={spendingAction === 'priority_prompt'}>{spendingAction === 'priority_prompt' ? 'Processing…' : 'Priority prompt · 3'}</button>
+                    <button className="ghost-btn" onClick={() => spendCredits('session_extend_5m')} disabled={spendingAction === 'session_extend_5m'}>{spendingAction === 'session_extend_5m' ? 'Processing…' : '+5 min · 8'}</button>
                   </div>
-                </div>
-                <div className="wallet-actions-grid wallet-actions-grid-compact">
-                  <button className="ghost-btn" onClick={() => spendCredits('chat_unlock')} disabled={!session || spendingAction === 'chat_unlock'}>{spendingAction === 'chat_unlock' ? 'Processing…' : 'Chat boost · 2'}</button>
-                  <button className="ghost-btn" onClick={() => spendCredits('priority_prompt')} disabled={!session || spendingAction === 'priority_prompt'}>{spendingAction === 'priority_prompt' ? 'Priority prompt · 3' : 'Priority prompt · 3'}</button>
-                  <button className="ghost-btn" onClick={() => spendCredits('session_extend_5m')} disabled={!session || spendingAction === 'session_extend_5m'}>{spendingAction === 'session_extend_5m' ? 'Processing…' : '+5 min · 8'}</button>
-                </div>
+                ) : (
+                  <div className="wallet-balance-card wallet-balance-card-muted">
+                    <span className="eyebrow">After you start</span>
+                    <strong>Credits become relevant in-session</strong>
+                    <p>Start chatting first. Upgrades like chat boost, priority prompt, and time extension only matter once the room is active.</p>
+                  </div>
+                )}
               </div>
             </>
           ) : (
@@ -925,23 +923,33 @@ function LivePage({ data }) {
                 <button className={`control ${presence?.transcript_on ? 'active' : ''}`} onClick={() => togglePresence('transcriptOn', !presence?.transcript_on)}>{presence?.transcript_on ? 'Transcribing' : 'Transcript Off'}</button>
               </div>
               <div className="wallet-panel wallet-panel-secondary">
-                <div className="wallet-balance-card">
-                  <span className="eyebrow">Wallet</span>
-                  <strong>{wallet ? `${wallet.balance} credits` : 'Loading credits…'}</strong>
-                  <p>Monthly plans only for now. Stripe checkout stays off until launch-ready.</p>
-                  <div className="plan-chip-row">
-                    {products.length ? products.map((product) => (
-                      <span className="presence-pill" key={product.code}>{product.name.replace(' Monthly','')} · {product.credits_amount} · ${((product.price_usd_cents || 0)/100).toFixed(0)}/mo</span>
-                    )) : <span className="presence-pill">Loading plans…</span>}
-                  </div>
-                </div>
-                <div className="wallet-actions-grid">
+                {session ? (
+                  <>
+                    <div className="wallet-balance-card">
+                      <span className="eyebrow">Wallet</span>
+                      <strong>{wallet ? `${wallet.balance} credits` : 'Loading credits…'}</strong>
+                      <p>Spend only when you want more control in the room.</p>
+                    </div>
+                    <div className="wallet-actions-grid">
                   <button className="ghost-btn" onClick={() => spendCredits('priority_prompt')} disabled={!session || spendingAction === 'priority_prompt'}>{spendingAction === 'priority_prompt' ? 'Processing…' : 'Priority prompt · 3'}</button>
                   <button className="ghost-btn" onClick={() => spendCredits('queue_jump')} disabled={!session || spendingAction === 'queue_jump'}>{spendingAction === 'queue_jump' ? 'Processing…' : 'Queue jump · 5'}</button>
                   <button className="ghost-btn" onClick={() => spendCredits('session_extend_5m')} disabled={!session || spendingAction === 'session_extend_5m'}>{spendingAction === 'session_extend_5m' ? 'Processing…' : '+5 min · 8'}</button>
-                  <button className="ghost-btn" onClick={() => spendCredits('premium_agent_unlock')} disabled={!session || spendingAction === 'premium_agent_unlock'}>{spendingAction === 'premium_agent_unlock' ? 'Processing…' : 'Premium unlock · 12'}</button>
-                  <button className="primary-btn" onClick={() => spendCredits('battle_unlock')} disabled={!session || spendingAction === 'battle_unlock'}>{spendingAction === 'battle_unlock' ? 'Processing…' : 'Battle unlock · 15'}</button>
+                  <button className="ghost-btn" onClick={() => spendCredits('premium_agent_unlock')} disabled={spendingAction === 'premium_agent_unlock'}>{spendingAction === 'premium_agent_unlock' ? 'Processing…' : 'Premium unlock · 12'}</button>
+                  <button className="primary-btn" onClick={() => spendCredits('battle_unlock')} disabled={spendingAction === 'battle_unlock'}>{spendingAction === 'battle_unlock' ? 'Processing…' : 'Battle unlock · 15'}</button>
                 </div>
+                  </>
+                ) : (
+                  <div className="wallet-balance-card wallet-balance-card-muted wallet-balance-card-full">
+                    <span className="eyebrow">Credits later</span>
+                    <strong>Start voice or webcam first</strong>
+                    <p>Credits matter after the room is active — for priority prompts, queue jumps, longer time, premium unlocks, and battle escalation.</p>
+                    <div className="plan-chip-row">
+                      {products.length ? products.map((product) => (
+                        <span className="presence-pill" key={product.code}>{product.name.replace(' Monthly','')} · {product.credits_amount} · ${((product.price_usd_cents || 0)/100).toFixed(0)}/mo</span>
+                      )) : <span className="presence-pill">Loading plans…</span>}
+                    </div>
+                  </div>
+                )}
               </div>
             </>
           )}
