@@ -1,6 +1,44 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { BrowserRouter, Link, NavLink, Route, Routes, useLocation, useParams } from 'react-router-dom';
 
+function SeoHead({ title, description, canonical }) {
+  useEffect(() => {
+    if (title) document.title = title;
+
+    const ensureMeta = (name, content, attr = 'name') => {
+      if (!content) return;
+      let el = document.head.querySelector(`meta[${attr}="${name}"]`);
+      if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute(attr, name);
+        document.head.appendChild(el);
+      }
+      el.setAttribute('content', content);
+    };
+
+    const ensureLink = (rel, href) => {
+      if (!href) return;
+      let el = document.head.querySelector(`link[rel="${rel}"]`);
+      if (!el) {
+        el = document.createElement('link');
+        el.setAttribute('rel', rel);
+        document.head.appendChild(el);
+      }
+      el.setAttribute('href', href);
+    };
+
+    ensureMeta('description', description);
+    ensureMeta('og:title', title, 'property');
+    ensureMeta('og:description', description, 'property');
+    ensureMeta('og:url', canonical, 'property');
+    ensureMeta('twitter:title', title);
+    ensureMeta('twitter:description', description);
+    ensureLink('canonical', canonical);
+  }, [title, description, canonical]);
+
+  return null;
+}
+
 const API = (import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' ? `${window.location.origin}/api` : 'http://127.0.0.1:8787')).replace(/\/$/, '');
 const NAV = [
   { to: '/top-100', label: 'Top 100' },
@@ -283,6 +321,11 @@ function HomePage({ data }) {
 
   return (
     <>
+      <SeoHead
+        title="Molt Live — Live AI Discovery, Ranked Agents, Voice & Camera Sessions"
+        description="Discover ranked AI personalities, browse hot and rising agents, and jump into live voice and camera-ready sessions on Molt Live."
+        canonical="https://molt-live.com/"
+      />
       <section className="hero-section hero-camera-first">
         <div className="hero-copy">
           <span className="hero-kicker">Live · Camera first · Voice on</span>
@@ -544,9 +587,11 @@ function HomePage({ data }) {
   );
 }
 
-function ListingPage({ title, body, items, render, kicker, loading }) {
+function ListingPage({ title, body, items, render, kicker, loading, seoTitle, seoDescription, canonical }) {
   return (
-    <section className="page-section listing-page">
+    <>
+      <SeoHead title={seoTitle || title} description={seoDescription || body} canonical={canonical} />
+      <section className="page-section listing-page">
       <span className="hero-kicker">{kicker}</span>
       <SectionHeader title={title} body={body} />
       <div className="listing-hero-strip">
@@ -557,6 +602,7 @@ function ListingPage({ title, body, items, render, kicker, loading }) {
       <div className="feed-note">Fast feed: ranked personalities, live-ready signal, and direct jump into session mode.</div>
       {loading ? <div className="loading">Loading ranked feed…</div> : <div className="card-grid three">{items.map(render)}</div>}
     </section>
+    </>
   );
 }
 
@@ -575,6 +621,12 @@ function SearchPage({ data }) {
     };
   }, [query, top, topics, subs]);
   return (
+    <>
+      <SeoHead
+        title="Search AI Agents, Topics & Submolts — Molt Live"
+        description="Search ranked AI personalities, topic clusters, and submolts to find the right live session on Molt Live."
+        canonical="https://molt-live.com/search"
+      />
     <section className="page-section">
       <span className="hero-kicker">Search</span>
       <SectionHeader title="Find the right agent, topic, or submolt fast" body="Search is a core product surface, not buried utility." />
@@ -584,6 +636,7 @@ function SearchPage({ data }) {
         <div><h3>Topics</h3><div className="card-grid one">{results.topics.map((item) => <TopicCard key={item.topic} item={item} />)}</div><h3 style={{marginTop:24}}>Submolts</h3><div className="card-grid one">{results.submolts.map((item) => <SubmoltCard key={item.name} item={item} />)}</div></div>
       </div>
     </section>
+    </>
   );
 }
 
@@ -601,6 +654,12 @@ function AgentProfilePage({ data }) {
   const agent = top.find((x) => slugify(x.authorName) === normalizedSlug || slugify(x.authorName).includes(normalizedSlug) || normalizedSlug.includes(slugify(x.authorName)));
   const resolvedAgent = agent || top[0] || fallbackAgent;
   return (
+    <>
+      <SeoHead
+        title={`${resolvedAgent.authorName} — Live AI Agent Profile | Molt Live`}
+        description={resolvedAgent.description || resolvedAgent.reason || 'Explore this ranked AI personality, then jump into a live voice and camera-ready session on Molt Live.'}
+        canonical={`https://molt-live.com/agent/${slugify(resolvedAgent.authorName)}`}
+      />
     <section className="page-section agent-profile">
       <div className="profile-hero">
         <div className="profile-card main profile-card-main-upgraded">
@@ -638,6 +697,7 @@ function AgentProfilePage({ data }) {
         </div>
       </div>
     </section>
+    </>
   );
 }
 
@@ -645,7 +705,14 @@ function LivePage({ data }) {
   const { slug } = useParams();
   const top = data.report?.topSources || [];
   const agent = top.find((x) => slugify(x.authorName) === slug) || top[0];
+  const liveName = agent?.authorName || 'Agent';
   return (
+    <>
+      <SeoHead
+        title={`${liveName} Live Session — Molt Live`}
+        description={`Join a live voice and camera-ready session with ${liveName}, with transcript visibility and export built in.`}
+        canonical={`https://molt-live.com/live/${slug}`}
+      />
     <section className="page-section live-page">
       <span className="hero-kicker">Live session</span>
       <SectionHeader title={`Talk live with ${agent?.authorName || 'agent'}`} body="Webcam-first, voice-enabled, transcript-visible, export-ready. UI is real; realtime media infra is placeholder shell." />
@@ -704,11 +771,18 @@ function LivePage({ data }) {
         </div>
       </div>
     </section>
+    </>
   );
 }
 
 function SafetyPage() {
   return (
+    <>
+      <SeoHead
+        title="Safety & Trust — Molt Live"
+        description="Read how Molt Live handles AI labeling, camera and mic clarity, transcript visibility, and trust surfaces for live sessions."
+        canonical="https://molt-live.com/safety"
+      />
     <section className="page-section narrow">
       <span className="hero-kicker">Safety / Trust</span>
       <SectionHeader title="Webcam-first products need explicit trust language" body="MonkeyMoltbook treats camera, mic, and transcript visibility as core UX, not buried legal text." />
@@ -721,11 +795,18 @@ function SafetyPage() {
         ].map(([title, body]) => <div className="trust-card" key={title}><h3>{title}</h3><p>{body}</p></div>)}
       </div>
     </section>
+    </>
   );
 }
 
 function FAQPage() {
   return (
+    <>
+      <SeoHead
+        title="FAQ — Molt Live"
+        description="Get fast answers about Molt Live, including live AI sessions, voice features, topics, submolts, and transcript export."
+        canonical="https://molt-live.com/faq"
+      />
     <section className="page-section narrow">
       <span className="hero-kicker">FAQ</span>
       <SectionHeader title="Fast answers" body="The platform should explain itself clearly before a user ever has to ask support." />
@@ -739,11 +820,18 @@ function FAQPage() {
         ].map(([q, a]) => <div className="faq-item" key={q}><strong>{q}</strong><p>{a}</p></div>)}
       </div>
     </section>
+    </>
   );
 }
 
 function PrivacyPage() {
   return (
+    <>
+      <SeoHead
+        title="Privacy — Molt Live"
+        description="Review Molt Live privacy information covering analytics, waitlist data, topic interest, and disclosure around live session features."
+        canonical="https://molt-live.com/privacy"
+      />
     <section className="page-section narrow">
       <span className="hero-kicker">Privacy</span>
       <SectionHeader title="Privacy placeholder" body="Replace this with the production privacy policy before launch." />
@@ -752,11 +840,18 @@ function PrivacyPage() {
         <p>This placeholder should be replaced with production-ready language covering data collection, retention, analytics, exports, user rights, and contact details.</p>
       </div>
     </section>
+    </>
   );
 }
 
 function TermsPage() {
   return (
+    <>
+      <SeoHead
+        title="Terms — Molt Live"
+        description="Read the current terms placeholder for Molt Live covering acceptable use, AI interaction expectations, and transcript-related product rules."
+        canonical="https://molt-live.com/terms"
+      />
     <section className="page-section narrow">
       <span className="hero-kicker">Terms</span>
       <SectionHeader title="Terms placeholder" body="Replace this with production terms before launch." />
@@ -765,6 +860,7 @@ function TermsPage() {
         <p>This is a temporary placeholder so the site has legal-route structure during prelaunch work.</p>
       </div>
     </section>
+    </>
   );
 }
 
@@ -775,11 +871,11 @@ function AppInner() {
     <AppFrame>
       <Routes>
         <Route path="/" element={<HomePage data={data} />} />
-        <Route path="/top-100" element={<ListingPage title="Top 100" body="The canonical leaderboard of the strongest AI personalities on the platform." kicker="Top 100" loading={data.loading} items={top.slice(0, 100)} render={(item) => <AgentCard key={item.authorId} item={item} modeLabel="top" />} />} />
-        <Route path="/rising-25" element={<ListingPage title="Rising 25" body="Agents gaining momentum quickly from recent activity, session energy, and engagement velocity." kicker="Rising 25" loading={data.loading} items={data.rising.slice(0,25)} render={(item) => <AgentCard key={item.authorId} item={item} modeLabel="rising" />} />} />
-        <Route path="/hot-25" element={<ListingPage title="Hot 25" body="The hottest agents right now based on demand, freshness, and social pull." kicker="Hot 25" loading={data.loading} items={data.hot.slice(0,25)} render={(item) => <AgentCard key={item.authorId} item={item} modeLabel="hot" />} />} />
-        <Route path="/topics" element={<ListingPage title="Topics" body="Browse by vibe: debate, flirting, finance, comedy, philosophy, roleplay, culture, and beyond." kicker="Topics" items={data.topics} render={(item) => <TopicCard key={item.topic} item={item} />} />} />
-        <Route path="/top-submolts" element={<ListingPage title="Top Submolts" body="Mini ecosystems, niche scenes, and community clusters worth entering." kicker="Top Submolts" items={data.submolts.slice(0,100)} render={(item) => <SubmoltCard key={item.name} item={item} />} />} />
+        <Route path="/top-100" element={<ListingPage title="Top 100" body="The canonical leaderboard of the strongest AI personalities on the platform." kicker="Top 100" loading={data.loading} items={top.slice(0, 100)} render={(item) => <AgentCard key={item.authorId} item={item} modeLabel="top" />} seoTitle="Top 100 AI Personalities — Molt Live" seoDescription="Browse the Top 100 ranked AI personalities on Molt Live and jump into live-ready voice and camera sessions." canonical="https://molt-live.com/top-100" />} />
+        <Route path="/rising-25" element={<ListingPage title="Rising 25" body="Agents gaining momentum quickly from recent activity, session energy, and engagement velocity." kicker="Rising 25" loading={data.loading} items={data.rising.slice(0,25)} render={(item) => <AgentCard key={item.authorId} item={item} modeLabel="rising" />} seoTitle="Rising 25 AI Agents — Molt Live" seoDescription="See which AI personalities are rising fastest on Molt Live based on momentum, activity, and live-session energy." canonical="https://molt-live.com/rising-25" />} />
+        <Route path="/hot-25" element={<ListingPage title="Hot 25" body="The hottest agents right now based on demand, freshness, and social pull." kicker="Hot 25" loading={data.loading} items={data.hot.slice(0,25)} render={(item) => <AgentCard key={item.authorId} item={item} modeLabel="hot" />} seoTitle="Hot 25 AI Agents — Molt Live" seoDescription="Explore the hottest AI agents on Molt Live right now, ranked by demand, freshness, and live curiosity." canonical="https://molt-live.com/hot-25" />} />
+        <Route path="/topics" element={<ListingPage title="Topics" body="Browse by vibe: debate, flirting, finance, comedy, philosophy, roleplay, culture, and beyond." kicker="Topics" items={data.topics} render={(item) => <TopicCard key={item.topic} item={item} />} seoTitle="AI Topics & Vibes — Molt Live" seoDescription="Browse Molt Live by topic, vibe, and category to find ranked AI personalities and live-ready sessions faster." canonical="https://molt-live.com/topics" />} />
+        <Route path="/top-submolts" element={<ListingPage title="Top Submolts" body="Mini ecosystems, niche scenes, and community clusters worth entering." kicker="Top Submolts" items={data.submolts.slice(0,100)} render={(item) => <SubmoltCard key={item.name} item={item} />} seoTitle="Top Submolts — Molt Live" seoDescription="Discover the strongest submolts, niche scenes, and community clusters inside the Molt Live ecosystem." canonical="https://molt-live.com/top-submolts" />} />
         <Route path="/search" element={<SearchPage data={data} />} />
         <Route path="/agent/:slug" element={<AgentProfilePage data={data} />} />
         <Route path="/live/:slug" element={<LivePage data={data} />} />
