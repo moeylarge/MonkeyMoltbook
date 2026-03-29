@@ -750,6 +750,18 @@ function LivePage({ data }) {
   const [starting, setStarting] = useState(false);
   const [sending, setSending] = useState(false);
   const [ending, setEnding] = useState(false);
+  const [wallet, setWallet] = useState(null);
+  const [spendingAction, setSpendingAction] = useState('');
+
+  const loadWallet = async () => {
+    const response = await fetch(`${API}/wallet?userId=demo-user`);
+    const payload = await response.json();
+    setWallet(payload.wallet);
+  };
+
+  useEffect(() => {
+    loadWallet();
+  }, []);
 
   const startSession = async () => {
     if (session || starting) return;
@@ -809,6 +821,24 @@ function LivePage({ data }) {
     setEnding(false);
   };
 
+  const spendCredits = async (actionCode) => {
+    if (!session?.id || spendingAction) return;
+    setSpendingAction(actionCode);
+    const response = await fetch(`${API}/live/session/${session.id}/spend`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: 'demo-user', actionCode })
+    });
+    const payload = await response.json();
+    if (response.ok) {
+      setWallet(payload.wallet);
+      const transcript = await fetch(`${API}/live/session/${session.id}/transcript`);
+      const transcriptPayload = await transcript.json();
+      setMessages(transcriptPayload.messages || []);
+    }
+    setSpendingAction('');
+  };
+
   const exportUrl = session?.id ? `${API}/live/session/${session.id}/export` : null;
 
   return (
@@ -858,6 +888,20 @@ function LivePage({ data }) {
             <button className={`control ${presence?.tts_on ? 'active' : ''}`} onClick={() => togglePresence('ttsOn', !presence?.tts_on)}>{presence?.tts_on ? 'TTS Enabled' : 'TTS Off'}</button>
             <button className={`control ${presence?.transcript_on ? 'active' : ''}`} onClick={() => togglePresence('transcriptOn', !presence?.transcript_on)}>{presence?.transcript_on ? 'Transcribing' : 'Transcript Off'}</button>
           </div>
+          <div className="wallet-panel">
+            <div className="wallet-balance-card">
+              <span className="eyebrow">Wallet</span>
+              <strong>{wallet ? `${wallet.balance} credits` : 'Loading credits…'}</strong>
+              <p>Basic: 100/mo · Silver: 300/mo · Gold: 750/mo</p>
+            </div>
+            <div className="wallet-actions-grid">
+              <button className="ghost-btn" onClick={() => spendCredits('priority_prompt')} disabled={!session || spendingAction === 'priority_prompt'}>{spendingAction === 'priority_prompt' ? 'Processing…' : 'Priority prompt · 3'}</button>
+              <button className="ghost-btn" onClick={() => spendCredits('queue_jump')} disabled={!session || spendingAction === 'queue_jump'}>{spendingAction === 'queue_jump' ? 'Processing…' : 'Queue jump · 5'}</button>
+              <button className="ghost-btn" onClick={() => spendCredits('session_extend_5m')} disabled={!session || spendingAction === 'session_extend_5m'}>{spendingAction === 'session_extend_5m' ? 'Processing…' : '+5 min · 8'}</button>
+              <button className="ghost-btn" onClick={() => spendCredits('premium_agent_unlock')} disabled={!session || spendingAction === 'premium_agent_unlock'}>{spendingAction === 'premium_agent_unlock' ? 'Processing…' : 'Premium unlock · 12'}</button>
+              <button className="primary-btn" onClick={() => spendCredits('battle_unlock')} disabled={!session || spendingAction === 'battle_unlock'}>{spendingAction === 'battle_unlock' ? 'Processing…' : 'Battle unlock · 15'}</button>
+            </div>
+          </div>
         </div>
         <div className="transcript-shell transcript-shell-redesign">
           <div className="transcript-header">
@@ -885,7 +929,7 @@ function LivePage({ data }) {
             <input className="chat-input" placeholder="Type a prompt while voice is on…" value={draft} onChange={(e) => setDraft(e.target.value)} />
             <button className="primary-btn" onClick={sendMessage} disabled={!session || sending}>{sending ? 'Sending…' : 'Send'}</button>
           </div>
-          <div className="session-meta">{session ? `Session state: ${session.status} · transcript persistence live · export endpoint ready · credits not wired yet` : 'Session state: start a live session to create transcript persistence'}</div>
+          <div className="session-meta">{session ? `Session state: ${session.status} · transcript persistence live · export endpoint ready · credits wired to backend` : 'Session state: start a live session to create transcript persistence'}</div>
         </div>
       </div>
     </section>
