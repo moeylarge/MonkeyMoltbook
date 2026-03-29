@@ -182,12 +182,124 @@ export async function storeRawAuthorSnapshots(runId, authors) {
   return [];
 }
 
+export async function upsertSubmolts(submolts) {
+  if (!submolts?.length) return [];
+  const rows = submolts.map((row) => ({
+    name: safeText(row.name),
+    url: safeText(row.url) || (row.name ? `https://www.moltbook.com/m/${encodeURIComponent(row.name)}` : null),
+    post_count: safeNumber(row.postCount ?? row.post_count),
+    avg_score_per_post: safeNumber(row.avgScorePerPost ?? row.avg_score_per_post),
+    last_seen_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  })).filter((row) => row.name);
+
+  const merged = [];
+  for (const batch of chunkArray(rows, 50)) {
+    const result = await supabaseFetch('submolts', {
+      method: 'POST',
+      query: 'on_conflict=name',
+      body: batch,
+      prefer: 'resolution=merge-duplicates,return=representation'
+    });
+    merged.push(...(result.data || []));
+  }
+  return merged;
+}
+
+export async function upsertPosts(posts, authorIdMap) {
+  if (!posts?.length) return [];
+  const rows = posts.map((post) => ({
+    source_post_id: safeText(post.id),
+    source_author_id: safeText(post.author?.id),
+    author_id: authorIdMap.get(String(post.author?.id || '')) || null,
+    author_name: safeText(post.author?.name),
+    title: safeText(post.title),
+    snippet: safeText(post.content),
+    url: safeText(post.url),
+    submolt_name: safeText(post.submolt_name || post.submoltName),
+    score: safeNumber(post.score),
+    comment_count: safeNumber(post.comment_count ?? post.commentCount),
+    created_at_source: post.created_at || post.createdAt || null,
+    payload: sanitizeForJson(post)
+  })).filter((row) => row.source_post_id || row.title);
+
+  const merged = [];
+  for (const batch of chunkArray(rows, 50)) {
+    const result = await supabaseFetch('posts', {
+      method: 'POST',
+      query: 'on_conflict=source_post_id',
+      body: batch,
+      prefer: 'resolution=merge-duplicates,return=representation'
+    });
+    merged.push(...(result.data || []));
+  }
+  return merged;
+}
+
+export async function storeRawPostSnapshots(runId, posts) {
+  if (!runId || !posts?.length) return [];
+  const payload = posts.map((post) => ({
+    run_id: runId,
+    source_post_id: safeText(post.id),
+    source_author_id: safeText(post.author?.id),
+    submolt_name: safeText(post.submolt_name || post.submoltName),
+    payload: sanitizeForJson(post)
+  }));
+  for (const batch of chunkArray(payload, 50)) {
+    await supabaseFetch('raw_post_snapshots', {
+      method: 'POST',
+      body: batch,
+      prefer: 'return=minimal'
+    });
+  }
+  return [];
+}
+
+export async function storeRawSubmoltSnapshots(runId, submolts) {
+  if (!runId || !submolts?.length) return [];
+  const payload = submolts.map((row) => ({
+    run_id: runId,
+    submolt_name: safeText(row.name) || 'unknown',
+    payload: sanitizeForJson(row)
+  }));
+  for (const batch of chunkArray(payload, 50)) {
+    await supabaseFetch('raw_submolt_snapshots', {
+      method: 'POST',
+      body: batch,
+      prefer: 'return=minimal'
+    });
+  }
+  return [];
+}
+
+export async function replaceSubmoltSnapshots(runId, submolts, submoltIdMap) {
+  if (!runId || !submolts?.length) return [];
+  const payload = submolts.map((row, index) => ({
+    run_id: runId,
+    submolt_id: submoltIdMap.get(String(row.name || '')) || null,
+    position: index + 1,
+    post_count: safeNumber(row.postCount ?? row.post_count),
+    avg_score_per_post: safeNumber(row.avgScorePerPost ?? row.avg_score_per_post),
+    payload: sanitizeForJson(row)
+  }));
+  for (const batch of chunkArray(payload, 50)) {
+    await supabaseFetch('submolt_snapshots', {
+      method: 'POST',
+      body: batch,
+      prefer: 'return=minimal'
+    });
+  }
+  return [];
+}
+
 export async function persistMoltbookSnapshot({ mode = 'default', triggerSource = 'manual', source = 'unknown', intel }) {
   if (!isSupabaseStorageEnabled()) {
     return { ok: false, disabled: true };
   }
 
   const authors = intel?.authors || [];
+  const posts = intel?.posts || [];
+  const submolts = intel?.discovery?.submolts || intel?.signals?.topSubmolts || [];
   const run = await createIngestRun({
     mode,
     trigger_source: triggerSource,
@@ -206,16 +318,25 @@ export async function persistMoltbookSnapshot({ mode = 'default', triggerSource 
   const upsertedAuthors = await upsertAuthors(authors);
   const authorIdMap = new Map(upsertedAuthors.map((row) => [String(row.source_author_id || ''), row.id]));
 
+  const upsertedSubmolts = await upsertSubmolts(submolts);
+  const submoltIdMap = new Map(upsertedSubmolts.map((row) => [String(row.name || ''), row.id]));
+
   await storeRawAuthorSnapshots(run?.id, authors.slice(0, 100));
+  await storeRawPostSnapshots(run?.id, posts.slice(0, 200));
+  await storeRawSubmoltSnapshots(run?.id, submolts.slice(0, 100));
+  await upsertPosts(posts.slice(0, 300), authorIdMap);
   await replaceRankingSnapshots(run?.id, 'top', authors.slice(0, 25), authorIdMap);
   await replaceRankingSnapshots(run?.id, 'rising', intel?.signals?.rising || [], authorIdMap);
   await replaceRankingSnapshots(run?.id, 'hot', intel?.signals?.hot || [], authorIdMap);
   await replaceTopicClusters(run?.id, intel?.signals?.topicClusters || []);
+  await replaceSubmoltSnapshots(run?.id, submolts.slice(0, 100), submoltIdMap);
 
   return {
     ok: true,
     runId: run?.id || null,
     authorRows: upsertedAuthors.length,
+    postRows: Math.min(posts.length, 300),
+    submoltRows: upsertedSubmolts.length,
     mode,
     triggerSource
   };

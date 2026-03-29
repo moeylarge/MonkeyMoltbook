@@ -126,6 +126,19 @@ app.get('/moltbook/export/snapshots.csv', async (_req, res) => { const intel = a
 app.get('/moltbook/export/report.json', async (_req, res) => { const intel = await getMoltbookIntel(); res.json({ phase: PHASE, intel, growth: buildGrowthMetrics(intel) }); });
 app.get('/moltbook/scheduler', (_req, res) => res.json({ phase: PHASE, ...getSchedulerState() }));
 app.get('/moltbook/storage/status', (_req, res) => res.json({ phase: PHASE, provider: 'supabase', enabled: isSupabaseStorageEnabled() }));
+app.get('/moltbook/storage/debug', async (_req, res) => {
+  const intel = await getMoltbookIntel();
+  res.json({
+    phase: PHASE,
+    provider: 'supabase',
+    enabled: isSupabaseStorageEnabled(),
+    lastFetchedAt: intel.lastFetchedAt,
+    authorCount: intel.authorCount,
+    postCount: intel.postCount,
+    topicCount: intel?.signals?.topicClusters?.length || 0,
+    submoltCount: intel?.discovery?.submolts?.length || intel?.signals?.topSubmolts?.length || 0
+  });
+});
 app.post('/moltbook/scheduler/start', async (req, res) => { const everyMs = Number(req.query.everyMs || 15 * 60 * 1000); const state = startScheduler(runMoltbookRefreshJob, everyMs); res.json({ phase: PHASE, ok: true, ...state }); });
 app.post('/moltbook/scheduler/stop', (_req, res) => { stopScheduler(); res.json({ phase: PHASE, ok: true, ...getSchedulerState() }); });
 app.post('/moltbook/refresh', async (req, res) => {
