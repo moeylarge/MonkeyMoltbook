@@ -59,6 +59,20 @@ function safeText(value) {
     .replace(/(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '');
 }
 
+function sanitizeForJson(value) {
+  if (Array.isArray(value)) return value.map(sanitizeForJson);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(([, v]) => v !== undefined)
+        .map(([k, v]) => [k, sanitizeForJson(v)])
+    );
+  }
+  if (typeof value === 'string') return safeText(value);
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+  return value ?? null;
+}
+
 export async function createIngestRun(payload) {
   const result = await supabaseFetch('raw_ingest_runs', {
     method: 'POST',
@@ -137,7 +151,7 @@ export async function replaceTopicClusters(runId, topics) {
     run_id: runId,
     topic: row.topic,
     count: safeNumber(row.count) || 0,
-    payload: row
+    payload: sanitizeForJson(row)
   }));
   for (const batch of chunkArray(payload, 50)) {
     await supabaseFetch('topic_clusters', {
@@ -156,7 +170,7 @@ export async function storeRawAuthorSnapshots(runId, authors) {
     source_author_id: safeText(row.authorId) || null,
     author_name: safeText(row.authorName) || 'unknown',
     profile_url: safeText(row.profileUrl) || authorProfileUrl(row),
-    payload: row
+    payload: sanitizeForJson(row)
   }));
   for (const batch of chunkArray(payload, 50)) {
     await supabaseFetch('raw_author_snapshots', {
@@ -182,11 +196,11 @@ export async function persistMoltbookSnapshot({ mode = 'default', triggerSource 
     author_count: Number(intel?.authorCount || authors.length || 0),
     post_count: Number(intel?.postCount || 0),
     submolt_count: Number(intel?.discovery?.submolts?.length || intel?.signals?.topSubmolts?.length || 0),
-    payload_summary: {
+    payload_summary: sanitizeForJson({
       lastFetchedAt: intel?.lastFetchedAt || null,
       discoverySurfaces: intel?.discovery?.surfaces || [],
       errors: intel?.discovery?.errors || []
-    }
+    })
   });
 
   const upsertedAuthors = await upsertAuthors(authors);
