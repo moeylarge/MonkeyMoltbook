@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 
-const DATA_DIR = path.resolve(process.cwd(), 'data');
+const DATA_DIR = process.env.VERCEL ? path.join('/tmp', 'monkeymoltbook-data') : path.resolve(process.cwd(), 'data');
 const STORE_PATH = path.join(DATA_DIR, 'moltbook-public-store.json');
 
 const MAX_SNAPSHOTS = 40;

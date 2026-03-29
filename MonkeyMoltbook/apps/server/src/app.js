@@ -24,7 +24,7 @@ app.use((req, res, next) => {
 
 const PHASE = 'Controlled Moltbook ingestion';
 const DEFAULT_PRELOAD_COUNT = 3;
-const DATA_DIR = path.join(process.cwd(), 'data');
+const DATA_DIR = process.env.VERCEL ? path.join('/tmp', 'monkeymoltbook-data') : path.join(process.cwd(), 'data');
 const WAITLIST_FILE = path.join(DATA_DIR, 'waitlist.jsonl');
 const INTEREST_FILE = path.join(DATA_DIR, 'topic-interest.jsonl');
 const ANALYTICS_FILE = path.join(DATA_DIR, 'analytics-events.jsonl');
