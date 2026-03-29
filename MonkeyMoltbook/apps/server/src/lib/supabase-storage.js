@@ -54,7 +54,9 @@ function safeNumber(value) {
 
 function safeText(value) {
   if (value === undefined || value === null) return null;
-  return String(value);
+  return String(value)
+    .replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])/g, '')
+    .replace(/(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '');
 }
 
 export async function createIngestRun(payload) {
@@ -64,6 +66,12 @@ export async function createIngestRun(payload) {
     prefer: 'return=representation'
   });
   return result.data?.[0] || null;
+}
+
+function chunkArray(items, size = 50) {
+  const out = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
 }
 
 export async function upsertAuthors(authors) {
@@ -90,13 +98,17 @@ export async function upsertAuthors(authors) {
     updated_at: new Date().toISOString()
   })).filter((row) => row.author_name);
 
-  const result = await supabaseFetch('authors', {
-    method: 'POST',
-    query: 'on_conflict=author_name',
-    body: rows,
-    prefer: 'resolution=merge-duplicates,return=representation'
-  });
-  return result.data || [];
+  const merged = [];
+  for (const batch of chunkArray(rows, 50)) {
+    const result = await supabaseFetch('authors', {
+      method: 'POST',
+      query: 'on_conflict=author_name',
+      body: batch,
+      prefer: 'resolution=merge-duplicates,return=representation'
+    });
+    merged.push(...(result.data || []));
+  }
+  return merged;
 }
 
 export async function replaceRankingSnapshots(runId, type, rows, authorIdMap) {
@@ -106,15 +118,17 @@ export async function replaceRankingSnapshots(runId, type, rows, authorIdMap) {
     ranking_type: type,
     author_id: authorIdMap.get(String(row.authorId || '')) || null,
     position: index + 1,
-    fit_score: Number(row.fitScore || 0),
-    signal_score: Number(row.signalScore || 0)
+    fit_score: safeNumber(row.fitScore),
+    signal_score: safeNumber(row.signalScore)
   }));
-  const result = await supabaseFetch('ranking_snapshots', {
-    method: 'POST',
-    body: payload,
-    prefer: 'return=minimal'
-  });
-  return result.data || [];
+  for (const batch of chunkArray(payload, 50)) {
+    await supabaseFetch('ranking_snapshots', {
+      method: 'POST',
+      body: batch,
+      prefer: 'return=minimal'
+    });
+  }
+  return [];
 }
 
 export async function replaceTopicClusters(runId, topics) {
@@ -122,32 +136,36 @@ export async function replaceTopicClusters(runId, topics) {
   const payload = topics.map((row) => ({
     run_id: runId,
     topic: row.topic,
-    count: Number(row.count || 0),
+    count: safeNumber(row.count) || 0,
     payload: row
   }));
-  const result = await supabaseFetch('topic_clusters', {
-    method: 'POST',
-    body: payload,
-    prefer: 'return=minimal'
-  });
-  return result.data || [];
+  for (const batch of chunkArray(payload, 50)) {
+    await supabaseFetch('topic_clusters', {
+      method: 'POST',
+      body: batch,
+      prefer: 'return=minimal'
+    });
+  }
+  return [];
 }
 
 export async function storeRawAuthorSnapshots(runId, authors) {
   if (!runId || !authors?.length) return [];
   const payload = authors.map((row) => ({
     run_id: runId,
-    source_author_id: String(row.authorId || ''),
-    author_name: row.authorName,
-    profile_url: row.profileUrl || authorProfileUrl(row),
+    source_author_id: safeText(row.authorId) || null,
+    author_name: safeText(row.authorName) || 'unknown',
+    profile_url: safeText(row.profileUrl) || authorProfileUrl(row),
     payload: row
   }));
-  const result = await supabaseFetch('raw_author_snapshots', {
-    method: 'POST',
-    body: payload,
-    prefer: 'return=minimal'
-  });
-  return result.data || [];
+  for (const batch of chunkArray(payload, 50)) {
+    await supabaseFetch('raw_author_snapshots', {
+      method: 'POST',
+      body: batch,
+      prefer: 'return=minimal'
+    });
+  }
+  return [];
 }
 
 export async function persistMoltbookSnapshot({ mode = 'default', triggerSource = 'manual', source = 'unknown', intel }) {
