@@ -68,6 +68,22 @@ function useIntelData() {
 
 function AppFrame({ children }) {
   const location = useLocation();
+
+  useEffect(() => {
+    const preconnect = document.createElement('link');
+    preconnect.rel = 'preconnect';
+    preconnect.href = 'https://www.moltbook.com';
+    const dnsPrefetch = document.createElement('link');
+    dnsPrefetch.rel = 'dns-prefetch';
+    dnsPrefetch.href = 'https://www.moltbook.com';
+    document.head.appendChild(preconnect);
+    document.head.appendChild(dnsPrefetch);
+    return () => {
+      preconnect.remove();
+      dnsPrefetch.remove();
+    };
+  }, []);
+
   return (
     <div className="site-shell">
       <header className="topbar">
