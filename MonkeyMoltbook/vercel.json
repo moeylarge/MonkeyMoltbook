@@ -1,15 +1,10 @@
 {
-  "framework": null,
-  "buildCommand": "npm run build:web",
-  "outputDirectory": "apps/web/dist",
-  "installCommand": "npm install",
-  "functions": {
-    "api/index.js": {
-      "runtime": "@vercel/node"
-    }
-  },
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.js" },
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
+"framework": null,
+"buildCommand": "npm run build:web",
+"outputDirectory": "apps/web/dist",
+"installCommand": "npm install",
+"rewrites": [
+{ "source": "/api/(.*)", "destination": "/api/index.js" },
+{ "source": "/(.*)", "destination": "/index.html" }
+]
 }
