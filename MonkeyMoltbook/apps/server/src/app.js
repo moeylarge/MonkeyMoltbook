@@ -10,6 +10,8 @@ import { getResponse, getResponseStats } from './lib/responses.js';
 export const app = express();
 app.use(express.json());
 app.use((req, res, next) => {
+  if (req.url.startsWith('/api/')) req.url = req.url.slice(4);
+  else if (req.url === '/api') req.url = '/';
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
