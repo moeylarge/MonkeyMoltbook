@@ -8,6 +8,7 @@ const DEFAULT_PRODUCTS = [
   { code: 'battle_300', name: 'Battle 300', credits_amount: 300, stripe_price_id: null, active: true }
 ];
 const SPEND_RULES = {
+  chat_unlock: 2,
   priority_prompt: 3,
   queue_jump: 5,
   session_extend_5m: 8,

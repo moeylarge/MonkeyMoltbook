@@ -752,6 +752,7 @@ function LivePage({ data }) {
   const [ending, setEnding] = useState(false);
   const [wallet, setWallet] = useState(null);
   const [spendingAction, setSpendingAction] = useState('');
+  const [sessionMode, setSessionMode] = useState('chat');
 
   const loadWallet = async () => {
     const response = await fetch(`${API}/wallet?userId=demo-user`);
@@ -773,8 +774,8 @@ function LivePage({ data }) {
         agentName: liveName,
         agentAuthorId: agent?.authorId || null,
         entrySource: 'live-page',
-        mode: 'free',
-        ttsEnabled: true,
+        mode: sessionMode,
+        ttsEnabled: sessionMode !== 'chat',
         transcriptEnabled: true
       })
     });
@@ -866,16 +867,21 @@ function LivePage({ data }) {
           </div>
           <div className="live-stage-headline">
             <strong>{session ? `${agent?.authorName || 'Agent'} is live with you now` : `${agent?.authorName || 'Agent'} is on deck`}</strong>
-            <span>{session ? 'Typed messages are stored, transcript is real, and presence state is live.' : 'Camera-first conversation with transcript export built in.'}</span>
+            <span>{session ? 'Typed messages are stored, transcript is real, and presence state is live.' : 'Choose chat, voice, or webcam-style entry before starting.'}</span>
+          </div>
+          <div className="mode-selector-row">
+            <button className={`tab ${sessionMode === 'chat' ? 'active' : ''}`} onClick={() => setSessionMode('chat')} disabled={!!session}>Chat</button>
+            <button className={`tab ${sessionMode === 'voice' ? 'active' : ''}`} onClick={() => setSessionMode('voice')} disabled={!!session}>Voice</button>
+            <button className={`tab ${sessionMode === 'webcam' ? 'active' : ''}`} onClick={() => setSessionMode('webcam')} disabled={!!session}>Webcam</button>
           </div>
           <div className="live-room-meta-row">
             <div className="live-room-meta-card"><strong>{session ? 'Connected' : 'Idle'}</strong><span>{session ? `Started ${new Date(session.started_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : 'No live room started yet'}</span></div>
             <div className="live-room-meta-card"><strong>{messages.length}</strong><span>{messages.length === 1 ? 'stored turn' : 'stored turns'}</span></div>
-            <div className="live-room-meta-card"><strong>{presence?.battle_ready ? 'Battle ready' : 'Single-agent mode'}</strong><span>Credits layer comes after this room loop</span></div>
+            <div className="live-room-meta-card"><strong>{session ? session.mode : sessionMode}</strong><span>{sessionMode === 'chat' ? 'Lowest-friction paid entry mode' : sessionMode === 'voice' ? 'Voice-first with transcript' : 'Highest-intensity live mode'}</span></div>
           </div>
           <div className="live-stage-grid">
-            <div className="live-window human"><div className="live-window-overlay"><span>You</span><strong>{presence?.user_cam_on ? 'Camera visible' : 'Camera off'}</strong><small>{presence?.user_mic_on ? 'Mic hot · prompt ready' : 'Mic muted · transcript still available'}</small></div></div>
-            <div className="live-window ai"><div className="live-window-overlay"><span>{agent?.authorName || 'Agent'}</span><strong>{session ? 'Responding through stored session loop' : 'Live persona waiting'}</strong><small>{presence?.tts_on ? 'TTS enabled · transcript visible' : 'Text reply only · transcript visible'}</small></div></div>
+            <div className="live-window human"><div className="live-window-overlay"><span>You</span><strong>{sessionMode === 'chat' ? 'Chat mode active' : presence?.user_cam_on ? 'Camera visible' : 'Camera off'}</strong><small>{sessionMode === 'chat' ? 'Low-friction text entry · transcript still available' : presence?.user_mic_on ? 'Mic hot · prompt ready' : 'Mic muted · transcript still available'}</small></div></div>
+            <div className="live-window ai"><div className="live-window-overlay"><span>{agent?.authorName || 'Agent'}</span><strong>{session ? 'Responding through stored session loop' : 'Live persona waiting'}</strong><small>{sessionMode === 'chat' ? 'Chat-first reply loop · transcript visible' : presence?.tts_on ? 'TTS enabled · transcript visible' : 'Text reply only · transcript visible'}</small></div></div>
           </div>
           <div className="live-cta-row">
             <button className="primary-btn" onClick={startSession} disabled={starting || !!session}>{session ? 'Session live' : starting ? 'Starting…' : 'Start live now'}</button>
@@ -895,6 +901,7 @@ function LivePage({ data }) {
               <p>Basic: 100/mo · Silver: 300/mo · Gold: 750/mo</p>
             </div>
             <div className="wallet-actions-grid">
+              <button className="ghost-btn" onClick={() => spendCredits('chat_unlock')} disabled={!session || spendingAction === 'chat_unlock'}>{spendingAction === 'chat_unlock' ? 'Processing…' : 'Chat unlock · 2'}</button>
               <button className="ghost-btn" onClick={() => spendCredits('priority_prompt')} disabled={!session || spendingAction === 'priority_prompt'}>{spendingAction === 'priority_prompt' ? 'Processing…' : 'Priority prompt · 3'}</button>
               <button className="ghost-btn" onClick={() => spendCredits('queue_jump')} disabled={!session || spendingAction === 'queue_jump'}>{spendingAction === 'queue_jump' ? 'Processing…' : 'Queue jump · 5'}</button>
               <button className="ghost-btn" onClick={() => spendCredits('session_extend_5m')} disabled={!session || spendingAction === 'session_extend_5m'}>{spendingAction === 'session_extend_5m' ? 'Processing…' : '+5 min · 8'}</button>
@@ -929,7 +936,7 @@ function LivePage({ data }) {
             <input className="chat-input" placeholder="Type a prompt while voice is on…" value={draft} onChange={(e) => setDraft(e.target.value)} />
             <button className="primary-btn" onClick={sendMessage} disabled={!session || sending}>{sending ? 'Sending…' : 'Send'}</button>
           </div>
-          <div className="session-meta">{session ? `Session state: ${session.status} · transcript persistence live · export endpoint ready · credits wired to backend` : 'Session state: start a live session to create transcript persistence'}</div>
+          <div className="session-meta">{session ? `Session state: ${session.status} · transcript persistence live · export endpoint ready · credits wired to backend · chat mode included` : 'Session state: start a live session to create transcript persistence'}</div>
         </div>
       </div>
     </section>
