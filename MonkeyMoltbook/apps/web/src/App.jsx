@@ -751,6 +751,7 @@ function LivePage({ data }) {
   const [sending, setSending] = useState(false);
   const [ending, setEnding] = useState(false);
   const [wallet, setWallet] = useState(null);
+  const [products, setProducts] = useState([]);
   const [spendingAction, setSpendingAction] = useState('');
   const [sessionMode, setSessionMode] = useState('chat');
 
@@ -760,8 +761,15 @@ function LivePage({ data }) {
     setWallet(payload.wallet);
   };
 
+  const loadProducts = async () => {
+    const response = await fetch(`${API}/credits/products`);
+    const payload = await response.json();
+    setProducts((payload.products || []).filter((p) => p.billing_interval === 'month'));
+  };
+
   useEffect(() => {
     loadWallet();
+    loadProducts();
   }, []);
 
   const startSession = async () => {
@@ -898,7 +906,12 @@ function LivePage({ data }) {
             <div className="wallet-balance-card">
               <span className="eyebrow">Wallet</span>
               <strong>{wallet ? `${wallet.balance} credits` : 'Loading credits…'}</strong>
-              <p>Basic: 100/mo · Silver: 300/mo · Gold: 750/mo</p>
+              <p>Monthly plans only for now. Stripe checkout stays off until launch-ready.</p>
+              <div className="plan-chip-row">
+                {products.length ? products.map((product) => (
+                  <span className="presence-pill" key={product.code}>{product.name.replace(' Monthly','')} · {product.credits_amount} · ${((product.price_usd_cents || 0)/100).toFixed(0)}/mo</span>
+                )) : <span className="presence-pill">Loading plans…</span>}
+              </div>
             </div>
             <div className="wallet-actions-grid">
               <button className="ghost-btn" onClick={() => spendCredits('chat_unlock')} disabled={!session || spendingAction === 'chat_unlock'}>{spendingAction === 'chat_unlock' ? 'Processing…' : 'Chat unlock · 2'}</button>

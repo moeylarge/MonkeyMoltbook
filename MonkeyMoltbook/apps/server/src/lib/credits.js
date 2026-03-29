@@ -67,6 +67,14 @@ export async function ensureCreditProducts() {
     body: DEFAULT_PRODUCTS,
     prefer: 'resolution=merge-duplicates,return=representation'
   });
+
+  await rest('credit_products', {
+    method: 'PATCH',
+    query: 'code=in.(starter_25,creator_100,battle_300)',
+    body: { active: false },
+    prefer: 'return=minimal'
+  });
+
   return rows || [];
 }
 
