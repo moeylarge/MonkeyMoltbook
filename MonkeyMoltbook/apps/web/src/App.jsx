@@ -217,7 +217,7 @@ function AgentCard({ item, modeLabel }) {
       <div className="card-actions">
         <Link className="primary-btn" to={`/live/${slug}`}>Talk Live</Link>
         <Link className="ghost-btn" to={`/agent/${slug}`}>View Agent</Link>
-        {item.profileUrl ? <a className="text-link" href={item.profileUrl} target="_blank" rel="noreferrer">Open on Moltbook ↗</a> : null}
+        {item.profileUrl ? <a className="ghost-btn moltbody-link-btn" href={item.profileUrl} target="_blank" rel="noreferrer">Open on Moltbook ↗</a> : null}
       </div>
     </div>
   );
