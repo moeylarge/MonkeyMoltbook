@@ -1,197 +1,167 @@
 # MonkeyMoltbook — HANDOFF
 
-Updated: 2026-03-27 America/Los_Angeles
+Updated: 2026-03-29 America/Los_Angeles
 
 ## Current phase
 
-**MOLT-LIVE deployed prototype + launch-pass refinement**
+**MOLT-LIVE live product refinement + backend-backed search/community expansion + rolling collector automation**
 
 ## Objective
 
-Build MonkeyMoltbook as a **website-first** Moltbook intelligence and live-AI discovery platform.
+Build MonkeyMoltbook as a **website-first** Moltbook intelligence and live AI discovery platform, with MOLT-LIVE as the real interaction layer.
 
-The active product direction is now:
-- public Moltbook data ingestion
-- ranking + signal analysis
-- Top 100 / Rising 25 / Hot 25 / Topics / Top Submolts / Search
-- direct navigation out to Moltbook accounts/submolts
-- future live webcam AI session shell with transcript/export UX
+Active product direction now includes:
+- Moltbook public-data ingestion and ranking
+- website-first discovery surfaces
+- live session entry via chat / voice / webcam modes
+- transcript persistence + export
+- wallet / credits backend
+- future Stripe billing, but not yet activated
 
-It is **not** currently a mobile-app-first swipe product.
+## What was completed in this session
 
-## What was done today
+### Homepage / product surface
+- homepage hierarchy was reworked toward:
+  - stronger proof near the top
+  - stronger live-session realism
+  - credits/battle integration closer to user desire path
+  - less equal-weight discovery clutter
+- homepage hero stat `ranked agents in feed` was locked to `100`
+- homepage still feels too clustered and needs another pass of subtraction tomorrow
 
-### Backend / data pipeline
-The server on `http://127.0.0.1:8787` was expanded well beyond the earlier public-feed adapter.
+### SEO / indexability
+- homepage title / description / canonical / OG / Twitter basics were added
+- `robots.txt` and `sitemap.xml` were added
+- sitemap was submitted to Google Search Console and Bing Webmaster Tools
+- route-level metadata was added for key routes
+- crawlable intro text was added to ranking pages
+- `What is Molt Live?` page was added and included in sitemap
 
-Implemented in `apps/server`:
-- persistent local public-data storage for Moltbook posts/authors
-- ranking layer for public authors
-- snapshot history retention
-- per-author history retention
-- MonkeyMoltbook fit scoring
-- admit / watch / reject labels
-- broader public discovery across multiple surfaces:
-  - `new`
-  - `top`
-  - `hot`
-- submolt discovery/indexing
-- author coverage mapping
-- growth metrics API
-- CSV / JSON export endpoints
-- scheduler endpoints for repeated crawls
-- rising / hot / topic-cluster signal endpoints
-- direct profile/submolt links in the data model
+### Automation / storage
+- Vercel cron refresh was set up and verified:
+  - 15 min fast refresh
+  - 30 min fuller refresh
+- Supabase was introduced as external storage
+- `supabase/schema.sql` was created and applied incrementally
+- external persistence is now live for:
+  - authors
+  - posts
+  - submolts
+  - ranking snapshots
+  - topic clusters
+  - raw author/post/submolt snapshots
+- storage/debug endpoints exist and refresh persistence was verified in production
 
-Important current server endpoints include:
-- `GET /moltbook/report`
-- `GET /moltbook/history`
-- `GET /moltbook/discovery`
-- `GET /moltbook/growth`
-- `GET /moltbook/rising`
-- `GET /moltbook/hot`
-- `GET /moltbook/topics`
-- `GET /moltbook/top-submolts`
-- `GET /moltbook/export/authors.csv`
-- `GET /moltbook/export/snapshots.csv`
-- `GET /moltbook/export/report.json`
-- `GET /moltbook/scheduler`
-- `POST /moltbook/scheduler/start?everyMs=...`
-- `POST /moltbook/scheduler/stop`
-- `POST /moltbook/refresh`
+### Live session backbone
+- live session implementation docs were created:
+  - `LIVE_SESSION_ARCHITECTURE_SPEC.md`
+  - `LIVE_SESSION_CREDITS_IMPLEMENTATION_PLAN.md`
+- first real live session loop is now active:
+  - create session
+  - send typed message
+  - store agent reply
+  - fetch transcript
+  - export transcript
+- Supabase session tables were added and verified
 
-### Website pivot
-A new web app was created at:
-- `MonkeyMoltbook/apps/web`
+### Credits / plans
+- wallet / credits backend was added and verified
+- spend actions are live in backend and connected to transcript/system events
+- current spend model:
+  - `chat_unlock` → 2
+  - `priority_prompt` → 3
+  - `queue_jump` → 5
+  - `session_extend_5m` → 8
+  - `premium_agent_unlock` → 12
+  - `battle_unlock` → 15
+- monthly plans were defined as:
+  - Basic — 100 credits — $19/mo
+  - Silver — 300 credits — $49/mo
+  - Gold — 750 credits — $99/mo
+- old placeholder credit products were hidden from the active flow
+- Stripe checkout endpoint is scaffolded, but billing is intentionally off
 
-The product/frontend direction was explicitly reset and replaced with a new authoritative directive:
-- the site must feel inspired by `monkey.app/home` energy
-- but must remain original and **not** a clone
-- webcam-first AI discovery must be obvious
-- ranked discovery tabs must be core architecture
-- the site must not look like a generic dashboard/admin tool
+### Live room UX direction
+- chat mode was elevated to a first-class mode
+- live room now supports mode selection:
+  - Chat
+  - Voice
+  - Webcam
+- chat mode got its own simplified layout
+- voice/webcam keep the richer room layout
+- credits are more deferred until the session is active
+- labels were tightened for clarity
+- still not final; the room needs one more user-judgment pass tomorrow
 
-Implemented website/product shell routes:
-- `/`
-- `/top-100`
-- `/rising-25`
-- `/hot-25`
-- `/topics`
-- `/top-submolts`
-- `/search`
-- `/agent/:slug`
-- `/live/:slug`
-- `/safety`
-- `/faq`
+## Important files created / updated
 
-The rebuilt web shell now includes:
-- branded landing page / hero
-- discovery preview modules
-- Top 100 / Rising 25 / Hot 25 / Topics / Top Submolts / Search structure
-- agent profile page
-- live session page shell
-- transcript/export UI shell
-- trust/safety page
-- FAQ page
-- mobile/desktop responsive navigation
+- `MonkeyMoltbook/LIVE_SESSION_ARCHITECTURE_SPEC.md`
+- `MonkeyMoltbook/SUPABASE_STORAGE_SPEC.md`
+- `MonkeyMoltbook/LIVE_SESSION_CREDITS_IMPLEMENTATION_PLAN.md`
+- `MonkeyMoltbook/TRUST_SCORE_V1_SPEC.md`
+- `MonkeyMoltbook/supabase/schema.sql`
+- `apps/server/src/lib/supabase-storage.js`
+- `apps/server/src/lib/live-sessions.js`
+- `apps/server/src/lib/credits.js`
 
-## Verified proof
+## Key production/system truths
 
-- server boots locally on `http://localhost:8787`
-- current terminal confirmation after restart showed:
-  - `MonkeyMoltbook server listening on http://localhost:8787`
-- web app builds cleanly from `apps/web`
-- latest verified web build command passed:
-  - `npm run build:web`
-- latest backend/product shell routes now compile successfully
+- live site: `https://molt-live.com`
+- Vercel cron only for site/data automation
+- explicitly do **not** use OpenClaw cron for this project
+- Supabase project in use should be treated as temporary/trust-reduced because service role was exposed in chat; can be replaced later
+- Stripe checkout remains off for now by explicit choice
 
-## Important commits from today
+## Next step for the next chat
 
-Backend / data work:
-- `200f61e` — `Add Moltbook public intel storage and rankings`
-- `2f28d46` — `Add Moltbook snapshot history retention`
-- `e8dd53e` — `Add Moltbook fit scoring and source report`
-- `fe8bfb8` — `Expand Moltbook public discovery surfaces`
-- `9345c71` — `Add Moltbook exports and growth endpoints`
-- `d5b8505` — `Add Moltbook rising hot and topic signals`
+Do this first:
+1. audit whether Vercel cron runs are actually growing data coverage
+2. inspect backend/debug counts for authors, posts, communities, search documents
+3. re-test Groups search and a few `/community/:slug` pages after collector runs
+4. if growth is good, improve search ordering/relevance next
+5. if growth is weak, investigate better/internal Moltbook data sources more aggressively
+6. keep the future trust/safety layer in view as a major differentiator
 
-Frontend / website pivot:
-- `ee64f3f` — `Add MonkeyMoltbook web discovery app`
-- `f8ae94a` — `Rebuild MonkeyMoltbook web product shell`
+## Strong current judgment
 
-## Important current truth
+The biggest remaining issue is not backend anymore.
 
-- Moltbook posting/auth flow was checked and remained a separate blocker; this did **not** block the public-data intelligence buildout
-- the strategic decision today was to **avoid** spending more time on Moltbook posting and instead build out the public-data/ranking/discovery system
-- the product direction was explicitly upgraded from “Moltbook-like app” to a clearer wedge:
-  - simplify Moltbook for confused users
-  - surface the best accounts and submolts
-  - show rising/hot signals
-  - make navigation easy with direct links
-- John explicitly decided this should probably be a **website**, not a native app, and that decision should be treated as active truth unless reopened
+It is:
+- homepage clustering
+- too much information density
+- some room-level UX still feeling half-real / half-system-demo
+- copy needing simplification and demotion in the right places
 
-## Next step
+Tomorrow should be a cleanup / judgment pass, not another architecture expansion pass.
 
-Next major phase: **MOLT-LIVE LAUNCH PASS**
+## Useful commit trail from this session
 
-Priority order:
-1. stronger camera-first landing section
-2. stronger live session layout
-3. more convincing human-to-agent webcam flow
-4. cleaner mobile-first interaction feel
-5. final production/backend pass
+Key later-session commits include:
+- `a225da8` — Polish MOLT-LIVE homepage hierarchy and live flow
+- `8611064` — Add MOLT-LIVE basic SEO and sitemap
+- `11538fa` — Add route-level SEO metadata for MOLT-LIVE
+- `81d7299` — Make Moltbook external links prominent on agent cards
+- `dba4b86` — Add crawlable intro text to Molt ranking pages
+- `fffd643` — Add indexable What Is Molt Live page
+- `4ac3504` — Add What Is Molt Live page to sitemap
+- `4a4dafa` — Polish desktop trust realism and conversion flow
+- `6ea545c` — Set up automated Vercel refresh cadence for MOLT-LIVE
+- `f0e5f36` — Add Supabase schema and storage scaffold for MOLT-LIVE
+- `aad847c` — Persist Molt posts and submolts to Supabase
+- `3e01068` — Build first real live session backend and UI flow
+- `9d1b1f2` — Polish real live session room UI
+- `d4d1846` — Add wallet and credits backend endpoints
+- `215bc61` — Connect wallet and spend actions to live room UI
+- `89bbf6a` — Add chat mode as first-class live credits option
+- `f4edb67` — Hide old credit products and show monthly plans only
+- `db67356` — Simplify chat mode live room layout
+- `64d883f` — Lock homepage feed stat and tighten live room labels
+- `5c28705` — Clarify live mode messaging and defer credits until active
 
-Important design reminder:
-- `molt-live.com` should move much closer to the Monkey-style webcam energy on the interaction layer
-- especially the camera-first / live-conversation feel
-- but it must remain original and not become a direct clone
+## Guardrails
 
-Current state before launch:
-- deployed live at `https://molt-live.com`
-- Vercel frontend + Vercel `/api` backend are both working
-- Top 100 / Rising 25 / Hot 25 / Topics / Top Submolts all load
-- agent pages and live pages load
-- Open on Moltbook user links were corrected to `/u/<name>`
-- Submolt links were validated
-- waitlist / topic-interest / analytics hooks are live
-- legal placeholders exist (`/privacy`, `/terms`)
-- domain `molt-live.com` is connected and serving the project
-- production hardening fallback exists so ranking surfaces do not go blank when live Moltbook intel is empty
-- site was switched to a light theme and MM pink accents
-- credits / wallet / premium battle mode UI shell exists
-- camera-first homepage redesign and stronger live session redesign were started and deployed
-- still not final launch-ready product yet
-- real launch still requires the remaining launch-pass refinement and polish
-
-## Immediate resume order for next session
-
-Resume from this exact order:
-1. review deployed `molt-live.com` on phone first
-2. continue the **MOLT-LIVE LAUNCH PASS** only
-3. priority sequence:
-   - mobile-first homepage polish
-   - stronger camera-first landing section
-   - stronger live session realism / interaction tension
-   - credits / battle flow refinement
-   - final production hardening / launch polish
-4. do not re-open deployment plumbing unless the live site breaks again
-
-## Important recent commits / deployment checkpoint
-
-Key deployment + launch-pass commits from this session:
-- `f383398` — Adapt MonkeyMoltbook backend for Vercel api
-- `8ead41d` — Split MonkeyMoltbook Vercel app from local server boot
-- `6fced9b` — Use /tmp data path on Vercel
-- `21d5bb1` — Fix Moltbook profile links and add Vercel refresh cron
-- `c757672` — Fallback to seeded agents when Moltbook intel is empty
-- `d7e302b` — Switch MonkeyMoltbook to light theme
-- `163b8a1` — Use MM pink accent for nav tabs
-- `aa258f2` — Add credits UI and premium battle mode shell
-- `4fe050b` — Redesign camera-first homepage and live session mobile UX
-
-## Stop conditions
-
-- Do not drift back into the old generic dashboard design.
-- Do not resume mobile-shell debugging unless John explicitly reopens that path.
-- Do not mix posting/auth automation into the public-data intelligence system unless John explicitly requests that separate track again.
-- Do not reintroduce Railway unless Vercel deployment is explicitly reopened; the live working stack is Vercel now.
+- do not activate Stripe tomorrow unless John explicitly decides to
+- do not re-open storage/cron work unless broken
+- do not add more major feature surfaces before the cleanup list exists
+- preserve the current working backbone and simplify the UX from here
+ preserve the current working backbone and simplify the UX from here
