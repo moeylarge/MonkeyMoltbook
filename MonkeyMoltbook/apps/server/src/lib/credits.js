@@ -2,10 +2,13 @@ const SUPABASE_URL = process.env.SUPABASE_URL || '';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 const DEFAULT_USER_ID = 'demo-user';
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
+const APP_URL = process.env.APP_URL || 'https://molt-live.com';
+
 const DEFAULT_PRODUCTS = [
-  { code: 'starter_25', name: 'Starter 25', credits_amount: 25, stripe_price_id: null, active: true },
-  { code: 'creator_100', name: 'Creator 100', credits_amount: 100, stripe_price_id: null, active: true },
-  { code: 'battle_300', name: 'Battle 300', credits_amount: 300, stripe_price_id: null, active: true }
+  { code: 'basic_monthly_100', name: 'Basic Monthly', credits_amount: 100, price_usd_cents: 1900, billing_interval: 'month', stripe_price_id: null, active: true },
+  { code: 'silver_monthly_300', name: 'Silver Monthly', credits_amount: 300, price_usd_cents: 4900, billing_interval: 'month', stripe_price_id: null, active: true },
+  { code: 'gold_monthly_750', name: 'Gold Monthly', credits_amount: 750, price_usd_cents: 9900, billing_interval: 'month', stripe_price_id: null, active: true }
 ];
 const SPEND_RULES = {
   chat_unlock: 2,
@@ -89,7 +92,7 @@ export async function listCreditTransactions(userId = DEFAULT_USER_ID, limit = 2
 export async function listCreditProducts() {
   await ensureCreditProducts();
   return rest('credit_products', {
-    query: 'active=eq.true&select=*&order=credits_amount.asc'
+    query: 'active=eq.true&select=*&order=price_usd_cents.asc'
   });
 }
 
@@ -131,4 +134,50 @@ export async function spendCredits({ userId = DEFAULT_USER_ID, sessionId = null,
     prefer: 'return=representation'
   });
   return { ok: true, balance: balanceAfter, cost, wallet: updatedWallet, transaction: tx };
+}
+
+export async function createCheckoutSession({ productCode, userId = DEFAULT_USER_ID }) {
+  const products = await listCreditProducts();
+  const product = products.find((p) => p.code === productCode);
+  if (!product) throw new Error('unknown_product_code');
+  if (!STRIPE_SECRET_KEY) {
+    return {
+      ok: false,
+      error: 'stripe_not_configured',
+      product,
+      next: 'add STRIPE_SECRET_KEY and stripe_price_id values'
+    };
+  }
+  if (!product.stripe_price_id) {
+    return {
+      ok: false,
+      error: 'stripe_price_missing',
+      product,
+      next: 'attach Stripe price ids to credit_products rows'
+    };
+  }
+
+  const params = new URLSearchParams();
+  params.append('mode', 'subscription');
+  params.append('line_items[0][price]', product.stripe_price_id);
+  params.append('line_items[0][quantity]', '1');
+  params.append('success_url', `${APP_URL}/live/${encodeURIComponent('jimmythelizard')}?checkout=success&product=${encodeURIComponent(product.code)}`);
+  params.append('cancel_url', `${APP_URL}/live/${encodeURIComponent('jimmythelizard')}?checkout=cancelled`);
+  params.append('metadata[userId]', userId);
+  params.append('metadata[productCode]', product.code);
+  params.append('metadata[creditsAmount]', String(product.credits_amount));
+
+  const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${STRIPE_SECRET_KEY}`,
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: params.toString()
+  });
+  const text = await response.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = text || null; }
+  if (!response.ok) throw new Error(`stripe_checkout_${response.status}: ${typeof data === 'string' ? data : JSON.stringify(data)}`);
+  return { ok: true, product, checkoutUrl: data.url || null, checkoutSessionId: data.id || null };
 }

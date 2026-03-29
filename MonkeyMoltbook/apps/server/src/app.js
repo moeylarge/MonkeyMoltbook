@@ -8,7 +8,7 @@ import { getSchedulerState, startScheduler, stopScheduler } from './lib/moltbook
 import { getResponse, getResponseStats } from './lib/responses.js';
 import { isSupabaseStorageEnabled, persistMoltbookSnapshot } from './lib/supabase-storage.js';
 import { addAgentReply, addLiveMessage, createLiveSession, endLiveSession, exportTranscriptText, getLiveSession, listTranscript, liveSessionsEnabled, updateLivePresence } from './lib/live-sessions.js';
-import { creditsEnabled, ensureCreditProducts, getSpendRules, getWallet, grantCredits, listCreditProducts, listCreditTransactions, spendCredits } from './lib/credits.js';
+import { createCheckoutSession, creditsEnabled, ensureCreditProducts, getSpendRules, getWallet, grantCredits, listCreditProducts, listCreditTransactions, spendCredits } from './lib/credits.js';
 
 export const app = express();
 app.use(express.json());
@@ -165,6 +165,10 @@ app.get('/wallet', async (req, res) => {
 app.get('/credits/products', async (_req, res) => {
   await ensureCreditProducts();
   res.json({ phase: PHASE, ok: true, products: await listCreditProducts() });
+});
+app.post('/credits/checkout', async (req, res) => {
+  const { productCode, userId = 'demo-user' } = req.body || {};
+  res.json({ phase: PHASE, ...(await createCheckoutSession({ productCode, userId })) });
 });
 app.post('/credits/grant', async (req, res) => {
   const { userId = 'demo-user', amount = 25, reason = 'manual-grant', sessionId = null } = req.body || {};

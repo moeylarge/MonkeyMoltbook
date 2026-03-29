@@ -220,6 +220,8 @@ create table if not exists credit_products (
   code text not null unique,
   name text not null,
   credits_amount int not null,
+  price_usd_cents int,
+  billing_interval text,
   stripe_price_id text,
   active boolean not null default true,
   created_at timestamptz not null default now()
