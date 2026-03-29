@@ -849,6 +849,7 @@ function LivePage({ data }) {
   };
 
   const exportUrl = session?.id ? `${API}/live/session/${session.id}/export` : null;
+  const isChatMode = (session?.mode || sessionMode) === 'chat';
 
   return (
     <>
@@ -860,18 +861,12 @@ function LivePage({ data }) {
     <section className="page-section live-page">
       <span className="hero-kicker">Live session</span>
       <SectionHeader title={`Talk live with ${agent?.authorName || 'agent'}`} body="Webcam-first, voice-enabled, transcript-visible, export-ready. UI is real; realtime media infra is placeholder shell." />
-      <div className="live-layout live-layout-monkeyish live-layout-redesign">
-        <div className="live-stage live-stage-upgraded live-stage-redesign">
+      <div className={`live-layout live-layout-monkeyish live-layout-redesign ${isChatMode ? 'live-layout-chat' : ''}`}>
+        <div className={`live-stage live-stage-upgraded live-stage-redesign ${isChatMode ? 'live-stage-chat' : ''}`}>
           <div className="battle-banner">
             <span className="eyebrow">Live room</span>
             <strong>{session ? 'Stored session is active' : 'Real session layer is now wired'}</strong>
             <span>{session ? `Session ${session.id.slice(0, 8)} · transcript persisted` : 'Start the room to create a real session, then credits can layer in next'}</span>
-          </div>
-          <div className="session-badge-row">
-            <span className="presence-pill">{presence?.user_cam_on ? 'Cam visible' : 'Cam off'}</span>
-            <span className="presence-pill">{presence?.tts_on ? 'Voice active' : 'Voice off'}</span>
-            <span className="presence-pill">{presence?.transcript_on ? 'Transcript on' : 'Transcript off'}</span>
-            <span className="presence-pill">{session ? 'Supabase stored' : 'Ready to create'}</span>
           </div>
           <div className="live-stage-headline">
             <strong>{session ? `${agent?.authorName || 'Agent'} is live with you now` : `${agent?.authorName || 'Agent'} is on deck`}</strong>
@@ -882,48 +877,81 @@ function LivePage({ data }) {
             <button className={`tab ${sessionMode === 'voice' ? 'active' : ''}`} onClick={() => setSessionMode('voice')} disabled={!!session}>Voice</button>
             <button className={`tab ${sessionMode === 'webcam' ? 'active' : ''}`} onClick={() => setSessionMode('webcam')} disabled={!!session}>Webcam</button>
           </div>
-          <div className="live-room-meta-row">
-            <div className="live-room-meta-card"><strong>{session ? 'Connected' : 'Idle'}</strong><span>{session ? `Started ${new Date(session.started_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : 'No live room started yet'}</span></div>
-            <div className="live-room-meta-card"><strong>{messages.length}</strong><span>{messages.length === 1 ? 'stored turn' : 'stored turns'}</span></div>
-            <div className="live-room-meta-card"><strong>{session ? session.mode : sessionMode}</strong><span>{sessionMode === 'chat' ? 'Lowest-friction paid entry mode' : sessionMode === 'voice' ? 'Voice-first with transcript' : 'Highest-intensity live mode'}</span></div>
-          </div>
-          <div className="live-stage-grid">
-            <div className="live-window human"><div className="live-window-overlay"><span>You</span><strong>{sessionMode === 'chat' ? 'Chat mode active' : presence?.user_cam_on ? 'Camera visible' : 'Camera off'}</strong><small>{sessionMode === 'chat' ? 'Low-friction text entry · transcript still available' : presence?.user_mic_on ? 'Mic hot · prompt ready' : 'Mic muted · transcript still available'}</small></div></div>
-            <div className="live-window ai"><div className="live-window-overlay"><span>{agent?.authorName || 'Agent'}</span><strong>{session ? 'Responding through stored session loop' : 'Live persona waiting'}</strong><small>{sessionMode === 'chat' ? 'Chat-first reply loop · transcript visible' : presence?.tts_on ? 'TTS enabled · transcript visible' : 'Text reply only · transcript visible'}</small></div></div>
-          </div>
+          {isChatMode ? (
+            <>
+              <div className="chat-mode-summary">
+                <div className="live-room-meta-card"><strong>{session ? 'Connected' : 'Ready'}</strong><span>{session ? `Started ${new Date(session.started_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : 'Start a low-friction text session first'}</span></div>
+                <div className="live-room-meta-card"><strong>{wallet ? `${wallet.balance} credits` : '...'}</strong><span>Chat is the easiest entry mode</span></div>
+              </div>
+              <div className="wallet-panel wallet-panel-secondary">
+                <div className="wallet-balance-card">
+                  <span className="eyebrow">Monthly plans</span>
+                  <strong>Basic / Silver / Gold</strong>
+                  <p>Stripe stays off for now. Plans are shown for clarity, not checkout.</p>
+                  <div className="plan-chip-row">
+                    {products.length ? products.map((product) => (
+                      <span className="presence-pill" key={product.code}>{product.name.replace(' Monthly','')} · {product.credits_amount} · ${((product.price_usd_cents || 0)/100).toFixed(0)}/mo</span>
+                    )) : <span className="presence-pill">Loading plans…</span>}
+                  </div>
+                </div>
+                <div className="wallet-actions-grid wallet-actions-grid-compact">
+                  <button className="ghost-btn" onClick={() => spendCredits('chat_unlock')} disabled={!session || spendingAction === 'chat_unlock'}>{spendingAction === 'chat_unlock' ? 'Processing…' : 'Unlock chat boost · 2'}</button>
+                  <button className="ghost-btn" onClick={() => spendCredits('priority_prompt')} disabled={!session || spendingAction === 'priority_prompt'}>{spendingAction === 'priority_prompt' ? 'Priority prompt · 3' : 'Priority prompt · 3'}</button>
+                  <button className="ghost-btn" onClick={() => spendCredits('session_extend_5m')} disabled={!session || spendingAction === 'session_extend_5m'}>{spendingAction === 'session_extend_5m' ? 'Processing…' : '+5 min · 8'}</button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="session-badge-row">
+                <span className="presence-pill">{presence?.user_cam_on ? 'Cam visible' : 'Cam off'}</span>
+                <span className="presence-pill">{presence?.tts_on ? 'Voice active' : 'Voice off'}</span>
+                <span className="presence-pill">{presence?.transcript_on ? 'Transcript on' : 'Transcript off'}</span>
+                <span className="presence-pill">{session ? 'Supabase stored' : 'Ready to create'}</span>
+              </div>
+              <div className="live-room-meta-row">
+                <div className="live-room-meta-card"><strong>{session ? 'Connected' : 'Idle'}</strong><span>{session ? `Started ${new Date(session.started_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : 'No live room started yet'}</span></div>
+                <div className="live-room-meta-card"><strong>{messages.length}</strong><span>{messages.length === 1 ? 'stored turn' : 'stored turns'}</span></div>
+                <div className="live-room-meta-card"><strong>{session ? session.mode : sessionMode}</strong><span>{sessionMode === 'voice' ? 'Voice-first with transcript' : 'Highest-intensity live mode'}</span></div>
+              </div>
+              <div className="live-stage-grid">
+                <div className="live-window human"><div className="live-window-overlay"><span>You</span><strong>{presence?.user_cam_on ? 'Camera visible' : 'Camera off'}</strong><small>{presence?.user_mic_on ? 'Mic hot · prompt ready' : 'Mic muted · transcript still available'}</small></div></div>
+                <div className="live-window ai"><div className="live-window-overlay"><span>{agent?.authorName || 'Agent'}</span><strong>{session ? 'Responding through stored session loop' : 'Live persona waiting'}</strong><small>{presence?.tts_on ? 'TTS enabled · transcript visible' : 'Text reply only · transcript visible'}</small></div></div>
+              </div>
+              <div className="control-row">
+                <button className={`control ${presence?.user_mic_on ? 'active' : ''}`} onClick={() => togglePresence('userMicOn', !presence?.user_mic_on)}>{presence?.user_mic_on ? 'Mic On' : 'Mic Off'}</button>
+                <button className={`control ${presence?.user_cam_on ? 'active' : ''}`} onClick={() => togglePresence('userCamOn', !presence?.user_cam_on)}>{presence?.user_cam_on ? 'Cam On' : 'Cam Off'}</button>
+                <button className={`control ${presence?.tts_on ? 'active' : ''}`} onClick={() => togglePresence('ttsOn', !presence?.tts_on)}>{presence?.tts_on ? 'TTS Enabled' : 'TTS Off'}</button>
+                <button className={`control ${presence?.transcript_on ? 'active' : ''}`} onClick={() => togglePresence('transcriptOn', !presence?.transcript_on)}>{presence?.transcript_on ? 'Transcribing' : 'Transcript Off'}</button>
+              </div>
+              <div className="wallet-panel wallet-panel-secondary">
+                <div className="wallet-balance-card">
+                  <span className="eyebrow">Wallet</span>
+                  <strong>{wallet ? `${wallet.balance} credits` : 'Loading credits…'}</strong>
+                  <p>Monthly plans only for now. Stripe checkout stays off until launch-ready.</p>
+                  <div className="plan-chip-row">
+                    {products.length ? products.map((product) => (
+                      <span className="presence-pill" key={product.code}>{product.name.replace(' Monthly','')} · {product.credits_amount} · ${((product.price_usd_cents || 0)/100).toFixed(0)}/mo</span>
+                    )) : <span className="presence-pill">Loading plans…</span>}
+                  </div>
+                </div>
+                <div className="wallet-actions-grid">
+                  <button className="ghost-btn" onClick={() => spendCredits('priority_prompt')} disabled={!session || spendingAction === 'priority_prompt'}>{spendingAction === 'priority_prompt' ? 'Processing…' : 'Priority prompt · 3'}</button>
+                  <button className="ghost-btn" onClick={() => spendCredits('queue_jump')} disabled={!session || spendingAction === 'queue_jump'}>{spendingAction === 'queue_jump' ? 'Processing…' : 'Queue jump · 5'}</button>
+                  <button className="ghost-btn" onClick={() => spendCredits('session_extend_5m')} disabled={!session || spendingAction === 'session_extend_5m'}>{spendingAction === 'session_extend_5m' ? 'Processing…' : '+5 min · 8'}</button>
+                  <button className="ghost-btn" onClick={() => spendCredits('premium_agent_unlock')} disabled={!session || spendingAction === 'premium_agent_unlock'}>{spendingAction === 'premium_agent_unlock' ? 'Processing…' : 'Premium unlock · 12'}</button>
+                  <button className="primary-btn" onClick={() => spendCredits('battle_unlock')} disabled={!session || spendingAction === 'battle_unlock'}>{spendingAction === 'battle_unlock' ? 'Processing…' : 'Battle unlock · 15'}</button>
+                </div>
+              </div>
+            </>
+          )}
           <div className="live-cta-row">
-            <button className="primary-btn" onClick={startSession} disabled={starting || !!session}>{session ? 'Session live' : starting ? 'Starting…' : 'Start live now'}</button>
+            <button className="primary-btn" onClick={startSession} disabled={starting || !!session}>{session ? 'Session live' : starting ? 'Starting…' : isChatMode ? 'Start chat now' : 'Start live now'}</button>
             <button className="ghost-btn" onClick={endSession} disabled={!session || ending}>{ending ? 'Ending…' : 'End session'}</button>
             <button className="ghost-btn" disabled>Invite agent battle</button>
           </div>
-          <div className="control-row">
-            <button className={`control ${presence?.user_mic_on ? 'active' : ''}`} onClick={() => togglePresence('userMicOn', !presence?.user_mic_on)}>{presence?.user_mic_on ? 'Mic On' : 'Mic Off'}</button>
-            <button className={`control ${presence?.user_cam_on ? 'active' : ''}`} onClick={() => togglePresence('userCamOn', !presence?.user_cam_on)}>{presence?.user_cam_on ? 'Cam On' : 'Cam Off'}</button>
-            <button className={`control ${presence?.tts_on ? 'active' : ''}`} onClick={() => togglePresence('ttsOn', !presence?.tts_on)}>{presence?.tts_on ? 'TTS Enabled' : 'TTS Off'}</button>
-            <button className={`control ${presence?.transcript_on ? 'active' : ''}`} onClick={() => togglePresence('transcriptOn', !presence?.transcript_on)}>{presence?.transcript_on ? 'Transcribing' : 'Transcript Off'}</button>
-          </div>
-          <div className="wallet-panel">
-            <div className="wallet-balance-card">
-              <span className="eyebrow">Wallet</span>
-              <strong>{wallet ? `${wallet.balance} credits` : 'Loading credits…'}</strong>
-              <p>Monthly plans only for now. Stripe checkout stays off until launch-ready.</p>
-              <div className="plan-chip-row">
-                {products.length ? products.map((product) => (
-                  <span className="presence-pill" key={product.code}>{product.name.replace(' Monthly','')} · {product.credits_amount} · ${((product.price_usd_cents || 0)/100).toFixed(0)}/mo</span>
-                )) : <span className="presence-pill">Loading plans…</span>}
-              </div>
-            </div>
-            <div className="wallet-actions-grid">
-              <button className="ghost-btn" onClick={() => spendCredits('chat_unlock')} disabled={!session || spendingAction === 'chat_unlock'}>{spendingAction === 'chat_unlock' ? 'Processing…' : 'Chat unlock · 2'}</button>
-              <button className="ghost-btn" onClick={() => spendCredits('priority_prompt')} disabled={!session || spendingAction === 'priority_prompt'}>{spendingAction === 'priority_prompt' ? 'Processing…' : 'Priority prompt · 3'}</button>
-              <button className="ghost-btn" onClick={() => spendCredits('queue_jump')} disabled={!session || spendingAction === 'queue_jump'}>{spendingAction === 'queue_jump' ? 'Processing…' : 'Queue jump · 5'}</button>
-              <button className="ghost-btn" onClick={() => spendCredits('session_extend_5m')} disabled={!session || spendingAction === 'session_extend_5m'}>{spendingAction === 'session_extend_5m' ? 'Processing…' : '+5 min · 8'}</button>
-              <button className="ghost-btn" onClick={() => spendCredits('premium_agent_unlock')} disabled={!session || spendingAction === 'premium_agent_unlock'}>{spendingAction === 'premium_agent_unlock' ? 'Processing…' : 'Premium unlock · 12'}</button>
-              <button className="primary-btn" onClick={() => spendCredits('battle_unlock')} disabled={!session || spendingAction === 'battle_unlock'}>{spendingAction === 'battle_unlock' ? 'Processing…' : 'Battle unlock · 15'}</button>
-            </div>
-          </div>
         </div>
-        <div className="transcript-shell transcript-shell-redesign">
+        <div className={`transcript-shell transcript-shell-redesign ${isChatMode ? 'transcript-shell-chat' : ''}`}>
           <div className="transcript-header">
             <span>Transcript</span>
             {exportUrl ? <a className="ghost-btn" href={exportUrl} target="_blank" rel="noreferrer">Export .txt</a> : <button className="ghost-btn" disabled>Export .txt</button>}
@@ -942,11 +970,11 @@ function LivePage({ data }) {
           </div>
           <div className="live-side-summary">
             <span className="presence-pill">{session ? `Session ${session.status}` : 'Session idle'}</span>
-            <span className="presence-pill">{presence?.user_mic_on ? 'Mic hot' : 'Mic muted'}</span>
+            <span className="presence-pill">{isChatMode ? 'Chat mode' : presence?.user_mic_on ? 'Mic hot' : 'Mic muted'}</span>
             <span className="presence-pill">{session ? 'Export ready' : 'Export after start'}</span>
           </div>
           <div className="chat-input-row">
-            <input className="chat-input" placeholder="Type a prompt while voice is on…" value={draft} onChange={(e) => setDraft(e.target.value)} />
+            <input className="chat-input" placeholder={isChatMode ? 'Type a message to start the chat…' : 'Type a prompt while voice is on…'} value={draft} onChange={(e) => setDraft(e.target.value)} />
             <button className="primary-btn" onClick={sendMessage} disabled={!session || sending}>{sending ? 'Sending…' : 'Send'}</button>
           </div>
           <div className="session-meta">{session ? `Session state: ${session.status} · transcript persistence live · export endpoint ready · credits wired to backend · chat mode included` : 'Session state: start a live session to create transcript persistence'}</div>
