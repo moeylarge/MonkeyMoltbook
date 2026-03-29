@@ -4,10 +4,13 @@
   "outputDirectory": "apps/web/dist",
   "installCommand": "npm install",
   "crons": [
-    { "path": "/api/refresh", "schedule": "*/15 * * * *" }
+    { "path": "/api/refresh-fast", "schedule": "*/15 * * * *" },
+    { "path": "/api/refresh-full", "schedule": "*/30 * * * *" }
   ],
   "rewrites": [
     { "source": "/api/refresh", "destination": "/api/refresh.mjs" },
+    { "source": "/api/refresh-fast", "destination": "/api/refresh-fast.mjs" },
+    { "source": "/api/refresh-full", "destination": "/api/refresh-full.mjs" },
     { "source": "/api/(.*)", "destination": "/api/index.mjs" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
