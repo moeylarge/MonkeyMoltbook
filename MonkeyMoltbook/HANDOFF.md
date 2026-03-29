@@ -119,12 +119,14 @@ Active product direction now includes:
 ## Next step for the next chat
 
 Do this first:
-1. audit whether Vercel cron runs are actually growing data coverage
-2. inspect backend/debug counts for authors, posts, communities, search documents
-3. re-test Groups search and a few `/community/:slug` pages after collector runs
-4. if growth is good, improve search ordering/relevance next
-5. if growth is weak, investigate better/internal Moltbook data sources more aggressively
-6. keep the future trust/safety layer in view as a major differentiator
+1. apply the new trust tables in Supabase SQL (`entity_risk_scores`, `entity_risk_events`, `risky_domains`) because production storage does not have them yet
+2. audit whether Vercel cron runs are actually growing data coverage
+3. inspect backend/debug counts for authors, posts, communities, search documents
+4. re-test Groups search and a few `/community/:slug` pages after collector runs
+5. if growth is good, improve search ordering/relevance next
+6. continue tuning trust heuristics from live corpus examples before stronger ranking/demotion is enabled
+7. if growth is weak, investigate better/internal Moltbook data sources more aggressively
+8. keep the future trust/safety layer in view as a major differentiator
 
 ## Strong current judgment
 

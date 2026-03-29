@@ -20,18 +20,30 @@ function hasRepeatedPattern(text = '') {
 
 const RISK_PATTERNS = {
   phishing: [
-    'seed phrase', 'wallet connect', 'wallet recovery', 'verify your wallet', 'password reset', 'private key', 'login now', 'claim now'
+    'seed phrase', 'wallet connect', 'wallet recovery', 'verify your wallet', 'private key', 'connect wallet to claim', 'enter your wallet', 'verify your account now'
   ],
   malware: [
-    'crack', 'keygen', 'loader', 'stealer', 'rat', 'bypass', 'exploit', 'payload', 'malware', 'virus'
+    'keygen', 'stealer', ' rat ', 'remote access trojan', 'credential dump', 'password dump', 'clipboard drainer', 'wallet drainer', 'malware', 'virus'
   ],
   scam: [
-    'guaranteed profit', 'double your money', 'dm for method', 'easy money', 'instant payout', 'risk free', 'limited time only'
+    'guaranteed profit', 'double your money', 'dm for method', 'instant payout', 'risk free', 'guaranteed returns', 'send funds first', 'claim your reward now'
   ],
   urgency: [
-    'act now', 'urgent', 'limited spots', 'before it is gone', 'last chance', 'do not miss', 'expires today'
+    'act now', 'urgent', 'limited spots', 'before it is gone', 'last chance', 'expires today', 'only today', 'final chance'
   ]
 };
+
+const BENIGN_PATTERNS = [
+  'hackathon',
+  'usdchackathon',
+  'projectsubmission',
+  'free guidance',
+  'no agenda',
+  'open source',
+  'security research',
+  'compliance',
+  'philosophy'
+];
 
 function collectPhraseFlags(text) {
   const hits = [];
@@ -41,6 +53,10 @@ function collectPhraseFlags(text) {
     }
   }
   return hits;
+}
+
+function benignHitCount(text = '') {
+  return BENIGN_PATTERNS.filter((pattern) => text.includes(pattern)).length;
 }
 
 function buildReason(flags = []) {
@@ -67,6 +83,7 @@ export function scorePostRisk(post = {}) {
   const text = textParts(post.title, post.snippet, post.body, post.description);
   const urls = extractUrls(textParts(text, post.url));
   const flags = collectPhraseFlags(text);
+  const benignHits = benignHitCount(text);
   let languageRisk = 0;
   let linkRisk = 0;
   let duplicationRisk = 0;
@@ -80,7 +97,7 @@ export function scorePostRisk(post = {}) {
     else if (hit.startsWith('urgency:')) languageRisk += 8;
   }
 
-  if (urls.length >= 1) linkRisk += 8;
+  if (urls.length >= 1) linkRisk += 6;
   if (urls.length >= 3) {
     linkRisk += 10;
     flags.push('links:many');
@@ -90,11 +107,14 @@ export function scorePostRisk(post = {}) {
     flags.push('links:suspicious');
   }
   if (hasRepeatedPattern(text)) {
-    duplicationRisk += 18;
+    duplicationRisk += 14;
     flags.push('behavior:repetitive');
   }
 
-  const score = clamp(languageRisk + linkRisk + duplicationRisk + accountContribution + communityContribution);
+  let score = languageRisk + linkRisk + duplicationRisk + accountContribution + communityContribution;
+  if (benignHits) score -= benignHits * 8;
+  if (flags.length <= 1 && linkRisk === 0) score -= 10;
+  score = clamp(score);
   const reasons = buildReason(flags);
 
   return {
@@ -117,6 +137,7 @@ export function scorePostRisk(post = {}) {
 export function scoreAuthorRisk(author = {}) {
   const text = textParts(author.authorName, author.description, author.reason);
   const flags = collectPhraseFlags(text);
+  const benignHits = benignHitCount(text);
   let accountThinnessRisk = 0;
   let behaviorRisk = 0;
   let networkRisk = 0;
@@ -126,8 +147,9 @@ export function scoreAuthorRisk(author = {}) {
   const karma = Number(author.karma ?? 0);
   const descriptionLength = String(author.description || '').trim().length;
   const submoltCount = Array.isArray(author.submolts) ? author.submolts.length : 0;
+  const isClaimed = Boolean(author.isClaimed ?? author.is_claimed);
 
-  if (descriptionLength < 20 && postCount > 0) {
+  if (descriptionLength < 20 && postCount > 0 && !isClaimed) {
     accountThinnessRisk += 16;
     flags.push('account:thin');
   }
@@ -142,7 +164,12 @@ export function scoreAuthorRisk(author = {}) {
     else if (hit.startsWith('urgency:')) languageRisk += 6;
   }
 
-  const score = clamp(accountThinnessRisk + behaviorRisk + networkRisk + languageRisk);
+  let score = accountThinnessRisk + behaviorRisk + networkRisk + languageRisk;
+  if (isClaimed) score -= 6;
+  if (karma >= 500) score -= 8;
+  if (benignHits) score -= benignHits * 8;
+  if (flags.length <= 1 && postCount <= 2) score -= 8;
+  score = clamp(score);
   const reasons = buildReason(flags);
 
   return {
@@ -164,6 +191,7 @@ export function scoreAuthorRisk(author = {}) {
 export function scoreCommunityRisk(community = {}) {
   const text = textParts(community.name, community.title, community.description, ...(community.sampleTitles || []));
   const flags = collectPhraseFlags(text);
+  const benignHits = benignHitCount(text);
   let contentRisk = 0;
   let linkRisk = 0;
   let densityRisk = 0;
@@ -184,7 +212,10 @@ export function scoreCommunityRisk(community = {}) {
     flags.push('community:risky-density');
   }
 
-  const score = clamp(contentRisk + linkRisk + densityRisk);
+  let score = contentRisk + linkRisk + densityRisk;
+  if (benignHits) score -= benignHits * 10;
+  if (flags.length <= 1 && (community.postCount || 0) < 5) score -= 12;
+  score = clamp(score);
   const reasons = buildReason(flags);
 
   return {
