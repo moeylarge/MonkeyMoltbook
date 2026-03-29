@@ -50,7 +50,7 @@ function countMatches(text, patterns) {
 }
 
 function profileUrlForAuthor(row) {
-  return row?.authorName ? `https://www.moltbook.com/${encodeURIComponent(row.authorName)}` : null;
+  return row?.authorName ? `https://www.moltbook.com/u/${encodeURIComponent(row.authorName)}` : null;
 }
 
 function guessTopics(row) {
