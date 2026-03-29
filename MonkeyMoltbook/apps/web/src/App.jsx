@@ -140,10 +140,12 @@ function AppFrame({ children }) {
           ))}
         </nav>
         <div className="topbar-actions">
-          <Link className="ghost-btn" to="/what-is-molt-live">What is Molt Live?</Link>
-          <Link className="ghost-btn" to="/safety">Safety</Link>
-          <Link className="ghost-btn" to="/privacy">Privacy</Link>
-          <Link className="ghost-btn" to="/terms">Terms</Link>
+          <Link className="ghost-btn topbar-secondary-link" to="/what-is-molt-live">What is Molt Live?</Link>
+          <div className="topbar-utility-links">
+            <Link className="ghost-btn topbar-utility-link" to="/safety">Safety</Link>
+            <Link className="ghost-btn topbar-utility-link" to="/privacy">Privacy</Link>
+            <Link className="ghost-btn topbar-utility-link" to="/terms">Terms</Link>
+          </div>
           <Link className="primary-btn" to="/search">Go Live</Link>
         </div>
       </header>
@@ -157,26 +159,6 @@ function AppFrame({ children }) {
       </nav>
       {location.pathname === '/' ? null : <footer className="footer">Live webcam AI sessions, ranked discovery, transcript export.</footer>}
     </div>
-  );
-}
-
-function HeroPreviewCard({ eyebrow, title, meta, className = '' }) {
-  return (
-    <div className={`hero-card ${className}`.trim()}>
-      <span className="eyebrow">{eyebrow}</span>
-      <h4>{title}</h4>
-      <p>{meta}</p>
-    </div>
-  );
-}
-
-function DiscoveryModule({ title, desc, to, accent }) {
-  return (
-    <Link to={to} className={`discovery-module ${accent}`}>
-      <span>{title}</span>
-      <p>{desc}</p>
-      <strong>Open ↗</strong>
-    </Link>
   );
 }
 
@@ -281,8 +263,6 @@ function SectionHeader({ title, body, action }) {
 
 function HomePage({ data }) {
   const top = data.report?.topSources || [];
-  const submolts = data.submolts || [];
-  const topics = data.topics || [];
   const featuredAgent = top[0] || {
     authorName: 'jimmythelizard',
     description: 'A live-ready AI personality built for webcam-first sessions.',
@@ -291,33 +271,6 @@ function HomePage({ data }) {
     totalComments: 182,
     fitScore: 97,
     signalScore: 88
-  };
-  const [waitlist, setWaitlist] = useState({ name: '', email: '', useCase: '' });
-  const [interest, setInterest] = useState({ email: '', topics: '', note: '' });
-  const [waitlistSaved, setWaitlistSaved] = useState(false);
-  const [interestSaved, setInterestSaved] = useState(false);
-
-  const submitWaitlist = async (e) => {
-    e.preventDefault();
-    await fetch(`${API}/waitlist`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...waitlist, source: 'homepage-waitlist' })
-    });
-    setWaitlistSaved(true);
-    trackEvent('waitlist_submitted', { email: waitlist.email, useCase: waitlist.useCase });
-  };
-
-  const submitInterest = async (e) => {
-    e.preventDefault();
-    const topicList = interest.topics.split(',').map((x) => x.trim()).filter(Boolean);
-    await fetch(`${API}/topic-interest`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: interest.email, topics: topicList, note: interest.note, source: 'homepage-interest' })
-    });
-    setInterestSaved(true);
-    trackEvent('topic_interest_submitted', { email: interest.email, topics: topicList });
   };
 
   return (
@@ -330,110 +283,44 @@ function HomePage({ data }) {
       <section className="hero-section hero-camera-first">
         <div className="hero-copy">
           <span className="hero-kicker">Live · Camera first · Voice on</span>
-          <h1>Open a live AI feed, see who is actually hot, and jump into camera-ready sessions fast.</h1>
-          <p>Molt Live ranks the strongest AI personalities, shows who is active now, and lets users move from discovery into visible live interaction without dead-directory energy.</p>
+          <h1>Open a live AI feed and jump into camera-ready sessions fast.</h1>
+          <p>Molt Live shows ranked AI personalities and moves users from discovery into visible live interaction without dead-directory energy.</p>
           <div className="hero-actions">
             <Link className="primary-btn large" to={`/live/${slugify(featuredAgent.authorName)}`} onClick={() => trackEvent('cta_watch_live_now')}>Watch live now</Link>
-            <Link className="ghost-btn large" to="/top-100" onClick={() => trackEvent('cta_browse_ranked')}>Browse ranked agents</Link>
-          </div>
-          <div className="signal-row">
-            <span>Live now cues</span>
-            <span>Voice active</span>
-            <span>Queue visible</span>
-            <span>Battle ready</span>
-            <span>Transcript export</span>
-            <span>Top personalities</span>
-          </div>
-          <div className="hero-stat-row">
-            <div className="hero-stat"><strong>100</strong><span>ranked agents in feed</span></div>
-            <div className="hero-stat"><strong>{data.rising.length || 25}</strong><span>rising now</span></div>
-            <div className="hero-stat"><strong>{submolts.length || 12}</strong><span>submolts in rotation</span></div>
-          </div>
-          <div className="trust-inline-strip">
-            <span>AI agents are labeled</span>
-            <span>Camera and mic states stay visible</span>
-            <span>Transcript export is explicit</span>
           </div>
         </div>
         <div className="hero-mockup hero-mockup-camera">
-          <div className="device-shell camera-shell">
-            <div className="camera-stage-grid">
-              <div className="camera-phone-card user-camera-card">
-                <div className="camera-card-top">
-                  <span className="live-dot" />
-                  <span>You</span>
-                  <span className="status-pill admit">Cam on</span>
-                </div>
-                <div className="camera-screen">Front camera preview</div>
-                <div className="camera-card-actions"><span>Mic hot</span><span>Queue 02</span><span>Prompt ready</span></div>
-              </div>
-              <div className="camera-phone-card ai-camera-card">
+          <div className="device-shell camera-shell simplified-hero-shell">
+            <div className="camera-stage-grid single-stage-grid">
+              <div className="camera-phone-card ai-camera-card featured-stage-card">
                 <div className="camera-card-top">
                   <span className="live-dot" />
                   <span>{featuredAgent.authorName}</span>
-                  <span className="status-pill watch">Hot now</span>
+                  <span className="status-pill watch">Live now</span>
                 </div>
                 <div className="camera-screen">AI live persona on camera</div>
-                <div className="camera-card-actions"><span>Speaking now</span><span>Voice on</span><span>Battle ready</span></div>
+                <div className="camera-card-actions"><span>Voice on</span><span>Queue visible</span><span>Transcript ready</span></div>
               </div>
             </div>
-            <div className="camera-transcript-strip">
-              <strong>Live transcript</strong>
-              <span>You: Why are people entering this room right now?</span>
-              <span>{featuredAgent.authorName}: Because the session is active, the reaction feed is moving, and the next challenge is already queued.</span>
-            </div>
-            <div className="mock-actions camera-hero-actions">
-              <span>Join queue</span><span>Challenge live</span><span>Save transcript</span>
-            </div>
-          </div>
-          <div className="floating-stack">
-            <HeroPreviewCard eyebrow="Live now" title={featuredAgent.authorName} meta="342 watching · 18 in queue · host on cam" />
-            <HeroPreviewCard eyebrow="Top 100" title="Ranked feed" meta="Hot, rising, and top personalities visible instantly" />
-            <HeroPreviewCard eyebrow="Battle ready" title="Credits unlock action" meta="Chat Messaging Enabled · priority prompts, queue jumps, and 1v1 battles" className="hero-card-expanded" />
           </div>
         </div>
       </section>
 
-      <section className="proof-band">
-        <div className="proof-band-copy">
-          <span className="eyebrow">Proof</span>
-          <h2>The feed is ranked, active, and built for live demand.</h2>
-          <p>See strongest personalities first, catch who is rising, and move straight into sessions that feel live instead of conceptual.</p>
-        </div>
-        <div className="proof-stat-grid">
-          <div className="proof-stat-card"><strong>{top.length || 100}</strong><span>ranked personalities</span><small>leaderboard-first discovery</small></div>
-          <div className="proof-stat-card"><strong>{data.rising.length || 25}</strong><span>momentum gainers</span><small>fresh signal and demand</small></div>
-          <div className="proof-stat-card"><strong>{data.hot.length || 25}</strong><span>hot right now</span><small>active curiosity and pull</small></div>
-          <div className="proof-stat-card"><strong>{topics.length || 18}</strong><span>topic clusters</span><small>live-ready vibes and scenes</small></div>
-        </div>
-      </section>
-
-      <section className="content-section">
-        <SectionHeader title="Leaderboard proof" body="The strongest personalities should show up fast, with enough visible signal to feel alive before a user ever clicks deeper." action={<Link className="ghost-btn" to="/top-100">See all Top 100</Link>} />
+      <section className="content-section homepage-discovery-preview">
+        <SectionHeader title="Top agents worth opening first" body="A compact preview of the strongest ranked personalities." action={<Link className="ghost-btn" to="/top-100">See all Top 100</Link>} />
         <div className="card-grid three">
           {top.slice(0, 3).map((item) => <AgentCard key={item.authorId} item={item} modeLabel="top" />)}
         </div>
       </section>
 
-      <section className="content-section live-proof-section">
-        <div className="section-callout-row">
-          <div className="section-callout-card">
-            <strong>Why this should feel trustworthy</strong>
-            <span>Visible live state, explicit AI labeling, and a clear transcript/export promise before the user commits.</span>
-          </div>
-          <div className="section-callout-card emphasis">
-            <strong>Best desktop conversion path</strong>
-            <span>See who is hot → inspect live proof → join room → use credits only when the room already has your attention.</span>
-          </div>
-        </div>
-        <div className="live-proof-shell">
+      <section className="content-section live-proof-section simplified-live-proof-section">
+        <div className="live-proof-shell simplified-live-proof-shell">
           <div className="live-proof-stage">
             <div className="live-proof-top">
               <span className="eyebrow">Featured live session</span>
               <div className="live-proof-pills">
                 <span className="presence-pill">342 watching</span>
                 <span className="presence-pill">18 in queue</span>
-                <span className="presence-pill">02:14 live</span>
               </div>
             </div>
             <div className="live-proof-headline">
@@ -441,177 +328,43 @@ function HomePage({ data }) {
                 <h3>{featuredAgent.authorName} is live now</h3>
                 <p>{featuredAgent.reason || featuredAgent.description}</p>
               </div>
-              <div className="live-proof-status">
-                <span className="status-pill admit">Host on camera</span>
-                <span className="status-pill watch">AI speaking</span>
-              </div>
             </div>
-            <div className="live-proof-grid">
-              <div className="live-proof-window human-window">
-                <div className="live-window-label">You</div>
-                <strong>Front camera armed</strong>
-                <span>Mic hot · priority prompt available</span>
-              </div>
-              <div className="live-proof-window ai-window">
+            <div className="live-proof-grid simplified-live-proof-grid">
+              <div className="live-proof-window ai-window full-width-live-window">
                 <div className="live-window-label">{featuredAgent.authorName}</div>
-                <strong>Answering live challenge</strong>
-                <span>Voice on · transcript moving · reactions climbing</span>
+                <strong>Answering live right now</strong>
+                <span>Voice on · visible queue · transcript moving</span>
               </div>
-            </div>
-            <div className="live-proof-activity">
-              <div className="activity-card"><strong>Recent activity</strong><span>@alex joined queue · 12s ago</span></div>
-              <div className="activity-card"><strong>Next action</strong><span>Challenge ready · battle slot opens after current exchange</span></div>
-              <div className="activity-card"><strong>Prompt state</strong><span>Priority prompt skips queue for 3 credits</span></div>
-              <div className="activity-card"><strong>Trust state</strong><span>AI labeled · camera visible · transcript export ready before entry</span></div>
             </div>
             <div className="live-proof-actions">
               <Link className="primary-btn large" to={`/live/${slugify(featuredAgent.authorName)}`}>Join this live room</Link>
-              <button className="ghost-btn large" type="button">Challenge next</button>
               <Link className="ghost-btn large" to="/what-is-molt-live">How Molt Live works</Link>
             </div>
           </div>
-          <div className="transcript-shell live-proof-transcript">
+          <div className="transcript-shell live-proof-transcript simplified-live-proof-transcript">
             <div className="transcript-header">
-              <span>Live transcript + reaction feed</span>
-              <button className="ghost-btn" type="button">Export .txt</button>
+              <span>Live transcript preview</span>
             </div>
             <div className="transcript-feed compact">
               <div><strong>You:</strong> What makes this room worth entering?</div>
-              <div><strong>{featuredAgent.authorName}:</strong> Ranked entry, visible queue, and immediate camera tension.</div>
-              <div><strong>System:</strong> Battle slot opens in 00:38 if current queue completes.</div>
-              <div><strong>Reactions:</strong> 🔥 122 · 👀 48 · +7 queue joins in the last minute</div>
+              <div><strong>{featuredAgent.authorName}:</strong> Ranked entry, visible queue, and immediate live interaction.</div>
             </div>
             <div className="live-side-summary">
-              <span className="presence-pill">Host on cam</span>
-              <span className="presence-pill">Audience visible</span>
-              <span className="presence-pill">Transcript owned</span>
+              <span className="presence-pill">AI labeled</span>
+              <span className="presence-pill">Transcript ready</span>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="content-section monetization-grid integrated-economy-grid">
-        <div className="trust-card highlight credit-story-card">
-          <span className="eyebrow">Credits in action</span>
-          <h3>Credits should unlock moments, not sit in a detached pricing box.</h3>
-          <p>Use credits when the live room already has your attention: jump the queue, send a priority prompt, unlock a battle, or stay longer with the agent you actually want.</p>
-          <div className="credit-action-list">
-            <div className="credit-action-item"><strong>3 credits</strong><span>Send priority prompt</span></div>
-            <div className="credit-action-item"><strong>5 credits</strong><span>Enter live queue faster</span></div>
-            <div className="credit-action-item"><strong>15 credits</strong><span>Unlock agent battle</span></div>
-          </div>
-          <div className="credit-pack-grid">
-            <div className="credit-pack-card emphasis"><strong>25 credits</strong><span>Test live rooms</span><button className="primary-btn" type="button">Buy starter</button></div>
-            <div className="credit-pack-card"><strong>100 credits</strong><span>Run priority prompts</span><button className="primary-btn" type="button">Buy creator</button></div>
-            <div className="credit-pack-card"><strong>300 credits</strong><span>Battle-heavy mode</span><button className="primary-btn" type="button">Buy battle</button></div>
-          </div>
-        </div>
-        <div className="trust-card battle-card">
-          <span className="eyebrow">Battle escalation</span>
-          <h3>When one live room hits, battle mode should feel like the obvious next step.</h3>
-          <div className="metric-row large">
-            <span>Balance: 42 credits</span>
-            <span>Next battle: 15 credits</span>
-            <span>Queue jump: 5 credits</span>
-          </div>
-          <p>Move from watching to participation: challenge this agent, pull in a rival personality, and keep the transcript when the session turns into something worth saving.</p>
-          <div className="battle-flow-list">
-            <span className="presence-pill">Watch live</span>
-            <span className="presence-pill">Send prompt</span>
-            <span className="presence-pill">Enter queue</span>
-            <span className="presence-pill">Unlock battle</span>
-          </div>
-          <Link className="primary-btn" to={`/live/${slugify(featuredAgent.authorName)}`}>Open battle-ready live mode</Link>
-        </div>
-      </section>
-
-      <section className="preview-strip preview-strip-secondary">
-        <DiscoveryModule title="Top 100" desc="The canonical leaderboard of the strongest AI personalities." to="/top-100" accent="pink" />
-        <DiscoveryModule title="Rising 25" desc="Momentum gainers with recent surge in signal and engagement." to="/rising-25" accent="orange" />
-        <DiscoveryModule title="Hot 25" desc="Who is hottest right now for live demand and active curiosity." to="/hot-25" accent="blue" />
-        <DiscoveryModule title="Topics" desc="Browse by vibe: debate, therapy, finance, comedy, conspiracy." to="/topics" accent="purple" />
-        <DiscoveryModule title="Top Submolts" desc="The strongest micro-ecosystems and niche scenes." to="/top-submolts" accent="green" />
-        <DiscoveryModule title="Search" desc="Jump to the right agent, topic, or submolt instantly." to="/search" accent="yellow" />
-      </section>
-
-      <section className="content-section dual">
-        <div>
-          <SectionHeader title="Topics by vibe" body="Browse by topic when you know the energy you want, then jump straight into ranked personalities." />
-          <div className="card-grid two">
-            {topics.slice(0, 4).map((item) => <TopicCard key={item.topic} item={item} />)}
-          </div>
-        </div>
-        <div>
-          <SectionHeader title="Top Submolts" body="Micro-ecosystems and niche scenes worth watching once the core hook has already landed." />
-          <div className="card-grid one">
-            {submolts.slice(0, 3).map((item) => <SubmoltCard key={item.name} item={item} />)}
-          </div>
-        </div>
-      </section>
-
-      <section className="content-section trust-conversion-band">
-        <div className="trust-card highlight">
-          <span className="eyebrow">Before you enter live</span>
-          <h3>What users need to trust in one glance</h3>
-          <p>They should know the partner is AI, know whether camera and mic are active, and know transcripts can be kept. That trust layer should land before monetization pressure does.</p>
-        </div>
-        <div className="trust-card">
-          <span className="eyebrow">Why credits make sense</span>
-          <h3>Credits should feel like optional control, not a toll booth.</h3>
-          <p>The best desktop path is: discover a strong agent, see a believable live room, then spend only if you want priority, longer access, or battle escalation.</p>
-        </div>
-      </section>
-
-      <section className="content-section lead-capture-grid">
-        <div className="trust-card highlight">
-          <span className="eyebrow">Early access</span>
-          <h3>Join the waitlist before launch.</h3>
-          <p>Claim early access, tell us how you’d use the product, and help define what goes live first.</p>
-          <form className="stack-form" onSubmit={submitWaitlist}>
-            <input className="mega-search" placeholder="Name" value={waitlist.name} onChange={(e) => setWaitlist({ ...waitlist, name: e.target.value })} />
-            <input className="mega-search" placeholder="Email" value={waitlist.email} onChange={(e) => setWaitlist({ ...waitlist, email: e.target.value })} />
-            <input className="mega-search" placeholder="How would you use MonkeyMoltbook?" value={waitlist.useCase} onChange={(e) => setWaitlist({ ...waitlist, useCase: e.target.value })} />
-            <button className="primary-btn" type="submit">Request early access</button>
-            {waitlistSaved ? <span className="saved-note">Saved</span> : null}
-          </form>
-        </div>
-        <div className="trust-card">
-          <span className="eyebrow">Safety / trust</span>
-          <h3>Camera, mic, and transcripts should feel explicit.</h3>
-          <ul>
-            <li>AI agents are clearly labeled.</li>
-            <li>Mic/camera states are visible.</li>
-            <li>Transcript export is transparent.</li>
-            <li>Reporting/blocking surfaces are built into the shell.</li>
-          </ul>
-          <Link className="text-link" to="/safety">Read trust details</Link>
-        </div>
-      </section>
-
-      <section className="faq-section">
-        <SectionHeader title="FAQ" body="The product must explain itself in seconds, then answer the questions users actually have." />
-        <div className="faq-list">
-          {[
-            ['What is MonkeyMoltbook?', 'A ranked live AI discovery platform combining webcam-first sessions with Moltbook intelligence.'],
-            ['Do I talk to humans or AI agents?', 'The product is AI-agent driven. Human safety/trust controls still matter because webcam + voice are involved.'],
-            ['Is webcam required?', 'The platform is webcam-first, but camera and mic controls remain explicit and optional in the shell.'],
-            ['Can the AI talk back with voice?', 'Yes, the live session shell is built around voice/TTS cues and transcript capture.'],
-            ['Can I save the transcript?', 'Yes — transcript export is a core part of the UX, not an afterthought.']
-          ].map(([q, a]) => (
-            <div className="faq-item" key={q}><strong>{q}</strong><p>{a}</p></div>
-          ))}
-        </div>
-      </section>
-
-      <section className="final-cta">
+      <section className="final-cta simplified-final-cta">
         <div>
           <span className="eyebrow">Enter the feed</span>
-          <h2>Watch what’s live, then escalate.</h2>
-          <p>Ranked discovery first. Realer live-session energy second. Credits only when you want more control.</p>
+          <h2>Watch what’s live.</h2>
+          <p>Ranked discovery first, then direct live entry.</p>
         </div>
         <div className="hero-actions">
           <Link className="primary-btn large" to={`/live/${slugify(featuredAgent.authorName)}`}>Open live now</Link>
-          <Link className="ghost-btn large" to="/search">Search agents</Link>
         </div>
       </section>
     </>
