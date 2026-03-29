@@ -100,7 +100,11 @@ Active product direction now includes:
 - `MonkeyMoltbook/LIVE_SESSION_CREDITS_IMPLEMENTATION_PLAN.md`
 - `MonkeyMoltbook/TRUST_SCORE_V1_SPEC.md`
 - `MonkeyMoltbook/supabase/schema.sql`
-- `apps/server/src/lib/supabase-storage.js`
+- `MonkeyMoltbook/apps/server/src/lib/trust-score.js`
+- `MonkeyMoltbook/apps/server/src/lib/supabase-storage.js`
+- `MonkeyMoltbook/apps/server/src/app.js`
+- `MonkeyMoltbook/apps/web/src/App.jsx`
+- `MonkeyMoltbook/apps/web/src/styles.css`
 - `apps/server/src/lib/live-sessions.js`
 - `apps/server/src/lib/credits.js`
 

@@ -341,3 +341,178 @@ export async function persistMoltbookSnapshot({ mode = 'default', triggerSource 
     triggerSource
   };
 }
+
+export async function upsertSearchDocuments(rows) {
+  if (!rows?.length) return [];
+  const payload = rows.map((row) => ({
+    entity_type: safeText(row.entity_type || row.entityType),
+    entity_id: row.entity_id || row.entityId,
+    title: safeText(row.title),
+    subtitle: safeText(row.subtitle),
+    body: safeText(row.body),
+    keywords: safeText(row.keywords),
+    popularity_score: safeNumber(row.popularity_score ?? row.popularityScore) || 0,
+    freshness_score: safeNumber(row.freshness_score ?? row.freshnessScore) || 0,
+    live_score: safeNumber(row.live_score ?? row.liveScore) || 0,
+    updated_at: new Date().toISOString()
+  })).filter((row) => row.entity_type && row.entity_id && row.title);
+
+  const merged = [];
+  for (const batch of chunkArray(payload, 50)) {
+    const result = await supabaseFetch('search_documents', {
+      method: 'POST',
+      query: 'on_conflict=entity_type,entity_id',
+      body: batch,
+      prefer: 'resolution=merge-duplicates,return=representation'
+    });
+    merged.push(...(result.data || []));
+  }
+  return merged;
+}
+
+export async function searchDocuments({ query, entityType, limit = 20 } = {}) {
+  if (!isSupabaseStorageEnabled()) return [];
+  const safeQuery = encodeURIComponent(`%${String(query || '').trim()}%`);
+  const clauses = [
+    `or=(title.ilike.${safeQuery},subtitle.ilike.${safeQuery},keywords.ilike.${safeQuery},body.ilike.${safeQuery})`,
+    `limit=${Math.max(1, Math.min(Number(limit) || 20, 50))}`,
+    'order=popularity_score.desc'
+  ];
+  if (entityType) clauses.unshift(`entity_type=eq.${encodeURIComponent(entityType)}`);
+  const result = await supabaseFetch('search_documents', { query: clauses.join('&') });
+  return result.data || [];
+}
+
+export async function upsertCommunities(rows) {
+  if (!rows?.length) return [];
+  const payload = rows.map((row) => ({
+    source_community_id: safeText(row.source_community_id || row.sourceCommunityId || row.id),
+    slug: safeText(row.slug || row.name),
+    name: safeText(row.name),
+    title: safeText(row.title),
+    description: safeText(row.description),
+    member_count: safeNumber(row.member_count ?? row.memberCount),
+    post_count: safeNumber(row.post_count ?? row.postCount),
+    last_seen_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    payload: sanitizeForJson(row)
+  })).filter((row) => row.name);
+
+  const merged = [];
+  for (const batch of chunkArray(payload, 50)) {
+    const result = await supabaseFetch('communities', {
+      method: 'POST',
+      query: 'on_conflict=name',
+      body: batch,
+      prefer: 'resolution=merge-duplicates,return=representation'
+    });
+    merged.push(...(result.data || []));
+  }
+  return merged;
+}
+
+export async function getCommunityBySlug(slug) {
+  if (!isSupabaseStorageEnabled()) return null;
+  const result = await supabaseFetch('communities', { query: `slug=eq.${encodeURIComponent(slug)}&select=*` });
+  return result.data?.[0] || null;
+}
+
+export async function upsertEntityRiskScores(rows) {
+  if (!rows?.length) return [];
+  const payload = rows.map((row) => ({
+    entity_type: safeText(row.entity_type || row.entityType),
+    entity_id: safeText(row.entity_id || row.entityId),
+    version: safeText(row.version) || 'trust-v1',
+    risk_score: safeNumber(row.risk_score ?? row.riskScore) || 0,
+    risk_label: safeText(row.risk_label || row.riskLabel) || 'Low Risk',
+    reason_short: safeText(row.reason_short || row.reasonShort),
+    signal_breakdown: sanitizeForJson(row.signal_breakdown || row.signalBreakdown || {}),
+    evidence_summary: sanitizeForJson(row.evidence_summary || row.evidenceSummary || null),
+    scored_at: row.scored_at || row.scoredAt || new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  })).filter((row) => row.entity_type && row.entity_id);
+
+  const merged = [];
+  for (const batch of chunkArray(payload, 50)) {
+    const result = await supabaseFetch('entity_risk_scores', {
+      method: 'POST',
+      query: 'on_conflict=entity_type,entity_id,version',
+      body: batch,
+      prefer: 'resolution=merge-duplicates,return=representation'
+    });
+    merged.push(...(result.data || []));
+  }
+  return merged;
+}
+
+export async function getEntityRiskScore(entityType, entityId, version = 'trust-v1') {
+  if (!isSupabaseStorageEnabled()) return null;
+  const result = await supabaseFetch('entity_risk_scores', {
+    query: `entity_type=eq.${encodeURIComponent(entityType)}&entity_id=eq.${encodeURIComponent(entityId)}&version=eq.${encodeURIComponent(version)}&select=*`
+  });
+  return result.data?.[0] || null;
+}
+
+export async function getIngestionJob(jobName) {
+  if (!isSupabaseStorageEnabled()) return null;
+  const result = await supabaseFetch('ingestion_jobs', { query: `job_name=eq.${encodeURIComponent(jobName)}&select=*` });
+  return result.data?.[0] || null;
+}
+
+export async function upsertIngestionJob(job) {
+  const result = await supabaseFetch('ingestion_jobs', {
+    method: 'POST',
+    query: 'on_conflict=job_name',
+    body: [{ ...sanitizeForJson(job), updated_at: new Date().toISOString() }],
+    prefer: 'resolution=merge-duplicates,return=representation'
+  });
+  return result.data?.[0] || null;
+}
+
+export async function buildSearchDocumentsFromState({ authors = [], topics = [], submolts = [] } = {}) {
+  const docs = [];
+
+  for (const row of authors) {
+    docs.push({
+      entity_type: 'author',
+      entity_id: row.id,
+      title: row.author_name || row.authorName,
+      subtitle: row.label || 'author',
+      body: row.description || row.reason || '',
+      keywords: [row.author_name || row.authorName, row.label, row.reason].filter(Boolean).join(' '),
+      popularity_score: safeNumber(row.fit_score ?? row.fitScore) || 0,
+      freshness_score: safeNumber(row.signal_score ?? row.signalScore) || 0,
+      live_score: safeNumber(row.signal_score ?? row.signalScore) || 0,
+    });
+  }
+
+  for (const row of topics) {
+    docs.push({
+      entity_type: 'topic',
+      entity_id: row.id || crypto.randomUUID(),
+      title: row.topic || row.label,
+      subtitle: 'topic',
+      body: ((row.accounts || []).map((a) => a.authorName).join(' ')) || '',
+      keywords: [row.topic, row.label].filter(Boolean).join(' '),
+      popularity_score: safeNumber(row.count) || 0,
+      freshness_score: 0,
+      live_score: 0,
+    });
+  }
+
+  for (const row of submolts) {
+    docs.push({
+      entity_type: 'submolt',
+      entity_id: row.id,
+      title: row.name,
+      subtitle: 'group',
+      body: (row.sampleTitles || []).join(' '),
+      keywords: [row.name, ...(row.authors || [])].filter(Boolean).join(' '),
+      popularity_score: safeNumber(row.post_count ?? row.postCount) || 0,
+      freshness_score: safeNumber(row.avg_score_per_post ?? row.avgScorePerPost) || 0,
+      live_score: 0,
+    });
+  }
+
+  return upsertSearchDocuments(docs);
+}

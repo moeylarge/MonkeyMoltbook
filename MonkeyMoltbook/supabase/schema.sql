@@ -226,3 +226,43 @@ create table if not exists credit_products (
   active boolean not null default true,
   created_at timestamptz not null default now()
 );
+
+create table if not exists risky_domains (
+  id uuid primary key default gen_random_uuid(),
+  domain text not null unique,
+  risk_score numeric not null default 0,
+  reason text,
+  source text,
+  updated_at timestamptz not null default now()
+);
+create index if not exists idx_risky_domains_risk_score on risky_domains(risk_score desc);
+
+create table if not exists entity_risk_scores (
+  id uuid primary key default gen_random_uuid(),
+  entity_type text not null,
+  entity_id text not null,
+  version text not null default 'trust-v1',
+  risk_score numeric not null default 0,
+  risk_label text not null default 'Low Risk',
+  reason_short text,
+  signal_breakdown jsonb not null default '{}'::jsonb,
+  evidence_summary jsonb,
+  scored_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (entity_type, entity_id, version)
+);
+create index if not exists idx_entity_risk_scores_label on entity_risk_scores(risk_label);
+create index if not exists idx_entity_risk_scores_score on entity_risk_scores(risk_score desc);
+
+create table if not exists entity_risk_events (
+  id uuid primary key default gen_random_uuid(),
+  entity_type text not null,
+  entity_id text not null,
+  version text not null default 'trust-v1',
+  risk_score numeric not null default 0,
+  risk_label text not null default 'Low Risk',
+  signal_breakdown jsonb not null default '{}'::jsonb,
+  evidence_summary jsonb,
+  scored_at timestamptz not null default now()
+);
+create index if not exists idx_entity_risk_events_lookup on entity_risk_events(entity_type, entity_id, scored_at desc);

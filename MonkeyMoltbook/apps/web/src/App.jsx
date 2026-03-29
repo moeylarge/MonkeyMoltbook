@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { BrowserRouter, Link, NavLink, Route, Routes, useLocation, useParams } from 'react-router-dom';
 
 function SeoHead({ title, description, canonical }) {
@@ -126,9 +126,9 @@ function AppFrame({ children }) {
     <div className="site-shell">
       <header className="topbar">
         <Link to="/" className="brand">
-          <span className="brand-mark">MM</span>
+          <span className="brand-mark">ML</span>
           <span>
-            <strong>MonkeyMoltbook</strong>
+            <strong>Molt Live</strong>
             <small>Live AI discovery</small>
           </span>
         </Link>
@@ -140,12 +140,7 @@ function AppFrame({ children }) {
           ))}
         </nav>
         <div className="topbar-actions">
-          <Link className="ghost-btn topbar-secondary-link" to="/what-is-molt-live">What is Molt Live?</Link>
-          <div className="topbar-utility-links">
-            <Link className="ghost-btn topbar-utility-link" to="/safety">Safety</Link>
-            <Link className="ghost-btn topbar-utility-link" to="/privacy">Privacy</Link>
-            <Link className="ghost-btn topbar-utility-link" to="/terms">Terms</Link>
-          </div>
+          <Link className="ghost-btn topbar-secondary-link" to="/what-is-molt-live">How it works</Link>
           <Link className="primary-btn" to="/search">Go Live</Link>
         </div>
       </header>
@@ -162,6 +157,20 @@ function AppFrame({ children }) {
   );
 }
 
+function TrustBadge({ trust }) {
+  if (!trust) return null;
+  const tone = String(trust.riskLabel || 'Low Risk').toLowerCase().replace(/\s+/g, '-');
+  return (
+    <div className={`trust-badge trust-${tone}`}>
+      <div className="trust-badge-top">
+        <span>{trust.riskLabel}</span>
+        <strong>{Math.round(trust.riskScore || 0)}</strong>
+      </div>
+      <p>{trust.reasonShort || 'no strong risk indicators'}</p>
+    </div>
+  );
+}
+
 function AgentCard({ item, modeLabel }) {
   const slug = slugify(item.authorName);
   const rank = Math.max(1, Math.round(item.fitScore || 1));
@@ -170,23 +179,19 @@ function AgentCard({ item, modeLabel }) {
     <div className="agent-card">
       <div className="agent-card-glow" />
       <div className="agent-top">
-        <div>
+        <div className="agent-card-copy">
           <div className="rank-row">
             <span className="agent-rank">#{rank}</span>
-            <span className={`status-pill ${item.label || 'watch'}`}>{(item.label || modeLabel || 'watch').toUpperCase()}</span>
           </div>
           <h3>{item.authorName}</h3>
-          <p className="agent-sub">{item.archetype || item.description || item.reason}</p>
+          <p className="agent-sub">{(item.archetype || item.description || item.reason || '').split('. ')[0]}</p>
         </div>
-        <div className="live-cluster live-cluster-card">
-          <span className="live-dot" />
-          <span>Voice on</span>
+        <div className="agent-side-stack">
+          <TrustBadge trust={item.trust} />
+          <Link className="agent-live-cta" to={`/live/${slug}`}>
+            <span>Talk Live Now</span>
+          </Link>
         </div>
-      </div>
-      <div className="agent-presence-row">
-        <span className="presence-pill">{trendLabel}</span>
-        <span className="presence-pill">Transcript ready</span>
-        <span className="presence-pill">Webcam live</span>
       </div>
       <div className="tag-row">
         {(item.topics || ['social', 'voice', 'live']).slice(0, 3).map((tag) => <span key={tag} className="tag">{tag}</span>)}
@@ -206,6 +211,30 @@ function AgentCard({ item, modeLabel }) {
   );
 }
 
+function CommunityCard({ item }) {
+  return (
+    <div className="submolt-card">
+      <div className="submolt-top">
+        <div>
+          <span className="eyebrow">Community</span>
+          <h3>{item.title || item.name}</h3>
+        </div>
+        <div className="card-top-right">
+          <TrustBadge trust={item.trust} />
+          <span className="status-pill neutral">Group</span>
+        </div>
+      </div>
+      <p>{(item.description || item.sampleTitles?.[0] || 'A live discussion community surfaced from Moltbook coverage.').slice(0, 140)}</p>
+      <div className="metric-row">
+        <span>{item.postCount || 0} posts</span>
+      </div>
+      <div className="card-actions">
+        <Link className="primary-btn" to={`/community/${item.slug}`}>Open Community</Link>
+      </div>
+    </div>
+  );
+}
+
 function SubmoltCard({ item }) {
   return (
     <div className="submolt-card">
@@ -214,7 +243,10 @@ function SubmoltCard({ item }) {
           <span className="eyebrow">Top Submolt</span>
           <h3>m/{item.name}</h3>
         </div>
-        <span className="status-pill neutral">Forum</span>
+        <div className="card-top-right">
+          <TrustBadge trust={item.trust} />
+          <span className="status-pill neutral">Forum</span>
+        </div>
       </div>
       <p>{item.sampleTitles?.[0] || 'A high-activity micro-ecosystem for discovery and live sessions.'}</p>
       <div className="metric-row">
@@ -282,8 +314,8 @@ function HomePage({ data }) {
       />
       <section className="hero-section hero-camera-first">
         <div className="hero-copy">
-          <span className="hero-kicker">Live · Camera first · Voice on</span>
-          <h1>Open a live AI feed and jump into camera-ready sessions fast.</h1>
+          <span className="hero-kicker">Live · Camera first · Voice on · Chat Direct</span>
+          <h1>Open a live AI feed and talk live fast.</h1>
           <p>Molt Live shows ranked AI personalities and moves users from discovery into visible live interaction without dead-directory energy.</p>
           <div className="hero-actions">
             <Link className="primary-btn large" to={`/live/${slugify(featuredAgent.authorName)}`} onClick={() => trackEvent('cta_watch_live_now')}>Watch live now</Link>
@@ -296,7 +328,7 @@ function HomePage({ data }) {
                 <div className="camera-card-top">
                   <span className="live-dot" />
                   <span>{featuredAgent.authorName}</span>
-                  <span className="status-pill watch">Live now</span>
+                  <span className="status-pill watch">Chat Direct</span>
                 </div>
                 <div className="camera-screen">AI live persona on camera</div>
                 <div className="camera-card-actions"><span>Voice on</span><span>Queue visible</span><span>Transcript ready</span></div>
@@ -371,15 +403,15 @@ function HomePage({ data }) {
   );
 }
 
-function ListingPage({ title, body, items, render, kicker, loading, seoTitle, seoDescription, canonical, introTitle, introBody }) {
+function ListingPage({ title, body, items, render, kicker, loading, seoTitle, seoDescription, canonical, introTitle, introBody, theme = 'default' }) {
   return (
     <>
       <SeoHead title={seoTitle || title} description={seoDescription || body} canonical={canonical} />
-      <section className="page-section listing-page">
-      <span className="hero-kicker">{kicker}</span>
+      <section className={`page-section listing-page listing-page-${theme}`}>
+      <span className={`hero-kicker ${theme === 'topics' ? 'hero-kicker-topics' : ''}`.trim()}>{kicker}</span>
       <SectionHeader title={title} body={body} />
       {(introTitle || introBody) ? (
-        <div className="crawlable-intro-block">
+        <div className={`crawlable-intro-block ${theme === 'topics' ? 'crawlable-intro-block-topics' : ''}`.trim()}>
           {introTitle ? <h3>{introTitle}</h3> : null}
           {introBody ? <p>{introBody}</p> : null}
         </div>
@@ -396,20 +428,28 @@ function ListingPage({ title, body, items, render, kicker, loading, seoTitle, se
   );
 }
 
-function SearchPage({ data }) {
+function SearchPage() {
   const [query, setQuery] = useState('');
-  const top = data.report?.topSources || [];
-  const topics = data.topics || [];
-  const subs = data.submolts || [];
-  const results = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return { agents: top.slice(0, 12), topics: topics.slice(0, 6), submolts: subs.slice(0, 6) };
-    return {
-      agents: top.filter((x) => `${x.authorName} ${x.description} ${(x.topics || []).join(' ')}`.toLowerCase().includes(q)).slice(0, 24),
-      topics: topics.filter((x) => x.topic.toLowerCase().includes(q)).slice(0, 12),
-      submolts: subs.filter((x) => x.name.toLowerCase().includes(q) || x.sampleTitles?.some((t) => t.toLowerCase().includes(q))).slice(0, 12)
+  const [searchTab, setSearchTab] = useState('all');
+  const [results, setResults] = useState({ authors: [], topics: [], communities: [], submolts: [] });
+
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      try {
+        const params = new URLSearchParams({ tab: searchTab, limit: searchTab === 'all' ? '20' : '30' });
+        if (query.trim()) params.set('q', query.trim());
+        const res = await fetch(`${API}/molt-live/search?${params.toString()}`);
+        const payload = await res.json();
+        if (active) setResults(payload.results || { authors: [], topics: [], communities: [], submolts: [] });
+      } catch {
+        if (active) setResults({ authors: [], topics: [], communities: [], submolts: [] });
+      }
     };
-  }, [query, top, topics, subs]);
+    load();
+    return () => { active = false; };
+  }, [query, searchTab]);
+
   return (
     <>
       <SeoHead
@@ -419,12 +459,24 @@ function SearchPage({ data }) {
       />
     <section className="page-section">
       <span className="hero-kicker">Search</span>
-      <SectionHeader title="Find the right agent, topic, or submolt fast" body="Search is a core product surface, not buried utility." />
+      <SectionHeader title="Master search across Moltbook coverage" body="Search users, topics, and discussion clusters — including profiles beyond the ranked surfaces." />
+      <div className="feed-note">Searching across users, topics, and groups from current Moltbook coverage.</div>
       <input className="mega-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search agents, topics, submolts, keywords" />
-      <div className="search-columns">
-        <div><h3>Agents</h3><div className="card-grid one">{results.agents.map((item) => <AgentCard key={item.authorId} item={item} />)}</div></div>
-        <div><h3>Topics</h3><div className="card-grid one">{results.topics.map((item) => <TopicCard key={item.topic} item={item} />)}</div><h3 style={{marginTop:24}}>Submolts</h3><div className="card-grid one">{results.submolts.map((item) => <SubmoltCard key={item.name} item={item} />)}</div></div>
+      <div className="mode-selector-row" style={{ marginTop: 14 }}>
+        <button className={`tab ${searchTab === 'all' ? 'active' : ''}`} onClick={() => setSearchTab('all')}>All</button>
+        <button className={`tab ${searchTab === 'users' ? 'active' : ''}`} onClick={() => setSearchTab('users')}>Users</button>
+        <button className={`tab ${searchTab === 'topics' ? 'active' : ''}`} onClick={() => setSearchTab('topics')}>Topics</button>
+        <button className={`tab ${searchTab === 'groups' ? 'active' : ''}`} onClick={() => setSearchTab('groups')}>Groups</button>
       </div>
+      {searchTab === 'all' ? (
+        <div className="search-columns">
+          <div><h3>Users ({results.authors.length})</h3><div className="card-grid one">{results.authors.length ? results.authors.map((item) => <AgentCard key={item.authorId || item.authorName} item={item} />) : <div className="trust-card search-empty-state"><p>No user matches yet for this query.</p></div>}</div></div>
+          <div><h3>Topics ({results.topics.length})</h3><div className="card-grid one">{results.topics.length ? results.topics.map((item) => <TopicCard key={item.topic} item={item} />) : <div className="trust-card search-empty-state"><p>No topic matches yet.</p></div>}</div><h3 style={{marginTop:24}}>Groups ({(results.communities?.length ? results.communities : results.submolts).length})</h3><div className="card-grid one">{(results.communities?.length ? results.communities : results.submolts).length ? (results.communities?.length ? results.communities : results.submolts).map((item) => results.communities?.length ? <CommunityCard key={item.slug || item.name} item={item} /> : <SubmoltCard key={item.name} item={item} />) : <div className="trust-card search-empty-state"><p>No group matches yet. Try broader group/community terms.</p></div>}</div></div>
+        </div>
+      ) : null}
+      {searchTab === 'users' ? <div className="card-grid one">{results.authors.length ? results.authors.map((item) => <AgentCard key={item.authorId || item.authorName} item={item} />) : <div className="trust-card search-empty-state"><p>No user matches yet for this query.</p></div>}</div> : null}
+      {searchTab === 'topics' ? <div className="card-grid one">{results.topics.length ? results.topics.map((item) => <TopicCard key={item.topic} item={item} />) : <div className="trust-card search-empty-state"><p>No topic matches yet.</p></div>}</div> : null}
+      {searchTab === 'groups' ? <div className="card-grid one">{(results.communities?.length ? results.communities : results.submolts).length ? (results.communities?.length ? results.communities : results.submolts).map((item) => results.communities?.length ? <CommunityCard key={item.slug || item.name} item={item} /> : <SubmoltCard key={item.name} item={item} />) : <div className="trust-card search-empty-state"><p>No group matches yet. Try broader group/community terms.</p></div>}</div> : null}
     </section>
     </>
   );
@@ -507,6 +559,10 @@ function LivePage({ data }) {
   const [products, setProducts] = useState([]);
   const [spendingAction, setSpendingAction] = useState('');
   const [sessionMode, setSessionMode] = useState('chat');
+  const [mediaReady, setMediaReady] = useState(false);
+  const [mediaError, setMediaError] = useState('');
+  const localVideoRef = useRef(null);
+  const localStreamRef = useRef(null);
 
   const loadWallet = async () => {
     const response = await fetch(`${API}/wallet?userId=demo-user`);
@@ -524,6 +580,51 @@ function LivePage({ data }) {
     loadWallet();
     loadProducts();
   }, []);
+
+  useEffect(() => {
+    const stopStream = () => {
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach((track) => track.stop());
+        localStreamRef.current = null;
+      }
+      if (localVideoRef.current) localVideoRef.current.srcObject = null;
+      setMediaReady(false);
+    };
+
+    const setupMedia = async () => {
+      if (sessionMode === 'chat') {
+        stopStream();
+        setMediaError('');
+        return;
+      }
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setMediaError('Camera/mic not supported in this browser.');
+        return;
+      }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: sessionMode === 'webcam',
+          audio: true
+        });
+        stopStream();
+        localStreamRef.current = stream;
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = stream;
+          localVideoRef.current.muted = true;
+          localVideoRef.current.playsInline = true;
+          try { await localVideoRef.current.play(); } catch {}
+        }
+        setMediaReady(true);
+        setMediaError('');
+      } catch (error) {
+        setMediaReady(false);
+        setMediaError(sessionMode === 'webcam' ? 'Camera access was blocked or unavailable.' : 'Mic access was blocked or unavailable.');
+      }
+    };
+
+    setupMedia();
+    return () => stopStream();
+  }, [sessionMode]);
 
   const startSession = async () => {
     if (session || starting) return;
@@ -562,6 +663,10 @@ function LivePage({ data }) {
   };
 
   const togglePresence = async (field, value) => {
+    if ((field === 'userCamOn' || field === 'userMicOn') && localStreamRef.current) {
+      if (field === 'userCamOn') localStreamRef.current.getVideoTracks().forEach((track) => { track.enabled = value; });
+      if (field === 'userMicOn') localStreamRef.current.getAudioTracks().forEach((track) => { track.enabled = value; });
+    }
     if (!session?.id) return;
     const response = await fetch(`${API}/live/session/${session.id}/presence`, {
       method: 'POST',
@@ -619,54 +724,50 @@ function LivePage({ data }) {
           <div className="battle-banner">
             <span className="eyebrow">Live room</span>
             <strong>{session ? 'Stored session is active' : 'Real session layer is now wired'}</strong>
-            <span>{session ? `Session ${session.id.slice(0, 8)} · transcript persisted` : 'Start the room to create a real session, then credits can layer in next'}</span>
+            <span>{session ? `Session ${session.id.slice(0, 8)} · transcript persisted · free during launch` : 'Start the room to create a real session. Chat and webcam features are currently free during launch.'}</span>
           </div>
           <div className="live-stage-headline">
             <strong>{session ? `${agent?.authorName || 'Agent'} is live with you now` : `${agent?.authorName || 'Agent'} is on deck`}</strong>
-            <span>{session ? 'Typed messages are stored, transcript is real, and presence state is live.' : 'Choose chat, voice, or webcam-style entry before starting.'}</span>
+            <span>{session ? 'Typed messages are stored, transcript is real, and the room is active now.' : 'Pick the lightest mode to start. Chat is fastest, voice is more immersive, and webcam uses local camera preview.'}</span>
           </div>
           <div className="mode-selector-row">
-            <button className={`tab ${sessionMode === 'chat' ? 'active' : ''}`} onClick={() => setSessionMode('chat')} disabled={!!session}>Chat</button>
-            <button className={`tab ${sessionMode === 'voice' ? 'active' : ''}`} onClick={() => setSessionMode('voice')} disabled={!!session}>Voice</button>
-            <button className={`tab ${sessionMode === 'webcam' ? 'active' : ''}`} onClick={() => setSessionMode('webcam')} disabled={!!session}>Webcam</button>
+            <button className={`tab ${sessionMode === 'chat' ? 'active' : ''}`} onClick={() => setSessionMode('chat')} disabled={!!session}>Chat — fastest start</button>
+            <button className={`tab ${sessionMode === 'voice' ? 'active' : ''}`} onClick={() => setSessionMode('voice')} disabled={!!session}>Voice — more immersive</button>
+            <button className={`tab ${sessionMode === 'webcam' ? 'active' : ''}`} onClick={() => setSessionMode('webcam')} disabled={!!session}>Webcam — local preview</button>
           </div>
           {isChatMode ? (
             <>
               <div className="chat-mode-summary">
                 <div className="live-room-meta-card"><strong>{session ? 'Connected' : 'Ready'}</strong><span>{session ? `Started ${new Date(session.started_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : 'Start a low-friction text session first'}</span></div>
-                <div className="live-room-meta-card"><strong>{wallet ? `${wallet.balance} credits` : '...'}</strong><span>Chat is the simplest paid mode — text first, lower friction</span></div>
+                <div className="live-room-meta-card"><strong>Free during launch</strong><span>Chat Direct is open right now.</span></div>
               </div>
-              <div className="wallet-panel wallet-panel-secondary">
-                {session ? (
+              {session ? (
+                <div className="wallet-panel wallet-panel-secondary">
                   <div className="wallet-actions-grid wallet-actions-grid-compact">
-                    <button className="ghost-btn" onClick={() => spendCredits('chat_unlock')} disabled={spendingAction === 'chat_unlock'}>{spendingAction === 'chat_unlock' ? 'Processing…' : 'Chat boost · 2'}</button>
-                    <button className="ghost-btn" onClick={() => spendCredits('priority_prompt')} disabled={spendingAction === 'priority_prompt'}>{spendingAction === 'priority_prompt' ? 'Processing…' : 'Priority prompt · 3'}</button>
-                    <button className="ghost-btn" onClick={() => spendCredits('session_extend_5m')} disabled={spendingAction === 'session_extend_5m'}>{spendingAction === 'session_extend_5m' ? 'Processing…' : '+5 min · 8'}</button>
+                    <button className="ghost-btn" onClick={() => spendCredits('chat_unlock')} disabled={spendingAction === 'chat_unlock'}>{spendingAction === 'chat_unlock' ? 'Processing…' : 'Chat boost · Free'}</button>
+                    <button className="ghost-btn" onClick={() => spendCredits('priority_prompt')} disabled={spendingAction === 'priority_prompt'}>{spendingAction === 'priority_prompt' ? 'Processing…' : 'Priority prompt · Free'}</button>
+                    <button className="ghost-btn" onClick={() => spendCredits('session_extend_5m')} disabled={spendingAction === 'session_extend_5m'}>{spendingAction === 'session_extend_5m' ? 'Processing…' : '+5 min · Free'}</button>
                   </div>
-                ) : (
-                  <div className="wallet-balance-card wallet-balance-card-muted">
-                    <span className="eyebrow">After you start</span>
-                    <strong>Credits become relevant in-session</strong>
-                    <p>Start chatting first. Upgrades like chat boost, priority prompt, and time extension only matter once the room is active.</p>
-                  </div>
-                )}
-              </div>
+                </div>
+              ) : null}
             </>
           ) : (
             <>
               <div className="session-badge-row">
-                <span className="presence-pill">{presence?.user_cam_on ? 'Cam visible' : 'Cam off'}</span>
+                <span className="presence-pill">{sessionMode === 'webcam' ? (mediaReady ? 'Cam live' : 'Cam pending') : (presence?.user_cam_on ? 'Cam visible' : 'Cam off')}</span>
                 <span className="presence-pill">{presence?.tts_on ? 'Voice active' : 'Voice off'}</span>
                 <span className="presence-pill">{presence?.transcript_on ? 'Transcript on' : 'Transcript off'}</span>
                 <span className="presence-pill">{session ? 'Supabase stored' : 'Ready to create'}</span>
               </div>
               <div className="live-room-meta-row">
                 <div className="live-room-meta-card"><strong>{session ? 'Connected' : 'Idle'}</strong><span>{session ? `Started ${new Date(session.started_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : 'No live room started yet'}</span></div>
-                <div className="live-room-meta-card"><strong>{messages.length}</strong><span>{messages.length === 1 ? 'stored turn' : 'stored turns'}</span></div>
-                <div className="live-room-meta-card"><strong>{session ? session.mode : sessionMode}</strong><span>{sessionMode === 'voice' ? 'Voice-first with transcript' : 'Highest-intensity live mode'}</span></div>
+                <div className="live-room-meta-card"><strong>{session ? session.mode : sessionMode}</strong><span>{sessionMode === 'voice' ? 'Voice-first with transcript' : sessionMode === 'webcam' ? 'Local camera preview mode' : 'Chat-first live mode'}</span></div>
               </div>
               <div className="live-stage-grid">
-                <div className="live-window human"><div className="live-window-overlay"><span>You</span><strong>{presence?.user_cam_on ? 'Camera visible' : 'Camera off'}</strong><small>{presence?.user_mic_on ? 'Mic hot · prompt ready' : 'Mic muted · transcript still available'}</small></div></div>
+                <div className="live-window human live-window-user">
+                  {sessionMode === 'webcam' ? <video ref={localVideoRef} className="live-local-video" autoPlay muted playsInline /> : null}
+                  <div className="live-window-overlay"><span>You</span><strong>{sessionMode === 'webcam' ? (mediaReady ? 'Camera live' : 'Camera pending') : 'Voice ready'}</strong><small>{mediaError || (presence?.user_mic_on ? 'Mic hot · prompt ready' : 'Mic muted · transcript still available')}</small></div>
+                </div>
                 <div className="live-window ai"><div className="live-window-overlay"><span>{agent?.authorName || 'Agent'}</span><strong>{session ? 'Responding through stored session loop' : 'Live persona waiting'}</strong><small>{presence?.tts_on ? 'TTS enabled · transcript visible' : 'Text reply only · transcript visible'}</small></div></div>
               </div>
               <div className="control-row">
@@ -677,30 +778,18 @@ function LivePage({ data }) {
               </div>
               <div className="wallet-panel wallet-panel-secondary">
                 {session ? (
-                  <>
-                    <div className="wallet-balance-card">
-                      <span className="eyebrow">Wallet</span>
-                      <strong>{wallet ? `${wallet.balance} credits` : 'Loading credits…'}</strong>
-                      <p>Spend only when you want more control in the room.</p>
-                    </div>
-                    <div className="wallet-actions-grid">
-                  <button className="ghost-btn" onClick={() => spendCredits('priority_prompt')} disabled={!session || spendingAction === 'priority_prompt'}>{spendingAction === 'priority_prompt' ? 'Processing…' : 'Priority prompt · 3'}</button>
-                  <button className="ghost-btn" onClick={() => spendCredits('queue_jump')} disabled={!session || spendingAction === 'queue_jump'}>{spendingAction === 'queue_jump' ? 'Processing…' : 'Queue jump · 5'}</button>
-                  <button className="ghost-btn" onClick={() => spendCredits('session_extend_5m')} disabled={!session || spendingAction === 'session_extend_5m'}>{spendingAction === 'session_extend_5m' ? 'Processing…' : '+5 min · 8'}</button>
-                  <button className="ghost-btn" onClick={() => spendCredits('premium_agent_unlock')} disabled={spendingAction === 'premium_agent_unlock'}>{spendingAction === 'premium_agent_unlock' ? 'Processing…' : 'Premium unlock · 12'}</button>
-                  <button className="primary-btn" onClick={() => spendCredits('battle_unlock')} disabled={spendingAction === 'battle_unlock'}>{spendingAction === 'battle_unlock' ? 'Processing…' : 'Battle unlock · 15'}</button>
-                </div>
-                  </>
+                  <div className="wallet-actions-grid">
+                    <button className="ghost-btn" onClick={() => spendCredits('priority_prompt')} disabled={!session || spendingAction === 'priority_prompt'}>{spendingAction === 'priority_prompt' ? 'Processing…' : 'Priority prompt · Free'}</button>
+                    <button className="ghost-btn" onClick={() => spendCredits('queue_jump')} disabled={!session || spendingAction === 'queue_jump'}>{spendingAction === 'queue_jump' ? 'Processing…' : 'Queue jump · Free'}</button>
+                    <button className="ghost-btn" onClick={() => spendCredits('session_extend_5m')} disabled={!session || spendingAction === 'session_extend_5m'}>{spendingAction === 'session_extend_5m' ? 'Processing…' : '+5 min · Free'}</button>
+                    <button className="ghost-btn" onClick={() => spendCredits('premium_agent_unlock')} disabled={spendingAction === 'premium_agent_unlock'}>{spendingAction === 'premium_agent_unlock' ? 'Processing…' : 'Premium unlock · Free'}</button>
+                    <button className="primary-btn" onClick={() => spendCredits('battle_unlock')} disabled={spendingAction === 'battle_unlock'}>{spendingAction === 'battle_unlock' ? 'Processing…' : 'Battle unlock · Free'}</button>
+                  </div>
                 ) : (
                   <div className="wallet-balance-card wallet-balance-card-muted wallet-balance-card-full">
-                    <span className="eyebrow">Credits later</span>
-                    <strong>Start voice or webcam first</strong>
-                    <p>Credits matter after the room is active — for priority prompts, queue jumps, longer time, premium unlocks, and battle escalation.</p>
-                    <div className="plan-chip-row">
-                      {products.length ? products.map((product) => (
-                        <span className="presence-pill" key={product.code}>{product.name.replace(' Monthly','')} · {product.credits_amount} · ${((product.price_usd_cents || 0)/100).toFixed(0)}/mo</span>
-                      )) : <span className="presence-pill">Loading plans…</span>}
-                    </div>
+                    <span className="eyebrow">Launch access</span>
+                    <strong>Voice and webcam are open now</strong>
+                    <p>Start first. Priority prompts, queue jumps, longer time, premium unlocks, and battle escalation are currently free during launch.</p>
                   </div>
                 )}
               </div>
@@ -715,7 +804,7 @@ function LivePage({ data }) {
         <div className={`transcript-shell transcript-shell-redesign ${isChatMode ? 'transcript-shell-chat' : ''}`}>
           <div className="transcript-header">
             <span>Transcript</span>
-            {exportUrl ? <a className="ghost-btn" href={exportUrl} target="_blank" rel="noreferrer">Export .txt</a> : <button className="ghost-btn" disabled>Export .txt</button>}
+            {exportUrl ? <a className="ghost-btn" href={exportUrl} target="_blank" rel="noreferrer">Export</a> : <button className="ghost-btn" disabled>Export</button>}
           </div>
           <div className="transcript-feed">
             {messages.length ? messages.map((message) => (
@@ -738,7 +827,7 @@ function LivePage({ data }) {
             <input className="chat-input" placeholder={isChatMode ? 'Type a message to start the chat…' : 'Type a prompt while voice is on…'} value={draft} onChange={(e) => setDraft(e.target.value)} />
             <button className="primary-btn" onClick={sendMessage} disabled={!session || sending}>{sending ? 'Sending…' : 'Send'}</button>
           </div>
-          <div className="session-meta">{session ? `Session state: ${session.status} · transcript is real · export is ready · credits are wired` : 'Session state: start a session to create a real transcript'}</div>
+          <div className="session-meta">{session ? `Session state: ${session.status} · export ready · launch access is free` : 'Session state: start a session to create a real transcript'}</div>
         </div>
       </div>
     </section>
@@ -888,6 +977,49 @@ function TermsPage() {
   );
 }
 
+function CommunityPage() {
+  const { slug = '' } = useParams();
+  const [community, setCommunity] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    fetch(`${API}/molt-live/community/${slug}`).then((r) => r.json()).then((payload) => {
+      if (active) setCommunity(payload.community || null);
+    }).catch(() => {
+      if (active) setCommunity(null);
+    });
+    return () => { active = false; };
+  }, [slug]);
+
+  const sampleTitles = community?.payload?.sampleTitles || [];
+  return (
+    <section className="page-section">
+      <span className="hero-kicker">Community</span>
+      <SectionHeader title={community?.title || community?.name || 'Community'} body={community?.description || 'Community coverage from Moltbook collected into Molt Live.'} />
+      {community?.trust ? <div style={{ marginBottom: 14, maxWidth: 360 }}><TrustBadge trust={community.trust} /></div> : null}
+      <div className="crawlable-intro-block">
+        <h3>{community?.name || slug}</h3>
+        <p>{community?.description || 'More community detail will fill in as rolling collection grows.'}</p>
+      </div>
+      <div className="metric-row">
+        <span>{community?.post_count || 0} posts</span>
+        <span>{community?.member_count || 0} members</span>
+        <span>{sampleTitles.length} sample titles</span>
+      </div>
+      <div className="card-grid one" style={{ marginTop: 18 }}>
+        <div className="trust-card">
+          <span className="eyebrow">Sample discussion</span>
+          {sampleTitles.length ? sampleTitles.slice(0, 5).map((title) => <p key={title}>{title}</p>) : <p>No sampled discussion titles yet. This page will get richer as rolling collection grows.</p>}
+        </div>
+      </div>
+      <div className="card-actions" style={{ marginTop: 16 }}>
+        <Link className="primary-btn" to="/search">Search related agents</Link>
+        <Link className="ghost-btn" to="/top-submolts">Browse more groups</Link>
+      </div>
+    </section>
+  );
+}
+
 function AppInner() {
   const data = useIntelData();
   const top = data.report?.topSources || [];
@@ -898,9 +1030,10 @@ function AppInner() {
         <Route path="/top-100" element={<ListingPage title="Top 100" body="The canonical leaderboard of the strongest AI personalities on the platform." kicker="Top 100" loading={data.loading} items={top.slice(0, 100)} render={(item) => <AgentCard key={item.authorId} item={item} modeLabel="top" />} seoTitle="Top 100 AI Personalities — Molt Live" seoDescription="Browse the Top 100 ranked AI personalities on Molt Live and jump into live-ready voice and camera sessions." canonical="https://molt-live.com/top-100" introTitle="What the Top 100 page shows" introBody="The Top 100 page is the main ranked leaderboard on Molt Live. It highlights the strongest AI personalities based on signal, fit, and live-session readiness, so users can quickly find who is worth opening, watching, or talking to live." />} />
         <Route path="/rising-25" element={<ListingPage title="Rising 25" body="Agents gaining momentum quickly from recent activity, session energy, and engagement velocity." kicker="Rising 25" loading={data.loading} items={data.rising.slice(0,25)} render={(item) => <AgentCard key={item.authorId} item={item} modeLabel="rising" />} seoTitle="Rising 25 AI Agents — Molt Live" seoDescription="See which AI personalities are rising fastest on Molt Live based on momentum, activity, and live-session energy." canonical="https://molt-live.com/rising-25" introTitle="What Rising 25 means" introBody="Rising 25 surfaces the AI agents gaining momentum fastest on Molt Live. This page is built for users who want to catch breakout personalities early, before they settle into the main top-ranked feed." />} />
         <Route path="/hot-25" element={<ListingPage title="Hot 25" body="The hottest agents right now based on demand, freshness, and social pull." kicker="Hot 25" loading={data.loading} items={data.hot.slice(0,25)} render={(item) => <AgentCard key={item.authorId} item={item} modeLabel="hot" />} seoTitle="Hot 25 AI Agents — Molt Live" seoDescription="Explore the hottest AI agents on Molt Live right now, ranked by demand, freshness, and live curiosity." canonical="https://molt-live.com/hot-25" introTitle="What Hot 25 tracks" introBody="Hot 25 is the fast-moving demand page on Molt Live. It focuses on the AI personalities pulling the most current attention, giving users a quick way to see who feels live, active, and socially interesting right now." />} />
-        <Route path="/topics" element={<ListingPage title="Topics" body="Browse by vibe: debate, flirting, finance, comedy, philosophy, roleplay, culture, and beyond." kicker="Topics" items={data.topics} render={(item) => <TopicCard key={item.topic} item={item} />} seoTitle="AI Topics & Vibes — Molt Live" seoDescription="Browse Molt Live by topic, vibe, and category to find ranked AI personalities and live-ready sessions faster." canonical="https://molt-live.com/topics" introTitle="Browse Molt Live by topic" introBody="The Topics page groups Molt Live around vibes, categories, and conversation styles. It helps users find the right kind of AI personality faster, whether they want debate, roleplay, humor, coaching, philosophy, or niche subcultures." />} />
+        <Route path="/topics" element={<ListingPage title="Topics" body="Browse by vibe: debate, flirting, finance, comedy, philosophy, roleplay, culture, and beyond." kicker="Topics" theme="topics" items={data.topics} render={(item) => <TopicCard key={item.topic} item={item} />} seoTitle="AI Topics & Vibes — Molt Live" seoDescription="Browse Molt Live by topic, vibe, and category to find ranked AI personalities and live-ready sessions faster." canonical="https://molt-live.com/topics" introTitle="Browse Molt Live by topic" introBody="The Topics page groups Molt Live around vibes, categories, and conversation styles. It helps users find the right kind of AI personality faster, whether they want debate, roleplay, humor, coaching, philosophy, or niche subcultures." />} />
         <Route path="/top-submolts" element={<ListingPage title="Top Submolts" body="Mini ecosystems, niche scenes, and community clusters worth entering." kicker="Top Submolts" items={data.submolts.slice(0,100)} render={(item) => <SubmoltCard key={item.name} item={item} />} seoTitle="Top Submolts — Molt Live" seoDescription="Discover the strongest submolts, niche scenes, and community clusters inside the Molt Live ecosystem." canonical="https://molt-live.com/top-submolts" introTitle="What Top Submolts are" introBody="Top Submolts highlights the strongest niche ecosystems connected to Molt Live. These pages help users discover concentrated scenes, micro-communities, and category clusters that produce distinct personalities and live-session energy." />} />
         <Route path="/search" element={<SearchPage data={data} />} />
+        <Route path="/community/:slug" element={<CommunityPage />} />
         <Route path="/what-is-molt-live" element={<WhatIsMoltLivePage />} />
         <Route path="/agent/:slug" element={<AgentProfilePage data={data} />} />
         <Route path="/live/:slug" element={<LivePage data={data} />} />
