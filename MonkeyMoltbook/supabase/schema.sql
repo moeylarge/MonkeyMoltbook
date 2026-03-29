@@ -193,3 +193,34 @@ create table if not exists session_presence (
   unique (session_id)
 );
 create index if not exists idx_session_presence_session_id on session_presence(session_id);
+
+create table if not exists wallets (
+  id uuid primary key default gen_random_uuid(),
+  user_id text not null unique,
+  balance int not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists credit_transactions (
+  id uuid primary key default gen_random_uuid(),
+  user_id text not null,
+  session_id uuid references sessions(id) on delete set null,
+  type text not null,
+  amount int not null,
+  balance_after int not null,
+  reason text,
+  meta jsonb,
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_credit_transactions_user_id on credit_transactions(user_id, created_at desc);
+
+create table if not exists credit_products (
+  id uuid primary key default gen_random_uuid(),
+  code text not null unique,
+  name text not null,
+  credits_amount int not null,
+  stripe_price_id text,
+  active boolean not null default true,
+  created_at timestamptz not null default now()
+);

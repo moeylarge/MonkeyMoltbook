@@ -8,6 +8,7 @@ import { getSchedulerState, startScheduler, stopScheduler } from './lib/moltbook
 import { getResponse, getResponseStats } from './lib/responses.js';
 import { isSupabaseStorageEnabled, persistMoltbookSnapshot } from './lib/supabase-storage.js';
 import { addAgentReply, addLiveMessage, createLiveSession, endLiveSession, exportTranscriptText, getLiveSession, listTranscript, liveSessionsEnabled, updateLivePresence } from './lib/live-sessions.js';
+import { creditsEnabled, ensureCreditProducts, getSpendRules, getWallet, grantCredits, listCreditProducts, listCreditTransactions, spendCredits } from './lib/credits.js';
 
 export const app = express();
 app.use(express.json());
@@ -154,6 +155,21 @@ app.get('/hook', async (_req, res) => res.json(await getNextAgentHook()));
 app.get('/preload', async (req, res) => { const requested = Number.parseInt(req.query.count, 10); const count = Number.isFinite(requested) && requested > 0 ? Math.min(requested, DEFAULT_PRELOAD_COUNT) : DEFAULT_PRELOAD_COUNT; res.json({ phase: PHASE, count, hooks: await getNextAgentHooks(count) }); });
 app.get('/response', (req, res) => { const agentId = String(req.query.agentId || 'ego-destroyer'); const userText = String(req.query.userText || ''); const response = getResponse(agentId, userText); res.json({ phase: PHASE, agentId, userText, response: { type: 'response', agentId, text: response.text, validation: response.validation } }); });
 app.get('/live/enabled', (_req, res) => res.json({ phase: PHASE, enabled: liveSessionsEnabled() }));
+app.get('/credits/enabled', (_req, res) => res.json({ phase: PHASE, enabled: creditsEnabled() }));
+app.get('/wallet', async (req, res) => {
+  const userId = String(req.query.userId || 'demo-user');
+  const wallet = await getWallet(userId);
+  const transactions = await listCreditTransactions(userId);
+  res.json({ phase: PHASE, ok: true, wallet, transactions, spendRules: getSpendRules() });
+});
+app.get('/credits/products', async (_req, res) => {
+  await ensureCreditProducts();
+  res.json({ phase: PHASE, ok: true, products: await listCreditProducts() });
+});
+app.post('/credits/grant', async (req, res) => {
+  const { userId = 'demo-user', amount = 25, reason = 'manual-grant', sessionId = null } = req.body || {};
+  res.json({ phase: PHASE, ok: true, ...(await grantCredits({ userId, amount, reason, sessionId })) });
+});
 app.post('/live/session/create', async (req, res) => {
   const { agentName = 'Agent', agentAuthorId = null, entrySource = 'direct', mode = 'free', ttsEnabled = true, transcriptEnabled = true } = req.body || {};
   const created = await createLiveSession({ agentName, agentAuthorId, entrySource, mode, ttsEnabled, transcriptEnabled });
@@ -170,6 +186,18 @@ app.post('/live/session/:id/message', async (req, res) => {
 });
 app.post('/live/session/:id/presence', async (req, res) => res.json({ phase: PHASE, ok: true, presence: await updateLivePresence(req.params.id, req.body || {}) }));
 app.post('/live/session/:id/end', async (req, res) => res.json({ phase: PHASE, ok: true, session: await endLiveSession(req.params.id) }));
+app.post('/live/session/:id/spend', async (req, res) => {
+  const { actionCode, userId = 'demo-user' } = req.body || {};
+  const result = await spendCredits({ userId, sessionId: req.params.id, actionCode });
+  if (!result.ok) return res.status(400).json({ phase: PHASE, ...result });
+  await addLiveMessage(req.params.id, {
+    role: 'system',
+    messageType: 'credit-event',
+    text: `${actionCode} unlocked for ${result.cost} credits. Balance is now ${result.balance}.`,
+    meta: { actionCode, cost: result.cost, balance: result.balance }
+  });
+  res.json({ phase: PHASE, ...result });
+});
 app.get('/live/session/:id/transcript', async (req, res) => res.json({ phase: PHASE, ok: true, messages: await listTranscript(req.params.id) }));
 app.get('/live/session/:id/export', async (req, res) => {
   const text = await exportTranscriptText(req.params.id);
