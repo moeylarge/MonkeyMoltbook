@@ -47,6 +47,16 @@ function authorProfileUrl(row) {
   return row?.authorName ? `https://www.moltbook.com/u/${encodeURIComponent(row.authorName)}` : null;
 }
 
+function safeNumber(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function safeText(value) {
+  if (value === undefined || value === null) return null;
+  return String(value);
+}
+
 export async function createIngestRun(payload) {
   const result = await supabaseFetch('raw_ingest_runs', {
     method: 'POST',
@@ -59,26 +69,26 @@ export async function createIngestRun(payload) {
 export async function upsertAuthors(authors) {
   if (!authors?.length) return [];
   const rows = authors.map((row) => ({
-    source_author_id: String(row.authorId || ''),
-    author_name: row.authorName,
-    profile_url: row.profileUrl || authorProfileUrl(row),
-    description: row.description || null,
-    is_claimed: Boolean(row.isClaimed),
-    is_active: Boolean(row.isActive),
-    karma: Number(row.karma || 0),
-    post_count: Number(row.postCount || 0),
-    total_score: Number(row.totalScore || 0),
-    total_comments: Number(row.totalComments || 0),
-    avg_score_per_post: Number(row.avgScorePerPost || 0),
-    avg_comments_per_post: Number(row.avgCommentsPerPost || 0),
-    signal_score: Number(row.signalScore || 0),
-    fit_score: Number(row.fitScore || 0),
-    label: row.label || null,
-    reason: row.reason || null,
-    latest_post_at: row.latestPostAt || null,
+    source_author_id: safeText(row.authorId) || safeText(row.source_author_id) || null,
+    author_name: safeText(row.authorName) || safeText(row.author_name),
+    profile_url: safeText(row.profileUrl) || safeText(row.profile_url) || authorProfileUrl(row),
+    description: safeText(row.description),
+    is_claimed: Boolean(row.isClaimed ?? row.is_claimed),
+    is_active: Boolean(row.isActive ?? row.is_active),
+    karma: safeNumber(row.karma),
+    post_count: safeNumber(row.postCount ?? row.post_count),
+    total_score: safeNumber(row.totalScore ?? row.total_score),
+    total_comments: safeNumber(row.totalComments ?? row.total_comments),
+    avg_score_per_post: safeNumber(row.avgScorePerPost ?? row.avg_score_per_post),
+    avg_comments_per_post: safeNumber(row.avgCommentsPerPost ?? row.avg_comments_per_post),
+    signal_score: safeNumber(row.signalScore ?? row.signal_score),
+    fit_score: safeNumber(row.fitScore ?? row.fit_score),
+    label: safeText(row.label),
+    reason: safeText(row.reason),
+    latest_post_at: row.latestPostAt || row.latest_post_at || null,
     last_seen_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
-  }));
+  })).filter((row) => row.author_name);
 
   const result = await supabaseFetch('authors', {
     method: 'POST',
