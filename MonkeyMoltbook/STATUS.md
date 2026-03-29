@@ -1,6 +1,6 @@
 # MonkeyMoltbook — STATUS
 
-Updated: 2026-03-23 America/Los_Angeles
+Updated: 2026-03-28 America/Los_Angeles
 
 ## Project name
 
@@ -12,7 +12,7 @@ ACTIVE
 
 ## Current phase
 
-Public-feed Moltbook adapter implementation complete
+MOLT-LIVE deployed prototype + launch-pass refinement
 
 ## Stack
 
@@ -25,23 +25,28 @@ Public-feed Moltbook adapter implementation complete
 
 - monorepo created
 - package workspaces configured
-- mobile shell exists and matches the single-screen rule
-- backend process starts and serves `/health`
-- backend serves `/agents`, `/hook`, `/preload`, and `/response`
-- 12 local archetypes are defined and normalized
-- Moltbook secondary pool now derives from public `/posts` feed by default
-- public-feed adapter groups posts by author and derives style/archetype locally
-- WebSocket server accepts connections and sends boot payload
-- WebSocket server sends live rotating hook payloads
-- source mixing follows `local:local:moltbook`
-- mobile shell is wired to open a WebSocket and render live hook data
-- swipe-left progression is implemented in the app
-- app maintains a local preload queue of upcoming hooks
-- hook payloads include validation metadata
-- app tracks local swipe/reply thresholds and shows a minimal gate overlay at threshold
-- app submits user replies and renders generated agent follow-up responses
-- backend exposes response validation and per-agent response banks
-- Moltbook path is cached and timeout-limited with live public-feed fallback behavior
+- website-first product shell is deployed live at `https://molt-live.com`
+- Vercel frontend + Vercel `/api` backend are working
+- backend serves live routes for:
+  - `/api/health`
+  - `/api/moltbook/report`
+  - `/api/moltbook/rising`
+  - `/api/moltbook/hot`
+  - `/api/moltbook/topics`
+  - `/api/moltbook/top-submolts`
+  - `/api/refresh`
+- `molt-live.com` domain is connected and live
+- Top 100 / Rising 25 / Hot 25 load on production
+- Topics / Top Submolts load on production
+- agent pages load on production
+- live pages load on production
+- Open on Moltbook user links were fixed to `/u/<name>`
+- Vercel cron refresh path exists
+- production-safe fallback exists so ranking surfaces do not go blank when live intel is empty
+- waitlist capture, topic-interest capture, analytics hooks, privacy/terms placeholders are in place
+- credits / wallet / premium battle mode shell exists
+- site is now on a light theme with MM pink nav/action accents
+- camera-first homepage and live session redesign pass has been started and deployed
 
 ## Current quality signal
 
@@ -52,17 +57,21 @@ Public-feed Moltbook adapter implementation complete
 
 ## Incomplete
 
-- improve Moltbook-derived hook quality so fallback rate drops
-- design Moltbook participation/posting workflows if John wants active traction-building
-- logging / analytics layer
+- mobile-first homepage polish
+- stronger camera-first landing section
+- stronger live session realism / interaction tension
+- more convincing human-to-agent webcam flow
+- credits / wallet / paid battle flow refinement
+- final production hardening and launch polish
 - real billing/paywall integration
+- richer analytics layer
 - authenticated/private Moltbook profile ingestion if API access is later available
 
 ## Immediate next decision
 
 The project is now in its next phase:
-- Moltbook execution under the security policy
-- Daily Moltbook Check-In Protocol as the default cadence/rule-set
-- candidate/source-quality development
-- derivation quality refinement
-- logging / analytics layer
+- **MOLT-LIVE LAUNCH PASS**
+- mobile-first homepage + live session refinement
+- camera-first interaction redesign
+- credits / premium battle UX refinement
+- final production hardening and launch polish

@@ -4,7 +4,7 @@ Updated: 2026-03-27 America/Los_Angeles
 
 ## Current phase
 
-**Website pivot + public Moltbook intelligence platform**
+**MOLT-LIVE deployed prototype + launch-pass refinement**
 
 ## Objective
 
@@ -147,13 +147,51 @@ Important design reminder:
 - but it must remain original and not become a direct clone
 
 Current state before launch:
-- strong prototype / product shell
-- not final launch-ready product yet
-- discovery surfaces, agent page, live shell, waitlist/topic-interest capture, legal placeholders, and Vercel prep are in place
-- real launch still requires the launch-pass redesign and production backend setup
+- deployed live at `https://molt-live.com`
+- Vercel frontend + Vercel `/api` backend are both working
+- Top 100 / Rising 25 / Hot 25 / Topics / Top Submolts all load
+- agent pages and live pages load
+- Open on Moltbook user links were corrected to `/u/<name>`
+- Submolt links were validated
+- waitlist / topic-interest / analytics hooks are live
+- legal placeholders exist (`/privacy`, `/terms`)
+- domain `molt-live.com` is connected and serving the project
+- production hardening fallback exists so ranking surfaces do not go blank when live Moltbook intel is empty
+- site was switched to a light theme and MM pink accents
+- credits / wallet / premium battle mode UI shell exists
+- camera-first homepage redesign and stronger live session redesign were started and deployed
+- still not final launch-ready product yet
+- real launch still requires the remaining launch-pass refinement and polish
+
+## Immediate resume order for next session
+
+Resume from this exact order:
+1. review deployed `molt-live.com` on phone first
+2. continue the **MOLT-LIVE LAUNCH PASS** only
+3. priority sequence:
+   - mobile-first homepage polish
+   - stronger camera-first landing section
+   - stronger live session realism / interaction tension
+   - credits / battle flow refinement
+   - final production hardening / launch polish
+4. do not re-open deployment plumbing unless the live site breaks again
+
+## Important recent commits / deployment checkpoint
+
+Key deployment + launch-pass commits from this session:
+- `f383398` — Adapt MonkeyMoltbook backend for Vercel api
+- `8ead41d` — Split MonkeyMoltbook Vercel app from local server boot
+- `6fced9b` — Use /tmp data path on Vercel
+- `21d5bb1` — Fix Moltbook profile links and add Vercel refresh cron
+- `c757672` — Fallback to seeded agents when Moltbook intel is empty
+- `d7e302b` — Switch MonkeyMoltbook to light theme
+- `163b8a1` — Use MM pink accent for nav tabs
+- `aa258f2` — Add credits UI and premium battle mode shell
+- `4fe050b` — Redesign camera-first homepage and live session mobile UX
 
 ## Stop conditions
 
 - Do not drift back into the old generic dashboard design.
 - Do not resume mobile-shell debugging unless John explicitly reopens that path.
 - Do not mix posting/auth automation into the public-data intelligence system unless John explicitly requests that separate track again.
+- Do not reintroduce Railway unless Vercel deployment is explicitly reopened; the live working stack is Vercel now.
