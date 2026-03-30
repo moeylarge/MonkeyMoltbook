@@ -841,9 +841,9 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
 
   const nextCursor = sample.nextCursor || null;
   const job = await upsertIngestionJob({
-    job_name: 'moltbook-expanded-ingest',
+    job_name: jobName,
     status: 'ok',
-    cursor_json: mode === 'cursor' ? { mode, nextCursor, steps, perPage, hasMore: !!sample.hasMore } : { mode, pages, perPage },
+    cursor_json: (mode === 'cursor' || mode === 'suspicious') ? { mode, nextCursor, steps, perPage, hasMore: !!sample.hasMore } : { mode, pages, perPage },
     last_run_at: new Date().toISOString(),
     last_success_at: new Date().toISOString(),
     stats_json: {
@@ -854,11 +854,12 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
       indexed: searchDocs.length,
       pageStats: sample.pageStats || [],
       cursorStats: sample.cursorStats || [],
+      familyCounts: sample.familyCounts || null,
       errors: sample.errors || []
     }
   });
 
-  res.json({ phase: PHASE, ok: true, mode, pages, perPage, steps, delayMs, resumedFromSavedCursor: mode === 'cursor' && !req.query.cursor && !!savedCursor, nextCursor, hasMore: !!sample.hasMore, sampledPosts: posts.length, authors: authors.length, communities: communities.length, submolts: submolts.length, indexed: searchDocs.length, pageStats: sample.pageStats || [], cursorStats: sample.cursorStats || [], errors: sample.errors || [], job });
+  res.json({ phase: PHASE, ok: true, mode, pages, perPage, steps, delayMs, resumedFromSavedCursor: (mode === 'cursor' || mode === 'suspicious') && !req.query.cursor && !!savedCursor, nextCursor, hasMore: !!sample.hasMore, sampledPosts: posts.length, authors: authors.length, communities: communities.length, submolts: submolts.length, indexed: searchDocs.length, pageStats: sample.pageStats || [], cursorStats: sample.cursorStats || [], familyCounts: sample.familyCounts || null, errors: sample.errors || [], job });
 });
 app.get('/moltbook/export/authors.csv', async (_req, res) => { const intel = await getMoltbookIntel(); res.type('text/csv').send(authorsToCsv(intel.authors ?? [])); });
 app.get('/moltbook/export/snapshots.csv', async (_req, res) => { const intel = await getMoltbookIntel(); res.type('text/csv').send(snapshotsToCsv(intel.snapshots ?? [])); });
