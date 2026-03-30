@@ -45,6 +45,23 @@ const BENIGN_PATTERNS = [
   'philosophy'
 ];
 
+const MINT_SPAM_PATTERNS = [
+  'mbc-20',
+  'hackai',
+  ' mint ',
+  '"op":"mint"',
+  '"tick":',
+  '"amt":',
+  'bot farming',
+  'bot run',
+  'grabbing bot',
+  'grabbing hackai',
+  'allocation',
+  'tokens',
+  'mint gpt',
+  'daily hackai mint'
+];
+
 function collectPhraseFlags(text) {
   const hits = [];
   for (const [type, patterns] of Object.entries(RISK_PATTERNS)) {
@@ -59,11 +76,16 @@ function benignHitCount(text = '') {
   return BENIGN_PATTERNS.filter((pattern) => text.includes(pattern)).length;
 }
 
+function mintSpamHitCount(text = '') {
+  return MINT_SPAM_PATTERNS.filter((pattern) => text.includes(pattern)).length;
+}
+
 function buildReason(flags = []) {
   const reasons = [];
   if (flags.some((x) => x.startsWith('phishing:'))) reasons.push('phishing-like language');
   if (flags.some((x) => x.startsWith('malware:'))) reasons.push('malware/hack phrasing');
   if (flags.some((x) => x.startsWith('scam:'))) reasons.push('scam-style promo language');
+  if (flags.includes('mint:spam')) reasons.push('mint/ticker spam pattern');
   if (flags.includes('links:suspicious')) reasons.push('suspicious outbound links');
   if (flags.includes('links:many')) reasons.push('high outbound link density');
   if (flags.includes('behavior:repetitive')) reasons.push('repetitive promo patterns');
@@ -84,6 +106,7 @@ export function scorePostRisk(post = {}) {
   const urls = extractUrls(textParts(text, post.url));
   const flags = collectPhraseFlags(text);
   const benignHits = benignHitCount(text);
+  const mintSpamHits = mintSpamHitCount(text);
   let languageRisk = 0;
   let linkRisk = 0;
   let duplicationRisk = 0;
@@ -109,6 +132,13 @@ export function scorePostRisk(post = {}) {
   if (hasRepeatedPattern(text)) {
     duplicationRisk += 14;
     flags.push('behavior:repetitive');
+  }
+  if (mintSpamHits >= 2) {
+    duplicationRisk += 24;
+    flags.push('mint:spam');
+  } else if (mintSpamHits === 1) {
+    duplicationRisk += 10;
+    flags.push('mint:spam');
   }
 
   let score = languageRisk + linkRisk + duplicationRisk + accountContribution + communityContribution;
@@ -138,6 +168,7 @@ export function scoreAuthorRisk(author = {}) {
   const text = textParts(author.authorName, author.description, author.reason);
   const flags = collectPhraseFlags(text);
   const benignHits = benignHitCount(text);
+  const mintSpamHits = mintSpamHitCount(text);
   let accountThinnessRisk = 0;
   let behaviorRisk = 0;
   let networkRisk = 0;
@@ -156,6 +187,14 @@ export function scoreAuthorRisk(author = {}) {
   if (postCount >= 8 && submoltCount >= 4) behaviorRisk += 14;
   if (postCount >= 12 && karma <= 5) behaviorRisk += 18;
   if (submoltCount >= 6) networkRisk += 10;
+  if (mintSpamHits >= 2) {
+    behaviorRisk += 34;
+    networkRisk += 10;
+    flags.push('mint:spam');
+  } else if (mintSpamHits === 1) {
+    behaviorRisk += 22;
+    flags.push('mint:spam');
+  }
 
   for (const hit of flags) {
     if (hit.startsWith('phishing:')) languageRisk += 18;
@@ -168,7 +207,8 @@ export function scoreAuthorRisk(author = {}) {
   if (isClaimed) score -= 6;
   if (karma >= 500) score -= 8;
   if (benignHits) score -= benignHits * 8;
-  if (flags.length <= 1 && postCount <= 2) score -= 8;
+  if (flags.length <= 1 && postCount <= 2 && !flags.includes('mint:spam')) score -= 8;
+  if (flags.includes('mint:spam')) score = Math.max(score, 28);
   score = clamp(score);
   const reasons = buildReason(flags);
 
@@ -192,6 +232,7 @@ export function scoreCommunityRisk(community = {}) {
   const text = textParts(community.name, community.title, community.description, ...(community.sampleTitles || []));
   const flags = collectPhraseFlags(text);
   const benignHits = benignHitCount(text);
+  const mintSpamHits = mintSpamHitCount(text);
   let contentRisk = 0;
   let linkRisk = 0;
   let densityRisk = 0;
@@ -208,6 +249,17 @@ export function scoreCommunityRisk(community = {}) {
     flags.push('links:many');
   }
   if ((community.postCount || 0) >= 20 && hasRepeatedPattern((community.sampleTitles || []).join(' '))) {
+    densityRisk += 14;
+    flags.push('community:risky-density');
+  }
+  if (mintSpamHits >= 2) {
+    densityRisk += 36;
+    flags.push('mint:spam');
+  } else if (mintSpamHits === 1) {
+    densityRisk += 16;
+    flags.push('mint:spam');
+  }
+  if ((community.postCount || 0) >= 10 && mintSpamHits >= 2) {
     densityRisk += 14;
     flags.push('community:risky-density');
   }
