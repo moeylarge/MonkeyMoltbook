@@ -50,6 +50,8 @@ function communitySearchRank(item, query) {
   if (name === 'crypto' || slug === 'crypto') score -= suspiciousQuery ? 110 : 8;
   if (suspiciousQuery && (item.matchedPostCount || 0) <= 3 && (name === 'general' || slug === 'general')) score -= 120;
   if (q === 'mint' && (name === 'general' || slug === 'general')) score -= 260;
+  if ((q === 'mbc20' || q === 'mbc-20' || q === 'hackai' || q === 'bot' || q === 'wang') && (name === 'general' || slug === 'general')) score -= 260;
+  if ((q === 'mbc20' || q === 'mbc-20' || q === 'hackai' || q === 'bot' || q === 'wang') && (item.specializedEvidence || 0) <= 1) score -= 120;
   if (q === 'wallet' && (name === 'general' || slug === 'general')) score -= 120;
 
   return score;

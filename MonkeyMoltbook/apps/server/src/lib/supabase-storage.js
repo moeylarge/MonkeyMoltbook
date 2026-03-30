@@ -472,7 +472,8 @@ export async function searchCommunityEvidence({ query, limit = 20 } = {}) {
   if (!isSupabaseStorageEnabled()) return [];
   const q = String(query || '').trim();
   if (!q) return [];
-  const isMintIntent = q.toLowerCase() === 'mint';
+  const mintIntentTerms = new Set(['mint', 'mbc20', 'mbc-20', 'hackai', 'bot', 'wang']);
+  const isMintIntent = mintIntentTerms.has(q.toLowerCase());
   const safeQuery = encodeURIComponent(`%${q}%`);
   const mintClauses = [
     'select=submolt_name,title,snippet,score,comment_count,payload',
