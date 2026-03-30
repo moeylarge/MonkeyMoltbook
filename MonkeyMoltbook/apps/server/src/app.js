@@ -976,6 +976,7 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
       pageStats: sample.pageStats || [],
       cursorStats: sample.cursorStats || [],
       familyCounts: sample.familyCounts || null,
+      matchedPostPreview: sample.matchedPostPreview || null,
       errors: sample.errors || []
     }
   });
