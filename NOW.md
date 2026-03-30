@@ -6,45 +6,66 @@ Updated: 2026-03-29 America/Los_Angeles
 
 ## Resume point
 
-Active focus is no longer homepage cleanup or generic collector tuning.
+Active focus is no longer suspicious-ingest route reliability.
+That part was debugged and fixed on live Vercel in this session.
 
-Resume from the live trust/search + suspicious-ingest debug state:
-- trust/search ranking work for the four priority group lanes was substantially cleaned
-- current top-priority unresolved task is making the targeted suspicious-language ingest path complete reliably on live Vercel
+Resume from the new state:
+- suspicious ingest works on production
+- targeted suspicious family lanes work on production
+- deep targeted acquisition works on production
+- strict contextual gates work on production
+- the new active frontier is **candidate-first suspicious-source acquisition + second-stage scoring**
 
 ## Current truth
 
 - project path: `/Users/moey/.openclaw/workspace/MonkeyMoltbook`
-- site is live at `https://molt-live.com`
-- deployment target is **Vercel for both frontend and backend**
+- live site: `https://molt-live.com`
+- deployment target: **Vercel for both frontend and backend**
 - Railway is not part of the active deployment path
-- suspicious user persistence/audit architecture is materially improved
-- dedicated suspicious-author and mint-author audit lanes exist
-- mint-family group ranking is now cleaned to the same strict standard as claim/wallet/exploit
-- claim-family group ranking is clean and materially improved
-- wallet/exploit group lanes are now strict and truthfully zero when the corpus does not justify results
-- deeper generic ingest helped claim but did not materially deepen wallet/exploit-family community evidence
-- dedicated fetch probe route works on live Vercel
-- suspicious ingest route still times out before finishing
+- Supabase storage and ingestion job state are active
+- debug/status endpoint exists for ingestion jobs:
+  - `/api/moltbook/ingest/status`
+- suspicious ingest is no longer hanging on live Vercel
+- the missing `suspiciousMatchMeta` bug was fixed
+- targeted family lanes now exist for:
+  - wallet
+  - claim
+  - seed
+  - exploit
+- deep targeted acquisition defaults are now:
+  - `perPage=100`
+  - `steps=20`
+- contextual gates removed most weak wallet/seed/exploit false positives
+- claim still surfaces weak airdrop-adjacent discussion more than true scam/abuse intent
+- new weak-signal candidate collector exists:
+  - `mode=suspicious-candidates`
 
 ## Immediate next actions
 
-1. verify the current live codepath for suspicious ingest matches current source before further tests
-2. continue debugging suspicious ingest execution on Vercel
-3. highest-value next technical move:
-   - get probe-internal progress surfaced directly while suspicious ingest is running
-   - prove whether the route returns from the shared probe function or stalls inside it
-4. once suspicious ingest is reliable, use it to deepen:
-   - wallet
-   - exploit
-   - drainer
-   - seed phrase
-   - claim-style evidence
-5. only after that, move toward the explicit trust product surface on `molt-live.com`
+1. keep the current strict family scorer and contextual gates as-is
+2. keep the new candidate collector as the primary acquisition surface
+3. build a **second-stage candidate scorer** over the weak-signal corpus
+4. promote candidates when weak cues co-occur with stronger abuse/CTA language, for example:
+   - free
+   - claim
+   - connect wallet
+   - verify
+   - eligible
+   - zero risk
+   - reward
+   - enter seed phrase
+   - restore wallet
+5. down-rank low-value contexts such as:
+   - philosophy/general discussion
+   - generic tax/airdrop discussion
+   - benign security-research discussion
+6. rerun the deep candidate collector and inspect the ranked shortlist
 
 ## Guardrails
 
 - keep Vercel as the deployment target
-- do not let Railway distract the debugging path
-- preserve strict cleaned trust-search lanes; do not reintroduce broad semantic junk
-- truthful zero-result lanes are acceptable until data depth improves
+- do not let Railway distract the path
+- do not reopen broad phrase-churn without evidence
+- preserve the strict family scorer as the final gate
+- use candidate collection as stage 1, candidate scoring as stage 2
+- truthful zero remains acceptable if the corpus does not justify more

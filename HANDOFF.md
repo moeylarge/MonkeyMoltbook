@@ -14,135 +14,162 @@ Updated: 2026-03-29 America/Los_Angeles
    - `MonkeyMoltbook/HANDOFF.md`
 4. Then open supporting project docs as needed:
    - `MonkeyMoltbook/apps/server/src/app.js`
-   - `MonkeyMoltbook/apps/server/src/lib/supabase-storage.js`
-   - `MonkeyMoltbook/apps/server/src/lib/trust-score.js`
    - `MonkeyMoltbook/apps/server/src/lib/moltbook-discovery.js`
+   - `MonkeyMoltbook/apps/server/src/lib/supabase-storage.js`
 5. Live site:
    - `https://molt-live.com`
 
 ## Current truth
 
-- Primary active project: **MonkeyMoltbook / MOLT-LIVE**
+- Primary active project in this session: **MonkeyMoltbook / MOLT-LIVE**
 - Project path: `/Users/moey/.openclaw/workspace/MonkeyMoltbook`
 - Deployment target is **Vercel for both frontend and backend**
-- Railway is legacy noise and should be ignored unless John explicitly asks to clean it up
-- Current phase: **trust/search repair + suspicious ingestion/debug on live Vercel**
-- Supabase external storage is active for Moltbook-derived data
-- Core trust/search architecture is materially improved across users, groups, persistence, and audit lanes
+- Railway is legacy noise and should be ignored unless John explicitly asks
+- Supabase storage is active for Moltbook-derived data and ingestion job state
+- The old blocker "suspicious ingest hangs before sample fetch completes" was fully debugged and resolved in this session
 
 ## What happened last
 
-A long production trust/search session completed on MOLT-LIVE.
+This session was a long live-Vercel debugging + ingestion-quality pass focused on the suspicious collection pipeline.
 
-### User-side suspicious search
-- suspicious user/account search was rebuilt to merge stored author rows with post-backed evidence instead of thin profile text
-- user intent handling was tuned for:
-  - `wallet`
-  - `seed phrase`
-  - `drainer`
-  - `malware`
-  - `exploit`
-  - `claim`
-  - `airdrop`
-- final live user trust state materially improved, with strongest justified suspicious lane in `airdrop`
+### 1) Core suspicious-ingest reliability was fixed on live Vercel
+What was proven and repaired:
+- production had briefly been serving older Vercel deployments until explicit `vercel deploy --prod` runs were made from the linked repo
+- live debug/status inspection was added for ingestion jobs:
+  - `/api/moltbook/ingest/status`
+- probe-internal phase tracing was added to the suspicious ingest path
+- the real route failure was narrowed from timeout symptoms to a concrete code bug
+- the actual bug was:
+  - `suspiciousMatchMeta` was referenced but missing from `apps/server/src/lib/moltbook-discovery.js`
+- restoring that classifier fixed the end-to-end suspicious route timeout/failure
 
-### Persistence and audit fixes
-- evidence-backed suspicious-author persistence was fixed end-to-end:
-  - query-time suspicious author writes are awaited
-  - evidence authors are resolved to real stored `authors.id` via `source_author_id`
-  - audit hydration now maps persisted rows back to real stored author names
-- dedicated audit lanes now exist:
-  - `/api/moltbook/audit/suspicious-authors`
-  - `/api/moltbook/audit/mint-authors`
-- critical rule is now explicit:
-  - mint/ticker spam and evidence-backed suspicious authors are separate lanes and must stay separated
+Result:
+- suspicious ingest now completes successfully on production
+- Vercel deployment + route + live status visibility are all confirmed healthy
 
-### Group-ranking repair pass
-The four priority group trust/search lanes were repaired in order:
-1. `mint`
-2. `claim`
-3. `wallet`
-4. `exploit`
+### 2) Classifier tuning hit its limit
+After reliability was restored, multiple controlled live passes were run to tune suspicious-family matching.
 
-Current outcome:
-- `mint` family is now clean and specialized:
-  - `mint` → `mbc20`
-  - `hackai` → `mbc20`
-  - `mbc20` → `mbc20`
-  - `mbc-20` → `mbc-20`, then `mbc20`
-  - `bot` → `mbc20`
-  - `wang` → `mbc20`
-- `claim` family is now strict and no longer polluted by broad semantic junk
-- `wallet` family is now strict and truthfully returns zero on groups given current corpus depth
-- `exploit` family is now strict and truthfully returns zero on groups given current corpus depth
+What was learned:
+- broad exploit phrases increased captures but created obvious false positives
+- tightening exploit phrases removed noise but often zeroed the lane again
+- wallet/seed/exploit lanes were extremely sparse under strict intent rules
+- claim lane kept surfacing mostly weak airdrop-adjacent discussion
 
-### Data-depth finding
-- deeper generic ingest helped `claim` materially
-- but `wallet` / `exploit` / `drainer` / `seed phrase` remain data-starved at the group level
-- the blocker is no longer ranking pollution there; it is targeted evidence scarcity
+Conclusion:
+- phrase tuning alone is not the bottleneck anymore
+- the real bottleneck became **corpus quality / acquisition strategy**
 
-### Suspicious ingestion debugging on Vercel
-This is the current active frontier and the most important unresolved item.
+### 3) Targeted suspicious family lanes were built and validated
+New targeted family-scoped suspicious lanes now exist:
+- `suspicious-targeted&family=wallet`
+- `suspicious-targeted&family=claim`
+- `suspicious-targeted&family=seed`
+- `suspicious-targeted&family=exploit`
 
-What is now proven:
-- Vercel is the correct deployment target for frontend and backend
-- normal backend health routes work on Vercel
-- raw one-page Moltbook fetch works on Vercel via dedicated probe route:
-  - `/api/moltbook/probe/fetch`
-- suspicious ingest route starts and writes provisional job progress to Supabase
-- suspicious ingest route still hangs before `sample_fetched`
-- `delayMs=0` is now honored in the suspicious ingest path
-- the failure boundary was narrowed to the suspicious sample-fetch/probe area
+What was added/fixed:
+- separate family-specific ingestion jobs/cursors
+- status endpoint fixed to resolve targeted family jobs correctly
+- deeper targeted acquisition defaults increased to:
+  - `perPage=100`
+  - `steps=20`
 
-Key architectural move made:
-- suspicious ingest was refactored away from the old crawler-like path toward a **probe-driven path**
-- dedicated one-page probe logic exists in source
-- however, this probe-driven suspicious ingest path is still not yet proven end-to-end complete on live Vercel
+Result from deep family sweeps:
+- targeted acquisition works
+- but after stronger contextual gating:
+  - wallet → zero convincing survivors
+  - seed → zero convincing survivors
+  - exploit → zero convincing survivors
+  - claim → still only weak airdrop-adjacent survivors
 
-## Exact current blocker
+Conclusion:
+- the family-scoped architecture works
+- the upstream recent-feed corpus still lacks convincing malicious wallet/seed/exploit evidence at this depth
 
-The main unresolved issue is:
-- suspicious ingest on live Vercel still times out before completing
-- it writes `phase = before_sample_fetch`
-- but does not reach `sample_fetched`
+### 4) Contextual gates were added and did the right thing
+Stronger second-stage intent/context filters were added:
+- wallet/seed now require stronger action context around private-key / seed-phrase language
+- exploit now excludes more informational security-discussion cases
+- claim requires stronger airdrop/claim context than before
 
-Important nuance:
-- the dedicated fetch probe route succeeds quickly on Vercel
-- so the remaining bug is no longer “can Vercel fetch Moltbook?”
-- it is specifically about the suspicious ingest execution path and probe integration inside that route
+Result:
+- weak wallet/seed/exploit false positives were removed
+- remaining surviving claim content is still low quality / discussion-adjacent
+- the system is now behaving honestly rather than manufacturing suspicious hits
 
-## Latest verified source-of-truth files
+### 5) New suspicious candidate collector was added
+Because strict family lanes were too sparse, a new candidate-first collector was built.
 
-- `MonkeyMoltbook/apps/server/src/app.js`
-- `MonkeyMoltbook/apps/server/src/lib/supabase-storage.js`
-- `MonkeyMoltbook/apps/server/src/lib/trust-score.js`
-- `MonkeyMoltbook/apps/server/src/lib/moltbook-discovery.js`
+New mode:
+- `mode=suspicious-candidates`
+
+What it does:
+- performs a deep feed-backed cursor walk
+- collects **weak suspicious cues** into a broader candidate corpus instead of pretending they are final suspicious hits
+- returns:
+  - `candidateCount`
+  - `cueCounts`
+  - `candidatePreview`
+- keeps the strict family scorer separate
+
+This is the key new architectural shift from this session.
+
+### 6) First candidate-run result
+The first deep `suspicious-candidates` run succeeded on production and surfaced a broader weak-signal corpus.
+
+Important finding:
+- candidate preview is still noisy overall, but it surfaced at least one more promising wallet/CTA-style item than the strict family lanes were giving us:
+  - `Free 1 USDT on BNB Chain - Zero Risk Demo`
+  - weak cues: `wallet`, `connect wallet`
+
+That means the project is now at the correct next stage:
+- broad candidate harvest first
+- then second-stage candidate scoring/ranking
+
+## Exact current blocker / next frontier
+
+The next unresolved engineering/product task is no longer route reliability.
+
+The real next frontier is:
+- build a **second-stage scorer** over the weak-signal suspicious candidate corpus
+- promote only the highest-intent scam/abuse-like candidates
+- down-rank philosophical, generic crypto, tax, and informational security discussion
 
 ## What to do first in the next chat
 
 Resume exactly here:
 
-1. verify local HEAD / origin / live Vercel alias are aligned before testing anything
-2. continue debugging the suspicious-ingest execution path
-3. highest-value next technical move:
-   - instrument **inside the shared suspicious probe path itself** or otherwise surface probe-internal progress directly to the job row
-   - prove whether suspicious ingest actually returns from the shared probe function
-4. do not reopen broader ranking work first; that part is mostly in a better state already
-5. preserve the current strict trust-search behavior for:
-   - `mint`
+1. verify local HEAD / origin / live Vercel alias are aligned
+2. open these files first:
+   - `MonkeyMoltbook/HANDOFF.md`
+   - `MonkeyMoltbook/STATUS.md`
+   - `MonkeyMoltbook/apps/server/src/lib/moltbook-discovery.js`
+   - `MonkeyMoltbook/apps/server/src/app.js`
+3. confirm the new candidate mode exists:
+   - `mode=suspicious-candidates`
+4. highest-value next implementation move:
+   - add a **second-stage candidate scorer** for weak-signal suspicious candidates
+5. score candidates upward when cues co-occur with stronger abuse/CTA language like:
+   - `free`
    - `claim`
-   - `wallet`
-   - `exploit`
-6. keep the product roadmap order explicit from here:
-   1. final reliability of suspicious targeted ingestion on Vercel
-   2. strengthen shallow suspicious evidence outside airdrop/promo lanes
-   3. then build the explicit trust product surface on `molt-live.com`
+   - `connect wallet`
+   - `verify`
+   - `eligible`
+   - `zero risk`
+   - `reward`
+   - `enter seed phrase`
+   - `restore wallet`
+6. down-rank obvious low-value contexts like:
+   - philosophy/self-help discussion
+   - generic tax/airdrop discussion
+   - benign security-research discussion
+7. rerun the deep candidate collector after scoring is added, then inspect the ranked shortlist
 
 ## Guardrails
 
 - Vercel handles both frontend and backend
-- Railway is not in use
-- do not treat Railway errors as live blockers
-- do not relax the strict cleaned ranking lanes just to force non-zero results
-- truthful zero is better than polluted junk results
-- do not switch suspicious ingest back to a broad crawler model until the probe-driven path is stable
+- Railway is not in use and should not be treated as a blocker
+- do not go back to broad phrase-churn without evidence
+- keep the strict family scorer intact
+- treat the candidate collector as stage 1 and the new scorer as stage 2
+- truthful zero is still better than polluted junk
