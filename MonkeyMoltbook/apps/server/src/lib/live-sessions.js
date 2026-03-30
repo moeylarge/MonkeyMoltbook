@@ -88,7 +88,8 @@ export async function getLiveSession(sessionId) {
 
 export async function addLiveMessage(sessionId, { role = 'user', messageType = 'typed', text = '', meta = null } = {}) {
   const cleanText = String(text || '').trim();
-  if (!cleanText) throw new Error('message_text_required');
+  const hasAttachment = Boolean(meta?.attachment);
+  if (!cleanText && !hasAttachment) throw new Error('message_text_required');
 
   const [message] = await rest('session_messages', {
     method: 'POST',
@@ -168,7 +169,11 @@ export async function endLiveSession(sessionId) {
 
 export async function exportTranscriptText(sessionId) {
   const messages = await listTranscript(sessionId);
-  return messages.map((m) => `${m.role.toUpperCase()}: ${m.text}`).join('\n');
+  return messages.map((m) => {
+    const attachment = m?.meta?.attachment;
+    const attachmentLine = attachment ? ` [Attachment: ${attachment.name || 'file'}${attachment.type ? `, ${attachment.type}` : ''}]` : '';
+    return `${m.role.toUpperCase()}: ${m.text}${attachmentLine}`;
+  }).join('\n');
 }
 
 export function liveSessionsEnabled() {

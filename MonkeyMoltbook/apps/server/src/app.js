@@ -1204,6 +1204,29 @@ app.post('/live/session/:id/message', async (req, res) => {
   res.json({ phase: PHASE, ok: true, userMessage, agentReply });
 });
 
+app.post('/live/session/:id/message/attachment', async (req, res) => {
+  const sessionId = req.params.id;
+  const attachment = req.body?.attachment || null;
+  const text = String(req.body?.text || '').trim();
+  if (!attachment?.name || !attachment?.dataUrl) {
+    return res.status(400).json({ phase: PHASE, ok: false, error: 'attachment_required' });
+  }
+  const userMessage = await addLiveMessage(sessionId, {
+    role: 'user',
+    messageType: 'attachment',
+    text,
+    meta: {
+      attachment: {
+        name: String(attachment.name || 'file'),
+        type: String(attachment.type || 'application/octet-stream'),
+        size: Number(attachment.size || 0),
+        dataUrl: String(attachment.dataUrl || '')
+      }
+    }
+  });
+  res.json({ phase: PHASE, ok: true, userMessage });
+});
+
 app.post('/live/session/:id/message/stream', async (req, res) => {
   const sessionId = req.params.id;
   const text = String(req.body?.text || '').trim();

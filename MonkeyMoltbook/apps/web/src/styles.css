@@ -156,6 +156,14 @@
 .chat-input-row-sticky .primary-btn{min-width:120px}
 .chat-input-row-sticky .ghost-btn{background:#fff4ec;border:1px solid #ecc0a2;color:#9a4b21;box-shadow:0 8px 18px rgba(160,88,40,.08);font-weight:650}
 .chat-input-row-sticky .ghost-btn:hover{background:#ffeadb;border-color:#e7ae88;color:#873a17}
+.chat-action-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.attachment-input-hidden{display:none}
+.attachment-card{margin-top:12px;padding:12px;border-radius:16px;background:#fffaf6;border:1px solid #edd7c7}
+.attachment-preview{display:block;max-width:100%;max-height:260px;border-radius:12px;border:1px solid #ead8cb;margin-bottom:10px}
+.attachment-meta-row{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.attachment-actions{display:flex;gap:8px;flex-wrap:wrap}
+.attachment-action-btn{min-width:46px;justify-content:center}
+.attachment-file-badge{display:inline-flex;align-items:center;padding:10px 12px;border-radius:12px;background:#fff;border:1px solid #ead8cb;color:#7d3614;font-weight:700;margin-bottom:10px}
 
 .live-back-row{max-width:1260px;margin:0 auto 12px}
 .live-back-btn{min-height:42px;font-weight:700}

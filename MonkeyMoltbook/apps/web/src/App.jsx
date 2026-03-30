@@ -611,9 +611,11 @@ function LivePage({ data }) {
   const [mediaDebug, setMediaDebug] = useState(null);
   const [mediaState, setMediaState] = useState('idle');
   const [requestingMedia, setRequestingMedia] = useState(false);
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
   const localVideoRef = useRef(null);
   const localStreamRef = useRef(null);
   const streamAbortRef = useRef(null);
+  const attachmentInputRef = useRef(null);
 
   const loadWallet = async () => {
     const response = await fetch(`${API}/wallet?userId=demo-user`);
@@ -829,7 +831,7 @@ function LivePage({ data }) {
   };
 
   const sendMessage = async () => {
-    if (!session?.id || !draft.trim() || sending) return;
+    if (!session?.id || !draft.trim() || sending || uploadingAttachment) return;
     const text = draft.trim();
     const optimisticUser = {
       id: `user-${Date.now()}`,
@@ -910,6 +912,53 @@ function LivePage({ data }) {
     } finally {
       streamAbortRef.current = null;
       setSending(false);
+      await loadTranscript(session?.id);
+    }
+  };
+
+  const uploadAttachment = async (file) => {
+    if (!session?.id || !file || uploadingAttachment) return;
+    if (file.size > 3 * 1024 * 1024) {
+      setMessages((current) => [...current, {
+        id: `system-${Date.now()}`,
+        role: 'system',
+        text: 'Attachment too large. Keep it under 3 MB for now.',
+        created_at: new Date().toISOString(),
+      }]);
+      return;
+    }
+
+    setUploadingAttachment(true);
+    try {
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const response = await fetch(`${API}/live/session/${session.id}/message/attachment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: draft.trim(),
+          attachment: {
+            name: file.name,
+            type: file.type || 'application/octet-stream',
+            size: file.size,
+            dataUrl,
+          }
+        })
+      });
+
+      const payload = await response.json();
+      if (response.ok && payload?.userMessage) {
+        setMessages((current) => [...current, payload.userMessage]);
+        setDraft('');
+      }
+    } finally {
+      setUploadingAttachment(false);
+      if (attachmentInputRef.current) attachmentInputRef.current.value = '';
       await loadTranscript(session?.id);
     }
   };
@@ -1236,9 +1285,26 @@ function LivePage({ data }) {
                 </div>
               </div>
               <div className="transcript-feed transcript-feed-bubbles transcript-feed-chat-dominant">
-                {messages.length ? messages.map((message) => (
-                  <div className={`transcript-bubble transcript-${message.role || 'user'} ${message.streaming ? 'streaming' : ''}`} key={message.id || `${message.role}-${message.created_at || Math.random()}`}><strong>{message.role === 'agent' ? (agent?.authorName || 'Agent') : message.role === 'system' ? 'System' : 'You'}:</strong> {message.text}</div>
-                )) : (
+                {messages.length ? messages.map((message) => {
+                  const attachment = message?.meta?.attachment;
+                  const isImage = Boolean(attachment?.type?.startsWith('image/'));
+                  return (
+                  <div className={`transcript-bubble transcript-${message.role || 'user'} ${message.streaming ? 'streaming' : ''}`} key={message.id || `${message.role}-${message.created_at || Math.random()}`}>
+                    <strong>{message.role === 'agent' ? (agent?.authorName || 'Agent') : message.role === 'system' ? 'System' : 'You'}:</strong> {message.text !== '[attachment]' ? ` ${message.text}` : ''}
+                    {attachment ? (
+                      <div className="attachment-card">
+                        {isImage ? <img className="attachment-preview" src={attachment.dataUrl} alt={attachment.name || 'attachment'} /> : <div className="attachment-file-badge">📎 File attached</div>}
+                        <div className="attachment-meta-row">
+                          <span>{attachment.name || 'file'}</span>
+                          <div className="attachment-actions">
+                            <a className="ghost-btn attachment-action-btn" href={attachment.dataUrl} target="_blank" rel="noreferrer">Open</a>
+                            <a className="ghost-btn attachment-action-btn" href={attachment.dataUrl} download={attachment.name || 'attachment'}>Download</a>
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                )}) : (
                   <div className="transcript-empty-state">
                     <strong>Transcript will appear here after you start.</strong>
                     <p>Start your live session first, then your conversation and export will appear here.</p>
@@ -1252,9 +1318,13 @@ function LivePage({ data }) {
               </div>
               <div className="chat-input-row chat-input-row-sticky">
                 <textarea className="chat-input chat-input-live" rows={2} placeholder={isChatMode ? 'Ask anything, start the conversation, or drop a quick prompt…' : 'Type a prompt while voice is on…'} value={draft} onChange={(e) => setDraft(e.target.value)} />
-                <button className="primary-btn" onClick={sendMessage} disabled={!session || sending}>{sending ? 'Sending…' : 'Send'}</button>
-                {sending ? <button className="ghost-btn" onClick={cancelGeneration}>Stop</button> : null}
-                {!sending && lastSentText ? <button className="ghost-btn" onClick={retryLastMessage}>Retry last</button> : null}
+                <div className="chat-action-row">
+                  <input ref={attachmentInputRef} type="file" className="attachment-input-hidden" onChange={(e) => uploadAttachment(e.target.files?.[0])} />
+                  <button className="ghost-btn attachment-action-btn" onClick={() => attachmentInputRef.current?.click()} disabled={!session || uploadingAttachment || sending}>{uploadingAttachment ? 'Uploading…' : '📎'}</button>
+                  <button className="primary-btn" onClick={sendMessage} disabled={!session || sending || uploadingAttachment}>{sending ? 'Sending…' : 'Send'}</button>
+                  {sending ? <button className="ghost-btn" onClick={cancelGeneration}>Stop</button> : null}
+                  {!sending && lastSentText ? <button className="ghost-btn" onClick={retryLastMessage}>Retry last</button> : null}
+                </div>
               </div>
               <div className="session-meta">{`Session state: ${session.status} · export ready · launch access is free`}</div>
             </>
