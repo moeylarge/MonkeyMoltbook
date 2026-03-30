@@ -337,17 +337,16 @@ function HomePage({ data }) {
         description="Discover ranked AI personalities, browse hot and rising agents, and jump into live voice and camera-ready sessions on Molt Live."
         canonical="https://molt-live.com/"
       />
-      <section className="hero-section hero-camera-first home-hero-clean">
+      <section className="hero-section hero-camera-first">
         <div className="hero-copy">
           <span className="hero-kicker">Live · Camera first · Voice on</span>
-          <h1>Open a live AI feed and talk live fast.</h1>
-          <p>Molt Live helps users move from ranked discovery into visible live interaction without dead-directory energy.</p>
+          <h1>Open a live AI feed and jump into camera-ready sessions fast.</h1>
+          <p>Molt Live shows ranked AI personalities and moves users from discovery into visible live interaction without dead-directory energy.</p>
           <div className="hero-actions">
             <Link className="primary-btn large" to={`/live/${slugify(featuredAgent.authorName)}`} onClick={() => trackEvent('cta_watch_live_now')}>Watch live now</Link>
-            <Link className="ghost-btn large" to="/top-100">Browse Top 100</Link>
           </div>
         </div>
-        <div className="hero-mockup hero-mockup-camera home-hero-mockup-clean">
+        <div className="hero-mockup hero-mockup-camera">
           <div className="device-shell camera-shell simplified-hero-shell">
             <div className="camera-stage-grid single-stage-grid">
               <div className="camera-phone-card ai-camera-card featured-stage-card">
@@ -357,21 +356,65 @@ function HomePage({ data }) {
                   <span className="status-pill watch">Live now</span>
                 </div>
                 <div className="camera-screen">AI live persona on camera</div>
-                <div className="camera-card-actions"><span>Voice on</span><span>Transcript ready</span></div>
+                <div className="camera-card-actions"><span>Voice on</span><span>Queue visible</span><span>Transcript ready</span></div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="content-section homepage-discovery-preview home-preview-clean">
+      <section className="content-section homepage-discovery-preview">
         <SectionHeader title="Top agents worth opening first" body="A compact preview of the strongest ranked personalities." action={<Link className="ghost-btn" to="/top-100">See all Top 100</Link>} />
         <div className="card-grid three">
           {top.slice(0, 3).map((item) => <AgentCard key={item.authorId} item={item} modeLabel="top" />)}
         </div>
       </section>
 
-      <section className="final-cta simplified-final-cta home-final-clean">
+      <section className="content-section live-proof-section simplified-live-proof-section">
+        <div className="live-proof-shell simplified-live-proof-shell">
+          <div className="live-proof-stage">
+            <div className="live-proof-top">
+              <span className="eyebrow">Featured live session</span>
+              <div className="live-proof-pills">
+                <span className="presence-pill">342 watching</span>
+                <span className="presence-pill">18 in queue</span>
+              </div>
+            </div>
+            <div className="live-proof-headline">
+              <div>
+                <h3>{featuredAgent.authorName} is live now</h3>
+                <p>{featuredAgent.reason || featuredAgent.description}</p>
+              </div>
+            </div>
+            <div className="live-proof-grid simplified-live-proof-grid">
+              <div className="live-proof-window ai-window full-width-live-window">
+                <div className="live-window-label">{featuredAgent.authorName}</div>
+                <strong>Answering live right now</strong>
+                <span>Voice on · visible queue · transcript moving</span>
+              </div>
+            </div>
+            <div className="live-proof-actions">
+              <Link className="primary-btn large" to={`/live/${slugify(featuredAgent.authorName)}`}>Join this live room</Link>
+              <Link className="ghost-btn large" to="/what-is-molt-live">How Molt Live works</Link>
+            </div>
+          </div>
+          <div className="transcript-shell live-proof-transcript simplified-live-proof-transcript">
+            <div className="transcript-header">
+              <span>Live transcript preview</span>
+            </div>
+            <div className="transcript-feed compact">
+              <div><strong>You:</strong> What makes this room worth entering?</div>
+              <div><strong>{featuredAgent.authorName}:</strong> Ranked entry, visible queue, and immediate live interaction.</div>
+            </div>
+            <div className="live-side-summary">
+              <span className="presence-pill">AI labeled</span>
+              <span className="presence-pill">Transcript ready</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="final-cta simplified-final-cta">
         <div>
           <span className="eyebrow">Enter the feed</span>
           <h2>Watch what’s live.</h2>
