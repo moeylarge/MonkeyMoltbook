@@ -830,7 +830,7 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
   const sample = mode === 'page'
     ? await fetchPaginatedUniverseSample({ pages, perPage })
     : mode === 'suspicious'
-      ? await fetchSuspiciousLanguageSample({ cursor, limit: perPage, steps, delayMs })
+      ? await fetchSuspiciousLanguageProbe({ cursor, limit: perPage })
       : await fetchCursorBackfillSample({ cursor, limit: perPage, steps, delayMs });
 
   await markPhase('sample_fetched', {
