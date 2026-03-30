@@ -1,4 +1,4 @@
-const MOLTBOOK_BASE = 'https://www.moltbook.com/api/v1/posts';
+export const MOLTBOOK_BASE = 'https://www.moltbook.com/api/v1/posts';
 const FETCH_TIMEOUT_MS = 6000;
 
 function uniqueBy(items, keyFn) {
