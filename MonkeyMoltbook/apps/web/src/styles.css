@@ -163,3 +163,6 @@
 .export-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .export-select{min-height:42px;padding:9px 12px;border-radius:14px;border:1px solid #e8d8cb;background:#fffdfb;color:#1b1917;box-shadow:0 8px 18px rgba(120,72,32,.08);font:inherit}
 .export-select:focus-visible{outline:none;border-color:#f2b28f;box-shadow:0 0 0 3px rgba(255,255,255,.92),0 0 0 6px rgba(255,90,54,.18),0 12px 28px rgba(120,72,32,.12)}
+
+.ai-upgrade-card{margin-bottom:14px;border-color:#f2c2a4;background:linear-gradient(180deg,#fff7f1,#fffdfb)}
+.ai-upgrade-card .primary-btn[disabled]{opacity:1;filter:none;cursor:not-allowed}

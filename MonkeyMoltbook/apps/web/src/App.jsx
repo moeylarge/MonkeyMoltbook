@@ -602,6 +602,7 @@ function LivePage({ data }) {
   const [spendingAction, setSpendingAction] = useState('');
   const [lastSentText, setLastSentText] = useState('');
   const [exportFormat, setExportFormat] = useState('txt');
+  const [chatKind, setChatKind] = useState('human');
   const [sessionMode, setSessionMode] = useState('webcam');
   const [mediaReady, setMediaReady] = useState(false);
   const [mediaError, setMediaError] = useState('');
@@ -1049,8 +1050,19 @@ function LivePage({ data }) {
               </div>
               <div className="chat-mode-summary chat-mode-summary-strong">
                 <div className="live-room-meta-card"><strong>{session ? 'Connected' : 'Chat ready'}</strong><span>{session ? `Started ${new Date(session.started_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : 'Fastest way to start talking'}</span></div>
-                <div className="live-room-meta-card"><strong>Free during launch</strong><span>Chat Direct is open right now.</span></div>
+                <div className="live-room-meta-card"><strong>Free during launch</strong><span>Human chat is open right now.</span></div>
               </div>
+              {!session ? (
+                <div className="wallet-balance-card wallet-balance-card-muted wallet-balance-card-full ai-upgrade-card">
+                  <span className="eyebrow">Premium AI chat</span>
+                  <strong>Upgrade to AI Chat</strong>
+                  <p>Default chat is human-to-human. Unlock AI chat with your premium plan or credits.</p>
+                  <div className="media-failure-actions">
+                    <button className={`ghost-btn ${chatKind === 'human' ? 'active' : ''}`} onClick={() => setChatKind('human')}>Human chat (default)</button>
+                    <button className="primary-btn" onClick={() => setChatKind('ai')} disabled>AI chat · Premium</button>
+                  </div>
+                </div>
+              ) : null}
             </>
           ) : (
             <>
@@ -1155,8 +1167,8 @@ function LivePage({ data }) {
               </div>
               <div className="transcript-feed transcript-feed-bubbles">
                 <div className="transcript-empty-state pre-session-empty-state pre-session-preview-card chat-empty-state-card">
-                  <strong>Type your first message to start chatting live.</strong>
-                  <p>Chat is the fastest fallback. Start with a quick message and the live transcript will build from there.</p>
+                  <strong>{chatKind === 'ai' ? 'AI chat is premium.' : 'Type your first message to start chatting live.'}</strong>
+                  <p>{chatKind === 'ai' ? 'Unlock premium AI chat with a plan or credits. Human chat remains free by default.' : 'Chat is the fastest fallback. Start with a quick message and the live transcript will build from there.'}</p>
                 </div>
               </div>
               <div className="chat-input-row chat-input-row-strong">
