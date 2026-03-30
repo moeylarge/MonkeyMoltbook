@@ -119,14 +119,15 @@ Active product direction now includes:
 ## Next step for the next chat
 
 Do this first:
-1. treat expanded/backfill ingestion as the main source of stronger community coverage; rolling collector alone was too thin and repeated the same window
-2. verify Vercel cron / ingest strategy is actually deepening community rows, not just refreshing shallow slices
-3. inspect backend/debug counts for authors, posts, communities, search documents
-4. re-test Groups search and `/community/:slug` pages after richer ingest runs
-5. continue tuning trust heuristics from live corpus examples before stronger ranking/demotion is enabled
-6. improve group/community search so suspicious queries like `mint` / `hackai` can surface risky communities from richer stored evidence, not just community name matches
-7. if growth is weak, investigate better/internal Moltbook data sources more aggressively
-8. keep the trust/safety layer in view as a major differentiator
+1. start from the now-stable trust/search base and run a broader audit across suspicious queries, bad rankings, false positives, and empty-result gaps
+2. treat expanded/backfill ingestion as the main source of stronger community coverage; rolling collector alone was too thin and repeated the same window
+3. verify Vercel cron / ingest strategy is actually deepening community rows, not just refreshing shallow slices
+4. inspect backend/debug counts for authors, posts, communities, search documents
+5. re-test Groups search and `/community/:slug` pages after richer ingest runs
+6. continue tuning trust heuristics only from concrete audited failures, not broad blind weighting tweaks
+7. keep improving group/community search so suspicious queries surface risky specialized communities before broad buckets
+8. if growth is weak, investigate better/internal Moltbook data sources more aggressively
+9. keep the trust/safety layer in view as a major differentiator
 
 ## Strong current judgment
 
