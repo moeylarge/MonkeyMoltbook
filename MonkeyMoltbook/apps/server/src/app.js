@@ -247,7 +247,20 @@ app.get('/molt-live/search', async (req, res) => {
         if (name === 'general' && !strongMintEvidence) return false;
         return true;
       })
-      .sort((a, b) => communitySearchRank(b, q) - communitySearchRank(a, q) || (b.matchedPostCount || 0) - (a.matchedPostCount || 0) || (b.postCount || 0) - (a.postCount || 0))
+      .sort((a, b) => {
+        if (q === 'mint') {
+          const classify = (item) => {
+            const text = `${String(item.name || '').toLowerCase()} ${String(item.slug || '').toLowerCase()} ${(item.sampleTitles || []).join(' ').toLowerCase()}`;
+            if (/(mbc20|mbc-20|hackai|wang|bot)/.test(text)) return 3;
+            if (String(item.trust?.riskLabel || '').includes('Severe') || String(item.trust?.riskLabel || '').includes('High')) return 2;
+            if (String(item.name || '').toLowerCase() === 'general') return 0;
+            return 1;
+          };
+          const bucketDiff = classify(b) - classify(a);
+          if (bucketDiff) return bucketDiff;
+        }
+        return communitySearchRank(b, q) - communitySearchRank(a, q) || (b.matchedPostCount || 0) - (a.matchedPostCount || 0) || (b.postCount || 0) - (a.postCount || 0);
+      })
       .slice(0, rowLimit);
   }
 
