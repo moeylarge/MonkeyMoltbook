@@ -601,6 +601,7 @@ function LivePage({ data }) {
   const [sessionMode, setSessionMode] = useState('chat');
   const [mediaReady, setMediaReady] = useState(false);
   const [mediaError, setMediaError] = useState('');
+  const [mediaDebug, setMediaDebug] = useState(null);
   const [requestingMedia, setRequestingMedia] = useState(false);
   const localVideoRef = useRef(null);
   const localStreamRef = useRef(null);
@@ -633,12 +634,30 @@ function LivePage({ data }) {
 
   const requestMediaAccess = async () => {
     if (requestingMedia) return;
+
+    const baseDebug = {
+      secureContext: window.isSecureContext,
+      hasMediaDevices: !!navigator.mediaDevices,
+      hasGetUserMedia: !!navigator.mediaDevices?.getUserMedia,
+      requestedMode: sessionMode,
+    };
+
     if (!navigator.mediaDevices?.getUserMedia) {
+      setMediaDebug({ ...baseDebug, failureKind: 'api_missing' });
       setMediaError('Camera/mic not supported in this browser.');
       return;
     }
+
     setRequestingMedia(true);
+    setMediaDebug({ ...baseDebug, status: 'requesting' });
+
     try {
+      let permissionState = null;
+      try {
+        permissionState = await navigator.permissions?.query?.({ name: sessionMode === 'webcam' ? 'camera' : 'microphone' }).then((r) => r.state);
+      } catch {}
+
+      const devicesBefore = await navigator.mediaDevices.enumerateDevices().catch(() => []);
       const stream = await navigator.mediaDevices.getUserMedia({
         video: sessionMode === 'webcam',
         audio: true
@@ -651,8 +670,16 @@ function LivePage({ data }) {
         localVideoRef.current.playsInline = true;
         try { await localVideoRef.current.play(); } catch {}
       }
+      const tracks = stream.getTracks().map((track) => ({ kind: track.kind, label: track.label || '', enabled: track.enabled, readyState: track.readyState }));
       setMediaReady(true);
       setMediaError('');
+      setMediaDebug({
+        ...baseDebug,
+        status: 'granted',
+        permissionState,
+        deviceKindsBefore: Array.isArray(devicesBefore) ? devicesBefore.map((d) => d.kind) : [],
+        tracks,
+      });
       if (session?.id) {
         const presenceResponse = await fetch(`${API}/live/session/${session.id}/presence`, {
           method: 'POST',
@@ -667,7 +694,25 @@ function LivePage({ data }) {
       }
     } catch (error) {
       setMediaReady(false);
-      setMediaError(sessionMode === 'webcam' ? 'Camera access was blocked or unavailable. Click Allow camera to retry.' : 'Mic access was blocked or unavailable. Click Allow mic to retry.');
+      const name = error?.name || 'UnknownError';
+      const message = error?.message || 'Unknown media error';
+      const devicesAfter = await navigator.mediaDevices.enumerateDevices().catch(() => []);
+      let failureKind = 'browser_api_failure';
+      if (!window.isSecureContext) failureKind = 'insecure_context';
+      else if (name === 'NotAllowedError') failureKind = 'permission_denied_or_dismissed';
+      else if (name === 'NotFoundError' || name === 'DevicesNotFoundError') failureKind = 'no_devices';
+      else if (name === 'NotReadableError' || name === 'TrackStartError') failureKind = 'device_busy_or_os_blocked';
+      else if (name === 'OverconstrainedError') failureKind = 'unsupported_constraints';
+
+      setMediaDebug({
+        ...baseDebug,
+        status: 'failed',
+        failureKind,
+        errorName: name,
+        errorMessage: message,
+        deviceKindsAfter: Array.isArray(devicesAfter) ? devicesAfter.map((d) => d.kind) : [],
+      });
+      setMediaError(`${sessionMode === 'webcam' ? 'Camera' : 'Mic'} failed: ${name} — ${message}`);
     } finally {
       setRequestingMedia(false);
     }
@@ -873,6 +918,14 @@ function LivePage({ data }) {
                 </div>
                 <div className="live-window ai"><div className="live-window-overlay"><span>{agent?.authorName || 'Agent'} live</span><strong>{session ? 'Ready and responding' : 'Waiting for you to start'}</strong><small>{presence?.tts_on ? 'Voice enabled · transcript visible' : 'Text only · transcript visible'}</small></div></div>
               </div>
+              {mediaDebug ? (
+                <div className="wallet-balance-card wallet-balance-card-muted wallet-balance-card-full">
+                  <span className="eyebrow">Media diagnostics</span>
+                  <strong>{mediaDebug.status || mediaDebug.failureKind || 'idle'}</strong>
+                  <p>{mediaDebug.failureKind ? `Failure: ${mediaDebug.failureKind}` : 'Request state captured.'}</p>
+                  <pre className="media-debug-pre">{JSON.stringify(mediaDebug, null, 2)}</pre>
+                </div>
+              ) : null}
               <div className="control-row">
                 <button className={`control ${presence?.user_mic_on ? 'active' : ''}`} onClick={() => togglePresence('userMicOn', !presence?.user_mic_on)}>{presence?.user_mic_on ? 'Mic On' : 'Mic Off'}</button>
                 <button className={`control ${presence?.user_cam_on ? 'active' : ''}`} onClick={() => togglePresence('userCamOn', !presence?.user_cam_on)}>{presence?.user_cam_on ? 'Cam On' : 'Cam Off'}</button>
