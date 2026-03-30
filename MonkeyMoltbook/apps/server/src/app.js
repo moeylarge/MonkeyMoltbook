@@ -7,7 +7,7 @@ import { getMoltbookIntel, getMoltbookStats, getMoltbookAgents } from './lib/mol
 import { buildAuthorCoverage, buildCommunityIndex, buildSubmoltIndex, fetchExpandedUniverseSample, fetchCursorBackfillSample, fetchPaginatedUniverseSample } from './lib/moltbook-discovery.js';
 import { getSchedulerState, startScheduler, stopScheduler } from './lib/moltbook-scheduler.js';
 import { getResponse, getResponseStats } from './lib/responses.js';
-import { buildSearchDocumentsFromState, getCommunityBySlug, getEntityRiskScore, getIngestionJob, isSupabaseStorageEnabled, persistMoltbookSnapshot, searchCommunities, searchCommunityEvidence, searchDocuments, upsertCommunities, upsertEntityRiskScores, upsertIngestionJob, upsertPosts, upsertSearchDocuments, upsertSubmolts, upsertAuthors } from './lib/supabase-storage.js';
+import { buildSearchDocumentsFromState, getCommunityBySlug, getEntityRiskScore, getIngestionJob, isSupabaseStorageEnabled, persistMoltbookSnapshot, searchAuthors, searchAuthorEvidence, searchCommunities, searchCommunityEvidence, searchDocuments, upsertCommunities, upsertEntityRiskScores, upsertIngestionJob, upsertPosts, upsertSearchDocuments, upsertSubmolts, upsertAuthors } from './lib/supabase-storage.js';
 import { scoreAuthorRisk, scoreCommunityRisk } from './lib/trust-score.js';
 import { addAgentReply, addLiveMessage, createLiveSession, endLiveSession, exportTranscriptText, getLiveSession, listTranscript, liveSessionsEnabled, updateLivePresence } from './lib/live-sessions.js';
 import { createCheckoutSession, creditsEnabled, ensureCreditProducts, getSpendRules, getWallet, grantCredits, listCreditProducts, listCreditTransactions, spendCredits } from './lib/credits.js';
@@ -51,6 +51,48 @@ function communitySearchRank(item, query) {
   if (suspiciousQuery && (item.matchedPostCount || 0) <= 3 && (name === 'general' || slug === 'general')) score -= 120;
   if (q === 'mint' && (name === 'general' || slug === 'general')) score -= 260;
   if (q === 'wallet' && (name === 'general' || slug === 'general')) score -= 120;
+
+  return score;
+}
+
+function authorSearchRank(item, query) {
+  const q = String(query || '').trim().toLowerCase();
+  if (!q) return 0;
+  const name = String(item.authorName || item.author_name || '').toLowerCase();
+  const desc = String(item.description || '').toLowerCase();
+  const reason = String(item.reason || '').toLowerCase();
+  const titles = Array.isArray(item.sampleTitles) ? item.sampleTitles.join(' ').toLowerCase() : '';
+  const snippets = Array.isArray(item.sampleSnippets) ? item.sampleSnippets.join(' ').toLowerCase() : '';
+  const submolts = Array.isArray(item.submolts) ? item.submolts.join(' ').toLowerCase() : '';
+  const text = `${name} ${desc} ${reason} ${titles} ${snippets} ${submolts}`;
+  const suspiciousQuery = /(wallet|seed phrase|seed|drainer|malware|exploit|claim|airdrop)/i.test(q);
+  let score = 0;
+
+  if (name === q) score += 120;
+  if (name.includes(q)) score += 60;
+  if (desc.includes(q)) score += 10;
+  if (reason.includes(q)) score += 12;
+  if (titles.includes(q)) score += 30;
+  if (snippets.includes(q)) score += 45;
+  if (item.matchedPostCount) score += Math.min(180, item.matchedPostCount * 24);
+  if (item.suspiciousHits) score += Math.min(160, item.suspiciousHits * 32);
+
+  if (suspiciousQuery && /(wallet|seed phrase|private key|wallet recovery|drainer|clipboard drainer|stealer|keygen|remote access trojan|malware|airdrop|claim your reward now|connect wallet to claim)/.test(text)) score += 120;
+  if (q === 'wallet' && /(wallet|wallet connect|connect wallet|wallet recovery|drainer|seed phrase)/.test(text)) score += 80;
+  if (q === 'seed phrase' && /(seed phrase|private key|recovery phrase|wallet recovery)/.test(text)) score += 130;
+  if (q === 'drainer' && /(drainer|wallet drainer|clipboard drainer|seed phrase)/.test(text)) score += 120;
+  if (q === 'malware' && /(malware|virus|keygen|stealer|remote access trojan)/.test(text)) score += 120;
+  if (q === 'exploit' && /(exploit|wallet exploit|drainer|seed phrase)/.test(text)) score += 70;
+  if (q === 'claim' && /(claim|claim your reward now|airdrop|connect wallet to claim)/.test(text)) score += 48;
+  if (q === 'airdrop' && /(airdrop|claim|connect wallet to claim|wallet connect)/.test(text)) score += 70;
+
+  if (suspiciousQuery && String(item.trust?.riskLabel || '').includes('Severe')) score += 100;
+  else if (suspiciousQuery && String(item.trust?.riskLabel || '').includes('High')) score += 70;
+  else if (suspiciousQuery && String(item.trust?.riskLabel || '').includes('Caution')) score += 24;
+
+  if (suspiciousQuery && (item.matchedPostCount || 0) === 0 && String(item.trust?.riskLabel || '') === 'Low Risk') score -= 140;
+  if (q === 'claim' && /(hackathon|free guidance|open source|security research|compliance)/.test(text)) score -= 120;
+  if (q === 'exploit' && /(hackathon|free guidance|open source|security research|compliance)/.test(text)) score -= 90;
 
   return score;
 }
@@ -187,13 +229,115 @@ app.get('/molt-live/search', async (req, res) => {
   const tab = String(req.query.tab || 'all');
   const limit = Math.max(1, Math.min(Number(req.query.limit) || 20, 50));
 
-  const authors = (intel.authors || []).filter((row) => {
+  let authors = (intel.authors || []).filter((row) => {
     if (!q) return true;
     return `${row.authorName || ''} ${row.description || ''} ${(row.topics || []).join(' ')} ${row.reason || ''}`.toLowerCase().includes(q);
-  }).slice(0, tab === 'all' ? 12 : limit).map((row) => ({
+  }).map((row) => ({
     ...row,
-    trust: scoreAuthorRisk(row)
+    trust: scoreAuthorRisk(row),
+    matchedPostCount: 0,
+    suspiciousHits: 0,
+    sampleTitles: [],
+    sampleSnippets: []
   }));
+
+  if (isSupabaseStorageEnabled() && (tab === 'all' || tab === 'users')) {
+    const rowLimit = tab === 'all' ? 12 : limit;
+    const [storedAuthors, evidenceAuthors] = await Promise.all([
+      searchAuthors({ query: q, limit: rowLimit }).catch(() => []),
+      searchAuthorEvidence({ query: q, limit: rowLimit }).catch(() => [])
+    ]);
+    const mergedByAuthor = new Map();
+
+    for (const row of [...authors, ...storedAuthors.map((item) => ({
+      id: item.id,
+      sourceAuthorId: item.source_author_id,
+      authorId: item.source_author_id,
+      authorName: item.author_name,
+      description: item.description || '',
+      karma: item.karma || 0,
+      postCount: item.post_count || 0,
+      observedPosts: item.post_count || 0,
+      reason: item.reason || '',
+      isClaimed: Boolean(item.is_claimed),
+      trust: scoreAuthorRisk({
+        authorName: item.author_name,
+        description: item.description,
+        reason: item.reason,
+        postCount: item.post_count,
+        karma: item.karma,
+        isClaimed: item.is_claimed
+      }),
+      matchedPostCount: 0,
+      suspiciousHits: 0,
+      sampleTitles: [],
+      sampleSnippets: [],
+      submolts: []
+    }))]) {
+      const key = String(row.authorId || row.sourceAuthorId || row.authorName || '').toLowerCase();
+      if (!key) continue;
+      const prev = mergedByAuthor.get(key) || null;
+      mergedByAuthor.set(key, prev ? {
+        ...prev,
+        ...row,
+        description: prev.description || row.description,
+        reason: prev.reason || row.reason,
+        postCount: Math.max(prev.postCount || prev.observedPosts || 0, row.postCount || row.observedPosts || 0),
+        observedPosts: Math.max(prev.observedPosts || prev.postCount || 0, row.observedPosts || row.postCount || 0),
+        submolts: [...new Set([...(prev.submolts || []), ...(row.submolts || [])])],
+        sampleTitles: [...new Set([...(prev.sampleTitles || []), ...(row.sampleTitles || [])])].slice(0, 6),
+        sampleSnippets: [...new Set([...(prev.sampleSnippets || []), ...(row.sampleSnippets || [])])].slice(0, 4)
+      } : row);
+    }
+
+    for (const row of evidenceAuthors) {
+      const key = String(row.sourceAuthorId || row.authorName || '').toLowerCase();
+      if (!key) continue;
+      const prev = mergedByAuthor.get(key);
+      const base = prev || {
+        sourceAuthorId: row.sourceAuthorId,
+        authorId: row.sourceAuthorId,
+        authorName: row.authorName,
+        description: row.description || '',
+        reason: row.sampleSnippets?.[0] || row.sampleTitles?.[0] || '',
+        postCount: row.matchedPostCount || 0,
+        observedPosts: row.matchedPostCount || 0,
+        karma: 0,
+        isClaimed: false,
+        submolts: [],
+        sampleTitles: [],
+        sampleSnippets: []
+      };
+      const merged = {
+        ...base,
+        sourceAuthorId: base.sourceAuthorId || row.sourceAuthorId,
+        authorId: base.authorId || row.sourceAuthorId,
+        authorName: base.authorName || row.authorName,
+        description: base.description || row.description || '',
+        reason: base.reason || row.sampleSnippets?.[0] || row.sampleTitles?.[0] || '',
+        postCount: Math.max(base.postCount || base.observedPosts || 0, row.matchedPostCount || 0),
+        observedPosts: Math.max(base.observedPosts || base.postCount || 0, row.matchedPostCount || 0),
+        matchedPostCount: Math.max(base.matchedPostCount || 0, row.matchedPostCount || 0),
+        suspiciousHits: Math.max(base.suspiciousHits || 0, row.suspiciousHits || 0),
+        submolts: [...new Set([...(base.submolts || []), ...(row.submolts || [])])],
+        sampleTitles: [...new Set([...(base.sampleTitles || []), ...(row.sampleTitles || [])])].slice(0, 6),
+        sampleSnippets: [...new Set([...(base.sampleSnippets || []), ...(row.sampleSnippets || [])])].slice(0, 4)
+      };
+      merged.trust = scoreAuthorRisk({
+        ...merged,
+        postCount: merged.postCount || merged.observedPosts || 0,
+        observedPosts: merged.observedPosts || merged.postCount || 0,
+        submolts: merged.submolts
+      });
+      mergedByAuthor.set(key, merged);
+    }
+
+    authors = [...mergedByAuthor.values()]
+      .sort((a, b) => authorSearchRank(b, q) - authorSearchRank(a, q) || (b.matchedPostCount || 0) - (a.matchedPostCount || 0) || (b.postCount || b.observedPosts || 0) - (a.postCount || a.observedPosts || 0))
+      .slice(0, rowLimit);
+  } else {
+    authors = authors.slice(0, tab === 'all' ? 12 : limit);
+  }
 
   const topics = (intel.signals?.topicClusters || []).filter((row) => {
     if (!q) return true;

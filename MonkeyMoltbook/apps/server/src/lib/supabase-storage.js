@@ -523,6 +523,85 @@ export async function searchCommunityEvidence({ query, limit = 20 } = {}) {
     .slice(0, Math.max(1, Math.min(Number(limit) || 20, 50)));
 }
 
+export async function searchAuthors({ query, limit = 20 } = {}) {
+  if (!isSupabaseStorageEnabled()) return [];
+  const q = String(query || '').trim();
+  const safeQuery = encodeURIComponent(`%${q}%`);
+  const clauses = [
+    'select=*',
+    `limit=${Math.max(1, Math.min(Number(limit) || 20, 50))}`,
+    'order=post_count.desc.nullslast,signal_score.desc.nullslast,fit_score.desc.nullslast'
+  ];
+  if (q) clauses.unshift(`or=(author_name.ilike.${safeQuery},description.ilike.${safeQuery},reason.ilike.${safeQuery})`);
+  const result = await supabaseFetch('authors', { query: clauses.join('&') });
+  return result.data || [];
+}
+
+export async function searchAuthorEvidence({ query, limit = 20 } = {}) {
+  if (!isSupabaseStorageEnabled()) return [];
+  const q = String(query || '').trim();
+  if (!q) return [];
+  const normalized = q.toLowerCase();
+  const safeQuery = encodeURIComponent(`%${q}%`);
+  const suspiciousClausesByIntent = {
+    wallet: `or=(title.ilike.%25wallet%25,snippet.ilike.%25wallet%25,snippet.ilike.%25wallet%20connect%25,snippet.ilike.%25connect%20wallet%25,snippet.ilike.%25verify%20your%20wallet%25,snippet.ilike.%25wallet%20recovery%25,snippet.ilike.%25drainer%25,snippet.ilike.%25seed%20phrase%25)`,
+    'seed phrase': `or=(title.ilike.%25seed%20phrase%25,snippet.ilike.%25seed%20phrase%25,snippet.ilike.%25private%20key%25,snippet.ilike.%25wallet%20recovery%25,snippet.ilike.%25recovery%20phrase%25,snippet.ilike.%25connect%20wallet%20to%20claim%25)`,
+    drainer: `or=(title.ilike.%25drainer%25,snippet.ilike.%25drainer%25,snippet.ilike.%25wallet%20drainer%25,snippet.ilike.%25clipboard%20drainer%25,snippet.ilike.%25seed%20phrase%25,snippet.ilike.%25wallet%25)`,
+    malware: `or=(title.ilike.%25malware%25,snippet.ilike.%25malware%25,snippet.ilike.%25virus%25,snippet.ilike.%25keygen%25,snippet.ilike.%25stealer%25,snippet.ilike.%25rat%25,snippet.ilike.%25remote%20access%20trojan%25)`,
+    exploit: `or=(title.ilike.%25exploit%25,snippet.ilike.%25exploit%25,snippet.ilike.%25wallet%20exploit%25,snippet.ilike.%25drainer%25,snippet.ilike.%25claim%25,snippet.ilike.%25seed%20phrase%25)`,
+    claim: `or=(title.ilike.%25claim%25,snippet.ilike.%25claim%25,snippet.ilike.%25claim%20now%25,snippet.ilike.%25claim%20your%20reward%25,snippet.ilike.%25connect%20wallet%20to%20claim%25,snippet.ilike.%25airdrop%25)`,
+    airdrop: `or=(title.ilike.%25airdrop%25,snippet.ilike.%25airdrop%25,snippet.ilike.%25claim%25,snippet.ilike.%25wallet%20connect%25,snippet.ilike.%25connect%20wallet%20to%20claim%25,snippet.ilike.%25seed%20phrase%25)`
+  };
+  const intentClause = suspiciousClausesByIntent[normalized] || `or=(author_name.ilike.${safeQuery},title.ilike.${safeQuery},snippet.ilike.${safeQuery})`;
+  const clauses = [
+    'select=author_name,source_author_id,title,snippet,score,comment_count,submolt_name,payload',
+    intentClause,
+    `limit=${Math.max(8, Math.min(Number(limit) * 12 || 60, 240))}`,
+    'order=score.desc.nullslast'
+  ];
+  const result = await supabaseFetch('posts', { query: clauses.join('&') });
+  const rows = result.data || [];
+  const grouped = new Map();
+  for (const row of rows) {
+    const authorName = safeText(row.author_name);
+    if (!authorName) continue;
+    const key = safeText(row.source_author_id) || authorName;
+    if (!grouped.has(key)) {
+      grouped.set(key, {
+        sourceAuthorId: safeText(row.source_author_id) || null,
+        authorName,
+        description: safeText(row.payload?.author?.description) || '',
+        matchedPostCount: 0,
+        totalScore: 0,
+        suspiciousHits: 0,
+        sampleTitles: [],
+        sampleSnippets: [],
+        submolts: new Set(),
+        source: 'post-evidence'
+      });
+    }
+    const entry = grouped.get(key);
+    const text = `${safeText(row.title)} ${safeText(row.snippet)}`.toLowerCase();
+    entry.matchedPostCount += 1;
+    entry.totalScore += safeNumber(row.score) || 0;
+    if (row.submolt_name) entry.submolts.add(safeText(row.submolt_name));
+    if (row.title && entry.sampleTitles.length < 6) entry.sampleTitles.push(safeText(row.title));
+    if (row.snippet && entry.sampleSnippets.length < 4) entry.sampleSnippets.push(safeText(row.snippet).slice(0, 220));
+
+    if (/seed phrase|private key|wallet recovery|connect wallet to claim|wallet drainer|clipboard drainer|remote access trojan|keygen|stealer|claim your reward now|verify your wallet/.test(text)) {
+      entry.suspiciousHits += 2;
+    } else if (normalized && text.includes(normalized)) {
+      entry.suspiciousHits += 1;
+    }
+  }
+  return [...grouped.values()].map((row) => ({
+    ...row,
+    submolts: [...row.submolts].filter(Boolean)
+  }))
+    .sort((a, b) => b.suspiciousHits - a.suspiciousHits || b.matchedPostCount - a.matchedPostCount || b.totalScore - a.totalScore)
+    .slice(0, Math.max(1, Math.min(Number(limit) || 20, 50)));
+}
+
 export async function upsertEntityRiskScores(rows) {
   if (!rows?.length) return [];
   const payload = rows.map((row) => ({
