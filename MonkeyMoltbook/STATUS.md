@@ -62,7 +62,7 @@ MOLT-LIVE deployed live product + suspicious-source acquisition / candidate-scor
 
 ## Incomplete
 
-- second-stage candidate scorer/ranker
+- live validation/tuning of the new second-stage candidate scorer/ranker
 - candidate promotion logic from weak-signal corpus to higher-confidence suspicious shortlist
 - stronger suspicious-source acquisition beyond the generic recent-feed cursor
 - richer suspicious-source mapping by recurring authors / submolts / phrase clusters

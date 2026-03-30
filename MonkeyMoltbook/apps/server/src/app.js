@@ -1003,13 +1003,14 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
       cursorStats: sample.cursorStats || [],
       familyCounts: sample.familyCounts || null,
       cueCounts: sample.cueCounts || null,
+      scoredCounts: sample.scoredCounts || null,
       matchedPostPreview: sample.matchedPostPreview || null,
       candidatePreview: sample.candidatePreview || null,
       errors: sample.errors || []
     }
   });
 
-  res.json({ phase: PHASE, ok: true, mode, targetFamily, pages, perPage, steps, delayMs, resumedFromSavedCursor: (mode === 'cursor' || suspiciousLikeMode || candidateMode) && !req.query.cursor && !!savedCursor, nextCursor, hasMore: !!sample.hasMore, sampledPosts: posts.length, candidateCount: sample.candidateCount || null, authors: authors.length, communities: communities.length, submolts: submolts.length, indexed: searchDocs.length, pageStats: sample.pageStats || [], cursorStats: sample.cursorStats || [], familyCounts: sample.familyCounts || null, cueCounts: sample.cueCounts || null, matchedPostPreview: sample.matchedPostPreview || [], candidatePreview: sample.candidatePreview || [], errors: sample.errors || [], job });
+  res.json({ phase: PHASE, ok: true, mode, targetFamily, pages, perPage, steps, delayMs, resumedFromSavedCursor: (mode === 'cursor' || suspiciousLikeMode || candidateMode) && !req.query.cursor && !!savedCursor, nextCursor, hasMore: !!sample.hasMore, sampledPosts: posts.length, candidateCount: sample.candidateCount || null, authors: authors.length, communities: communities.length, submolts: submolts.length, indexed: searchDocs.length, pageStats: sample.pageStats || [], cursorStats: sample.cursorStats || [], familyCounts: sample.familyCounts || null, cueCounts: sample.cueCounts || null, scoredCounts: sample.scoredCounts || null, matchedPostPreview: sample.matchedPostPreview || [], candidatePreview: sample.candidatePreview || [], errors: sample.errors || [], job });
 });
 app.get('/moltbook/export/authors.csv', async (_req, res) => { const intel = await getMoltbookIntel(); res.type('text/csv').send(authorsToCsv(intel.authors ?? [])); });
 app.get('/moltbook/export/snapshots.csv', async (_req, res) => { const intel = await getMoltbookIntel(); res.type('text/csv').send(snapshotsToCsv(intel.snapshots ?? [])); });

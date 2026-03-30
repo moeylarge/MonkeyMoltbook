@@ -142,22 +142,25 @@ In the next chat, do this first:
    - `apps/server/src/app.js`
    - `apps/server/src/lib/moltbook-discovery.js`
 3. confirm `mode=suspicious-candidates` exists and is live
-4. build a **second-stage candidate scorer** that ranks candidate posts higher when weak cues co-occur with stronger abuse/CTA language such as:
-   - free
-   - claim
-   - connect wallet
-   - verify
-   - eligible
-   - zero risk
-   - reward
-   - enter seed phrase
-   - restore wallet
-5. down-rank obvious low-value contexts such as:
-   - philosophy/general discussion
-   - generic tax/airdrop discussion
-   - benign security-research discussion
-6. rerun the deep candidate collector and inspect the ranked shortlist
-7. only after ranking improves, decide whether to promote any second-stage candidate logic back into final suspicious family outputs
+4. confirm the new **second-stage candidate scorer** is active in `mode=suspicious-candidates`
+   - it now scores candidates upward when weak cues co-occur with stronger abuse/CTA language such as:
+     - free
+     - claim
+     - connect wallet
+     - verify
+     - eligible
+     - zero risk
+     - reward
+     - enter seed phrase
+     - restore wallet
+   - it also down-ranks low-value contexts such as:
+     - philosophy/general discussion
+     - generic tax/airdrop discussion
+     - benign security-research discussion
+5. rerun the deep candidate collector and inspect the new ranked shortlist
+   - the endpoint should now expose `candidateScore`, `candidateLabel`, `candidateStrongSignals`, `candidatePenaltySignals`, and aggregate `scoredCounts`
+6. use the scored shortlist to judge whether any second-stage logic should later be promoted back into final suspicious family outputs
+7. keep the strict family scorer separate unless ranked candidate evidence clearly justifies promotion
 
 ## Guardrails
 

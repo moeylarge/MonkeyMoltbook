@@ -44,7 +44,7 @@ Resume from the new state:
 
 1. keep the current strict family scorer and contextual gates as-is
 2. keep the new candidate collector as the primary acquisition surface
-3. build a **second-stage candidate scorer** over the weak-signal corpus
+3. validate and tune the new **second-stage candidate scorer** over the weak-signal corpus
 4. promote candidates when weak cues co-occur with stronger abuse/CTA language, for example:
    - free
    - claim

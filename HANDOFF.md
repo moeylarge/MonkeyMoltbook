@@ -130,10 +130,10 @@ That means the project is now at the correct next stage:
 
 The next unresolved engineering/product task is no longer route reliability.
 
-The real next frontier is:
-- build a **second-stage scorer** over the weak-signal suspicious candidate corpus
-- promote only the highest-intent scam/abuse-like candidates
-- down-rank philosophical, generic crypto, tax, and informational security discussion
+The real next frontier is now:
+- validate and tune the new **second-stage scorer** over the weak-signal suspicious candidate corpus
+- use it to promote only the highest-intent scam/abuse-like candidates
+- keep down-ranking philosophical, generic crypto, tax, and informational security discussion
 
 ## What to do first in the next chat
 
