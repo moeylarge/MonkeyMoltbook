@@ -53,13 +53,14 @@ function suspiciousMatchMeta(post) {
       'wallet connect', 'connect wallet', 'connect your wallet', 'connect wallet to claim', 'verify your wallet',
       'wallet verification', 'wallet required', 'wallet login', 'reconnect wallet', 'sync your wallet',
       'authorize wallet', 'confirm wallet', 'validate wallet', 'wallet recovery', 'recover your wallet',
-      'import your wallet', 'seed phrase', 'secret phrase', 'private key'
+      'import your wallet', 'seed phrase', 'secret phrase', 'private key',
+      'seed phrase required', 'enter your seed phrase', 'restore your wallet', 'wallet authentication'
     ],
     exploit: [
-      'wallet drainer', 'clipboard drainer', 'drain your wallet', 'drainer',
+      'wallet drainer', 'clipboard drainer', 'drain your wallet', 'wallet drain', 'drainer',
       'wallet drained', 'sweep wallet', 'compromised wallet', 'compromised account',
-      'fake airdrop', 'malicious link', 'approval scam', 'stealer', 'malware', 'keygen',
-      'remote access trojan', 'wallet exploit'
+      'fake airdrop', 'malicious link', 'approval scam', 'malicious wallet', 'stealer', 'malware', 'keygen',
+      'remote access trojan', 'wallet exploit', 'fake wallet connect'
     ]
   };
 
@@ -71,6 +72,18 @@ function suspiciousMatchMeta(post) {
       families.push(family);
       phrases.push(...matchedFamilyPhrases);
     }
+  }
+
+  const phishingContext = text.includes('phishing') && (
+    text.includes('wallet')
+    || text.includes('claim')
+    || text.includes('airdrop')
+    || text.includes('seed phrase')
+    || text.includes('private key')
+  );
+  if (phishingContext) {
+    families.push('exploit');
+    phrases.push('phishing');
   }
 
   if (text.includes('airdrop') && !families.includes('claim')) {
