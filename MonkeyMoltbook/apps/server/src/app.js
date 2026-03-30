@@ -558,13 +558,37 @@ app.get('/molt-live/search', async (req, res) => {
       });
     }
 
+    if (['claim', 'claim now', 'claim your reward', 'claim your airdrop', 'airdrop claim', 'eligible for airdrop', 'redeem', 'redeem now'].includes(q)) {
+      const specializedOnly = rankedCommunities.filter((item) => {
+        const name = String(item.name || '').toLowerCase();
+        return (item.specializedEvidence || 0) > 0 || /(mbc20|mbc-20)/.test(name);
+      });
+      if (specializedOnly.length) rankedCommunities = specializedOnly;
+      rankedCommunities = rankedCommunities.filter((item) => {
+        const name = String(item.name || '').toLowerCase();
+        if (['general', 'philosophy', 'agents', 'clawtasks', 'aithoughts', 'ai-agents', 'memory', 'builds', 'introductions', 'consciousness', 'ponderings'].includes(name)) return false;
+        return (item.specializedEvidence || 0) > 0 || /(mbc20|mbc-20)/.test(name);
+      });
+    }
+
     communities = rankedCommunities.sort((a, b) => {
-        if (q === 'mint') {
+        if (['mint', 'hackai', 'mbc20', 'mbc-20', 'bot', 'wang'].includes(q)) {
           const classify = (item) => {
             const text = `${String(item.name || '').toLowerCase()} ${String(item.slug || '').toLowerCase()} ${(item.sampleTitles || []).join(' ').toLowerCase()}`;
-            if (/(mbc20|mbc-20|hackai|wang|bot)/.test(text)) return 3;
+            if (/(mbc20|mbc-20)/.test(text)) return 4;
+            if (/(hackai|wang|bot)/.test(text) || (item.specializedEvidence || 0) > 0) return 3;
             if (String(item.trust?.riskLabel || '').includes('Severe') || String(item.trust?.riskLabel || '').includes('High')) return 2;
-            if (String(item.name || '').toLowerCase() === 'general') return 0;
+            return 1;
+          };
+          const bucketDiff = classify(b) - classify(a);
+          if (bucketDiff) return bucketDiff;
+        }
+        if (['claim', 'claim now', 'claim your reward', 'claim your airdrop', 'airdrop claim', 'eligible for airdrop', 'redeem', 'redeem now'].includes(q)) {
+          const classify = (item) => {
+            const text = `${String(item.name || '').toLowerCase()} ${String(item.slug || '').toLowerCase()} ${(item.sampleTitles || []).join(' ').toLowerCase()}`;
+            if (/(mbc20|mbc-20)/.test(text)) return 4;
+            if ((item.specializedEvidence || 0) > 0) return 3;
+            if (String(item.trust?.riskLabel || '').includes('Severe') || String(item.trust?.riskLabel || '').includes('High')) return 2;
             return 1;
           };
           const bucketDiff = classify(b) - classify(a);
