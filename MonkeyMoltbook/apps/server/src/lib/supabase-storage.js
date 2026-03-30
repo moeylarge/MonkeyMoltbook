@@ -498,7 +498,13 @@ export async function searchCommunityEvidence({ query, limit = 20 } = {}) {
     `limit=${Math.max(10, Math.min(Number(limit) * 12 || 60, 240))}`,
     'order=score.desc.nullslast'
   ];
-  const clauses = isMintIntent ? mintClauses : isClaimIntent ? claimClauses : isWalletIntent ? walletClauses : [
+  const exploitClauses = [
+    'select=submolt_name,title,snippet,score,comment_count,payload',
+    'or=(title.ilike.%25exploit%25,title.ilike.%25drainer%25,title.ilike.%25malware%25,title.ilike.%25stealer%25,snippet.ilike.%25wallet%20exploit%25,snippet.ilike.%25verify%20your%20wallet%25,snippet.ilike.%25connect%20wallet%20to%20claim%25,snippet.ilike.%25wallet%20drainer%25,snippet.ilike.%25clipboard%20drainer%25,snippet.ilike.%25seed%20phrase%25,snippet.ilike.%25private%20key%25,snippet.ilike.%25stealer%25,snippet.ilike.%25malware%25,snippet.ilike.%25remote%20access%20trojan%25)',
+    `limit=${Math.max(10, Math.min(Number(limit) * 12 || 60, 240))}`,
+    'order=score.desc.nullslast'
+  ];
+  const clauses = isMintIntent ? mintClauses : isClaimIntent ? claimClauses : isWalletIntent ? walletClauses : isExploitIntent ? exploitClauses : [
     'select=submolt_name,title,snippet,score,comment_count,payload',
     `or=(submolt_name.ilike.${safeQuery},title.ilike.${safeQuery},snippet.ilike.${safeQuery})`,
     `limit=${Math.max(5, Math.min(Number(limit) * 10 || 50, 200))}`,

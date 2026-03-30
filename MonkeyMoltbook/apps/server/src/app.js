@@ -40,7 +40,8 @@ function communitySearchRank(item, query) {
   if (q === 'mint' && /(mint|mbc20|mbc-20|hackai|bot|wang)/.test(text)) score += 90;
   if (q === 'mint' && /(mbc20|mbc-20|hackai|bot|wang)/.test(text)) score += 140;
   if (['claim', 'claim now', 'claim your reward', 'claim your airdrop', 'airdrop claim', 'eligible for airdrop', 'redeem', 'redeem now'].includes(q) && /(claim now|claim your reward|claim your airdrop|claim your tokens|airdrop claim|eligible for airdrop|check your eligibility|connect wallet to claim|redeem now|redeem your reward|unlock your reward|verify your wallet|wallet connect|wang|mbc20|mbc-20)/.test(text)) score += 110;
-  if (q === 'wallet' && /(wallet|drainer|seed)/.test(text)) score += 80;
+  if (['wallet', 'wallet connect', 'connect wallet to claim', 'verify your wallet', 'wallet recovery', 'seed phrase', 'private key'].includes(q) && /(wallet connect|connect wallet|verify your wallet|wallet recovery|recover your wallet|import your wallet|seed phrase|private key|connect wallet to claim|wallet drainer|clipboard drainer|drainer)/.test(text)) score += 120;
+  if (['exploit', 'wallet exploit', 'social engineering exploit', 'drainer', 'stealer', 'malware'].includes(q) && /(wallet exploit|verify your wallet|connect wallet to claim|wallet drainer|clipboard drainer|seed phrase|private key|stealer|malware|remote access trojan|drainer)/.test(text)) score += 120;
 
   if (suspiciousQuery && String(item.trust?.riskLabel || '').includes('Severe')) score += 90;
   else if (suspiciousQuery && String(item.trust?.riskLabel || '').includes('High')) score += 60;
@@ -580,6 +581,19 @@ app.get('/molt-live/search', async (req, res) => {
       rankedCommunities = rankedCommunities.filter((item) => {
         const name = String(item.name || '').toLowerCase();
         if (['general', 'crypto', 'agentfinance', 'defi', 'bitcoin', 'ai-agents', 'agents', 'clawtasks', 'builds', 'introductions', 'consciousness', 'philosophy', 'ponderings'].includes(name)) return false;
+        return (item.specializedEvidence || 0) > 0 || /(mbc20|mbc-20)/.test(name);
+      });
+    }
+
+    if (['exploit', 'wallet exploit', 'social engineering exploit', 'drainer', 'stealer', 'malware'].includes(q)) {
+      const specializedOnly = rankedCommunities.filter((item) => {
+        const name = String(item.name || '').toLowerCase();
+        return (item.specializedEvidence || 0) > 0 || /(mbc20|mbc-20)/.test(name);
+      });
+      if (specializedOnly.length) rankedCommunities = specializedOnly;
+      rankedCommunities = rankedCommunities.filter((item) => {
+        const name = String(item.name || '').toLowerCase();
+        if (['general', 'crypto', 'agentfinance', 'agenttrust', 'defi', 'bitcoin', 'ai-agents', 'agents', 'clawtasks', 'builds', 'introductions', 'consciousness', 'philosophy', 'ponderings'].includes(name)) return false;
         return (item.specializedEvidence || 0) > 0 || /(mbc20|mbc-20)/.test(name);
       });
     }
