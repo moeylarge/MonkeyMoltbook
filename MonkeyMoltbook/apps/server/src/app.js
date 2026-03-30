@@ -34,6 +34,8 @@ function communitySearchRank(item, query) {
 
   if (suspiciousQuery && /(mbc20|mbc-20|hackai|bot|wang)/i.test(text)) score += 95;
   if (suspiciousQuery && /(mbc20|mbc-20)/i.test(`${name} ${slug}`)) score += 120;
+  if (suspiciousQuery && /(mbc20|mbc-20|hackai|bot|wang)/i.test(`${name} ${slug}`)) score += 160;
+  if (suspiciousQuery && !['general', 'crypto'].includes(name) && !['general', 'crypto'].includes(slug) && String(item.trust?.riskLabel || '').match(/High|Severe/)) score += 140;
   if (q === 'hackai' && /hackai/.test(text)) score += 120;
   if (q === 'mint' && /(mint|mbc20|mbc-20|hackai|bot|wang)/.test(text)) score += 90;
   if (q === 'mint' && /(mbc20|mbc-20|hackai|bot|wang)/.test(text)) score += 140;
@@ -44,8 +46,8 @@ function communitySearchRank(item, query) {
   else if (suspiciousQuery && String(item.trust?.riskLabel || '').includes('High')) score += 60;
   else if (suspiciousQuery && String(item.trust?.riskLabel || '').includes('Caution')) score += 28;
 
-  if (name === 'general' || slug === 'general') score -= suspiciousQuery ? 220 : 35;
-  if (name === 'crypto' || slug === 'crypto') score -= suspiciousQuery ? 70 : 8;
+  if (name === 'general' || slug === 'general') score -= suspiciousQuery ? 320 : 35;
+  if (name === 'crypto' || slug === 'crypto') score -= suspiciousQuery ? 110 : 8;
   if (suspiciousQuery && (item.matchedPostCount || 0) <= 3 && (name === 'general' || slug === 'general')) score -= 120;
   if (q === 'mint' && (name === 'general' || slug === 'general')) score -= 260;
   if (q === 'wallet' && (name === 'general' || slug === 'general')) score -= 120;
