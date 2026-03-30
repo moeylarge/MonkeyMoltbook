@@ -875,7 +875,7 @@ function LivePage({ data }) {
               <span>Enable webcam, approve access, and make sure your preview looks right before entering the live room.</span>
             </div>
           )}
-          <div className="mode-section">
+          {!isChatMode ? <div className="mode-section">
             <div className="mode-section-copy webcam-mode-copy">
               <h3>Enable webcam</h3>
               <p>Click the main button below. We’ll ask for camera access next so you can preview yourself before going live.</p>
@@ -901,11 +901,15 @@ function LivePage({ data }) {
                 <button className={`ghost-btn fallback-mode-btn ${sessionMode === 'chat' ? 'active' : ''}`} onClick={() => setSessionMode('chat')}>💬 Use chat instead</button>
               </div>
             ) : null}
-          </div>
+          </div> : null}
           {isChatMode ? (
             <>
-              <div className="chat-mode-summary">
-                <div className="live-room-meta-card"><strong>{session ? 'Connected' : 'Ready'}</strong><span>{session ? `Started ${new Date(session.started_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : 'Start a low-friction text session first'}</span></div>
+              <div className="live-stage-headline pre-session-headline chat-pre-session-headline">
+                <strong>{session ? `${agent?.authorName || 'Agent'} is chatting with you now` : `Start chatting with ${agent?.authorName || 'this agent'}`}</strong>
+                <span>{session ? 'Your chat session is active. Messages and export are ready.' : 'Type your first message to start a fast live chat. No webcam setup required.'}</span>
+              </div>
+              <div className="chat-mode-summary chat-mode-summary-strong">
+                <div className="live-room-meta-card"><strong>{session ? 'Connected' : 'Chat ready'}</strong><span>{session ? `Started ${new Date(session.started_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : 'Fastest way to start talking'}</span></div>
                 <div className="live-room-meta-card"><strong>Free during launch</strong><span>Chat Direct is open right now.</span></div>
               </div>
               {session ? (
@@ -942,13 +946,15 @@ function LivePage({ data }) {
                   </div>
                 </>
               ) : null}
-              <div className="live-stage-grid">
-                <button className="live-window human live-window-user live-window-cta" onClick={requestMediaAccess} disabled={requestingMedia || mediaState === 'preview-ready'}>
-                  {sessionMode === 'webcam' ? <video ref={localVideoRef} className="live-local-video" autoPlay muted playsInline /> : null}
-                  <div className="live-window-overlay"><span>Your camera</span><strong>{sessionMode === 'webcam' ? (mediaReady ? 'Camera ready — you can go live now' : mediaState === 'requesting' ? 'Requesting camera access' : 'Camera not connected') : 'Mic ready'}</strong><small>{mediaError || (mediaState === 'requesting' ? 'Approve the browser prompt to continue.' : 'Click anywhere in this panel to enable webcam and preview before going live.')}</small></div>
-                </button>
-                <div className="live-window ai"><div className="live-window-overlay"><span>{agent?.authorName || 'Agent'} live</span><strong>{session ? 'Ready and responding' : mediaState === 'preview-ready' ? 'Ready when you are' : 'Preview first, then go live'}</strong><small>{mediaState === 'preview-ready' ? 'Your camera is ready. Start live when you are set.' : 'We only show live room controls after your webcam preview is working.'}</small></div></div>
-              </div>
+              {!isChatMode ? (
+                <div className="live-stage-grid">
+                  <button className="live-window human live-window-user live-window-cta" onClick={requestMediaAccess} disabled={requestingMedia || mediaState === 'preview-ready'}>
+                    {sessionMode === 'webcam' ? <video ref={localVideoRef} className="live-local-video" autoPlay muted playsInline /> : null}
+                    <div className="live-window-overlay"><span>Your camera</span><strong>{sessionMode === 'webcam' ? (mediaReady ? 'Camera ready — you can go live now' : mediaState === 'requesting' ? 'Requesting camera access' : 'Camera not connected') : 'Mic ready'}</strong><small>{mediaError || (mediaState === 'requesting' ? 'Approve the browser prompt to continue.' : 'Click anywhere in this panel to enable webcam and preview before going live.')}</small></div>
+                  </button>
+                  <div className="live-window ai"><div className="live-window-overlay"><span>{agent?.authorName || 'Agent'} live</span><strong>{session ? 'Ready and responding' : mediaState === 'preview-ready' ? 'Ready when you are' : 'Preview first, then go live'}</strong><small>{mediaState === 'preview-ready' ? 'Your camera is ready. Start live when you are set.' : 'We only show live room controls after your webcam preview is working.'}</small></div></div>
+                </div>
+              ) : null}
               {mediaState === 'failed' ? (
                 <div className="wallet-balance-card wallet-balance-card-muted wallet-balance-card-full media-failure-card">
                   <span className="eyebrow">Camera setup issue</span>
@@ -1011,7 +1017,24 @@ function LivePage({ data }) {
           ) : null}
         </div>
         <div className={`transcript-shell transcript-shell-redesign ${isChatMode ? 'transcript-shell-chat' : ''}`}>
-          {!session ? (
+          {isChatMode && !session ? (
+            <>
+              <div className="transcript-header">
+                <span>Chat</span>
+                <span className="presence-pill ready">Instant fallback</span>
+              </div>
+              <div className="transcript-feed transcript-feed-bubbles">
+                <div className="transcript-empty-state pre-session-empty-state pre-session-preview-card chat-empty-state-card">
+                  <strong>Type your first message to start chatting live.</strong>
+                  <p>Chat is the fastest fallback. Start with a quick message and the live transcript will build from there.</p>
+                </div>
+              </div>
+              <div className="chat-input-row chat-input-row-strong">
+                <input className="chat-input chat-input-strong" placeholder="Ask anything, start the conversation, or drop a quick prompt…" value={draft} onChange={(e) => setDraft(e.target.value)} />
+                <button className="primary-btn" onClick={startSession} disabled={starting || !!session}>{starting ? 'Starting…' : 'Start chat now'}</button>
+              </div>
+            </>
+          ) : !session ? (
             <div className="transcript-empty-state pre-session-empty-state pre-session-preview-card">
               <strong>Step 1: Enable webcam</strong>
               <p>Approve camera access and preview yourself. The live room, transcript, and controls appear after that.</p>
