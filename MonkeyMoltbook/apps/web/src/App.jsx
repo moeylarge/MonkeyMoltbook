@@ -944,7 +944,7 @@ function LivePage({ data }) {
               <div className="live-stage-grid">
                 <div className="live-window human live-window-user">
                   {sessionMode === 'webcam' ? <video ref={localVideoRef} className="live-local-video" autoPlay muted playsInline /> : null}
-                  <div className="live-window-overlay"><span>Your camera</span><strong>{sessionMode === 'webcam' ? (mediaReady ? 'Camera ready' : mediaState === 'requesting' ? 'Requesting camera access' : 'Camera not connected') : 'Mic ready'}</strong><small>{mediaError || (mediaState === 'requesting' ? 'Approve the browser prompt to continue.' : 'Click the main webcam button to preview your camera before going live.')}</small></div>
+                  <div className="live-window-overlay"><span>Your camera</span><strong>{sessionMode === 'webcam' ? (mediaReady ? 'Camera ready — you can go live now' : mediaState === 'requesting' ? 'Requesting camera access' : 'Camera not connected') : 'Mic ready'}</strong><small>{mediaError || (mediaState === 'requesting' ? 'Approve the browser prompt to continue.' : 'Click the main webcam button to preview your camera before going live.')}</small></div>
                 </div>
                 <div className="live-window ai"><div className="live-window-overlay"><span>{agent?.authorName || 'Agent'} live</span><strong>{session ? 'Ready and responding' : mediaState === 'preview-ready' ? 'Ready when you are' : 'Preview first, then go live'}</strong><small>{mediaState === 'preview-ready' ? 'Your camera is ready. Start live when you are set.' : 'We only show live room controls after your webcam preview is working.'}</small></div></div>
               </div>
@@ -959,10 +959,10 @@ function LivePage({ data }) {
                      'Camera setup failed'}
                   </strong>
                   <p>
-                    {mediaDebug?.failureKind === 'no_devices' ? 'We could not find a camera device in this browser session. You can continue with voice or chat right now.' :
-                     mediaDebug?.failureKind === 'permission_denied_or_dismissed' ? 'Please allow camera access when prompted, then try again. You can also continue with voice or chat.' :
-                     mediaDebug?.failureKind === 'device_busy_or_os_blocked' ? 'Another app or your system settings may be blocking the camera. You can retry, or continue with voice or chat.' :
-                     'You can retry camera, or continue with voice or chat right now.'}
+                    {mediaDebug?.failureKind === 'no_devices' ? 'No camera was found here. Use voice or chat instead.' :
+                     mediaDebug?.failureKind === 'permission_denied_or_dismissed' ? 'Camera access was blocked. Try again or switch to voice/chat.' :
+                     mediaDebug?.failureKind === 'device_busy_or_os_blocked' ? 'Your camera is busy or blocked by the system. Retry or use voice/chat.' :
+                     'Camera setup failed. Retry or use voice/chat.'}
                   </p>
                   <div className="media-failure-actions">
                     <button className="primary-btn" onClick={requestMediaAccess} disabled={requestingMedia}>{requestingMedia ? 'Retrying…' : 'Try camera again'}</button>
