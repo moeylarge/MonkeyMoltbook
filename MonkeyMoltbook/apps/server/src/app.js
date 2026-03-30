@@ -790,6 +790,29 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
   const savedJob = (mode === 'cursor' || mode === 'suspicious') ? await getIngestionJob(jobName) : null;
   const savedCursor = savedJob?.cursor_json?.nextCursor || null;
   const cursor = req.query.cursor ? String(req.query.cursor) : savedCursor;
+  const phaseStartedAt = Date.now();
+  const phaseTimings = [];
+  const markPhase = async (phase, extra = {}) => {
+    phaseTimings.push({ phase, ms: Date.now() - phaseStartedAt, ...extra });
+    if (mode !== 'suspicious') return;
+    await upsertIngestionJob({
+      job_name: jobName,
+      status: 'running',
+      cursor_json: { mode, nextCursor: savedCursor || null, steps, perPage, hasMore: true },
+      last_run_at: new Date().toISOString(),
+      stats_json: {
+        phase,
+        phaseTimings,
+        pages,
+        perPage,
+        steps,
+        delayMs,
+        ...extra
+      }
+    }).catch(() => null);
+  };
+
+  await markPhase('start', { resumedFromSavedCursor: !!savedCursor });
 
   const sample = mode === 'page'
     ? await fetchPaginatedUniverseSample({ pages, perPage })
@@ -797,10 +820,26 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
       ? await fetchSuspiciousLanguageSample({ cursor, limit: perPage, steps, delayMs })
       : await fetchCursorBackfillSample({ cursor, limit: perPage, steps, delayMs });
 
+  await markPhase('sample_fetched', {
+    sampledPosts: (sample.posts || []).length,
+    familyCounts: sample.familyCounts || null,
+    errors: sample.errors || [],
+    nextCursor: sample.nextCursor || null,
+    hasMore: !!sample.hasMore
+  });
+
   const posts = sample.posts || [];
   const authors = buildAuthorCoverage(posts);
   const communities = buildCommunityIndex(posts);
   const submolts = buildSubmoltIndex(posts);
+
+  await markPhase('indexes_built', {
+    sampledPosts: posts.length,
+    authors: authors.length,
+    communities: communities.length,
+    submolts: submolts.length,
+    familyCounts: sample.familyCounts || null
+  });
 
   let upsertedAuthors = [];
   let upsertedPosts = [];
@@ -823,10 +862,13 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
       fitScore: row.observedPosts,
       reason: `Expanded coverage from public Moltbook sampling across ${row.surfaces.join(', ')}`,
     })));
+    await markPhase('authors_upserted', { upsertedAuthors: upsertedAuthors.length });
     const authorIdMap = new Map(upsertedAuthors.map((row) => [String(row.source_author_id || ''), row.id]));
     upsertedPosts = await upsertPosts(posts, authorIdMap);
+    await markPhase('posts_upserted', { upsertedPosts: upsertedPosts.length });
     upsertedCommunities = await upsertCommunities(communities);
     upsertedSubmolts = await upsertSubmolts(submolts);
+    await markPhase('communities_submolts_upserted', { upsertedCommunities: upsertedCommunities.length, upsertedSubmolts: upsertedSubmolts.length });
 
     if (mode === 'suspicious') {
       searchDocs = [];
