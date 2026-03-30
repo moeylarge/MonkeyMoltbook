@@ -38,6 +38,31 @@ export function normalizePosts(payload) {
   return Array.isArray(payload?.posts) ? payload.posts : [];
 }
 
+function weakSuspiciousCueMeta(post) {
+  const title = String(post?.title || '');
+  const snippet = String(post?.snippet || post?.body || post?.description || post?.content || '');
+  const text = `${title} ${snippet}`.toLowerCase();
+  const cueGroups = {
+    claim: ['airdrop', 'claim', 'eligible', 'reward', 'redeem'],
+    wallet: ['wallet', 'wallet connect', 'connect wallet', 'verify your wallet', 'private key'],
+    seed: ['seed phrase', 'secret phrase', 'private key', 'restore wallet'],
+    exploit: ['drainer', 'wallet drain', 'approval scam', 'malicious link', 'phishing', 'malware', 'exploit']
+  };
+  const weakFamilies = [];
+  const weakPhrases = [];
+  for (const [family, patterns] of Object.entries(cueGroups)) {
+    const hits = patterns.filter((phrase) => text.includes(phrase));
+    if (!hits.length) continue;
+    weakFamilies.push(family);
+    weakPhrases.push(...hits);
+  }
+  return {
+    matched: weakFamilies.length > 0,
+    families: [...new Set(weakFamilies)],
+    phrases: [...new Set(weakPhrases)]
+  };
+}
+
 function suspiciousMatchMeta(post) {
   const title = String(post?.title || '');
   const snippet = String(post?.snippet || post?.body || post?.description || post?.content || '');
@@ -377,6 +402,54 @@ export async function fetchCursorBackfillSample({ cursor = null, limit = 50, ste
     steps,
     limit,
     delayMs
+  };
+}
+
+export async function fetchSuspiciousCandidateSample({ cursor = null, limit = 100, steps = 20, delayMs = 0, onProgress = null } = {}) {
+  await emitProgress(onProgress, 'candidate_probe_entered', { cursor: cursor || null, limit, steps, delayMs });
+  const sample = await fetchCursorBackfillSample({ cursor, limit, steps, delayMs, onProgress });
+  const candidatePosts = [];
+  const cueCounts = { claim: 0, wallet: 0, seed: 0, exploit: 0 };
+
+  for (const post of sample.posts || []) {
+    const meta = weakSuspiciousCueMeta(post);
+    if (!meta.matched) continue;
+    for (const family of meta.families) {
+      cueCounts[family] = (cueCounts[family] || 0) + 1;
+    }
+    candidatePosts.push({
+      ...post,
+      weakCueFamilies: meta.families,
+      weakCuePhrases: meta.phrases,
+      discoverySurface: post.discoverySurface || 'new'
+    });
+    if (candidatePosts.length >= 250) break;
+  }
+
+  const uniqueCandidatePosts = uniqueBy(candidatePosts, (post) => post.id);
+  const candidatePreview = uniqueCandidatePosts.slice(0, 10).map((post) => ({
+    postId: String(post?.id || ''),
+    title: String(post?.title || ''),
+    weakCueFamilies: post?.weakCueFamilies || [],
+    weakCuePhrases: post?.weakCuePhrases || [],
+    submolt: typeof post?.submolt === 'string'
+      ? post.submolt
+      : post?.submolt?.name || post?.submolt?.slug || post?.submolt?.title || null
+  }));
+
+  await emitProgress(onProgress, 'candidate_probe_completed', {
+    fetchedPosts: (sample.posts || []).length,
+    candidatePosts: uniqueCandidatePosts.length,
+    cueCounts
+  });
+
+  return {
+    ...sample,
+    posts: uniqueCandidatePosts,
+    candidateCount: uniqueCandidatePosts.length,
+    cueCounts,
+    candidatePreview,
+    firstCursorStat: sample.cursorStats?.[0] || null
   };
 }
 
