@@ -11,4 +11,5 @@ Do not duplicate the active task list from `NOW.md`.
 - stronger suspicious-source acquisition beyond the generic recent-feed cursor
 - richer suspicious-source mapping by recurring authors / submolts / phrase clusters
 - final productization of trust/suspicious evidence into the best live UI surface
-- any broader search/community ranking work not required for the current ranked-candidate validation pass
+- broader search/community ranking work not required for the raw phrase inspection pass
+- any more scorer/threshold tuning before the raw phrase inspection is complete

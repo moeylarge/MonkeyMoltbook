@@ -38,13 +38,15 @@ MOLT-LIVE deployed live product + suspicious-source acquisition / candidate-scor
 - suspicious ingest route reliability on Vercel was restored
 - the missing `suspiciousMatchMeta` bug was fixed
 - targeted suspicious family lanes exist for wallet / claim / seed / exploit
-- strict suspicious family outputs remain sparse under truthful high-intent filtering
 - `mode=suspicious-candidates` exists
-- second-stage candidate scoring now exists
+- second-stage candidate scoring exists
+- multiple live tuning passes were run across stage 1 and stage 2
+- current tuning conclusion: raw phrase inspection is needed before more threshold changes
 
 ## Incomplete
 
-- live validation/tuning of the second-stage candidate scorer/ranker
+- raw live-phrase inspection for suspicious candidate source terms
+- rebuild of stage 1 candidate collection from observed phrasing
 - candidate promotion logic from weak-signal corpus to higher-confidence suspicious shortlist
 - stronger suspicious-source acquisition beyond the generic recent-feed cursor
 - richer suspicious-source mapping by recurring authors / submolts / phrase clusters
@@ -52,7 +54,7 @@ MOLT-LIVE deployed live product + suspicious-source acquisition / candidate-scor
 
 ## Immediate next move
 
-1. run the live ranked candidate path
-2. inspect whether the top shortlist is materially better
-3. tune only if the live ranking is obviously wrong
-4. leave deferred work in `BACKLOG.md`
+1. collect a raw sample of posts containing `claim`, `reward`, `eligible`, `wallet connect`, `connect wallet`, `verify your wallet`
+2. inspect the actual phrasing in those posts
+3. rebuild stage 1 candidate collection from observed phrasing
+4. avoid more blind threshold tuning until that inspection is done

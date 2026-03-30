@@ -20,8 +20,9 @@ Updated: 2026-03-29 America/Los_Angeles
 
 - suspicious ingest reliability is fixed
 - `mode=suspicious-candidates` exists
-- second-stage candidate scoring was added
-- current task is live validation/tuning of the ranked candidate shortlist
+- second-stage candidate scoring exists
+- stage-1 and stage-2 tuning by threshold guesswork hit a stop point
+- next move is raw phrase inspection before any more candidate tuning
 
 ## Open first inside the project
 
@@ -33,7 +34,7 @@ Updated: 2026-03-29 America/Los_Angeles
 ## Stop conditions
 
 Stop once one of these is true:
-- the live ranked shortlist was inspected
-- a scoring fix was made and verified
+- the raw phrase sample was collected
+- the next stage-1 rebuild plan is clear from observed phrasing
 - the handoff files were updated
 - the task was committed
