@@ -908,24 +908,28 @@ function LivePage({ data }) {
             </>
           ) : (
             <>
-              <div className="session-badge-row session-badge-row-clean">
-                {sessionMode === 'webcam' ? (
-                  <button className={`presence-pill ${mediaState === 'preview-ready' ? 'ready' : ''}`} onClick={requestMediaAccess} disabled={requestingMedia}>
-                    {mediaState === 'preview-ready' ? 'Camera ready' : mediaState === 'requesting' ? 'Allowing camera…' : mediaState === 'failed' ? 'Retry camera' : 'Allow camera'}
-                  </button>
-                ) : (
-                  <button className={`presence-pill ${mediaState === 'preview-ready' ? 'ready' : ''}`} onClick={requestMediaAccess} disabled={requestingMedia}>
-                    {mediaState === 'preview-ready' ? 'Mic ready' : mediaState === 'requesting' ? 'Allowing mic…' : mediaState === 'failed' ? 'Retry mic' : 'Allow mic'}
-                  </button>
-                )}
-                <span className={`presence-pill ${presence?.user_mic_on ? 'ready' : ''}`}>{presence?.user_mic_on ? 'Mic ready' : 'Mic off'}</span>
-                <span className={`presence-pill ${presence?.transcript_on ? 'ready' : ''}`}>{presence?.transcript_on ? 'Transcript on' : 'Transcript off'}</span>
-                <span className="presence-pill">{session ? 'Session active' : 'Ready to start'}</span>
-              </div>
-              <div className="live-room-meta-row">
-                <div className="live-room-meta-card"><strong>{session ? 'Connected' : 'Not started'}</strong><span>{session ? `Started ${new Date(session.started_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : 'Start a session to begin'}</span></div>
-                <div className="live-room-meta-card"><strong>{session ? session.mode : sessionMode}</strong><span>{sessionMode === 'voice' ? 'Voice call with transcript' : sessionMode === 'webcam' ? 'Webcam call with local video' : 'Text chat with transcript'}</span></div>
-              </div>
+              {session ? (
+                <>
+                  <div className="session-badge-row session-badge-row-clean">
+                    {sessionMode === 'webcam' ? (
+                      <button className={`presence-pill ${mediaState === 'preview-ready' ? 'ready' : ''}`} onClick={requestMediaAccess} disabled={requestingMedia}>
+                        {mediaState === 'preview-ready' ? 'Camera ready' : mediaState === 'requesting' ? 'Allowing camera…' : mediaState === 'failed' ? 'Retry camera' : 'Allow camera'}
+                      </button>
+                    ) : (
+                      <button className={`presence-pill ${mediaState === 'preview-ready' ? 'ready' : ''}`} onClick={requestMediaAccess} disabled={requestingMedia}>
+                        {mediaState === 'preview-ready' ? 'Mic ready' : mediaState === 'requesting' ? 'Allowing mic…' : mediaState === 'failed' ? 'Retry mic' : 'Allow mic'}
+                      </button>
+                    )}
+                    <span className={`presence-pill ${presence?.user_mic_on ? 'ready' : ''}`}>{presence?.user_mic_on ? 'Mic ready' : 'Mic off'}</span>
+                    <span className={`presence-pill ${presence?.transcript_on ? 'ready' : ''}`}>{presence?.transcript_on ? 'Transcript on' : 'Transcript off'}</span>
+                    <span className="presence-pill">Session active</span>
+                  </div>
+                  <div className="live-room-meta-row">
+                    <div className="live-room-meta-card"><strong>Connected</strong><span>{`Started ${new Date(session.started_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`}</span></div>
+                    <div className="live-room-meta-card"><strong>{session.mode}</strong><span>{sessionMode === 'voice' ? 'Voice call with transcript' : sessionMode === 'webcam' ? 'Webcam call with local video' : 'Text chat with transcript'}</span></div>
+                  </div>
+                </>
+              ) : null}
               <div className="live-stage-grid">
                 <div className="live-window human live-window-user">
                   {sessionMode === 'webcam' ? <video ref={localVideoRef} className="live-local-video" autoPlay muted playsInline /> : null}
@@ -970,8 +974,8 @@ function LivePage({ data }) {
                 <button className={`control ${presence?.tts_on ? 'active' : ''}`} onClick={() => togglePresence('ttsOn', !presence?.tts_on)}>{presence?.tts_on ? 'TTS Enabled' : 'TTS Off'}</button>
                 <button className={`control ${presence?.transcript_on ? 'active' : ''}`} onClick={() => togglePresence('transcriptOn', !presence?.transcript_on)}>{presence?.transcript_on ? 'Transcribing' : 'Transcript Off'}</button>
               </div>
-              <div className="wallet-panel wallet-panel-secondary">
-                {session ? (
+              {session ? (
+                <div className="wallet-panel wallet-panel-secondary">
                   <div className="wallet-actions-grid">
                     <button className="ghost-btn" onClick={() => spendCredits('priority_prompt')} disabled={!session || spendingAction === 'priority_prompt'}>{spendingAction === 'priority_prompt' ? 'Processing…' : 'Priority prompt · Free'}</button>
                     <button className="ghost-btn" onClick={() => spendCredits('queue_jump')} disabled={!session || spendingAction === 'queue_jump'}>{spendingAction === 'queue_jump' ? 'Processing…' : 'Queue jump · Free'}</button>
@@ -979,14 +983,8 @@ function LivePage({ data }) {
                     <button className="ghost-btn" onClick={() => spendCredits('premium_agent_unlock')} disabled={spendingAction === 'premium_agent_unlock'}>{spendingAction === 'premium_agent_unlock' ? 'Processing…' : 'Premium unlock · Free'}</button>
                     <button className="primary-btn" onClick={() => spendCredits('battle_unlock')} disabled={spendingAction === 'battle_unlock'}>{spendingAction === 'battle_unlock' ? 'Processing…' : 'Battle unlock · Free'}</button>
                   </div>
-                ) : (
-                  <div className="wallet-balance-card wallet-balance-card-muted wallet-balance-card-full">
-                    <span className="eyebrow">Launch access</span>
-                    <strong>Voice and webcam are open now</strong>
-                    <p>Start first. Priority prompts, queue jumps, longer time, premium unlocks, and battle escalation are currently free during launch.</p>
-                  </div>
-                )}
-              </div>
+                </div>
+              ) : null}
             </>
           )}
           <div className="live-cta-row live-cta-row-clean">
