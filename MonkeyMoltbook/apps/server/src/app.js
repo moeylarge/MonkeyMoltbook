@@ -7,7 +7,7 @@ import { getMoltbookIntel, getMoltbookStats, getMoltbookAgents } from './lib/mol
 import { buildAuthorCoverage, buildCommunityIndex, buildSubmoltIndex, fetchExpandedUniverseSample, fetchCursorBackfillSample, fetchPaginatedUniverseSample } from './lib/moltbook-discovery.js';
 import { getSchedulerState, startScheduler, stopScheduler } from './lib/moltbook-scheduler.js';
 import { getResponse, getResponseStats } from './lib/responses.js';
-import { buildSearchDocumentsFromState, getCommunityBySlug, getEntityRiskScore, getIngestionJob, isSupabaseStorageEnabled, listEvidenceBackedSuspiciousAuthors, listMintAbuseAuthors, persistMoltbookSnapshot, searchAuthors, searchAuthorEvidence, searchCommunities, searchCommunityEvidence, searchDocuments, upsertCommunities, upsertEntityRiskScores, upsertIngestionJob, upsertPosts, upsertSearchDocuments, upsertSubmolts, upsertAuthors } from './lib/supabase-storage.js';
+import { buildSearchDocumentsFromState, getAuthorsBySourceIds, getCommunityBySlug, getEntityRiskScore, getIngestionJob, isSupabaseStorageEnabled, listEvidenceBackedSuspiciousAuthors, listMintAbuseAuthors, persistMoltbookSnapshot, searchAuthors, searchAuthorEvidence, searchCommunities, searchCommunityEvidence, searchDocuments, upsertCommunities, upsertEntityRiskScores, upsertIngestionJob, upsertPosts, upsertSearchDocuments, upsertSubmolts, upsertAuthors } from './lib/supabase-storage.js';
 import { scoreAuthorRisk, scoreCommunityRisk } from './lib/trust-score.js';
 import { addAgentReply, addLiveMessage, createLiveSession, endLiveSession, exportTranscriptText, getLiveSession, listTranscript, liveSessionsEnabled, updateLivePresence } from './lib/live-sessions.js';
 import { createCheckoutSession, creditsEnabled, ensureCreditProducts, getSpendRules, getWallet, grantCredits, listCreditProducts, listCreditTransactions, spendCredits } from './lib/credits.js';
@@ -365,6 +365,11 @@ app.get('/molt-live/search', async (req, res) => {
       searchAuthors({ query: q, limit: rowLimit }).catch(() => []),
       searchAuthorEvidence({ query: q, limit: rowLimit }).catch(() => [])
     ]);
+    const evidenceAuthorRecords = await getAuthorsBySourceIds(evidenceAuthors.map((row) => row.sourceAuthorId)).catch(() => []);
+    const storedBySourceAuthorId = new Map([
+      ...storedAuthors.map((row) => [String(row.source_author_id || ''), row]),
+      ...evidenceAuthorRecords.map((row) => [String(row.source_author_id || ''), row])
+    ]);
     const mergedByAuthor = new Map();
 
     for (const row of [...authors, ...storedAuthors.map((item) => ({
@@ -414,16 +419,18 @@ app.get('/molt-live/search', async (req, res) => {
       const key = String(row.sourceAuthorId || row.authorName || '').toLowerCase();
       if (!key) continue;
       const prev = mergedByAuthor.get(key);
+      const stored = storedBySourceAuthorId.get(String(row.sourceAuthorId || '')) || null;
       const base = prev || {
+        id: stored?.id,
         sourceAuthorId: row.sourceAuthorId,
-        authorId: row.sourceAuthorId,
-        authorName: row.authorName,
-        description: row.description || '',
-        reason: row.sampleSnippets?.[0] || row.sampleTitles?.[0] || '',
-        postCount: row.matchedPostCount || 0,
-        observedPosts: row.matchedPostCount || 0,
-        karma: 0,
-        isClaimed: false,
+        authorId: stored?.id || row.sourceAuthorId,
+        authorName: stored?.author_name || row.authorName,
+        description: stored?.description || row.description || '',
+        reason: stored?.reason || row.sampleSnippets?.[0] || row.sampleTitles?.[0] || '',
+        postCount: Math.max(Number(stored?.post_count || 0), row.matchedPostCount || 0),
+        observedPosts: Math.max(Number(stored?.post_count || 0), row.matchedPostCount || 0),
+        karma: Number(stored?.karma || 0),
+        isClaimed: Boolean(stored?.is_claimed),
         submolts: [],
         phraseDiversity: 0,
         sampleTitles: [],
