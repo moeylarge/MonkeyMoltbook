@@ -50,13 +50,16 @@ function suspiciousMatchMeta(post) {
       'redeem now', 'redeem your reward', 'unlock your reward'
     ],
     wallet: [
-      'wallet connect', 'connect wallet', 'connect wallet to claim', 'verify your wallet',
-      'wallet verification', 'wallet recovery', 'recover your wallet', 'import your wallet',
-      'seed phrase', 'secret phrase', 'private key'
+      'wallet connect', 'connect wallet', 'connect your wallet', 'connect wallet to claim', 'verify your wallet',
+      'wallet verification', 'wallet required', 'wallet login', 'reconnect wallet', 'sync your wallet',
+      'authorize wallet', 'confirm wallet', 'validate wallet', 'wallet recovery', 'recover your wallet',
+      'import your wallet', 'seed phrase', 'secret phrase', 'private key'
     ],
     exploit: [
-      'wallet drainer', 'clipboard drainer', 'drain your wallet', 'drainer',
-      'stealer', 'malware', 'keygen', 'remote access trojan', 'wallet exploit'
+      'wallet drainer', 'clipboard drainer', 'drain your wallet', 'drainer', 'drain', 'drained',
+      'wallet drained', 'sweep wallet', 'compromised wallet', 'compromised account', 'phishing',
+      'fake airdrop', 'malicious link', 'approval scam', 'stealer', 'malware', 'keygen',
+      'remote access trojan', 'wallet exploit'
     ]
   };
 
