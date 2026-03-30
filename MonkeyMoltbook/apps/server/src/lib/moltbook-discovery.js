@@ -86,7 +86,15 @@ function suspiciousMatchMeta(post) {
     phrases.push('phishing');
   }
 
-  if (text.includes('airdrop') && !families.includes('claim')) {
+  const airdropContext = text.includes('airdrop') && (
+    text.includes('claim')
+    || text.includes('eligible')
+    || text.includes('reward')
+    || text.includes('connect wallet')
+    || text.includes('verify your wallet')
+    || text.includes('wallet connect')
+  );
+  if (airdropContext && !families.includes('claim')) {
     families.push('claim');
     phrases.push('airdrop');
   }
