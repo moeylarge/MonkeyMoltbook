@@ -720,8 +720,8 @@ app.get('/moltbook/ingest/status', async (req, res) => {
   const targetedJobName = family && targetedFamilies.has(family)
     ? `moltbook-suspicious-targeted-${family}`
     : null;
-  const jobName = allowlist[requested]
-    || targetedJobName
+  const jobName = targetedJobName
+    || allowlist[requested]
     || (requested.startsWith('moltbook-suspicious-targeted-') ? requested : null)
     || (Object.values(allowlist).includes(requested) ? requested : null);
   if (!jobName) {
