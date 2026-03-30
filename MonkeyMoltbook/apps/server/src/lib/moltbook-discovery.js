@@ -56,8 +56,8 @@ function suspiciousMatchMeta(post) {
       'import your wallet', 'seed phrase', 'secret phrase', 'private key'
     ],
     exploit: [
-      'wallet drainer', 'clipboard drainer', 'drain your wallet', 'drainer', 'drain', 'drained',
-      'wallet drained', 'sweep wallet', 'compromised wallet', 'compromised account', 'phishing',
+      'wallet drainer', 'clipboard drainer', 'drain your wallet', 'drainer',
+      'wallet drained', 'sweep wallet', 'compromised wallet', 'compromised account',
       'fake airdrop', 'malicious link', 'approval scam', 'stealer', 'malware', 'keygen',
       'remote access trojan', 'wallet exploit'
     ]
