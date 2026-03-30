@@ -22,18 +22,24 @@ function communitySearchRank(item, query) {
   const slug = String(item.slug || '').toLowerCase();
   const desc = String(item.description || '').toLowerCase();
   const titles = Array.isArray(item.sampleTitles) ? item.sampleTitles.join(' ').toLowerCase() : '';
+  const suspiciousQuery = /(mint|hackai|wallet|seed|claim|drainer|bot|exploit|malware|mbc20|mbc-20)/i.test(q);
   let score = 0;
 
-  if (name === q || slug === q) score += 120;
-  if (name.includes(q) || slug.includes(q)) score += 55;
+  if (name === q || slug === q) score += 140;
+  if (name.includes(q) || slug.includes(q)) score += 70;
   if (desc.includes(q)) score += 18;
-  if (titles.includes(q)) score += 26;
-  if (item.matchedPostCount) score += Math.min(40, item.matchedPostCount * 8);
-  if (/(mint|hackai|wallet|seed|claim|drainer|bot|exploit|malware)/i.test(q) && String(item.trust?.riskLabel || '').includes('High')) score += 45;
-  if (/(mint|hackai|wallet|seed|claim|drainer|bot|exploit|malware)/i.test(q) && String(item.trust?.riskLabel || '').includes('Caution')) score += 22;
-  if (name === 'general') score -= 35;
-  if (slug === 'general') score -= 35;
-  if (name === 'crypto') score -= 8;
+  if (titles.includes(q)) score += 30;
+  if (item.matchedPostCount) score += Math.min(90, item.matchedPostCount * 18);
+
+  if (suspiciousQuery && /(mbc20|mbc-20|hackai|bot)/i.test(`${name} ${slug} ${titles}`)) score += 75;
+  if (suspiciousQuery && /(mbc20|mbc-20)/i.test(`${name} ${slug}`)) score += 90;
+  if (suspiciousQuery && String(item.trust?.riskLabel || '').includes('High')) score += 50;
+  if (suspiciousQuery && String(item.trust?.riskLabel || '').includes('Caution')) score += 24;
+
+  if (name === 'general') score -= suspiciousQuery ? 70 : 35;
+  if (slug === 'general') score -= suspiciousQuery ? 70 : 35;
+  if (name === 'crypto') score -= suspiciousQuery ? 22 : 8;
+  if (slug === 'crypto') score -= suspiciousQuery ? 22 : 8;
   return score;
 }
 app.use((req, res, next) => {
