@@ -1063,21 +1063,23 @@ function LivePage({ data }) {
                 <strong>{session ? `Chat session is active` : `Start human chat`}</strong>
                 <span>{session ? 'Your chat session is active. Messages and export are ready.' : 'Type your first message to start a human-to-human chat. No webcam setup required.'}</span>
               </div>
-              <div className="chat-mode-summary chat-mode-summary-strong">
-                <div className="live-room-meta-card"><strong>{session ? 'Connected' : 'Chat ready'}</strong><span>{session ? `Started ${new Date(session.started_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : 'Fastest way to start talking'}</span></div>
-                <div className="live-room-meta-card"><strong>Free during launch</strong><span>Human chat is open right now.</span></div>
-              </div>
               {!session ? (
-                <div className="wallet-balance-card wallet-balance-card-muted wallet-balance-card-full ai-upgrade-card">
-                  <span className="eyebrow">Premium AI chat</span>
-                  <strong>Upgrade to AI Chat</strong>
-                  <p>Default chat is human-to-human. Unlock AI chat with your premium plan or credits.</p>
-                  <div className="media-failure-actions ai-mode-actions">
-                    <button className={`ghost-btn ${chatKind === 'human' ? 'active' : ''}`} onClick={() => setChatKind('human')}>Human chat (default)</button>
-                    <button className={`primary-btn ${chatKind === 'ai' ? 'active' : ''}`} onClick={() => (aiUnlocked ? setChatKind('ai') : unlockAiChat())}>{aiUnlocked ? 'AI chat unlocked' : 'Unlock AI chat · 2 credits'}</button>
+                <div className="wallet-balance-card wallet-balance-card-muted wallet-balance-card-full ai-upgrade-card ai-choice-block">
+                  <span className="eyebrow">Choose chat mode</span>
+                  <strong>Free human chat or Premium AI chat</strong>
+                  <p>Start with free human chat by default, or unlock AI chat with credits or a monthly plan.</p>
+                  <div className="ai-choice-grid">
+                    <button className={`ghost-btn ai-choice-card ${chatKind === 'human' ? 'active' : ''}`} onClick={() => setChatKind('human')}>
+                      <span className="ai-choice-label">Human chat</span>
+                      <small>Free · default · person-to-person</small>
+                    </button>
+                    <button className={`primary-btn ai-choice-card ${chatKind === 'ai' ? 'active' : ''}`} onClick={() => (aiUnlocked ? setChatKind('ai') : unlockAiChat())}>
+                      <span className="ai-choice-label">AI chat</span>
+                      <small>{aiUnlocked ? 'Premium unlocked' : 'Premium · 2 credits to unlock'}</small>
+                    </button>
                   </div>
                   {!aiUnlocked ? (
-                    <div className="ai-plan-row">
+                    <div className="ai-plan-row ai-plan-row-strong">
                       {(products || []).slice(0, 3).map((product) => (
                         <button key={product.code} className="ghost-btn ai-plan-btn" onClick={async () => {
                           const response = await fetch(`${API}/credits/checkout`, {
@@ -1086,7 +1088,7 @@ function LivePage({ data }) {
                             body: JSON.stringify({ productCode: product.code, userId: 'demo-user' })
                           });
                           const payload = await response.json();
-                          if (payload?.url) window.open(payload.url, '_blank');
+                          if (payload?.checkoutUrl) window.open(payload.checkoutUrl, '_blank');
                         }}>{product.name} · ${(product.price_usd_cents / 100).toFixed(0)}/mo</button>
                       ))}
                     </div>
@@ -1197,8 +1199,8 @@ function LivePage({ data }) {
               </div>
               <div className="transcript-feed transcript-feed-bubbles">
                 <div className="transcript-empty-state pre-session-empty-state pre-session-preview-card chat-empty-state-card">
-                  <strong>{chatKind === 'ai' ? 'Premium AI chat is ready.' : 'Type your first message to start chatting live.'}</strong>
-                  <p>{chatKind === 'ai' ? 'This chat will use premium AI mode powered by your upgraded plan or credits.' : 'Chat is the fastest fallback. Start with a quick message and the live transcript will build from there.'}</p>
+                  <strong>{chatKind === 'ai' ? 'Premium AI chat is ready.' : 'Free human chat is ready.'}</strong>
+                  <p>{chatKind === 'ai' ? 'This chat will use premium AI mode powered by your upgraded plan or credits.' : 'This chat will connect person-to-person by default. Start with a quick message to begin.'}</p>
                 </div>
               </div>
               <div className="chat-input-row chat-input-row-strong">

@@ -166,3 +166,14 @@
 
 .ai-upgrade-card{margin-bottom:14px;border-color:#f2c2a4;background:linear-gradient(180deg,#fff7f1,#fffdfb)}
 .ai-upgrade-card .primary-btn[disabled]{opacity:1;filter:none;cursor:not-allowed}
+
+.ai-choice-block{margin-bottom:16px}
+.ai-choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.ai-choice-card{min-height:88px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;text-align:left;padding:16px 18px;border-radius:18px}
+.ai-choice-label{font-size:18px;font-weight:800;line-height:1.1}
+.ai-choice-card small{margin-top:6px;font-size:13px;opacity:.92}
+.ai-choice-card.ghost-btn{background:#fff7f1;border:1px solid #edc6ab;color:#8e421a;box-shadow:0 10px 20px rgba(160,88,40,.08)}
+.ai-choice-card.primary-btn{box-shadow:0 16px 30px rgba(255,90,54,.24)}
+.ai-plan-row-strong{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
+.ai-plan-btn{justify-content:center;text-align:center;min-height:42px}
+@media (max-width: 900px){.ai-choice-grid,.ai-plan-row-strong{grid-template-columns:1fr}}
