@@ -896,15 +896,37 @@ function LivePage({ data }) {
     setPresence(payload.presence);
   };
 
+  const resetToDefaultLiveEntry = () => {
+    setSession(null);
+    setPresence(null);
+    setMessages([]);
+    setDraft('');
+    setSessionMode('webcam');
+    setMediaError('');
+    setMediaDebug(null);
+    setMediaState('idle');
+    setSending(false);
+    setStarting(false);
+    setEnding(false);
+    setLastSentText('');
+    streamAbortRef.current?.abort?.();
+    streamAbortRef.current = null;
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach((track) => track.stop());
+      localStreamRef.current = null;
+    }
+    if (localVideoRef.current) localVideoRef.current.srcObject = null;
+    localStorage.removeItem(`molt-live-session:${slug}`);
+  };
+
   const endSession = async () => {
     if (!session?.id || ending) return;
     setEnding(true);
     const response = await fetch(`${API}/live/session/${session.id}/end`, {
       method: 'POST'
     });
-    const payload = await response.json();
-    setSession(payload.session);
-    setEnding(false);
+    await response.json();
+    resetToDefaultLiveEntry();
   };
 
   const spendCredits = async (actionCode) => {
@@ -1110,7 +1132,7 @@ function LivePage({ data }) {
               {(mediaState === 'preview-ready' || session) ? (
                 <button className="primary-btn live-primary-cta" onClick={startSession} disabled={starting || !!session || (sessionMode === 'webcam' && mediaState !== 'preview-ready')}>{session ? '🔴 Session live' : starting ? 'Starting…' : '▶ Start Live Session'}</button>
               ) : null}
-              {session ? <button className="ghost-btn" onClick={endSession} disabled={!session || ending}>{ending ? 'Ending…' : 'End session'}</button> : null}
+              {session ? <button className="ghost-btn" onClick={endSession} disabled={!session || ending}>{ending ? 'Ending…' : isChatMode ? 'End chat' : 'End session'}</button> : null}
             </div>
           ) : null}
         </div>
