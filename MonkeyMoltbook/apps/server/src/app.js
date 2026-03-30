@@ -7,7 +7,7 @@ import { getMoltbookIntel, getMoltbookStats, getMoltbookAgents } from './lib/mol
 import { buildAuthorCoverage, buildCommunityIndex, buildSubmoltIndex, fetchExpandedUniverseSample, fetchCursorBackfillSample, fetchPaginatedUniverseSample } from './lib/moltbook-discovery.js';
 import { getSchedulerState, startScheduler, stopScheduler } from './lib/moltbook-scheduler.js';
 import { getResponse, getResponseStats } from './lib/responses.js';
-import { buildSearchDocumentsFromState, getCommunityBySlug, getEntityRiskScore, getIngestionJob, isSupabaseStorageEnabled, persistMoltbookSnapshot, searchDocuments, upsertCommunities, upsertEntityRiskScores, upsertIngestionJob, upsertPosts, upsertSearchDocuments, upsertSubmolts, upsertAuthors } from './lib/supabase-storage.js';
+import { buildSearchDocumentsFromState, getCommunityBySlug, getEntityRiskScore, getIngestionJob, isSupabaseStorageEnabled, persistMoltbookSnapshot, searchCommunities, searchDocuments, upsertCommunities, upsertEntityRiskScores, upsertIngestionJob, upsertPosts, upsertSearchDocuments, upsertSubmolts, upsertAuthors } from './lib/supabase-storage.js';
 import { scoreAuthorRisk, scoreCommunityRisk } from './lib/trust-score.js';
 import { addAgentReply, addLiveMessage, createLiveSession, endLiveSession, exportTranscriptText, getLiveSession, listTranscript, liveSessionsEnabled, updateLivePresence } from './lib/live-sessions.js';
 import { createCheckoutSession, creditsEnabled, ensureCreditProducts, getSpendRules, getWallet, grantCredits, listCreditProducts, listCreditTransactions, spendCredits } from './lib/credits.js';
@@ -162,15 +162,17 @@ app.get('/molt-live/search', async (req, res) => {
 
   let communities = [];
   if (isSupabaseStorageEnabled() && (tab === 'all' || tab === 'groups')) {
-    const docs = await searchDocuments({ query: q, entityType: 'community', limit: tab === 'all' ? 6 : limit }).catch(() => []);
-    communities = docs.map((row) => {
+    const rows = await searchCommunities({ query: q, limit: tab === 'all' ? 6 : limit }).catch(() => []);
+    communities = rows.map((row) => {
       const base = {
-        slug: row.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || '',
-        name: row.title,
-        title: row.title,
-        description: row.body || row.subtitle || 'Community coverage from Moltbook.',
-        sampleTitles: row.body ? [row.body.slice(0, 120)] : [],
-        postCount: Math.round(row.popularity_score || 0),
+        id: row.id,
+        slug: row.slug || row.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || '',
+        name: row.name,
+        title: row.title || row.name,
+        description: row.description || 'Community coverage from Moltbook.',
+        sampleTitles: row?.payload?.sampleTitles || [],
+        postCount: Math.round(row.post_count || 0),
+        memberCount: row.member_count || 0,
         source: 'community'
       };
       return {

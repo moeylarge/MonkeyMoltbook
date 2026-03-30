@@ -417,6 +417,20 @@ export async function getCommunityBySlug(slug) {
   return result.data?.[0] || null;
 }
 
+export async function searchCommunities({ query, limit = 20 } = {}) {
+  if (!isSupabaseStorageEnabled()) return [];
+  const q = String(query || '').trim();
+  const safeQuery = encodeURIComponent(`%${q}%`);
+  const clauses = [
+    'select=*',
+    `limit=${Math.max(1, Math.min(Number(limit) || 20, 50))}`,
+    'order=post_count.desc.nullslast'
+  ];
+  if (q) clauses.unshift(`or=(name.ilike.${safeQuery},title.ilike.${safeQuery},description.ilike.${safeQuery},slug.ilike.${safeQuery})`);
+  const result = await supabaseFetch('communities', { query: clauses.join('&') });
+  return result.data || [];
+}
+
 export async function upsertEntityRiskScores(rows) {
   if (!rows?.length) return [];
   const payload = rows.map((row) => ({
