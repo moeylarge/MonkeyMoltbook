@@ -15,6 +15,49 @@ import { createCheckoutSession, creditsEnabled, ensureCreditProducts, getSpendRu
 export const app = express();
 app.use(express.json());
 
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
+const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4.1-mini';
+
+function openAiEnabled() {
+  return Boolean(OPENAI_API_KEY);
+}
+
+function buildFredMessages({ agentName, userText, transcript = [] }) {
+  const recent = (transcript || []).slice(-10).map((m) => ({
+    role: m.role === 'agent' ? 'assistant' : m.role === 'user' ? 'user' : 'system',
+    content: String(m.text || '')
+  }));
+
+  return [
+    {
+      role: 'system',
+      content: `You are ${agentName || 'Fred'}, a live chat persona on Molt Live. Be natural, concise, useful, and non-repetitive. Do not say you 'heard' the user. Respond like a real assistant in an ongoing conversation. Avoid meta commentary about transcripts, storage, or implementation.`
+    },
+    ...recent,
+    { role: 'user', content: userText }
+  ];
+}
+
+async function createOpenAiChatCompletion({ agentName, userText, transcript = [] }) {
+  if (!openAiEnabled()) throw new Error('openai_not_configured');
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${OPENAI_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: OPENAI_MODEL,
+      temperature: 0.8,
+      stream: false,
+      messages: buildFredMessages({ agentName, userText, transcript })
+    })
+  });
+  const json = await response.json();
+  if (!response.ok) throw new Error(`openai_chat_failed:${response.status}:${JSON.stringify(json)}`);
+  return String(json?.choices?.[0]?.message?.content || '').trim();
+}
+
 function communitySearchRank(item, query) {
   const q = String(query || '').trim().toLowerCase();
   if (!q) return 0;
@@ -1127,10 +1170,18 @@ app.post('/live/session/create', async (req, res) => {
 app.get('/live/session/:id', async (req, res) => res.json({ phase: PHASE, ok: true, ...(await getLiveSession(req.params.id)) }));
 app.post('/live/session/:id/message', async (req, res) => {
   const sessionId = req.params.id;
-  const text = String(req.body?.text || '');
+  const text = String(req.body?.text || '').trim();
   const state = await getLiveSession(sessionId);
+  const transcript = await listTranscript(sessionId);
+  const agentName = state?.session?.agent_name || 'Agent';
   const userMessage = await addLiveMessage(sessionId, { role: 'user', messageType: 'typed', text });
-  const agentReply = await addAgentReply(sessionId, text, state?.session?.agent_name || 'Agent');
+  const agentText = await createOpenAiChatCompletion({ agentName, userText: text, transcript });
+  const agentReply = await addLiveMessage(sessionId, {
+    role: 'agent',
+    messageType: 'tts-text',
+    text: agentText,
+    meta: { generated: true, provider: 'openai', model: OPENAI_MODEL }
+  });
   res.json({ phase: PHASE, ok: true, userMessage, agentReply });
 });
 
@@ -1138,9 +1189,10 @@ app.post('/live/session/:id/message/stream', async (req, res) => {
   const sessionId = req.params.id;
   const text = String(req.body?.text || '').trim();
   const state = await getLiveSession(sessionId);
+  const transcript = await listTranscript(sessionId);
   const agentName = state?.session?.agent_name || 'Agent';
-  const agentText = `${agentName} heard: ${text}. This is the first real stored live-session loop, with transcript persistence now active.`;
   const userMessage = await addLiveMessage(sessionId, { role: 'user', messageType: 'typed', text });
+  const agentText = await createOpenAiChatCompletion({ agentName, userText: text, transcript });
 
   res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
   res.setHeader('Cache-Control', 'no-cache, no-transform');
@@ -1159,14 +1211,14 @@ app.post('/live/session/:id/message/stream', async (req, res) => {
   for (const word of words) {
     built += word;
     sendEvent('chunk', { text: built });
-    await new Promise((resolve) => setTimeout(resolve, 35));
+    await new Promise((resolve) => setTimeout(resolve, 20));
   }
 
   const agentReply = await addLiveMessage(sessionId, {
     role: 'agent',
     messageType: 'tts-text',
     text: agentText,
-    meta: { generated: true, streamed: true }
+    meta: { generated: true, streamed: true, provider: 'openai', model: OPENAI_MODEL }
   });
 
   sendEvent('done', { userMessage, agentReply });
