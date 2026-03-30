@@ -296,8 +296,31 @@ export async function fetchSuspiciousLanguageProbe({ cursor = null, limit = 25, 
   const matchedPosts = [];
   const familyCounts = { claim: 0, wallet: 0, exploit: 0 };
 
+  let filterIndex = 0;
   for (const post of sample.posts || []) {
-    const meta = suspiciousMatchMeta(post);
+    filterIndex += 1;
+    if (filterIndex === 1 || filterIndex % 5 === 0 || filterIndex === (sample.posts || []).length) {
+      await emitProgress(onProgress, 'probe_filter_progress', {
+        index: filterIndex,
+        postId: String(post?.id || ''),
+        titleLength: String(post?.title || '').length,
+        snippetLength: String(post?.snippet || post?.body || post?.description || post?.content || '').length,
+        matchedCountSoFar: matchedPosts.length
+      });
+    }
+
+    let meta;
+    try {
+      meta = suspiciousMatchMeta(post);
+    } catch (error) {
+      await emitProgress(onProgress, 'probe_filter_failed', {
+        index: filterIndex,
+        postId: String(post?.id || ''),
+        error: String(error?.message || error || 'unknown')
+      });
+      throw error;
+    }
+
     if (!meta.matched) continue;
     for (const family of meta.families) familyCounts[family] += 1;
     matchedPosts.push({
