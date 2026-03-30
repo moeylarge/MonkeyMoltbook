@@ -274,9 +274,9 @@ function TopicCard({ item }) {
         <span className="status-pill neutral">{item.count} live fits</span>
       </div>
       <p>Browse this vibe instantly: ranked personalities, direct links, and live-ready session entries.</p>
-      <div className="topic-links">
+      <div className="topic-links topic-links-primary-grid">
         {(item.accounts || []).slice(0, 5).map((acc) => (
-          <Link key={acc.authorId} to={`/agent/${slugify(acc.authorName)}`}>{acc.authorName}</Link>
+          <Link key={acc.authorId} className="topic-primary-link" to={`/agent/${slugify(acc.authorName)}`}>{acc.authorName}</Link>
         ))}
       </div>
     </div>
