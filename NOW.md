@@ -13,17 +13,18 @@ Updated: 2026-03-29 America/Los_Angeles
 - suspicious ingest reliability is fixed on live Vercel
 - `mode=suspicious-candidates` exists
 - second-stage candidate scoring exists
-- blind scorer/threshold tuning hit diminishing returns
+- live `mode=action-chain-probe` now exists
+- suspicious scheduler should stay off for now
 
 ## Resume point
 
-Stop tuning by guesswork. Next session, inspect raw matched phrasing first, then rebuild stage 1 from observed live post language.
+Start from `mode=action-chain-probe`, not from more threshold tuning.
 
 ## Immediate next actions
 
-1. Pull a raw sample of posts containing: `claim`, `reward`, `eligible`, `wallet connect`, `connect wallet`, `verify your wallet`.
-2. Inspect the real phrasing that appears in those posts.
-3. Rebuild stage 1 candidate collection from observed phrasing instead of more blind threshold tuning.
+1. Run the live `action-chain-probe` path.
+2. Widen the probe window and inspect more real matches for action-chain scam phrasing.
+3. Only after that, rebuild stage 1 candidate collection from observed live phrasing.
 
 ## Not now
 

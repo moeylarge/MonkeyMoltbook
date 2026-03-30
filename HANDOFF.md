@@ -21,8 +21,9 @@ Updated: 2026-03-29 America/Los_Angeles
 - suspicious ingest reliability is fixed
 - `mode=suspicious-candidates` exists
 - second-stage candidate scoring exists
-- stage-1 and stage-2 tuning by threshold guesswork hit a stop point
-- next move is raw phrase inspection before any more candidate tuning
+- repeated live tuning showed threshold-only iteration was looping
+- live `mode=action-chain-probe` was added as the new grounded starting point
+- suspicious scheduler should remain off until stage 1 is trustworthy
 
 ## Open first inside the project
 
@@ -34,7 +35,7 @@ Updated: 2026-03-29 America/Los_Angeles
 ## Stop conditions
 
 Stop once one of these is true:
-- the raw phrase sample was collected
-- the next stage-1 rebuild plan is clear from observed phrasing
+- the action-chain probe window was widened and inspected
+- a grounded stage-1 rebuild plan is clear from real matches
 - the handoff files were updated
 - the task was committed

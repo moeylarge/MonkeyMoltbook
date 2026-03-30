@@ -12,7 +12,7 @@ ACTIVE
 
 ## Current phase
 
-MOLT-LIVE deployed live product + suspicious-source acquisition / candidate-scoring architecture on Vercel
+MOLT-LIVE deployed live product + grounded suspicious-source probing on Vercel
 
 ## Stack
 
@@ -40,13 +40,19 @@ MOLT-LIVE deployed live product + suspicious-source acquisition / candidate-scor
 - targeted suspicious family lanes exist for wallet / claim / seed / exploit
 - `mode=suspicious-candidates` exists
 - second-stage candidate scoring exists
-- multiple live tuning passes were run across stage 1 and stage 2
-- current tuning conclusion: raw phrase inspection is needed before more threshold changes
+- live `mode=action-chain-probe` now exists
+- suspicious scheduler is off by design for now
+- live probe currently confirms one concrete suspicious action-chain cluster:
+  - `connect wallet`
+  - `fill form`
+  - `instant usdt`
+  - `zero risk`
+  - `no signing required`
 
 ## Incomplete
 
-- raw live-phrase inspection for suspicious candidate source terms
-- rebuild of stage 1 candidate collection from observed phrasing
+- widen live action-chain probe coverage and inspect more real matches
+- rebuild stage 1 candidate collection from observed phrasing
 - candidate promotion logic from weak-signal corpus to higher-confidence suspicious shortlist
 - stronger suspicious-source acquisition beyond the generic recent-feed cursor
 - richer suspicious-source mapping by recurring authors / submolts / phrase clusters
@@ -54,7 +60,7 @@ MOLT-LIVE deployed live product + suspicious-source acquisition / candidate-scor
 
 ## Immediate next move
 
-1. collect a raw sample of posts containing `claim`, `reward`, `eligible`, `wallet connect`, `connect wallet`, `verify your wallet`
-2. inspect the actual phrasing in those posts
-3. rebuild stage 1 candidate collection from observed phrasing
-4. avoid more blind threshold tuning until that inspection is done
+1. run live `mode=action-chain-probe`
+2. widen the probe window and inspect more real matches
+3. rebuild stage 1 from observed live action-chain phrasing
+4. keep scheduler/manual collection conservative until stage 1 is trustworthy

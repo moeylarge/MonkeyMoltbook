@@ -4,11 +4,11 @@ Updated: 2026-03-29 America/Los_Angeles
 
 ## Current phase
 
-**Candidate-first suspicious acquisition on live Vercel is at a decision point**
+**Grounded suspicious-source probing on live Vercel**
 
 ## Objective
 
-Use stage-1 weak-signal candidate collection plus stage-2 ranking to surface a tighter suspicious shortlist without polluting the final high-confidence family lanes.
+Use live action-chain probe results to rebuild stage 1 candidate collection from real observed scam-like phrasing instead of blind threshold tuning.
 
 ## Current verified state
 
@@ -19,18 +19,21 @@ Use stage-1 weak-signal candidate collection plus stage-2 ranking to surface a t
 - strict family lanes still exist and should stay separate
 - `mode=suspicious-candidates` exists
 - second-stage candidate scoring exists
-- multiple live tuning passes were run on both stage 1 and stage 2
-- blind threshold tuning is no longer the right move
+- repeated stage-1 / stage-2 tuning passes hit loop territory
+- live `mode=action-chain-probe` now exists
+- suspicious scheduler is currently off and should stay off for now
 
-## Decision point reached
+## What was learned in this chat
 
-The system hit both failure modes in sequence:
-- looser stage 1 + scorer tuning let too much junk in
-- stricter stage 1 + scorer tuning collapsed the candidate pool too far
-
-Current conclusion:
-- do **not** continue blind threshold tuning
-- next session must inspect real matched post language first
+- generic `claim`, `reward`, and `eligible` language is extremely noisy in the current feed
+- broad wallet/claim tuning without grounded examples loops quickly
+- a real suspicious action-chain pattern was found and verified on live data:
+  - `connect wallet`
+  - `fill form`
+  - `instant usdt`
+  - `zero risk`
+  - `no signing required`
+- live `action-chain-probe` successfully returns that exact post and matched-pattern set
 
 ## Source-of-truth files
 
@@ -42,20 +45,16 @@ Current conclusion:
 
 ## Immediate next step
 
-1. Pull a raw sample of posts containing:
-   - `claim`
-   - `reward`
-   - `eligible`
-   - `wallet connect`
-   - `connect wallet`
-   - `verify your wallet`
-2. Inspect the actual live phrasing in those posts.
-3. Rebuild stage 1 candidate collection from observed phrasing, not guesswork.
-4. Leave stage 2 mostly unchanged until stage 1 is grounded in real examples.
+1. Run live `mode=action-chain-probe`.
+2. Widen the probe window / sample depth.
+3. Inspect more real action-chain matches.
+4. Rebuild stage 1 candidate collection from those observed live phrases.
+5. Leave stage 2 mostly unchanged until stage 1 is grounded.
 
 ## Guardrails
 
 - do not reopen Railway
-- do not continue threshold-churn loops without new evidence
+- do not re-enter blind threshold-churn loops
+- do not turn the suspicious scheduler back on yet
 - do not promote candidate logic into final family lanes yet
 - truthful zero is better than polluted suspicious output

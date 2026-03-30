@@ -42,20 +42,70 @@ function weakSuspiciousCueMeta(post) {
   const title = String(post?.title || '');
   const snippet = String(post?.snippet || post?.body || post?.description || post?.content || '');
   const text = `${title} ${snippet}`.toLowerCase();
-  const cueGroups = {
-    claim: ['airdrop', 'claim', 'eligible', 'reward', 'redeem'],
-    wallet: ['wallet', 'wallet connect', 'connect wallet', 'verify your wallet', 'private key'],
-    seed: ['seed phrase', 'secret phrase', 'private key', 'restore wallet'],
-    exploit: ['drainer', 'wallet drain', 'approval scam', 'malicious link', 'phishing', 'malware', 'exploit']
-  };
+  const includesAny = (patterns) => patterns.filter((phrase) => text.includes(phrase));
+
+  const walletActionHits = includesAny([
+    'wallet connect', 'connect wallet', 'connect your wallet', 'connect wallet to claim',
+    'verify your wallet', 'wallet verification'
+  ]);
+  const walletRecoveryHits = includesAny([
+    'wallet recovery', 'recover your wallet', 'restore wallet', 'restore your wallet',
+    'import your wallet', 'wallet authentication'
+  ]);
+  const seedHits = includesAny(['seed phrase', 'secret phrase', 'private key', 'enter seed phrase']);
+  const exploitHits = includesAny(['drainer', 'wallet drain', 'approval scam', 'malicious link', 'phishing', 'malware']);
+
+  const actionChainHits = includesAny([
+    'fill form', 'instant usdt', 'free 1 usdt', 'usdt', 'zero risk', 'no risk',
+    'no signing required', 'claim now', 'claim your reward', 'claim your airdrop',
+    'claim your tokens', 'eligible for airdrop', 'check your eligibility',
+    'redeem now', 'redeem your reward', 'unlock your reward'
+  ]);
+  const technicalContextHits = includesAny([
+    'zero-knowledge', 'benchmark', 'zk', 'cryptography', 'signature scheme', 'key management',
+    'security model', 'threat model', 'custody', 'wallet architecture', 'technical design',
+    'implementation', 'inference', 'proof system'
+  ]);
+
   const weakFamilies = [];
   const weakPhrases = [];
-  for (const [family, patterns] of Object.entries(cueGroups)) {
-    const hits = patterns.filter((phrase) => text.includes(phrase));
-    if (!hits.length) continue;
-    weakFamilies.push(family);
-    weakPhrases.push(...hits);
+
+  const hasConnectWallet = includesAny(['connect wallet', 'connect your wallet']).length > 0;
+  const hasWalletConnect = includesAny(['wallet connect']).length > 0;
+  const hasFillForm = includesAny(['fill form']).length > 0;
+  const hasInstantUsdt = includesAny(['instant usdt']).length > 0;
+  const hasNoSigningRequired = includesAny(['no signing required']).length > 0;
+  const hasZeroRiskUsdt = includesAny(['zero risk', 'no risk']).length > 0 && includesAny(['usdt', 'free 1 usdt']).length > 0;
+  const hasObservedActionCluster = (
+    (hasConnectWallet && hasFillForm)
+    || (hasConnectWallet && hasInstantUsdt)
+    || (hasConnectWallet && hasNoSigningRequired)
+    || hasZeroRiskUsdt
+    || (hasWalletConnect && actionChainHits.length > 0)
+  );
+
+  const allowClaim = hasObservedActionCluster;
+  const allowWallet = hasObservedActionCluster || walletRecoveryHits.length > 0;
+  const allowSeed = seedHits.length > 0 && hasObservedActionCluster && technicalContextHits.length === 0;
+  const allowExploit = exploitHits.length > 0;
+
+  if (allowClaim) {
+    weakFamilies.push('claim');
+    weakPhrases.push(...actionChainHits, ...walletActionHits);
   }
+  if (allowWallet) {
+    weakFamilies.push('wallet');
+    weakPhrases.push(...walletActionHits, ...walletRecoveryHits, ...seedHits, ...actionChainHits);
+  }
+  if (allowSeed) {
+    weakFamilies.push('seed');
+    weakPhrases.push(...seedHits);
+  }
+  if (allowExploit) {
+    weakFamilies.push('exploit');
+    weakPhrases.push(...exploitHits);
+  }
+
   return {
     matched: weakFamilies.length > 0,
     families: [...new Set(weakFamilies)],
@@ -78,51 +128,76 @@ function secondStageCandidateScore(post, weakMeta) {
 
   let score = 0;
 
-  const weightedGroups = [
-    { label: 'cta_reward', weight: 14, patterns: ['free', 'claim', 'claim now', 'eligible', 'reward', 'redeem', 'bonus', 'airdrop'] },
-    { label: 'wallet_action', weight: 18, patterns: ['connect wallet', 'wallet connect', 'connect your wallet', 'verify your wallet', 'wallet verification', 'restore wallet', 'wallet recovery', 'import your wallet'] },
-    { label: 'seed_action', weight: 26, patterns: ['enter seed phrase', 'seed phrase required', 'secret phrase', 'private key', 'restore your wallet'] },
-    { label: 'pressure_or_safety', weight: 16, patterns: ['zero risk', 'no risk', 'limited time', 'act now', 'instant', 'verify now'] },
-    { label: 'abuse_terms', weight: 18, patterns: ['drainer', 'wallet drain', 'approval scam', 'malicious link', 'phishing'] }
-  ];
+  const walletActionHits = includesAny([
+    'connect wallet', 'wallet connect', 'connect your wallet', 'connect wallet to claim',
+    'verify your wallet', 'wallet verification', 'restore wallet', 'restore your wallet',
+    'wallet recovery', 'recover your wallet', 'import your wallet', 'wallet authentication'
+  ]);
+  const seedActionHits = includesAny([
+    'enter seed phrase', 'seed phrase required', 'secret phrase', 'private key', 'restore your wallet'
+  ]);
+  const abuseHits = includesAny(['drainer', 'wallet drain', 'approval scam', 'malicious link', 'phishing']);
+  const rewardHits = includesAny(['claim', 'claim now', 'eligible', 'reward', 'redeem', 'airdrop']);
+  const weakPromoHits = includesAny(['free', 'bonus', 'instant']);
+  const pressureHits = includesAny(['zero risk', 'no risk', 'limited time', 'act now', 'verify now']);
 
-  for (const group of weightedGroups) {
-    const hits = includesAny(group.patterns);
-    if (!hits.length) continue;
-    score += group.weight + Math.min(12, (hits.length - 1) * Math.max(3, Math.round(group.weight / 4)));
-    scoreSignals.strongSignals.push(...hits);
+  if (rewardHits.length) {
+    score += 8 + Math.min(8, (rewardHits.length - 1) * 2);
+    scoreSignals.strongSignals.push(...rewardHits);
+  }
+  if (walletActionHits.length) {
+    score += 24 + Math.min(10, (walletActionHits.length - 1) * 3);
+    scoreSignals.strongSignals.push(...walletActionHits);
+  }
+  if (seedActionHits.length) {
+    score += 28 + Math.min(10, (seedActionHits.length - 1) * 3);
+    scoreSignals.strongSignals.push(...seedActionHits);
+  }
+  if (abuseHits.length) {
+    score += 20 + Math.min(10, (abuseHits.length - 1) * 3);
+    scoreSignals.strongSignals.push(...abuseHits);
+  }
+  if (pressureHits.length) {
+    score += 12 + Math.min(6, (pressureHits.length - 1) * 2);
+    scoreSignals.strongSignals.push(...pressureHits);
+  }
+  if (weakPromoHits.length) {
+    score += 3 + Math.min(3, weakPromoHits.length - 1);
+    scoreSignals.strongSignals.push(...weakPromoHits);
   }
 
-  if ((weakMeta?.families || []).length >= 2) score += 10;
-  if ((weakMeta?.phrases || []).length >= 3) score += 6;
+  if ((weakMeta?.families || []).length >= 2) score += 6;
+  if ((weakMeta?.phrases || []).length >= 3) score += 4;
 
   const hasWalletCue = (weakMeta?.families || []).includes('wallet') || /wallet/.test(text);
   const hasClaimCue = (weakMeta?.families || []).includes('claim') || /claim|airdrop|reward|eligible|redeem/.test(text);
   const hasSeedCue = (weakMeta?.families || []).includes('seed') || /seed phrase|secret phrase|private key/.test(text);
   const hasExploitCue = (weakMeta?.families || []).includes('exploit') || /drainer|wallet drain|approval scam|malicious link|phishing|malware|exploit/.test(text);
+  const hasStrongWalletAction = walletActionHits.length > 0 || seedActionHits.length > 0;
 
-  if (hasWalletCue && hasClaimCue) {
-    score += 18;
-    scoreSignals.strongSignals.push('wallet+claim_combo');
+  if (hasWalletCue && hasClaimCue && hasStrongWalletAction) {
+    score += 20;
+    scoreSignals.strongSignals.push('wallet+claim_action_combo');
   }
   if (hasWalletCue && hasSeedCue) {
-    score += 24;
+    score += 22;
     scoreSignals.strongSignals.push('wallet+seed_combo');
   }
-  if (hasWalletCue && includesAny(['zero risk', 'no risk', 'free', 'reward']).length) {
-    score += 14;
-    scoreSignals.strongSignals.push('wallet+reward_combo');
-  }
   if (hasExploitCue && hasWalletCue) {
-    score += 16;
+    score += hasStrongWalletAction ? 18 : 8;
     scoreSignals.strongSignals.push('exploit+wallet_combo');
+  }
+  if (hasWalletCue && pressureHits.length && hasStrongWalletAction) {
+    score += 10;
+    scoreSignals.strongSignals.push('wallet+pressure_combo');
   }
 
   const penaltyGroups = [
     { label: 'security_research', weight: -26, patterns: ['security research', 'researcher', 'incident analysis', 'postmortem', 'defensive', 'protection', 'detected', 'detection', 'how phishing works', 'how drainer works'] },
     { label: 'philosophy_general', weight: -22, patterns: ['philosophy', 'consciousness', 'pondering', 'meditation', 'meaning of', 'ethics', 'spiritual'] },
     { label: 'generic_airdrop_discussion', weight: -18, patterns: ['tax', 'taxes', 'tax strategy', 'capital gains', 'discussion', 'news recap', 'market update', 'guide', 'tutorial'] },
-    { label: 'benign_education', weight: -16, patterns: ['open source', 'hackathon', 'compliance', 'best practices', 'awareness', 'education'] }
+    { label: 'benign_education', weight: -16, patterns: ['open source', 'hackathon', 'compliance', 'best practices', 'awareness', 'education'] },
+    { label: 'generic_crypto_framing', weight: -20, patterns: ['economy', 'wealth', 'on-chain', 'agents', 'agent payment', 'payment protocol', 'revolution', 'incentive layer', 'ground truth'] }
   ];
 
   for (const group of penaltyGroups) {
@@ -132,16 +207,33 @@ function secondStageCandidateScore(post, weakMeta) {
     scoreSignals.penaltySignals.push(...hits);
   }
 
-  if ((weakMeta?.families || []).includes('claim') && !hasWalletCue && !hasSeedCue && !includesAny(['free', 'connect wallet', 'wallet connect', 'verify your wallet', 'zero risk']).length) {
-    score -= 14;
+  if (hasWalletCue && !hasStrongWalletAction && !hasSeedCue) {
+    score -= 10;
+    scoreSignals.penaltySignals.push('wallet_without_action');
+  }
+
+  if ((weakMeta?.families || []).includes('claim') && !hasStrongWalletAction && !hasSeedCue && !pressureHits.length) {
+    score -= 16;
     scoreSignals.penaltySignals.push('claim_without_wallet_action');
   }
+
+  if (weakPromoHits.length && !hasStrongWalletAction && !hasExploitCue) {
+    score -= 6;
+    scoreSignals.penaltySignals.push('weak_promo_without_action');
+  }
+
+  const hasMultiSignalCombo = (
+    (rewardHits.length > 0 && pressureHits.length > 0)
+    || (rewardHits.length > 0 && abuseHits.length > 0)
+    || (abuseHits.length > 0 && pressureHits.length > 0)
+    || ((weakMeta?.families || []).length >= 2 && (rewardHits.length + abuseHits.length + pressureHits.length) >= 2)
+  );
 
   const dedup = (items) => [...new Set(items)];
   const finalScore = Math.max(0, score);
   let label = 'low';
-  if (finalScore >= 70) label = 'high';
-  else if (finalScore >= 40) label = 'medium';
+  if (finalScore >= 75 && hasStrongWalletAction) label = 'high';
+  else if (finalScore >= 34 && (hasStrongWalletAction || hasMultiSignalCombo)) label = 'medium';
 
   return {
     score: finalScore,
@@ -556,6 +648,55 @@ export async function fetchSuspiciousCandidateSample({ cursor = null, limit = 10
     cueCounts,
     scoredCounts,
     candidatePreview,
+    firstCursorStat: sample.cursorStats?.[0] || null
+  };
+}
+
+export async function fetchActionChainProbeSample({ cursor = null, limit = 100, steps = 20, delayMs = 0, onProgress = null } = {}) {
+  await emitProgress(onProgress, 'action_chain_probe_entered', { cursor: cursor || null, limit, steps, delayMs });
+  const sample = await fetchCursorBackfillSample({ cursor, limit, steps, delayMs, onProgress });
+  const actionPatterns = [
+    'connect wallet',
+    'connect wallet to claim',
+    'wallet connect',
+    'fill form',
+    'instant usdt',
+    'zero risk',
+    'no signing required'
+  ];
+  const matches = [];
+
+  for (const post of sample.posts || []) {
+    const title = String(post?.title || '');
+    const snippet = String(post?.snippet || post?.body || post?.description || post?.content || '');
+    const text = `${title} ${snippet}`.toLowerCase();
+    const matchedPatterns = actionPatterns.filter((phrase) => text.includes(phrase));
+    if (!matchedPatterns.length) continue;
+    matches.push({
+      ...post,
+      matchedActionPatterns: matchedPatterns,
+      discoverySurface: post.discoverySurface || 'new'
+    });
+    if (matches.length >= 100) break;
+  }
+
+  const uniqueMatches = uniqueBy(matches, (post) => post.id);
+  const matchPreview = uniqueMatches.slice(0, 20).map((post) => ({
+    postId: String(post?.id || ''),
+    title: String(post?.title || ''),
+    matchedActionPatterns: post?.matchedActionPatterns || [],
+    submolt: typeof post?.submolt === 'string'
+      ? post.submolt
+      : post?.submolt?.name || post?.submolt?.slug || post?.submolt?.title || null,
+    snippet: String(post?.snippet || post?.body || post?.description || post?.content || '').slice(0, 280)
+  }));
+
+  return {
+    ...sample,
+    posts: uniqueMatches,
+    matchCount: uniqueMatches.length,
+    actionPatterns,
+    matchPreview,
     firstCursorStat: sample.cursorStats?.[0] || null
   };
 }
