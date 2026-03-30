@@ -101,3 +101,12 @@
 .agent-live-cta:hover,.live-primary-cta:hover,.page-intro-cta:hover,.card-actions-priority .primary-btn:hover{transform:translateY(-1px) scale(1.01);filter:brightness(1.04);box-shadow:0 18px 34px rgba(255,90,54,.28)}
 .agent-live-cta:active,.live-primary-cta:active,.page-intro-cta:active,.card-actions-priority .primary-btn:active{transform:translateY(1px) scale(.99)}
 .agent-live-cta:focus-visible,.live-primary-cta:focus-visible,.page-intro-cta:focus-visible,.card-actions-priority .primary-btn:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(255,255,255,.9),0 0 0 6px rgba(255,90,54,.38),0 18px 34px rgba(255,90,54,.24)}
+
+.webcam-mode-copy{margin-bottom:10px}
+.primary-webcam-cta{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:18px 20px;border-radius:20px;font-size:18px;width:100%}
+.stronger-fallback-row{margin-top:14px}
+.stronger-fallback-row .fallback-mode-btn{flex:1;justify-content:center;border:1px solid #e1b89c;background:#fff4ec;color:#9a4b21;box-shadow:0 10px 18px rgba(160,88,40,.10);font-weight:700}
+.pre-session-preview-card{background:#fffaf6;border:1px solid #ead8cb;box-shadow:0 10px 24px rgba(120,72,32,.08)}
+.live-window.ai{background:linear-gradient(180deg,#fff7f1,#fff1e8);border:1px solid #ead8cb;color:#1b1917}
+.live-window.ai .live-window-overlay span{background:#fff1e8;color:#a3471f;border:1px solid #f2b28f}
+.live-window.ai .live-window-overlay small{color:#665c57}

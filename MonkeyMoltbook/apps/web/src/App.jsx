@@ -599,7 +599,7 @@ function LivePage({ data }) {
   const [wallet, setWallet] = useState(null);
   const [products, setProducts] = useState([]);
   const [spendingAction, setSpendingAction] = useState('');
-  const [sessionMode, setSessionMode] = useState('chat');
+  const [sessionMode, setSessionMode] = useState('webcam');
   const [mediaReady, setMediaReady] = useState(false);
   const [mediaError, setMediaError] = useState('');
   const [mediaDebug, setMediaDebug] = useState(null);
@@ -853,7 +853,7 @@ function LivePage({ data }) {
         kicker="Go Live"
         title="Preview your camera first"
         body="Enable webcam, preview yourself, then go live."
-        trustItems={['Free during launch', 'No credits required']}
+        trustItems={[]}
       />
       <div className={`live-layout live-layout-monkeyish live-layout-redesign ${isChatMode ? 'live-layout-chat' : ''}`}>
         <div className={`live-stage live-stage-upgraded live-stage-redesign ${isChatMode ? 'live-stage-chat' : ''}`}>
@@ -876,13 +876,13 @@ function LivePage({ data }) {
             </div>
           )}
           <div className="mode-section">
-            <div className="mode-section-copy">
+            <div className="mode-section-copy webcam-mode-copy">
               <h3>Enable webcam</h3>
-              <p>We’ll ask for camera access next so you can preview yourself before going live.</p>
+              <p>Click the main button below. We’ll ask for camera access next so you can preview yourself before going live.</p>
             </div>
             <div className="mode-selector-row mode-selector-cards single-webcam-cta-row">
               <button
-                className={`tab primary-webcam-cta ${sessionMode === 'webcam' ? 'active' : ''}`}
+                className={`primary-btn primary-webcam-cta ${sessionMode === 'webcam' ? 'active' : ''}`}
                 onClick={async () => {
                   setSessionMode('webcam');
                   setMediaError('');
@@ -896,9 +896,9 @@ function LivePage({ data }) {
               </button>
             </div>
             {mediaState !== 'preview-ready' && !session ? (
-              <div className="fallback-mode-row">
-                <button className={`tab fallback-mode-btn ${sessionMode === 'voice' ? 'active' : ''}`} onClick={() => setSessionMode('voice')}>🎤 Use voice instead</button>
-                <button className={`tab fallback-mode-btn ${sessionMode === 'chat' ? 'active' : ''}`} onClick={() => setSessionMode('chat')}>💬 Use chat instead</button>
+              <div className="fallback-mode-row stronger-fallback-row">
+                <button className={`ghost-btn fallback-mode-btn ${sessionMode === 'voice' ? 'active' : ''}`} onClick={() => setSessionMode('voice')}>🎤 Use voice instead</button>
+                <button className={`ghost-btn fallback-mode-btn ${sessionMode === 'chat' ? 'active' : ''}`} onClick={() => setSessionMode('chat')}>💬 Use chat instead</button>
               </div>
             ) : null}
           </div>
@@ -1001,9 +1001,9 @@ function LivePage({ data }) {
               ) : null}
             </>
           )}
-          {((sessionMode !== 'webcam' && !session) || mediaState === 'preview-ready' || session) ? (
+          {(mediaState === 'preview-ready' || session) ? (
             <div className="live-cta-row live-cta-row-clean">
-              {(sessionMode !== 'webcam' || mediaState === 'preview-ready' || session) ? (
+              {(mediaState === 'preview-ready' || session) ? (
                 <button className="primary-btn live-primary-cta" onClick={startSession} disabled={starting || !!session || (sessionMode === 'webcam' && mediaState !== 'preview-ready')}>{session ? '🔴 Session live' : starting ? 'Starting…' : '▶ Start Live Session'}</button>
               ) : null}
               {session ? <button className="ghost-btn" onClick={endSession} disabled={!session || ending}>{ending ? 'Ending…' : 'End session'}</button> : null}
@@ -1011,8 +1011,8 @@ function LivePage({ data }) {
           ) : null}
         </div>
         <div className={`transcript-shell transcript-shell-redesign ${isChatMode ? 'transcript-shell-chat' : ''}`}>
-          {!session && mediaState !== 'failed' ? (
-            <div className="transcript-empty-state pre-session-empty-state">
+          {!session ? (
+            <div className="transcript-empty-state pre-session-empty-state pre-session-preview-card">
               <strong>Step 1: Enable webcam</strong>
               <p>Approve camera access and preview yourself. The live room, transcript, and controls appear after that.</p>
             </div>
