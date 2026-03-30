@@ -55,6 +55,85 @@ function communitySearchRank(item, query) {
   return score;
 }
 
+function buildPersistableAuthorRiskRows({ posts = [], upsertedAuthors = [] } = {}) {
+  const authorBySourceId = new Map(upsertedAuthors.map((row) => [String(row.source_author_id || ''), row]));
+  const grouped = new Map();
+  const suspiciousPhrasePatterns = [
+    'wallet connect', 'connect wallet', 'verify your wallet', 'wallet verification', 'wallet recovery', 'recover your wallet', 'import your wallet',
+    'seed phrase', 'secret phrase', 'private key', 'connect wallet to claim', 'wallet drainer', 'clipboard drainer', 'drain your wallet',
+    'remote access trojan', 'keygen', 'stealer', 'claim your reward now', 'claim your reward', 'claim your tokens', 'claim your airdrop',
+    'redeem now', 'redeem your reward', 'unlock your reward', 'check your eligibility', 'eligible for airdrop', 'airdrop'
+  ];
+
+  for (const post of posts || []) {
+    const sourceAuthorId = String(post?.author?.id || '');
+    const mapped = authorBySourceId.get(sourceAuthorId);
+    if (!mapped?.id || !mapped?.author_name) continue;
+    if (!grouped.has(mapped.id)) {
+      grouped.set(mapped.id, {
+        id: mapped.id,
+        authorName: mapped.author_name,
+        description: mapped.description || '',
+        reason: mapped.reason || '',
+        postCount: Number(mapped.post_count || 0),
+        observedPosts: Number(mapped.post_count || 0),
+        karma: Number(mapped.karma || 0),
+        isClaimed: Boolean(mapped.is_claimed),
+        submolts: new Set(),
+        sampleTitles: [],
+        sampleSnippets: [],
+        matchedPostCount: 0,
+        suspiciousHits: 0,
+        phraseDiversity: new Set()
+      });
+    }
+    const entry = grouped.get(mapped.id);
+    const title = String(post?.title || '').slice(0, 160);
+    const snippet = String(post?.snippet || post?.body || post?.description || '').slice(0, 260);
+    const text = `${title} ${snippet}`.toLowerCase();
+    if (post?.submolt) entry.submolts.add(typeof post.submolt === 'string' ? post.submolt : post.submolt?.name || post.submolt?.slug || '');
+    if (title && entry.sampleTitles.length < 6) entry.sampleTitles.push(title);
+    if (snippet && entry.sampleSnippets.length < 4) entry.sampleSnippets.push(snippet);
+
+    let matched = false;
+    for (const phrase of suspiciousPhrasePatterns) {
+      if (text.includes(phrase)) {
+        entry.phraseDiversity.add(phrase);
+        matched = true;
+      }
+    }
+    if (/seed phrase|secret phrase|private key|wallet recovery|recover your wallet|import your wallet|connect wallet to claim|wallet drainer|clipboard drainer|drain your wallet|remote access trojan|keygen|stealer|claim your reward now|claim your reward|claim your tokens|claim your airdrop|redeem now|redeem your reward|unlock your reward|verify your wallet|wallet connect|wallet verification|check your eligibility|eligible for airdrop|airdrop/.test(text)) {
+      entry.suspiciousHits += 2;
+      matched = true;
+    }
+    if (matched) entry.matchedPostCount += 1;
+  }
+
+  return [...grouped.values()].map((row) => {
+    const hydrated = {
+      ...row,
+      submolts: [...row.submolts].filter(Boolean),
+      phraseDiversity: row.phraseDiversity.size
+    };
+    const trust = scoreAuthorRisk(hydrated);
+    return {
+      entity_type: 'author',
+      entity_id: row.id,
+      risk_score: trust.riskScore,
+      risk_label: trust.riskLabel,
+      reason_short: trust.reasonShort,
+      signal_breakdown: trust.signalBreakdown,
+      evidence_summary: {
+        matchedPostCount: hydrated.matchedPostCount || 0,
+        suspiciousHits: hydrated.suspiciousHits || 0,
+        phraseDiversity: hydrated.phraseDiversity || 0,
+        sampleTitles: hydrated.sampleTitles || []
+      },
+      version: trust.version || 'trust-v1'
+    };
+  });
+}
+
 function authorSearchRank(item, query) {
   const q = String(query || '').trim().toLowerCase();
   if (!q) return 0;
@@ -572,7 +651,7 @@ app.post('/moltbook/collect/rolling', async (req, res) => {
       ...upsertedSubmolts.map((row) => ({ entity_type: 'submolt', entity_id: row.id, title: row.name, subtitle: 'group', body: '', keywords: row.name, popularity_score: row.post_count || 0, freshness_score: row.avg_score_per_post || 0, live_score: 0 }))
     ]);
     await upsertEntityRiskScores([
-      ...upsertedAuthors.map((row) => ({ entity_type: 'author', entity_id: row.id, ...scoreAuthorRisk({ authorName: row.author_name, description: row.description, reason: row.reason, postCount: row.post_count, karma: row.karma }) })),
+      ...buildPersistableAuthorRiskRows({ posts, upsertedAuthors }),
       ...upsertedCommunities.map((row) => ({ entity_type: 'community', entity_id: row.id, ...scoreCommunityRisk({ name: row.name, title: row.title, description: row.description, postCount: row.post_count }) })),
       ...upsertedSubmolts.map((row) => ({ entity_type: 'submolt', entity_id: row.id, ...scoreCommunityRisk({ name: row.name, title: row.name, description: '', postCount: row.post_count }) }))
     ]);
@@ -647,7 +726,7 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
       ...upsertedSubmolts.map((row) => ({ entity_type: 'submolt', entity_id: row.id, title: row.name, subtitle: 'group', body: '', keywords: row.name, popularity_score: row.post_count || 0, freshness_score: row.avg_score_per_post || 0, live_score: 0 }))
     ]);
     await upsertEntityRiskScores([
-      ...upsertedAuthors.map((row) => ({ entity_type: 'author', entity_id: row.id, ...scoreAuthorRisk({ authorName: row.author_name, description: row.description, reason: row.reason, postCount: row.post_count, karma: row.karma }) })),
+      ...buildPersistableAuthorRiskRows({ posts, upsertedAuthors }),
       ...upsertedCommunities.map((row) => ({ entity_type: 'community', entity_id: row.id, ...scoreCommunityRisk({ name: row.name, title: row.title, description: row.description, postCount: row.post_count }) })),
       ...upsertedSubmolts.map((row) => ({ entity_type: 'submolt', entity_id: row.id, ...scoreCommunityRisk({ name: row.name, title: row.name, description: '', postCount: row.post_count }) }))
     ]);
