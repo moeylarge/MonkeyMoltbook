@@ -191,3 +191,8 @@
 .ai-plan-row-hero{margin-top:16px}
 .transcript-shell-chat{padding-top:18px}
 @media (max-width: 900px){.ai-choice-grid-hero{grid-template-columns:1fr}.ai-choice-card-hero{min-height:104px}}
+
+.chat-mode-prelude{display:block;max-width:980px;margin:0 auto 18px}
+.chat-pre-session-headline{margin-bottom:14px}
+.ai-choice-hero{display:block;min-height:0}
+.transcript-shell-chat{max-width:980px;margin:0 auto}

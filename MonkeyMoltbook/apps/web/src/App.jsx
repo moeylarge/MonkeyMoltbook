@@ -1065,10 +1065,10 @@ function LivePage({ data }) {
             ) : null}
           </div> : null}
           {isChatMode ? (
-            <>
+            <div className="chat-mode-prelude">
               <div className="live-stage-headline pre-session-headline chat-pre-session-headline">
-                <strong>{session ? `Chat session is active` : `Start human chat`}</strong>
-                <span>{session ? 'Your chat session is active. Messages and export are ready.' : 'Type your first message to start a human-to-human chat. No webcam setup required.'}</span>
+                <strong>{session ? `Chat session is active` : `Choose your chat mode`}</strong>
+                <span>{session ? 'Your chat session is active. Messages and export are ready.' : 'Pick free human chat or premium AI chat before the composer appears.'}</span>
               </div>
               {!session ? (
                 <div className="wallet-balance-card wallet-balance-card-muted wallet-balance-card-full ai-upgrade-card ai-choice-block ai-choice-hero">
@@ -1102,7 +1102,7 @@ function LivePage({ data }) {
                   ) : null}
                 </div>
               ) : null}
-            </>
+            </div>
           ) : (
             <>
               {session ? (
