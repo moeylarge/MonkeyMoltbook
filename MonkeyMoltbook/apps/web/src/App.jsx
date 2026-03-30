@@ -601,6 +601,7 @@ function LivePage({ data }) {
   const [products, setProducts] = useState([]);
   const [spendingAction, setSpendingAction] = useState('');
   const [lastSentText, setLastSentText] = useState('');
+  const [exportFormat, setExportFormat] = useState('txt');
   const [sessionMode, setSessionMode] = useState('webcam');
   const [mediaReady, setMediaReady] = useState(false);
   const [mediaError, setMediaError] = useState('');
@@ -964,7 +965,7 @@ function LivePage({ data }) {
     restoreSession();
   }, [slug, session]);
 
-  const exportUrl = session?.id ? `${API}/live/session/${session.id}/export` : null;
+  const exportUrl = session?.id ? `${API}/live/session/${session.id}/export?format=${encodeURIComponent(exportFormat)}` : null;
   const isChatMode = (session?.mode || sessionMode) === 'chat';
 
   return (
@@ -1163,7 +1164,14 @@ function LivePage({ data }) {
             <>
               <div className="transcript-header">
                 <span>Transcript</span>
-                {exportUrl ? <a className="ghost-btn" href={exportUrl} target="_blank" rel="noreferrer">Export transcript</a> : <button className="ghost-btn" disabled>Export transcript</button>}
+                <div className="export-controls">
+                  <select className="export-select" value={exportFormat} onChange={(e) => setExportFormat(e.target.value)}>
+                    <option value="txt">.txt</option>
+                    <option value="html">.html</option>
+                    <option value="doc">.doc</option>
+                  </select>
+                  {exportUrl ? <a className="ghost-btn" href={exportUrl} target="_blank" rel="noreferrer">Export transcript</a> : <button className="ghost-btn" disabled>Export transcript</button>}
+                </div>
               </div>
               <div className="transcript-feed transcript-feed-bubbles transcript-feed-chat-dominant">
                 {messages.length ? messages.map((message) => (

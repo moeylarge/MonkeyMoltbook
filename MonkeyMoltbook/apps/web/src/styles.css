@@ -159,3 +159,7 @@
 
 .live-back-row{max-width:1260px;margin:0 auto 12px}
 .live-back-btn{min-height:42px;font-weight:700}
+
+.export-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.export-select{min-height:42px;padding:9px 12px;border-radius:14px;border:1px solid #e8d8cb;background:#fffdfb;color:#1b1917;box-shadow:0 8px 18px rgba(120,72,32,.08);font:inherit}
+.export-select:focus-visible{outline:none;border-color:#f2b28f;box-shadow:0 0 0 3px rgba(255,255,255,.92),0 0 0 6px rgba(255,90,54,.18),0 12px 28px rgba(120,72,32,.12)}

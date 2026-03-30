@@ -1188,7 +1188,23 @@ app.post('/live/session/:id/spend', async (req, res) => {
 });
 app.get('/live/session/:id/transcript', async (req, res) => res.json({ phase: PHASE, ok: true, messages: await listTranscript(req.params.id) }));
 app.get('/live/session/:id/export', async (req, res) => {
+  const format = String(req.query?.format || 'txt').toLowerCase();
   const text = await exportTranscriptText(req.params.id);
+  const sessionId = req.params.id;
+
+  if (format === 'html') {
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>molt-live-${sessionId}</title><style>body{font-family:Arial,sans-serif;padding:32px;line-height:1.6;color:#1b1917}h1{margin:0 0 8px}pre{white-space:pre-wrap;font:inherit}</style></head><body><h1>Molt Live Transcript</h1><p>Session: ${sessionId}</p><pre>${String(text).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]))}</pre></body></html>`;
+    res.setHeader('Content-Disposition', `attachment; filename="molt-live-${sessionId}.html"`);
+    return res.type('text/html').send(html);
+  }
+
+  if (format === 'doc') {
+    const htmlDoc = `<!doctype html><html><head><meta charset="utf-8"><title>molt-live-${sessionId}</title></head><body><h1>Molt Live Transcript</h1><p>Session: ${sessionId}</p><pre>${String(text).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]))}</pre></body></html>`;
+    res.setHeader('Content-Disposition', `attachment; filename="molt-live-${sessionId}.doc"`);
+    return res.type('application/msword').send(htmlDoc);
+  }
+
+  res.setHeader('Content-Disposition', `attachment; filename="molt-live-${sessionId}.txt"`);
   res.type('text/plain').send(text);
 });
 
