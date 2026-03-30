@@ -133,10 +133,16 @@ Do this first:
    - `mbc-20` community page returns `High Risk`
    - `hackai` group search surfaces `mbc20`
    - `mint` group search is materially improved and no longer dominated by `general`
-5. treat expanded/backfill ingestion as the main source of stronger community coverage; rolling collector alone was too thin and repeated the same window
-6. verify Vercel cron / ingest strategy is actually deepening community rows, not just refreshing shallow slices
-7. continue tuning only from concrete audited failures, not broad blind weighting tweaks
-8. keep the trust/safety layer in view as a major differentiator
+5. preserve the larger Moltbook scale objective explicitly:
+   - master directory target includes about `20,482` communities
+   - about `2,368,410` posts
+   - about `412,973` memberships
+   - the product goal is to implement that fuller Moltbook dataset live into `molt-live.com`, not stop at the current thin subset
+6. treat expanded/backfill ingestion as the main source of stronger community coverage; rolling collector alone was too thin and repeated the same window
+7. run a full audit of collector + cron for Moltbook Live so future ingest is actually moving toward the larger dataset objective rather than just recycling shallow slices
+8. verify Vercel cron / ingest strategy is actually deepening community rows, not just refreshing shallow slices
+9. continue tuning only from concrete audited failures, not broad blind weighting tweaks
+10. keep the trust/safety layer in view as a major differentiator
 
 ## Strong current judgment
 
