@@ -253,14 +253,14 @@ export function scoreCommunityRisk(community = {}) {
     flags.push('community:risky-density');
   }
   if (mintSpamHits >= 2) {
-    densityRisk += 36;
+    densityRisk += 46;
     flags.push('mint:spam');
   } else if (mintSpamHits === 1) {
-    densityRisk += 16;
+    densityRisk += 20;
     flags.push('mint:spam');
   }
   if ((community.postCount || 0) >= 10 && mintSpamHits >= 2) {
-    densityRisk += 14;
+    densityRisk += 18;
     flags.push('community:risky-density');
   }
 
