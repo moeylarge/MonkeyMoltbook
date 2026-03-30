@@ -119,15 +119,24 @@ Active product direction now includes:
 ## Next step for the next chat
 
 Do this first:
-1. start from the now-stable trust/search base and run a broader audit across suspicious queries, bad rankings, false positives, and empty-result gaps
-2. treat expanded/backfill ingestion as the main source of stronger community coverage; rolling collector alone was too thin and repeated the same window
-3. verify Vercel cron / ingest strategy is actually deepening community rows, not just refreshing shallow slices
-4. inspect backend/debug counts for authors, posts, communities, search documents
-5. re-test Groups search and `/community/:slug` pages after richer ingest runs
-6. continue tuning trust heuristics only from concrete audited failures, not broad blind weighting tweaks
-7. keep improving group/community search so suspicious queries surface risky specialized communities before broad buckets
-8. if growth is weak, investigate better/internal Moltbook data sources more aggressively
-9. keep the trust/safety layer in view as a major differentiator
+1. resume from the current stable trust/search base; do not re-open broad community-ranking experimentation first
+2. highest-value next fix is suspicious **user/account search**, which is currently weaker than community search
+3. target user/account search improvements specifically for these suspicious queries:
+   - `wallet`
+   - `seed phrase`
+   - `drainer`
+   - `malware`
+   - `exploit`
+   - `claim`
+4. keep the current community trust/search work as the baseline to preserve:
+   - `mbc20` community page returns `High Risk`
+   - `mbc-20` community page returns `High Risk`
+   - `hackai` group search surfaces `mbc20`
+   - `mint` group search is materially improved and no longer dominated by `general`
+5. treat expanded/backfill ingestion as the main source of stronger community coverage; rolling collector alone was too thin and repeated the same window
+6. verify Vercel cron / ingest strategy is actually deepening community rows, not just refreshing shallow slices
+7. continue tuning only from concrete audited failures, not broad blind weighting tweaks
+8. keep the trust/safety layer in view as a major differentiator
 
 ## Strong current judgment
 
