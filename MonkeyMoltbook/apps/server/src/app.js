@@ -351,6 +351,28 @@ app.get('/molt-live/search', async (req, res) => {
       })
       .sort((a, b) => authorSearchRank(b, q) - authorSearchRank(a, q) || (b.matchedPostCount || 0) - (a.matchedPostCount || 0) || (b.postCount || b.observedPosts || 0) - (a.postCount || a.observedPosts || 0))
       .slice(0, rowLimit);
+
+    const persistableAuthorScores = authors
+      .filter((row) => row.id && row.trust)
+      .filter((row) => (row.matchedPostCount || 0) > 0 || /Caution|High|Severe/.test(String(row.trust?.riskLabel || '')))
+      .map((row) => ({
+        entity_type: 'author',
+        entity_id: row.id,
+        risk_score: row.trust.riskScore,
+        risk_label: row.trust.riskLabel,
+        reason_short: row.trust.reasonShort,
+        signal_breakdown: row.trust.signalBreakdown,
+        evidence_summary: {
+          matchedPostCount: row.matchedPostCount || 0,
+          suspiciousHits: row.suspiciousHits || 0,
+          phraseDiversity: row.phraseDiversity || 0,
+          sampleTitles: row.sampleTitles || []
+        },
+        version: row.trust.version || 'trust-v1'
+      }));
+    if (persistableAuthorScores.length) {
+      upsertEntityRiskScores(persistableAuthorScores).catch(() => null);
+    }
   } else {
     authors = suspiciousAuthorQuery
       ? authors.filter((row) => (row.matchedPostCount || 0) > 0 || /Caution|High|Severe/.test(String(row.trust?.riskLabel || ''))).slice(0, tab === 'all' ? 12 : limit)

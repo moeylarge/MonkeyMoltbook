@@ -205,7 +205,7 @@ export function scoreAuthorRisk(author = {}) {
     networkRisk += 10;
     flags.push('mint:spam');
   } else if (mintSpamHits === 1) {
-    behaviorRisk += 22;
+    behaviorRisk += 12;
     flags.push('mint:spam');
   }
 
@@ -237,7 +237,7 @@ export function scoreAuthorRisk(author = {}) {
   if (benignHits) score -= benignHits * 8;
   if (analysisHits) score -= analysisHits * 10;
   if (flags.length <= 1 && postCount <= 2 && matchedPostCount === 0 && !flags.includes('mint:spam')) score -= 8;
-  if (flags.includes('mint:spam')) score = Math.max(score, 28);
+  if (flags.includes('mint:spam') && (mintSpamHits >= 2 || matchedPostCount >= 2 || suspiciousHits >= 2)) score = Math.max(score, 28);
   if (promoHits >= 2 && ctaHits >= 1 && matchedPostCount >= 2) score = Math.max(score, 28);
   if ((phraseDiversity >= 2 && suspiciousHits >= 2) || (matchedPostCount >= 3 && suspiciousHits >= 2 && ctaHits >= 1)) score = Math.max(score, 25);
   score = clamp(score);
