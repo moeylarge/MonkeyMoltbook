@@ -782,10 +782,22 @@ app.post('/moltbook/collect/rolling', async (req, res) => {
 });
 app.post('/moltbook/ingest/expanded', async (req, res) => {
   const mode = String(req.query.mode || 'cursor');
-  const pages = Math.max(1, Math.min(Number(req.query.pages) || 3, 10));
-  const perPage = Math.max(25, Math.min(Number(req.query.perPage) || (mode === 'cursor' ? 50 : 100), 200));
-  const steps = Math.max(1, Math.min(Number(req.query.steps) || 5, 20));
-  const delayMs = Math.max(0, Math.min(Number(req.query.delayMs) || 750, 5000));
+  const parseOptionalNumber = (value) => {
+    if (value === undefined || value === null || value === '') return null;
+    const n = Number(value);
+    return Number.isFinite(n) ? n : null;
+  };
+  const pagesInput = parseOptionalNumber(req.query.pages);
+  const perPageInput = parseOptionalNumber(req.query.perPage);
+  const stepsInput = parseOptionalNumber(req.query.steps);
+  const delayInput = parseOptionalNumber(req.query.delayMs);
+  const defaultPerPage = mode === 'suspicious' ? 25 : (mode === 'cursor' ? 50 : 100);
+  const defaultSteps = mode === 'suspicious' ? 1 : 5;
+  const defaultDelayMs = mode === 'suspicious' ? 0 : 750;
+  const pages = Math.max(1, Math.min(pagesInput ?? 3, 10));
+  const perPage = Math.max(10, Math.min(perPageInput ?? defaultPerPage, 200));
+  const steps = Math.max(1, Math.min(stepsInput ?? defaultSteps, 20));
+  const delayMs = Math.max(0, Math.min(delayInput ?? defaultDelayMs, 5000));
   const jobName = mode === 'suspicious' ? 'moltbook-suspicious-ingest' : 'moltbook-expanded-ingest';
   const savedJob = (mode === 'cursor' || mode === 'suspicious') ? await getIngestionJob(jobName) : null;
   const savedCursor = savedJob?.cursor_json?.nextCursor || null;
