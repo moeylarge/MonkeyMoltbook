@@ -544,13 +544,13 @@ export async function searchAuthorEvidence({ query, limit = 20 } = {}) {
   const normalized = q.toLowerCase();
   const safeQuery = encodeURIComponent(`%${q}%`);
   const suspiciousClausesByIntent = {
-    wallet: `or=(snippet.ilike.%25wallet%20connect%25,snippet.ilike.%25connect%20wallet%25,snippet.ilike.%25verify%20your%20wallet%25,snippet.ilike.%25wallet%20recovery%25,snippet.ilike.%25wallet%20drainer%25,snippet.ilike.%25clipboard%20drainer%25,snippet.ilike.%25seed%20phrase%25,snippet.ilike.%25private%20key%25,snippet.ilike.%25connect%20wallet%20to%20claim%25)`,
-    'seed phrase': `or=(title.ilike.%25seed%20phrase%25,snippet.ilike.%25seed%20phrase%25,snippet.ilike.%25private%20key%25,snippet.ilike.%25wallet%20recovery%25,snippet.ilike.%25recovery%20phrase%25,snippet.ilike.%25connect%20wallet%20to%20claim%25)`,
-    drainer: `or=(title.ilike.%25drainer%25,snippet.ilike.%25drainer%25,snippet.ilike.%25wallet%20drainer%25,snippet.ilike.%25clipboard%20drainer%25,snippet.ilike.%25stealer%25,snippet.ilike.%25seed%20phrase%25,snippet.ilike.%25private%20key%25)`,
+    wallet: `or=(snippet.ilike.%25wallet%20connect%25,snippet.ilike.%25connect%20wallet%25,snippet.ilike.%25verify%20your%20wallet%25,snippet.ilike.%25wallet%20recovery%25,snippet.ilike.%25recover%20your%20wallet%25,snippet.ilike.%25import%20your%20wallet%25,snippet.ilike.%25wallet%20drainer%25,snippet.ilike.%25clipboard%20drainer%25,snippet.ilike.%25seed%20phrase%25,snippet.ilike.%25private%20key%25,snippet.ilike.%25connect%20wallet%20to%20claim%25,snippet.ilike.%25redeem%20your%20wallet%25,snippet.ilike.%25wallet%20verification%25)`,
+    'seed phrase': `or=(title.ilike.%25seed%20phrase%25,snippet.ilike.%25seed%20phrase%25,snippet.ilike.%25private%20key%25,snippet.ilike.%25wallet%20recovery%25,snippet.ilike.%25recover%20your%20wallet%25,snippet.ilike.%25recovery%20phrase%25,snippet.ilike.%25secret%20phrase%25,snippet.ilike.%25import%20your%20wallet%25,snippet.ilike.%25connect%20wallet%20to%20claim%25)`,
+    drainer: `or=(title.ilike.%25drainer%25,snippet.ilike.%25drainer%25,snippet.ilike.%25wallet%20drainer%25,snippet.ilike.%25clipboard%20drainer%25,snippet.ilike.%25stealer%25,snippet.ilike.%25seed%20phrase%25,snippet.ilike.%25private%20key%25,snippet.ilike.%25drain%20your%20wallet%25)`,
     malware: `or=(title.ilike.%25malware%25,snippet.ilike.%25malware%25,snippet.ilike.%25virus%25,snippet.ilike.%25keygen%25,snippet.ilike.%25stealer%25,snippet.ilike.%25rat%25,snippet.ilike.%25remote%20access%20trojan%25)`,
-    exploit: `or=(snippet.ilike.%25wallet%20exploit%25,snippet.ilike.%25verify%20your%20wallet%25,snippet.ilike.%25connect%20wallet%20to%20claim%25,snippet.ilike.%25wallet%20drainer%25,snippet.ilike.%25clipboard%20drainer%25,snippet.ilike.%25seed%20phrase%25,snippet.ilike.%25private%20key%25,snippet.ilike.%25stealer%25)`,
-    claim: `or=(snippet.ilike.%25claim%20now%25,snippet.ilike.%25claim%20your%20reward%25,snippet.ilike.%25connect%20wallet%20to%20claim%25,snippet.ilike.%25claim%20airdrop%25,snippet.ilike.%25airdrop%20claim%25,snippet.ilike.%25verify%20your%20wallet%25,snippet.ilike.%25wallet%20connect%25)`,
-    airdrop: `or=(title.ilike.%25airdrop%25,snippet.ilike.%25airdrop%25,snippet.ilike.%25claim%20your%20reward%25,snippet.ilike.%25connect%20wallet%20to%20claim%25,snippet.ilike.%25wallet%20connect%25,snippet.ilike.%25seed%20phrase%25)`
+    exploit: `or=(snippet.ilike.%25wallet%20exploit%25,snippet.ilike.%25verify%20your%20wallet%25,snippet.ilike.%25connect%20wallet%20to%20claim%25,snippet.ilike.%25wallet%20drainer%25,snippet.ilike.%25clipboard%20drainer%25,snippet.ilike.%25seed%20phrase%25,snippet.ilike.%25private%20key%25,snippet.ilike.%25stealer%25,snippet.ilike.%25recover%20your%20wallet%25)`,
+    claim: `or=(snippet.ilike.%25claim%20now%25,snippet.ilike.%25claim%20your%20reward%25,snippet.ilike.%25claim%20your%20tokens%25,snippet.ilike.%25claim%20your%20airdrop%25,snippet.ilike.%25connect%20wallet%20to%20claim%25,snippet.ilike.%25claim%20airdrop%25,snippet.ilike.%25airdrop%20claim%25,snippet.ilike.%25verify%20your%20wallet%25,snippet.ilike.%25wallet%20connect%25,snippet.ilike.%25redeem%20now%25,snippet.ilike.%25redeem%20your%20reward%25,snippet.ilike.%25unlock%20your%20reward%25,snippet.ilike.%25check%20your%20eligibility%25,snippet.ilike.%25eligible%20for%20airdrop%25)`,
+    airdrop: `or=(title.ilike.%25airdrop%25,snippet.ilike.%25airdrop%25,snippet.ilike.%25claim%20your%20reward%25,snippet.ilike.%25claim%20your%20airdrop%25,snippet.ilike.%25connect%20wallet%20to%20claim%25,snippet.ilike.%25wallet%20connect%25,snippet.ilike.%25seed%20phrase%25,snippet.ilike.%25eligible%20for%20airdrop%25,snippet.ilike.%25check%20your%20eligibility%25)`
   };
   const intentClause = suspiciousClausesByIntent[normalized] || `or=(author_name.ilike.${safeQuery},title.ilike.${safeQuery},snippet.ilike.${safeQuery})`;
   const clauses = [
@@ -574,6 +574,7 @@ export async function searchAuthorEvidence({ query, limit = 20 } = {}) {
         matchedPostCount: 0,
         totalScore: 0,
         suspiciousHits: 0,
+        phraseDiversity: new Set(),
         sampleTitles: [],
         sampleSnippets: [],
         submolts: new Set(),
@@ -588,7 +589,17 @@ export async function searchAuthorEvidence({ query, limit = 20 } = {}) {
     if (row.title && entry.sampleTitles.length < 6) entry.sampleTitles.push(safeText(row.title));
     if (row.snippet && entry.sampleSnippets.length < 4) entry.sampleSnippets.push(safeText(row.snippet).slice(0, 220));
 
-    if (/seed phrase|private key|wallet recovery|connect wallet to claim|wallet drainer|clipboard drainer|remote access trojan|keygen|stealer|claim your reward now|claim your reward|verify your wallet|wallet connect/.test(text)) {
+    const phrasePatterns = [
+      'wallet connect', 'connect wallet', 'verify your wallet', 'wallet verification', 'wallet recovery', 'recover your wallet', 'import your wallet',
+      'seed phrase', 'secret phrase', 'private key', 'connect wallet to claim', 'wallet drainer', 'clipboard drainer', 'drain your wallet',
+      'remote access trojan', 'keygen', 'stealer', 'claim your reward now', 'claim your reward', 'claim your tokens', 'claim your airdrop',
+      'redeem now', 'redeem your reward', 'unlock your reward', 'check your eligibility', 'eligible for airdrop'
+    ];
+    for (const phrase of phrasePatterns) {
+      if (text.includes(phrase)) entry.phraseDiversity.add(phrase);
+    }
+
+    if (/seed phrase|secret phrase|private key|wallet recovery|recover your wallet|import your wallet|connect wallet to claim|wallet drainer|clipboard drainer|drain your wallet|remote access trojan|keygen|stealer|claim your reward now|claim your reward|claim your tokens|claim your airdrop|redeem now|redeem your reward|unlock your reward|verify your wallet|wallet connect|wallet verification|check your eligibility|eligible for airdrop/.test(text)) {
       entry.suspiciousHits += 2;
     } else if (normalized && text.includes(normalized)) {
       entry.suspiciousHits += 1;
@@ -606,10 +617,11 @@ export async function searchAuthorEvidence({ query, limit = 20 } = {}) {
   const minHits = minHitsByIntent[normalized] || 1;
   return [...grouped.values()].map((row) => ({
     ...row,
-    submolts: [...row.submolts].filter(Boolean)
+    submolts: [...row.submolts].filter(Boolean),
+    phraseDiversity: row.phraseDiversity.size
   }))
     .filter((row) => row.suspiciousHits >= minHits)
-    .sort((a, b) => b.suspiciousHits - a.suspiciousHits || b.matchedPostCount - a.matchedPostCount || b.totalScore - a.totalScore)
+    .sort((a, b) => b.phraseDiversity - a.phraseDiversity || b.suspiciousHits - a.suspiciousHits || b.matchedPostCount - a.matchedPostCount || b.totalScore - a.totalScore)
     .slice(0, Math.max(1, Math.min(Number(limit) || 20, 50)));
 }
 

@@ -76,24 +76,25 @@ function authorSearchRank(item, query) {
   if (snippets.includes(q)) score += 45;
   if (item.matchedPostCount) score += Math.min(180, item.matchedPostCount * 24);
   if (item.suspiciousHits) score += Math.min(160, item.suspiciousHits * 32);
+  if (item.phraseDiversity) score += Math.min(140, item.phraseDiversity * 40);
 
   if (suspiciousQuery && /(wallet connect|connect wallet|verify your wallet|seed phrase|private key|wallet recovery|drainer|clipboard drainer|stealer|keygen|remote access trojan|malware|airdrop|claim your reward now|claim your reward|connect wallet to claim)/.test(text)) score += 120;
-  if (q === 'wallet' && /(wallet connect|connect wallet|verify your wallet|wallet recovery|wallet drainer|seed phrase|private key)/.test(text)) score += 120;
-  if (q === 'seed phrase' && /(seed phrase|private key|recovery phrase|wallet recovery)/.test(text)) score += 130;
-  if (q === 'drainer' && /(drainer|wallet drainer|clipboard drainer|seed phrase|private key|stealer)/.test(text)) score += 120;
+  if (q === 'wallet' && /(wallet connect|connect wallet|verify your wallet|wallet verification|wallet recovery|recover your wallet|import your wallet|wallet drainer|seed phrase|private key|redeem your wallet)/.test(text)) score += 120;
+  if (q === 'seed phrase' && /(seed phrase|secret phrase|private key|recovery phrase|wallet recovery|recover your wallet|import your wallet)/.test(text)) score += 130;
+  if (q === 'drainer' && /(drainer|wallet drainer|clipboard drainer|drain your wallet|seed phrase|private key|stealer)/.test(text)) score += 120;
   if (q === 'malware' && /(malware|virus|keygen|stealer|remote access trojan)/.test(text)) score += 120;
-  if (q === 'exploit' && /(wallet exploit|verify your wallet|connect wallet to claim|wallet drainer|clipboard drainer|seed phrase|private key|stealer)/.test(text)) score += 100;
-  if (q === 'claim' && /(claim your reward|claim now|connect wallet to claim|airdrop claim|wallet connect|verify your wallet)/.test(text)) score += 90;
-  if (q === 'airdrop' && /(airdrop|claim your reward|connect wallet to claim|wallet connect|verify your wallet)/.test(text)) score += 90;
+  if (q === 'exploit' && /(wallet exploit|verify your wallet|connect wallet to claim|wallet drainer|clipboard drainer|seed phrase|private key|stealer|recover your wallet)/.test(text)) score += 100;
+  if (q === 'claim' && /(claim your reward|claim now|claim your tokens|claim your airdrop|connect wallet to claim|airdrop claim|wallet connect|verify your wallet|redeem now|redeem your reward|unlock your reward|check your eligibility|eligible for airdrop)/.test(text)) score += 110;
+  if (q === 'airdrop' && /(airdrop|claim your reward|claim your airdrop|connect wallet to claim|wallet connect|verify your wallet|check your eligibility|eligible for airdrop)/.test(text)) score += 100;
 
   if (suspiciousQuery && String(item.trust?.riskLabel || '').includes('Severe')) score += 100;
   else if (suspiciousQuery && String(item.trust?.riskLabel || '').includes('High')) score += 70;
   else if (suspiciousQuery && String(item.trust?.riskLabel || '').includes('Caution')) score += 24;
 
   if (suspiciousQuery && (item.matchedPostCount || 0) === 0 && String(item.trust?.riskLabel || '') === 'Low Risk') score -= 140;
-  if (q === 'wallet' && !/(wallet connect|connect wallet|verify your wallet|wallet recovery|wallet drainer|seed phrase|private key)/.test(text)) score -= 180;
-  if (q === 'drainer' && !/(drainer|wallet drainer|clipboard drainer|stealer|seed phrase|private key)/.test(text)) score -= 180;
-  if (q === 'claim' && !/(claim your reward|claim now|connect wallet to claim|airdrop claim|wallet connect|verify your wallet)/.test(text)) score -= 220;
+  if (q === 'wallet' && !/(wallet connect|connect wallet|verify your wallet|wallet verification|wallet recovery|recover your wallet|import your wallet|wallet drainer|seed phrase|private key|redeem your wallet)/.test(text)) score -= 180;
+  if (q === 'drainer' && !/(drainer|wallet drainer|clipboard drainer|drain your wallet|stealer|seed phrase|private key)/.test(text)) score -= 180;
+  if (q === 'claim' && !/(claim your reward|claim now|claim your tokens|claim your airdrop|connect wallet to claim|airdrop claim|wallet connect|verify your wallet|redeem now|redeem your reward|unlock your reward|check your eligibility|eligible for airdrop)/.test(text)) score -= 220;
   if (q === 'claim' && /(hackathon|free guidance|open source|security research|compliance|falsifiable claim|claim: when|the claim is)/.test(text)) score -= 180;
   if (q === 'exploit' && !/(wallet exploit|verify your wallet|connect wallet to claim|wallet drainer|clipboard drainer|seed phrase|private key|stealer)/.test(text)) score -= 220;
   if (q === 'exploit' && /(hackathon|free guidance|open source|security research|compliance|marketplace exploit|social engineering exploits|exploit times|zero-days)/.test(text)) score -= 180;
