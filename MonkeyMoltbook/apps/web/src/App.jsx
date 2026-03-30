@@ -1071,22 +1071,22 @@ function LivePage({ data }) {
                 <span>{session ? 'Your chat session is active. Messages and export are ready.' : 'Type your first message to start a human-to-human chat. No webcam setup required.'}</span>
               </div>
               {!session ? (
-                <div className="wallet-balance-card wallet-balance-card-muted wallet-balance-card-full ai-upgrade-card ai-choice-block">
+                <div className="wallet-balance-card wallet-balance-card-muted wallet-balance-card-full ai-upgrade-card ai-choice-block ai-choice-hero">
                   <span className="eyebrow">Choose chat mode</span>
                   <strong>Free human chat or Premium AI chat</strong>
-                  <p>Start with free human chat by default, or unlock AI chat with credits or a monthly plan.</p>
-                  <div className="ai-choice-grid">
-                    <button className={`ghost-btn ai-choice-card ${chatKind === 'human' ? 'active' : ''}`} onClick={selectHumanChat}>
+                  <p>Choose how you want this conversation to work before the chat composer appears.</p>
+                  <div className="ai-choice-grid ai-choice-grid-hero">
+                    <button className={`ghost-btn ai-choice-card ai-choice-card-hero ${chatKind === 'human' ? 'active' : ''}`} onClick={selectHumanChat}>
                       <span className="ai-choice-label">Human chat</span>
                       <small>Free · default · person-to-person</small>
                     </button>
-                    <button className={`primary-btn ai-choice-card ${chatKind === 'ai' ? 'active' : ''}`} onClick={() => (aiUnlocked ? setChatKind('ai') : unlockAiChat())}>
+                    <button className={`primary-btn ai-choice-card ai-choice-card-hero ${chatKind === 'ai' ? 'active' : ''}`} onClick={() => (aiUnlocked ? setChatKind('ai') : unlockAiChat())}>
                       <span className="ai-choice-label">AI chat</span>
                       <small>{aiUnlocked ? 'Premium unlocked' : 'Premium · 2 credits to unlock'}</small>
                     </button>
                   </div>
                   {!aiUnlocked ? (
-                    <div className="ai-plan-row ai-plan-row-strong">
+                    <div className="ai-plan-row ai-plan-row-strong ai-plan-row-hero">
                       {(products || []).slice(0, 3).map((product) => (
                         <button key={product.code} className="ghost-btn ai-plan-btn" onClick={async () => {
                           const response = await fetch(`${API}/credits/checkout`, {

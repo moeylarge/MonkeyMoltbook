@@ -182,3 +182,12 @@
 .ai-choice-grid{margin-top:16px}
 .chat-empty-state-card{margin-top:0}
 .chat-input-row-strong{margin-top:14px}
+
+.ai-choice-hero{padding:26px 24px 22px;border:1px solid #f0c9ae;background:linear-gradient(180deg,#fff8f3,#fff2e8);box-shadow:0 22px 46px rgba(120,72,32,.14);margin-bottom:18px}
+.ai-choice-hero strong{display:block;font-size:28px;line-height:1.05;margin:6px 0 8px;color:#1b1917}
+.ai-choice-grid-hero{grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
+.ai-choice-card-hero{min-height:120px;border-radius:22px;padding:18px 20px}
+.ai-choice-card-hero .ai-choice-label{font-size:22px}
+.ai-plan-row-hero{margin-top:16px}
+.transcript-shell-chat{padding-top:18px}
+@media (max-width: 900px){.ai-choice-grid-hero{grid-template-columns:1fr}.ai-choice-card-hero{min-height:104px}}
