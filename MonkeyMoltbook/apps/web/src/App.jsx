@@ -603,6 +603,7 @@ function LivePage({ data }) {
   const [lastSentText, setLastSentText] = useState('');
   const [exportFormat, setExportFormat] = useState('txt');
   const [chatKind, setChatKind] = useState('human');
+  const [aiUnlocked, setAiUnlocked] = useState(false);
   const [sessionMode, setSessionMode] = useState('webcam');
   const [mediaReady, setMediaReady] = useState(false);
   const [mediaError, setMediaError] = useState('');
@@ -617,6 +618,20 @@ function LivePage({ data }) {
     const response = await fetch(`${API}/wallet?userId=demo-user`);
     const payload = await response.json();
     setWallet(payload.wallet);
+  };
+
+  const unlockAiChat = async () => {
+    const response = await fetch(`${API}/credits/unlock-ai-chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: 'demo-user' })
+    });
+    const payload = await response.json();
+    if (response.ok) {
+      setAiUnlocked(true);
+      setChatKind('ai');
+      setWallet(payload.wallet);
+    }
   };
 
   const loadProducts = async () => {
@@ -759,7 +774,7 @@ function LivePage({ data }) {
         agentName: liveName,
         agentAuthorId: agent?.authorId || null,
         entrySource: 'live-page',
-        mode: sessionMode,
+        mode: sessionMode === 'chat' ? (chatKind === 'ai' ? 'chat-ai' : 'chat') : sessionMode,
         ttsEnabled: sessionMode !== 'chat',
         transcriptEnabled: true
       })
@@ -1057,10 +1072,25 @@ function LivePage({ data }) {
                   <span className="eyebrow">Premium AI chat</span>
                   <strong>Upgrade to AI Chat</strong>
                   <p>Default chat is human-to-human. Unlock AI chat with your premium plan or credits.</p>
-                  <div className="media-failure-actions">
+                  <div className="media-failure-actions ai-mode-actions">
                     <button className={`ghost-btn ${chatKind === 'human' ? 'active' : ''}`} onClick={() => setChatKind('human')}>Human chat (default)</button>
-                    <button className="primary-btn" onClick={() => setChatKind('ai')} disabled>AI chat · Premium</button>
+                    <button className={`primary-btn ${chatKind === 'ai' ? 'active' : ''}`} onClick={() => (aiUnlocked ? setChatKind('ai') : unlockAiChat())}>{aiUnlocked ? 'AI chat unlocked' : 'Unlock AI chat · 2 credits'}</button>
                   </div>
+                  {!aiUnlocked ? (
+                    <div className="ai-plan-row">
+                      {(products || []).slice(0, 3).map((product) => (
+                        <button key={product.code} className="ghost-btn ai-plan-btn" onClick={async () => {
+                          const response = await fetch(`${API}/credits/checkout`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ productCode: product.code, userId: 'demo-user' })
+                          });
+                          const payload = await response.json();
+                          if (payload?.url) window.open(payload.url, '_blank');
+                        }}>{product.name} · ${(product.price_usd_cents / 100).toFixed(0)}/mo</button>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
             </>
@@ -1167,13 +1197,13 @@ function LivePage({ data }) {
               </div>
               <div className="transcript-feed transcript-feed-bubbles">
                 <div className="transcript-empty-state pre-session-empty-state pre-session-preview-card chat-empty-state-card">
-                  <strong>{chatKind === 'ai' ? 'AI chat is premium.' : 'Type your first message to start chatting live.'}</strong>
-                  <p>{chatKind === 'ai' ? 'Unlock premium AI chat with a plan or credits. Human chat remains free by default.' : 'Chat is the fastest fallback. Start with a quick message and the live transcript will build from there.'}</p>
+                  <strong>{chatKind === 'ai' ? 'Premium AI chat is ready.' : 'Type your first message to start chatting live.'}</strong>
+                  <p>{chatKind === 'ai' ? 'This chat will use premium AI mode powered by your upgraded plan or credits.' : 'Chat is the fastest fallback. Start with a quick message and the live transcript will build from there.'}</p>
                 </div>
               </div>
               <div className="chat-input-row chat-input-row-strong">
                 <textarea className="chat-input chat-input-strong" rows={3} placeholder="Ask anything, start the conversation, or drop a quick prompt…" value={draft} onChange={(e) => setDraft(e.target.value)} />
-                <button className="primary-btn" onClick={startSession} disabled={starting || !!session}>{starting ? 'Starting…' : 'Start chat now'}</button>
+                <button className="primary-btn" onClick={startSession} disabled={starting || !!session}>{starting ? 'Starting…' : chatKind === 'ai' ? 'Start AI chat' : 'Start chat now'}</button>
               </div>
             </>
           ) : !session ? (

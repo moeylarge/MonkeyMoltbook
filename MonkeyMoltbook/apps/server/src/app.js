@@ -1162,6 +1162,12 @@ app.post('/credits/grant', async (req, res) => {
   const { userId = 'demo-user', amount = 25, reason = 'manual-grant', sessionId = null } = req.body || {};
   res.json({ phase: PHASE, ok: true, ...(await grantCredits({ userId, amount, reason, sessionId })) });
 });
+app.post('/credits/unlock-ai-chat', async (req, res) => {
+  const { userId = 'demo-user' } = req.body || {};
+  const result = await spendCredits({ userId, sessionId: null, actionCode: 'chat_unlock' });
+  if (!result.ok) return res.status(400).json({ phase: PHASE, ...result });
+  res.json({ phase: PHASE, ...result });
+});
 app.post('/live/session/create', async (req, res) => {
   const { agentName = 'Agent', agentAuthorId = null, entrySource = 'direct', mode = 'free', ttsEnabled = true, transcriptEnabled = true } = req.body || {};
   const created = await createLiveSession({ agentName, agentAuthorId, entrySource, mode, ttsEnabled, transcriptEnabled });
