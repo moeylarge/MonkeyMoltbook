@@ -602,6 +602,7 @@ function LivePage({ data }) {
   const [mediaReady, setMediaReady] = useState(false);
   const [mediaError, setMediaError] = useState('');
   const [mediaDebug, setMediaDebug] = useState(null);
+  const [mediaState, setMediaState] = useState('idle');
   const [requestingMedia, setRequestingMedia] = useState(false);
   const localVideoRef = useRef(null);
   const localStreamRef = useRef(null);
@@ -630,6 +631,7 @@ function LivePage({ data }) {
     }
     if (localVideoRef.current) localVideoRef.current.srcObject = null;
     setMediaReady(false);
+    setMediaState('idle');
   };
 
   const requestMediaAccess = async () => {
@@ -649,6 +651,7 @@ function LivePage({ data }) {
     }
 
     setRequestingMedia(true);
+    setMediaState('requesting');
     setMediaDebug({ ...baseDebug, status: 'requesting' });
 
     try {
@@ -672,6 +675,7 @@ function LivePage({ data }) {
       }
       const tracks = stream.getTracks().map((track) => ({ kind: track.kind, label: track.label || '', enabled: track.enabled, readyState: track.readyState }));
       setMediaReady(true);
+      setMediaState('preview-ready');
       setMediaError('');
       setMediaDebug({
         ...baseDebug,
@@ -704,6 +708,7 @@ function LivePage({ data }) {
       else if (name === 'NotReadableError' || name === 'TrackStartError') failureKind = 'device_busy_or_os_blocked';
       else if (name === 'OverconstrainedError') failureKind = 'unsupported_constraints';
 
+      setMediaState('failed');
       setMediaDebug({
         ...baseDebug,
         status: 'failed',
@@ -722,10 +727,12 @@ function LivePage({ data }) {
     if (sessionMode === 'chat') {
       stopStream();
       setMediaError('');
+      setMediaDebug(null);
       return () => stopStream();
     }
     stopStream();
     setMediaError('');
+    setMediaDebug(null);
     return () => stopStream();
   }, [sessionMode]);
 
@@ -903,12 +910,12 @@ function LivePage({ data }) {
             <>
               <div className="session-badge-row session-badge-row-clean">
                 {sessionMode === 'webcam' ? (
-                  <button className={`presence-pill ${mediaReady ? 'ready' : ''}`} onClick={requestMediaAccess} disabled={requestingMedia}>
-                    {mediaReady ? 'Camera ready' : requestingMedia ? 'Allowing camera…' : 'Allow camera'}
+                  <button className={`presence-pill ${mediaState === 'preview-ready' ? 'ready' : ''}`} onClick={requestMediaAccess} disabled={requestingMedia}>
+                    {mediaState === 'preview-ready' ? 'Camera ready' : mediaState === 'requesting' ? 'Allowing camera…' : mediaState === 'failed' ? 'Retry camera' : 'Allow camera'}
                   </button>
                 ) : (
-                  <button className={`presence-pill ${mediaReady ? 'ready' : ''}`} onClick={requestMediaAccess} disabled={requestingMedia}>
-                    {mediaReady ? 'Mic ready' : requestingMedia ? 'Allowing mic…' : 'Allow mic'}
+                  <button className={`presence-pill ${mediaState === 'preview-ready' ? 'ready' : ''}`} onClick={requestMediaAccess} disabled={requestingMedia}>
+                    {mediaState === 'preview-ready' ? 'Mic ready' : mediaState === 'requesting' ? 'Allowing mic…' : mediaState === 'failed' ? 'Retry mic' : 'Allow mic'}
                   </button>
                 )}
                 <span className={`presence-pill ${presence?.user_mic_on ? 'ready' : ''}`}>{presence?.user_mic_on ? 'Mic ready' : 'Mic off'}</span>
@@ -960,7 +967,7 @@ function LivePage({ data }) {
             </>
           )}
           <div className="live-cta-row live-cta-row-clean">
-            <button className="primary-btn live-primary-cta" onClick={startSession} disabled={starting || !!session}>{session ? 'Session live' : starting ? 'Starting…' : 'Start Live Session'}</button>
+            <button className="primary-btn live-primary-cta" onClick={startSession} disabled={starting || !!session || (sessionMode === 'webcam' && mediaState !== 'preview-ready')}>{session ? 'Session live' : starting ? 'Starting…' : sessionMode === 'webcam' && mediaState !== 'preview-ready' ? 'Start with webcam first' : 'Start Live Session'}</button>
             <button className="ghost-btn" onClick={endSession} disabled={!session || ending}>{ending ? 'Ending…' : 'End session'}</button>
           </div>
         </div>
