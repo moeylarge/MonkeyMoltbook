@@ -709,13 +709,21 @@ app.get('/moltbook/backfill/status', async (_req, res) => {
 });
 app.get('/moltbook/ingest/status', async (req, res) => {
   const requested = String(req.query.job || req.query.name || 'expanded').trim().toLowerCase();
+  const family = String(req.query.family || req.query.target || '').trim().toLowerCase();
   const allowlist = {
     expanded: 'moltbook-expanded-ingest',
     suspicious: 'moltbook-suspicious-ingest',
     rolling: 'moltbook-rolling-collector',
     full: 'moltbook-full-backfill'
   };
-  const jobName = allowlist[requested] || (Object.values(allowlist).includes(requested) ? requested : null);
+  const targetedFamilies = new Set(['wallet', 'claim', 'seed', 'exploit']);
+  const targetedJobName = family && targetedFamilies.has(family)
+    ? `moltbook-suspicious-targeted-${family}`
+    : null;
+  const jobName = allowlist[requested]
+    || targetedJobName
+    || (requested.startsWith('moltbook-suspicious-targeted-') ? requested : null)
+    || (Object.values(allowlist).includes(requested) ? requested : null);
   if (!jobName) {
     return res.status(400).json({ phase: PHASE, ok: false, error: 'invalid_job_name' });
   }
