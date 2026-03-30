@@ -262,6 +262,15 @@ export async function fetchCursorBackfillSample({ cursor = null, limit = 50, ste
 
 export async function fetchSuspiciousLanguageProbe({ cursor = null, limit = 25, steps = 1, delayMs = 0 } = {}) {
   const sample = await fetchCursorBackfillSample({ cursor, limit, steps, delayMs });
+  const probePhases = [
+    { phase: 'probe_entered', cursor: cursor || null, limit, steps, delayMs },
+    {
+      phase: 'probe_fetch_completed',
+      fetchedPosts: (sample.posts || []).length,
+      errors: sample.errors || [],
+      firstCursorStat: sample.cursorStats?.[0] || null
+    }
+  ];
   const matchedPosts = [];
   const familyCounts = { claim: 0, wallet: 0, exploit: 0 };
 
@@ -278,11 +287,18 @@ export async function fetchSuspiciousLanguageProbe({ cursor = null, limit = 25, 
     if (matchedPosts.length >= 100) break;
   }
 
+  probePhases.push({
+    phase: 'probe_filtered_matches',
+    suspiciousMatchedCount: matchedPosts.length,
+    familyCounts
+  });
+
   return {
     ...sample,
     posts: uniqueBy(matchedPosts, (post) => post.id),
     familyCounts,
     suspiciousMatchedCount: matchedPosts.length,
-    firstCursorStat: sample.cursorStats?.[0] || null
+    firstCursorStat: sample.cursorStats?.[0] || null,
+    probePhases
   };
 }

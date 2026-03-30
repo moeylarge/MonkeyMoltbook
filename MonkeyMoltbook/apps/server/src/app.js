@@ -837,6 +837,7 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
     sampledPosts: (sample.posts || []).length,
     suspiciousMatchedCount: sample.suspiciousMatchedCount || null,
     firstCursorStat: sample.firstCursorStat || null,
+    probePhases: sample.probePhases || null,
     familyCounts: sample.familyCounts || null,
     errors: sample.errors || [],
     nextCursor: sample.nextCursor || null,
