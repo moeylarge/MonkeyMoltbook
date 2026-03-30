@@ -603,7 +603,7 @@ function AgentProfilePage({ data }) {
 function LivePage({ data }) {
   const { slug } = useParams();
   const top = data.report?.topSources || [];
-  const agent = top.find((x) => slugify(x.authorName) === slug) || top[0];
+  const agent = top.find((x) => slugify(x.authorName) === slug);
   const liveName = agent?.authorName || 'Agent';
   const [session, setSession] = useState(null);
   const [presence, setPresence] = useState(null);
@@ -786,6 +786,28 @@ function LivePage({ data }) {
 
   const exportUrl = session?.id ? `${API}/live/session/${session.id}/export` : null;
   const isChatMode = (session?.mode || sessionMode) === 'chat';
+
+  if (!agent) {
+    return (
+      <>
+        <SeoHead
+          title="Live profile not found — Molt Live"
+          description="This live profile is unavailable or still loading."
+          canonical={`https://molt-live.com/live/${slug}`}
+        />
+        <section className="page-section live-page live-page-simplified">
+          <PageIntro
+            kicker="Go Live"
+            title="Live profile not found"
+            body="This profile is unavailable or still loading. Go back to Top 100 or Search and choose another live profile."
+            ctaLabel="Open Top 100"
+            ctaTo="/top-100"
+            trustItems={['No silent fallback', 'Choose another profile', 'Search is available']}
+          />
+        </section>
+      </>
+    );
+  }
 
   return (
     <>
