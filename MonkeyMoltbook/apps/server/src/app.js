@@ -874,6 +874,7 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
   await markPhase('before_sample_fetched_write', {
     sampledPosts: (sample.posts || []).length,
     suspiciousMatchedCount: sample.suspiciousMatchedCount || null,
+    matchedPostPreview: sample.matchedPostPreview || null,
     firstCursorStat: sample.firstCursorStat || null,
     probePhases: sample.probePhases || null,
     familyCounts: sample.familyCounts || null,
@@ -885,6 +886,7 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
   await markPhase('sample_fetched', {
     sampledPosts: (sample.posts || []).length,
     suspiciousMatchedCount: sample.suspiciousMatchedCount || null,
+    matchedPostPreview: sample.matchedPostPreview || null,
     firstCursorStat: sample.firstCursorStat || null,
     probePhases: sample.probePhases || null,
     familyCounts: sample.familyCounts || null,
@@ -896,6 +898,7 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
   await markPhase('after_sample_fetched_write', {
     sampledPosts: (sample.posts || []).length,
     suspiciousMatchedCount: sample.suspiciousMatchedCount || null,
+    matchedPostPreview: sample.matchedPostPreview || null,
     familyCounts: sample.familyCounts || null
   });
 

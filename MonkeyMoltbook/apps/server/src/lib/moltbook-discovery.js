@@ -395,11 +395,23 @@ export async function fetchSuspiciousLanguageProbe({ cursor = null, limit = 25, 
     familyCounts
   });
 
+  const uniqueMatchedPosts = uniqueBy(matchedPosts, (post) => post.id);
+  const matchedPostPreview = uniqueMatchedPosts.slice(0, 5).map((post) => ({
+    postId: String(post?.id || ''),
+    title: String(post?.title || ''),
+    suspiciousFamilies: post?.suspiciousFamilies || [],
+    suspiciousPhrases: post?.suspiciousPhrases || [],
+    submolt: typeof post?.submolt === 'string'
+      ? post.submolt
+      : post?.submolt?.name || post?.submolt?.slug || post?.submolt?.title || null
+  }));
+
   return {
     ...sample,
-    posts: uniqueBy(matchedPosts, (post) => post.id),
+    posts: uniqueMatchedPosts,
     familyCounts,
-    suspiciousMatchedCount: matchedPosts.length,
+    suspiciousMatchedCount: uniqueMatchedPosts.length,
+    matchedPostPreview,
     firstCursorStat: sample.cursorStats?.[0] || null,
     probePhases
   };
