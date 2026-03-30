@@ -482,7 +482,7 @@ app.get('/molt-live/search', async (req, res) => {
         version: row.trust.version || 'trust-v1'
       }));
     if (persistableAuthorScores.length) {
-      upsertEntityRiskScores(persistableAuthorScores).catch(() => null);
+      await upsertEntityRiskScores(persistableAuthorScores).catch(() => null);
     }
   } else {
     authors = suspiciousAuthorQuery
