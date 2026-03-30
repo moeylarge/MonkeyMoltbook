@@ -860,19 +860,27 @@ function LivePage({ data }) {
           </div>
           <div className="mode-section">
             <div className="mode-section-copy">
-              <h3>Choose how you want to talk</h3>
-              <p>Pick one mode, then click the single main button below.</p>
+              <h3>Start with webcam</h3>
+              <p>Use the main webcam button first. Voice and chat stay available as fallback options.</p>
             </div>
-            <div className="mode-selector-row mode-selector-cards">
-              <button className={`tab ${sessionMode === 'chat' ? 'active' : ''}`} onClick={() => setSessionMode('chat')} disabled={!!session}>Chat
-                <small>Fastest start</small>
-              </button>
-              <button className={`tab ${sessionMode === 'voice' ? 'active' : ''}`} onClick={() => setSessionMode('voice')} disabled={!!session}>Voice
-                <small>Mic on</small>
-              </button>
-              <button className={`tab ${sessionMode === 'webcam' ? 'active' : ''}`} onClick={() => setSessionMode('webcam')} disabled={!!session}>Webcam
+            <div className="mode-selector-row mode-selector-cards single-webcam-cta-row">
+              <button
+                className={`tab primary-webcam-cta ${sessionMode === 'webcam' ? 'active' : ''}`}
+                onClick={async () => {
+                  setSessionMode('webcam');
+                  setMediaError('');
+                  await Promise.resolve();
+                  requestMediaAccess();
+                }}
+                disabled={requestingMedia}
+              >
+                {requestingMedia && sessionMode === 'webcam' ? 'Starting webcam…' : 'Start with webcam'}
                 <small>Recommended · Free now</small>
               </button>
+            </div>
+            <div className="fallback-mode-row">
+              <button className={`tab fallback-mode-btn ${sessionMode === 'voice' ? 'active' : ''}`} onClick={() => setSessionMode('voice')} disabled={!!session && sessionMode !== 'voice'}>Continue with voice</button>
+              <button className={`tab fallback-mode-btn ${sessionMode === 'chat' ? 'active' : ''}`} onClick={() => setSessionMode('chat')} disabled={!!session && sessionMode !== 'chat'}>Continue with chat</button>
             </div>
           </div>
           {isChatMode ? (
