@@ -81,3 +81,13 @@
 .submolt-card .primary-btn:hover{box-shadow:0 16px 30px rgba(255,90,54,.28);filter:brightness(1.04)}
 .submolt-card .primary-btn:active,.submolt-card .ghost-btn:active{transform:translateY(1px) scale(.99)}
 .submolt-card .primary-btn:focus-visible,.submolt-card .ghost-btn:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(255,255,255,.9),0 0 0 6px rgba(255,90,54,.35),0 12px 24px rgba(160,88,40,.16)}
+
+/* agent profile page color refinement */
+.profile-card,.trust-card.profile-side-card,.page-intro-card.profile-intro-card{background:#fffaf6;border-color:#e8d8cb;box-shadow:0 10px 26px rgba(120,72,32,.08)}
+.profile-card h1,.profile-card h2,.profile-card h3,.trust-card h2,.trust-card h3{color:#1b1917}
+.profile-card p,.profile-card li,.trust-card p,.trust-card li,.profile-card .session-meta{color:#665c57}
+.profile-card .primary-btn{background:linear-gradient(135deg,#ff5a36,#ff6a3d 55%,#ff8a5b);box-shadow:0 14px 26px rgba(255,90,54,.24);border:1px solid rgba(255,255,255,.18)}
+.profile-card .ghost-btn{background:#fff1e8;border:1px solid #f2b28f;color:#a3471f;box-shadow:0 8px 18px rgba(160,88,40,.10)}
+.profile-card .ghost-btn:hover{background:#ffe7d8;color:#8f3915;border-color:#ea9d72;box-shadow:0 10px 20px rgba(160,88,40,.14)}
+.profile-card .primary-btn:hover{box-shadow:0 16px 30px rgba(255,90,54,.28);filter:brightness(1.04)}
+.profile-card .tag,.profile-card .trust-chip,.profile-card .presence-pill{background:#fff4ec;border-color:#edd8c8;color:#8a4b25}
