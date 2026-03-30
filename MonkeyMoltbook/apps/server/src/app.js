@@ -1133,6 +1133,45 @@ app.post('/live/session/:id/message', async (req, res) => {
   const agentReply = await addAgentReply(sessionId, text, state?.session?.agent_name || 'Agent');
   res.json({ phase: PHASE, ok: true, userMessage, agentReply });
 });
+
+app.post('/live/session/:id/message/stream', async (req, res) => {
+  const sessionId = req.params.id;
+  const text = String(req.body?.text || '').trim();
+  const state = await getLiveSession(sessionId);
+  const agentName = state?.session?.agent_name || 'Agent';
+  const agentText = `${agentName} heard: ${text}. This is the first real stored live-session loop, with transcript persistence now active.`;
+  const userMessage = await addLiveMessage(sessionId, { role: 'user', messageType: 'typed', text });
+
+  res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders?.();
+
+  const sendEvent = (event, data) => {
+    res.write(`event: ${event}\n`);
+    res.write(`data: ${JSON.stringify(data)}\n\n`);
+  };
+
+  sendEvent('user', { userMessage });
+
+  const words = agentText.split(/(\s+)/).filter(Boolean);
+  let built = '';
+  for (const word of words) {
+    built += word;
+    sendEvent('chunk', { text: built });
+    await new Promise((resolve) => setTimeout(resolve, 35));
+  }
+
+  const agentReply = await addLiveMessage(sessionId, {
+    role: 'agent',
+    messageType: 'tts-text',
+    text: agentText,
+    meta: { generated: true, streamed: true }
+  });
+
+  sendEvent('done', { userMessage, agentReply });
+  res.end();
+});
 app.post('/live/session/:id/presence', async (req, res) => res.json({ phase: PHASE, ok: true, presence: await updateLivePresence(req.params.id, req.body || {}) }));
 app.post('/live/session/:id/end', async (req, res) => res.json({ phase: PHASE, ok: true, session: await endLiveSession(req.params.id) }));
 app.post('/live/session/:id/spend', async (req, res) => {

@@ -782,15 +782,65 @@ function LivePage({ data }) {
 
   const sendMessage = async () => {
     if (!session?.id || !draft.trim() || sending) return;
+    const text = draft.trim();
+    const optimisticUser = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      text,
+      created_at: new Date().toISOString(),
+      optimistic: true,
+    };
+    const streamingAgentId = `agent-stream-${Date.now()}`;
+    const streamingAgent = {
+      id: streamingAgentId,
+      role: 'agent',
+      text: '',
+      created_at: new Date().toISOString(),
+      streaming: true,
+    };
+
+    setMessages((prev) => [...prev, optimisticUser, streamingAgent]);
+    setDraft('');
     setSending(true);
-    const response = await fetch(`${API}/live/session/${session.id}/message`, {
+
+    const response = await fetch(`${API}/live/session/${session.id}/message/stream`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: draft })
+      body: JSON.stringify({ text })
     });
-    const payload = await response.json();
-    setMessages((prev) => [...prev, payload.userMessage, payload.agentReply].filter(Boolean));
-    setDraft('');
+
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    const applyEvent = (eventName, payload) => {
+      if (eventName === 'user' && payload?.userMessage) {
+        setMessages((current) => current.map((msg) => msg.id === optimisticUser.id ? payload.userMessage : msg));
+      }
+      if (eventName === 'chunk') {
+        setMessages((current) => current.map((msg) => msg.id === streamingAgentId ? { ...msg, text: payload?.text || '', streaming: true } : msg));
+      }
+      if (eventName === 'done' && payload?.agentReply) {
+        setMessages((current) => current.map((msg) => msg.id === streamingAgentId ? { ...payload.agentReply, streaming: false } : msg));
+      }
+    };
+
+    while (reader) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const parts = buffer.split('\n\n');
+      buffer = parts.pop() || '';
+      for (const part of parts) {
+        const eventMatch = part.match(/^event: (.+)$/m);
+        const dataMatch = part.match(/^data: (.+)$/m);
+        if (!dataMatch) continue;
+        const eventName = eventMatch ? eventMatch[1].trim() : 'message';
+        const payload = JSON.parse(dataMatch[1]);
+        applyEvent(eventName, payload);
+      }
+    }
+
     setSending(false);
   };
 
@@ -1030,7 +1080,7 @@ function LivePage({ data }) {
                 </div>
               </div>
               <div className="chat-input-row chat-input-row-strong">
-                <input className="chat-input chat-input-strong" placeholder="Ask anything, start the conversation, or drop a quick prompt…" value={draft} onChange={(e) => setDraft(e.target.value)} />
+                <textarea className="chat-input chat-input-strong" rows={3} placeholder="Ask anything, start the conversation, or drop a quick prompt…" value={draft} onChange={(e) => setDraft(e.target.value)} />
                 <button className="primary-btn" onClick={startSession} disabled={starting || !!session}>{starting ? 'Starting…' : 'Start chat now'}</button>
               </div>
             </>
@@ -1060,8 +1110,8 @@ function LivePage({ data }) {
                 <span className="presence-pill">{isChatMode ? 'Chat mode' : presence?.user_mic_on ? 'Mic ready' : 'Mic off'}</span>
                 <span className="presence-pill">Export ready</span>
               </div>
-              <div className="chat-input-row">
-                <input className="chat-input" placeholder={isChatMode ? 'Type a message to start the chat…' : 'Type a prompt while voice is on…'} value={draft} onChange={(e) => setDraft(e.target.value)} />
+              <div className="chat-input-row chat-input-row-sticky">
+                <textarea className="chat-input chat-input-live" rows={2} placeholder={isChatMode ? 'Ask anything, start the conversation, or drop a quick prompt…' : 'Type a prompt while voice is on…'} value={draft} onChange={(e) => setDraft(e.target.value)} />
                 <button className="primary-btn" onClick={sendMessage} disabled={!session || sending}>{sending ? 'Sending…' : 'Send'}</button>
               </div>
               <div className="session-meta">{`Session state: ${session.status} · export ready · launch access is free`}</div>
