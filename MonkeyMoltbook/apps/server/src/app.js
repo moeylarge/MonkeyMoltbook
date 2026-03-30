@@ -827,16 +827,21 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
     upsertedPosts = await upsertPosts(posts, authorIdMap);
     upsertedCommunities = await upsertCommunities(communities);
     upsertedSubmolts = await upsertSubmolts(submolts);
-    searchDocs = await upsertSearchDocuments([
-      ...upsertedAuthors.map((row) => ({ entity_type: 'author', entity_id: row.id, title: row.author_name, subtitle: row.label || 'author', body: row.description || row.reason || '', keywords: `${row.author_name} ${row.reason || ''}`, popularity_score: row.fit_score || 0, freshness_score: row.signal_score || 0, live_score: row.signal_score || 0 })),
-      ...upsertedCommunities.map((row) => ({ entity_type: 'community', entity_id: row.id, title: row.name, subtitle: 'community', body: row.description || '', keywords: `${row.name} ${row.title || ''}`, popularity_score: row.post_count || 0, freshness_score: 0, live_score: 0 })),
-      ...upsertedSubmolts.map((row) => ({ entity_type: 'submolt', entity_id: row.id, title: row.name, subtitle: 'group', body: '', keywords: row.name, popularity_score: row.post_count || 0, freshness_score: row.avg_score_per_post || 0, live_score: 0 }))
-    ]);
-    await upsertEntityRiskScores([
-      ...buildPersistableAuthorRiskRows({ posts, upsertedAuthors }),
-      ...upsertedCommunities.map((row) => ({ entity_type: 'community', entity_id: row.id, ...scoreCommunityRisk({ name: row.name, title: row.title, description: row.description, postCount: row.post_count }) })),
-      ...upsertedSubmolts.map((row) => ({ entity_type: 'submolt', entity_id: row.id, ...scoreCommunityRisk({ name: row.name, title: row.name, description: '', postCount: row.post_count }) }))
-    ]);
+
+    if (mode === 'suspicious') {
+      searchDocs = [];
+    } else {
+      searchDocs = await upsertSearchDocuments([
+        ...upsertedAuthors.map((row) => ({ entity_type: 'author', entity_id: row.id, title: row.author_name, subtitle: row.label || 'author', body: row.description || row.reason || '', keywords: `${row.author_name} ${row.reason || ''}`, popularity_score: row.fit_score || 0, freshness_score: row.signal_score || 0, live_score: row.signal_score || 0 })),
+        ...upsertedCommunities.map((row) => ({ entity_type: 'community', entity_id: row.id, title: row.name, subtitle: 'community', body: row.description || '', keywords: `${row.name} ${row.title || ''}`, popularity_score: row.post_count || 0, freshness_score: 0, live_score: 0 })),
+        ...upsertedSubmolts.map((row) => ({ entity_type: 'submolt', entity_id: row.id, title: row.name, subtitle: 'group', body: '', keywords: row.name, popularity_score: row.post_count || 0, freshness_score: row.avg_score_per_post || 0, live_score: 0 }))
+      ]);
+      await upsertEntityRiskScores([
+        ...buildPersistableAuthorRiskRows({ posts, upsertedAuthors }),
+        ...upsertedCommunities.map((row) => ({ entity_type: 'community', entity_id: row.id, ...scoreCommunityRisk({ name: row.name, title: row.title, description: row.description, postCount: row.post_count }) })),
+        ...upsertedSubmolts.map((row) => ({ entity_type: 'submolt', entity_id: row.id, ...scoreCommunityRisk({ name: row.name, title: row.name, description: '', postCount: row.post_count }) }))
+      ]);
+    }
   }
 
   const nextCursor = sample.nextCursor || null;
