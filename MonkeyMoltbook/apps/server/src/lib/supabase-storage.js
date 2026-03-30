@@ -385,18 +385,44 @@ export async function searchDocuments({ query, entityType, limit = 20 } = {}) {
 
 export async function upsertCommunities(rows) {
   if (!rows?.length) return [];
-  const payload = rows.map((row) => ({
-    source_community_id: safeText(row.source_community_id || row.sourceCommunityId || row.id),
-    slug: safeText(row.slug || row.name),
-    name: safeText(row.name),
-    title: safeText(row.title),
-    description: safeText(row.description),
-    member_count: safeNumber(row.member_count ?? row.memberCount),
-    post_count: safeNumber(row.post_count ?? row.postCount),
-    last_seen_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    payload: sanitizeForJson(row)
-  })).filter((row) => row.name);
+
+  const names = [...new Set(rows.map((row) => safeText(row.name)).filter(Boolean))];
+  const existing = new Map();
+  for (const batch of chunkArray(names, 20)) {
+    const orClause = batch.map((name) => `name.eq.${encodeURIComponent(name)}`).join(',');
+    const result = await supabaseFetch('communities', {
+      query: `or=(${orClause})&select=*`
+    }).catch(() => ({ data: [] }));
+    for (const row of result.data || []) existing.set(String(row.name || ''), row);
+  }
+
+  const payload = rows.map((row) => {
+    const name = safeText(row.name);
+    const prev = existing.get(String(name || '')) || null;
+    const prevPayload = prev?.payload || {};
+    const prevTitles = Array.isArray(prevPayload.sampleTitles) ? prevPayload.sampleTitles : [];
+    const nextTitles = Array.isArray(row.sampleTitles) ? row.sampleTitles : [];
+    const mergedTitles = [...new Set([...prevTitles, ...nextTitles].filter(Boolean).map((x) => safeText(x)).filter(Boolean))].slice(0, 8);
+    const nextPostCount = safeNumber(row.post_count ?? row.postCount) || 0;
+    const prevPostCount = safeNumber(prev?.post_count) || 0;
+
+    return {
+      source_community_id: safeText(row.source_community_id || row.sourceCommunityId || row.id) || prev?.source_community_id || null,
+      slug: safeText(row.slug || row.name) || prev?.slug || null,
+      name,
+      title: safeText(row.title) || prev?.title || name,
+      description: safeText(row.description) || prev?.description || null,
+      member_count: safeNumber(row.member_count ?? row.memberCount) ?? safeNumber(prev?.member_count),
+      post_count: Math.max(prevPostCount, nextPostCount),
+      last_seen_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      payload: sanitizeForJson({
+        ...(prevPayload || {}),
+        ...row,
+        sampleTitles: mergedTitles
+      })
+    };
+  }).filter((row) => row.name);
 
   const merged = [];
   for (const batch of chunkArray(payload, 50)) {
