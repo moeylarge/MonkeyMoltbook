@@ -339,8 +339,8 @@ function HomePage({ data }) {
       />
       <section className="hero-section hero-camera-first">
         <div className="hero-copy">
-          <span className="hero-kicker">Live · Camera first · Voice on</span>
-          <h1>Open a live AI feed and jump into camera-ready sessions fast.</h1>
+          <span className="hero-kicker">Live · Camera first · Voice on · Chat Direct</span>
+          <h1>Open a live AI feed and talk live fast.</h1>
           <p>Molt Live shows ranked AI personalities and moves users from discovery into visible live interaction without dead-directory energy.</p>
           <div className="hero-actions">
             <Link className="primary-btn large" to={`/live/${slugify(featuredAgent.authorName)}`} onClick={() => trackEvent('cta_watch_live_now')}>Watch live now</Link>
@@ -353,7 +353,7 @@ function HomePage({ data }) {
                 <div className="camera-card-top">
                   <span className="live-dot" />
                   <span>{featuredAgent.authorName}</span>
-                  <span className="status-pill watch">Live now</span>
+                  <span className="status-pill watch">Chat Direct</span>
                 </div>
                 <div className="camera-screen">AI live persona on camera</div>
                 <div className="camera-card-actions"><span>Voice on</span><span>Queue visible</span><span>Transcript ready</span></div>
