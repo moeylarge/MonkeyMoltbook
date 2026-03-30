@@ -110,3 +110,10 @@
 .live-window.ai{background:linear-gradient(180deg,#fff7f1,#fff1e8);border:1px solid #ead8cb;color:#1b1917}
 .live-window.ai .live-window-overlay span{background:#fff1e8;color:#a3471f;border:1px solid #f2b28f}
 .live-window.ai .live-window-overlay small{color:#665c57}
+
+.live-window-cta{cursor:pointer;appearance:none;width:100%;text-align:left;border:1px solid #f0b18d;background:linear-gradient(180deg,#fff8f3,#fff2e8);box-shadow:0 14px 30px rgba(160,88,40,.14);transition:transform .16s ease,box-shadow .16s ease,filter .16s ease}
+.live-window-cta:hover,.live-window-cta:focus-visible{transform:translateY(-2px) scale(1.01);filter:brightness(1.02);box-shadow:0 18px 36px rgba(160,88,40,.20);outline:none}
+.live-window-cta:active{transform:translateY(1px) scale(.995)}
+.live-window-cta::after{content:"Tap to enable webcam";position:absolute;right:16px;top:16px;padding:7px 10px;border-radius:999px;background:#ffefe3;color:#a3471f;border:1px solid #f2b28f;font-size:12px;font-weight:700;letter-spacing:.01em}
+.live-window-cta .live-window-overlay strong{color:#1b1917}
+.live-window-cta .live-window-overlay small{color:#665c57}

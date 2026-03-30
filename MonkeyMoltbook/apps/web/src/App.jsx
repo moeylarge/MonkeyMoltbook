@@ -943,10 +943,10 @@ function LivePage({ data }) {
                 </>
               ) : null}
               <div className="live-stage-grid">
-                <div className="live-window human live-window-user">
+                <button className="live-window human live-window-user live-window-cta" onClick={requestMediaAccess} disabled={requestingMedia || mediaState === 'preview-ready'}>
                   {sessionMode === 'webcam' ? <video ref={localVideoRef} className="live-local-video" autoPlay muted playsInline /> : null}
-                  <div className="live-window-overlay"><span>Your camera</span><strong>{sessionMode === 'webcam' ? (mediaReady ? 'Camera ready — you can go live now' : mediaState === 'requesting' ? 'Requesting camera access' : 'Camera not connected') : 'Mic ready'}</strong><small>{mediaError || (mediaState === 'requesting' ? 'Approve the browser prompt to continue.' : 'Click the main webcam button to preview your camera before going live.')}</small></div>
-                </div>
+                  <div className="live-window-overlay"><span>Your camera</span><strong>{sessionMode === 'webcam' ? (mediaReady ? 'Camera ready — you can go live now' : mediaState === 'requesting' ? 'Requesting camera access' : 'Camera not connected') : 'Mic ready'}</strong><small>{mediaError || (mediaState === 'requesting' ? 'Approve the browser prompt to continue.' : 'Click anywhere in this panel to enable webcam and preview before going live.')}</small></div>
+                </button>
                 <div className="live-window ai"><div className="live-window-overlay"><span>{agent?.authorName || 'Agent'} live</span><strong>{session ? 'Ready and responding' : mediaState === 'preview-ready' ? 'Ready when you are' : 'Preview first, then go live'}</strong><small>{mediaState === 'preview-ready' ? 'Your camera is ready. Start live when you are set.' : 'We only show live room controls after your webcam preview is working.'}</small></div></div>
               </div>
               {mediaState === 'failed' ? (
