@@ -1,5 +1,5 @@
 const MOLTBOOK_BASE = 'https://www.moltbook.com/api/v1/posts';
-const FETCH_TIMEOUT_MS = 1200;
+const FETCH_TIMEOUT_MS = 6000;
 
 function uniqueBy(items, keyFn) {
   const seen = new Set();
@@ -23,6 +23,10 @@ async function fetchJson(url) {
   } finally {
     clearTimeout(timeout);
   }
+}
+
+async function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function normalizePosts(payload) {
@@ -135,4 +139,145 @@ export function buildAuthorCoverage(posts) {
     submolts: [...row.submolts].filter(Boolean),
     observedPosts: row.postIds.size,
   }));
+}
+
+export function buildCommunityIndex(posts) {
+  const communities = new Map();
+  for (const post of posts || []) {
+    const raw = post.submolt;
+    const name = typeof raw === 'string' ? raw.trim() : raw?.name || raw?.slug || raw?.title || null;
+    if (!name) continue;
+    if (!communities.has(name)) {
+      communities.set(name, {
+        id: `community-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+        name,
+        slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        title: name,
+        description: `Community coverage derived from Moltbook public post discovery for ${name}.`,
+        memberCount: null,
+        postCount: 0,
+        sampleTitles: [],
+      });
+    }
+    const row = communities.get(name);
+    row.postCount += 1;
+    if (post.title && row.sampleTitles.length < 5) row.sampleTitles.push(String(post.title).slice(0, 120));
+  }
+  return [...communities.values()].sort((a, b) => b.postCount - a.postCount);
+}
+
+export async function fetchExpandedUniverseSample() {
+  const limits = [100, 200, 300];
+  const sorts = ['new', 'top', 'hot'];
+  const urls = [];
+  for (const sort of sorts) {
+    for (const limit of limits) urls.push({ sort, limit, url: `${MOLTBOOK_BASE}?sort=${sort}&limit=${limit}` });
+  }
+  const settled = await Promise.allSettled(urls.map(async (entry) => ({
+    key: `${entry.sort}-${entry.limit}`,
+    posts: normalizePosts(await fetchJson(entry.url)).map((post) => ({ ...post, discoverySurface: entry.sort }))
+  })));
+  const posts = [];
+  const errors = [];
+  for (const result of settled) {
+    if (result.status === 'fulfilled') posts.push(...result.value.posts);
+    else errors.push(String(result.reason?.message || result.reason || 'unknown'));
+  }
+  return { posts: uniqueBy(posts, (post) => post.id), errors };
+}
+
+export async function fetchPaginatedUniverseSample({ pages = 3, perPage = 100 } = {}) {
+  const sorts = ['new', 'top', 'hot'];
+  const posts = [];
+  const errors = [];
+  const pageStats = [];
+
+  for (const sort of sorts) {
+    let sortFailures = 0;
+    for (let page = 1; page <= pages; page += 1) {
+      const url = `${MOLTBOOK_BASE}?sort=${sort}&limit=${perPage}&page=${page}`;
+      try {
+        const pagePosts = normalizePosts(await fetchJson(url)).map((post) => ({ ...post, discoverySurface: sort, discoveryPage: page }));
+        posts.push(...pagePosts);
+        pageStats.push({ sort, page, count: pagePosts.length });
+        if (pagePosts.length === 0) break;
+      } catch (error) {
+        errors.push(`${sort}:page:${page}:${String(error?.message || error || 'unknown')}`);
+        sortFailures += 1;
+        if (sort === 'new') continue;
+        if (sortFailures >= 2) break;
+      }
+    }
+  }
+
+  return {
+    posts: uniqueBy(posts, (post) => post.id),
+    errors,
+    pageStats,
+    requestedPages: pages,
+    perPage
+  };
+}
+
+export async function fetchCursorBackfillSample({ cursor = null, limit = 50, steps = 5, delayMs = 750 } = {}) {
+  const posts = [];
+  const errors = [];
+  const cursorStats = [];
+  let nextCursor = cursor;
+  let hasMore = true;
+
+  for (let step = 1; step <= steps; step += 1) {
+    const params = new URLSearchParams({ sort: 'new', limit: String(limit) });
+    if (nextCursor) params.set('cursor', nextCursor);
+    const usedCursor = nextCursor || null;
+    const url = `${MOLTBOOK_BASE}?${params.toString()}`;
+    try {
+      const payload = await fetchJson(url);
+      const pagePosts = normalizePosts(payload).map((post) => ({ ...post, discoverySurface: 'new', discoveryStep: step }));
+      posts.push(...pagePosts);
+      cursorStats.push({ step, count: pagePosts.length, usedCursor, nextCursor: payload?.next_cursor || null, hasMore: Boolean(payload?.has_more) });
+      nextCursor = payload?.next_cursor || null;
+      hasMore = Boolean(payload?.has_more);
+      if (!hasMore || !nextCursor || pagePosts.length === 0) break;
+      if (delayMs > 0) await sleep(delayMs);
+    } catch (error) {
+      errors.push(`cursor:step:${step}:${String(error?.message || error || 'unknown')}`);
+      break;
+    }
+  }
+
+  return {
+    posts: uniqueBy(posts, (post) => post.id),
+    errors,
+    cursorStats,
+    nextCursor,
+    hasMore,
+    steps,
+    limit,
+    delayMs
+  };
+}
+
+export async function fetchSuspiciousLanguageSample({ cursor = null, limit = 100, steps = 12, delayMs = 250 } = {}) {
+  const sample = await fetchCursorBackfillSample({ cursor, limit, steps, delayMs });
+  const matchedPosts = [];
+  const familyCounts = { claim: 0, wallet: 0, exploit: 0 };
+
+  for (const post of sample.posts || []) {
+    const meta = suspiciousMatchMeta(post);
+    if (!meta.matched) continue;
+    for (const family of meta.families) familyCounts[family] += 1;
+    matchedPosts.push({
+      ...post,
+      suspiciousFamilies: meta.families,
+      suspiciousPhrases: meta.phrases,
+      discoverySurface: post.discoverySurface || 'new'
+    });
+  }
+
+  return {
+    ...sample,
+    posts: uniqueBy(matchedPosts, (post) => post.id),
+    familyCounts
+  };
 }

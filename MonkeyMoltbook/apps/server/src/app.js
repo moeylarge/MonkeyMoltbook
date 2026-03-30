@@ -4,7 +4,7 @@ import path from 'node:path';
 import { getAgentStats, getNextAgentHook, getNextAgentHooks, listAgents } from './lib/agents.js';
 import { authorsToCsv, buildGrowthMetrics, snapshotsToCsv } from './lib/moltbook-export.js';
 import { getMoltbookIntel, getMoltbookStats, getMoltbookAgents } from './lib/moltbook.js';
-import { buildAuthorCoverage, buildCommunityIndex, buildSubmoltIndex, fetchExpandedUniverseSample, fetchCursorBackfillSample, fetchPaginatedUniverseSample } from './lib/moltbook-discovery.js';
+import { buildAuthorCoverage, buildCommunityIndex, buildSubmoltIndex, fetchExpandedUniverseSample, fetchCursorBackfillSample, fetchPaginatedUniverseSample, fetchSuspiciousLanguageSample } from './lib/moltbook-discovery.js';
 import { getSchedulerState, startScheduler, stopScheduler } from './lib/moltbook-scheduler.js';
 import { getResponse, getResponseStats } from './lib/responses.js';
 import { buildSearchDocumentsFromState, getAuthorsByIds, getAuthorsBySourceIds, getCommunityBySlug, getEntityRiskScore, getIngestionJob, isSupabaseStorageEnabled, listEvidenceBackedSuspiciousAuthors, listMintAbuseAuthors, persistMoltbookSnapshot, searchAuthors, searchAuthorEvidence, searchCommunities, searchCommunityEvidence, searchDocuments, upsertCommunities, upsertEntityRiskScores, upsertIngestionJob, upsertPosts, upsertSearchDocuments, upsertSubmolts, upsertAuthors } from './lib/supabase-storage.js';
@@ -786,13 +786,16 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
   const perPage = Math.max(25, Math.min(Number(req.query.perPage) || (mode === 'cursor' ? 50 : 100), 200));
   const steps = Math.max(1, Math.min(Number(req.query.steps) || 5, 20));
   const delayMs = Math.max(0, Math.min(Number(req.query.delayMs) || 750, 5000));
-  const savedJob = mode === 'cursor' ? await getIngestionJob('moltbook-expanded-ingest') : null;
+  const jobName = mode === 'suspicious' ? 'moltbook-suspicious-ingest' : 'moltbook-expanded-ingest';
+  const savedJob = (mode === 'cursor' || mode === 'suspicious') ? await getIngestionJob(jobName) : null;
   const savedCursor = savedJob?.cursor_json?.nextCursor || null;
   const cursor = req.query.cursor ? String(req.query.cursor) : savedCursor;
 
   const sample = mode === 'page'
     ? await fetchPaginatedUniverseSample({ pages, perPage })
-    : await fetchCursorBackfillSample({ cursor, limit: perPage, steps, delayMs });
+    : mode === 'suspicious'
+      ? await fetchSuspiciousLanguageSample({ cursor, limit: perPage, steps, delayMs })
+      : await fetchCursorBackfillSample({ cursor, limit: perPage, steps, delayMs });
 
   const posts = sample.posts || [];
   const authors = buildAuthorCoverage(posts);
