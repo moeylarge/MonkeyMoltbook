@@ -231,17 +231,19 @@ export async function fetchCursorBackfillSample({ cursor = null, limit = 50, ste
     if (nextCursor) params.set('cursor', nextCursor);
     const usedCursor = nextCursor || null;
     const url = `${MOLTBOOK_BASE}?${params.toString()}`;
+    const fetchStartedAt = Date.now();
     try {
       const payload = await fetchJson(url);
       const pagePosts = normalizePosts(payload).map((post) => ({ ...post, discoverySurface: 'new', discoveryStep: step }));
       posts.push(...pagePosts);
-      cursorStats.push({ step, count: pagePosts.length, usedCursor, nextCursor: payload?.next_cursor || null, hasMore: Boolean(payload?.has_more) });
+      cursorStats.push({ step, count: pagePosts.length, usedCursor, nextCursor: payload?.next_cursor || null, hasMore: Boolean(payload?.has_more), fetchMs: Date.now() - fetchStartedAt });
       nextCursor = payload?.next_cursor || null;
       hasMore = Boolean(payload?.has_more);
       if (!hasMore || !nextCursor || pagePosts.length === 0) break;
       if (delayMs > 0) await sleep(delayMs);
     } catch (error) {
       errors.push(`cursor:step:${step}:${String(error?.message || error || 'unknown')}`);
+      cursorStats.push({ step, count: 0, usedCursor, nextCursor: null, hasMore: false, fetchMs: Date.now() - fetchStartedAt, error: String(error?.message || error || 'unknown') });
       break;
     }
   }
