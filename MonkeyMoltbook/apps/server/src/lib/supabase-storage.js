@@ -511,7 +511,11 @@ export async function searchCommunityEvidence({ query, limit = 20 } = {}) {
     entry.matchedPostCount += 1;
     entry.postCount = Math.max(entry.postCount, entry.matchedPostCount);
     entry.totalScore += safeNumber(row.score) || 0;
-    if (/(mbc20|mbc-20|hackai|bot|wang|\"op\":\"mint\")/.test(text)) entry.specializedEvidence += 1;
+    const strongMintPattern = /(mbc20|mbc-20|\"op\":\"mint\"|\"p\":\"mbc-20\"|mbc20\.xyz)/.test(text)
+      || (/hackai/.test(text) && /mint/.test(text))
+      || (/\bbot\b/.test(text) && /mint|\"tick\"/.test(text))
+      || (/\bwang\b/.test(text) && /mint|claim|\"tick\"/.test(text));
+    if (strongMintPattern) entry.specializedEvidence += 1;
     if (row.title && entry.sampleTitles.length < 8) entry.sampleTitles.push(safeText(row.title));
   }
   return [...grouped.values()]
