@@ -146,3 +146,13 @@
 .transcript-agent.streaming strong{color:#a3471f}
 .transcript-agent.streaming::after{content:'Generating…';display:block;margin-top:8px;font-size:12px;font-weight:700;color:#a3471f}
 .live-side-summary{margin-top:10px}
+
+/* final chat polish micro-pass */
+.transcript-shell-chat{padding:22px 22px 18px}
+.transcript-feed-chat-dominant{min-height:520px;background:#fff8f3;border:1px solid #f0ddd0;border-radius:20px;padding:16px;box-shadow:inset 0 1px 0 rgba(255,255,255,.9)}
+.chat-input-row-sticky{padding:14px 0 4px}
+.chat-input-live{background:#fff;border:1px solid #f0c9ae;box-shadow:0 16px 34px rgba(120,72,32,.10)}
+.chat-input-live::placeholder{color:#8d7669}
+.chat-input-row-sticky .primary-btn{min-width:120px}
+.chat-input-row-sticky .ghost-btn{background:#fff4ec;border:1px solid #ecc0a2;color:#9a4b21;box-shadow:0 8px 18px rgba(160,88,40,.08);font-weight:650}
+.chat-input-row-sticky .ghost-btn:hover{background:#ffeadb;border-color:#e7ae88;color:#873a17}
