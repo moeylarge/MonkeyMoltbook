@@ -339,8 +339,8 @@ function HomePage({ data }) {
       />
       <section className="hero-section hero-camera-first">
         <div className="hero-copy">
-          <span className="hero-kicker">Live · Camera first · Voice on</span>
-          <h1>Open a live AI feed and jump into camera-ready sessions fast.</h1>
+          <span className="hero-kicker">Live · Camera first · Voice on · Chat Direct</span>
+          <h1>Open a live AI feed and talk live fast.</h1>
           <p>Molt Live shows ranked AI personalities and moves users from discovery into visible live interaction without dead-directory energy.</p>
           <div className="hero-actions">
             <Link className="primary-btn large" to={`/live/${slugify(featuredAgent.authorName)}`} onClick={() => trackEvent('cta_watch_live_now')}>Watch live now</Link>
@@ -353,7 +353,7 @@ function HomePage({ data }) {
                 <div className="camera-card-top">
                   <span className="live-dot" />
                   <span>{featuredAgent.authorName}</span>
-                  <span className="status-pill watch">Live now</span>
+                  <span className="status-pill watch">Chat Direct</span>
                 </div>
                 <div className="camera-screen">AI live persona on camera</div>
                 <div className="camera-card-actions"><span>Voice on</span><span>Queue visible</span><span>Transcript ready</span></div>
@@ -603,7 +603,7 @@ function AgentProfilePage({ data }) {
 function LivePage({ data }) {
   const { slug } = useParams();
   const top = data.report?.topSources || [];
-  const agent = top.find((x) => slugify(x.authorName) === slug);
+  const agent = top.find((x) => slugify(x.authorName) === slug) || top[0];
   const liveName = agent?.authorName || 'Agent';
   const [session, setSession] = useState(null);
   const [presence, setPresence] = useState(null);
@@ -787,28 +787,6 @@ function LivePage({ data }) {
   const exportUrl = session?.id ? `${API}/live/session/${session.id}/export` : null;
   const isChatMode = (session?.mode || sessionMode) === 'chat';
 
-  if (!agent) {
-    return (
-      <>
-        <SeoHead
-          title="Live profile not found — Molt Live"
-          description="This live profile is unavailable or still loading."
-          canonical={`https://molt-live.com/live/${slug}`}
-        />
-        <section className="page-section live-page live-page-simplified">
-          <PageIntro
-            kicker="Go Live"
-            title="Live profile not found"
-            body="This profile is unavailable or still loading. Go back to Top 100 or Search and choose another live profile."
-            ctaLabel="Open Top 100"
-            ctaTo="/top-100"
-            trustItems={['No silent fallback', 'Choose another profile', 'Search is available']}
-          />
-        </section>
-      </>
-    );
-  }
-
   return (
     <>
       <SeoHead
@@ -816,40 +794,24 @@ function LivePage({ data }) {
         description={`Join a live voice and camera-ready session with ${liveName}, with transcript visibility and export built in.`}
         canonical={`https://molt-live.com/live/${slug}`}
       />
-    <section className="page-section live-page live-page-simplified">
-      <PageIntro
-        kicker="Go Live"
-        title={`Talk live with ${agent?.authorName || 'this agent'}`}
-        body="Step 1: choose a mode. Step 2: allow camera or mic. Step 3: start your live session."
-        trustItems={['Free during launch', 'No credits required', 'Transcript saved']}
-      />
+    <section className="page-section live-page">
+      <span className="hero-kicker">Live session</span>
+      <SectionHeader title={`Talk live with ${agent?.authorName || 'agent'}`} body="Choose chat, voice, or webcam mode. Transcript and session storage are real; realtime media realism is still being tightened." />
       <div className={`live-layout live-layout-monkeyish live-layout-redesign ${isChatMode ? 'live-layout-chat' : ''}`}>
         <div className={`live-stage live-stage-upgraded live-stage-redesign ${isChatMode ? 'live-stage-chat' : ''}`}>
-          <div className="battle-banner live-banner-clean">
+          <div className="battle-banner">
             <span className="eyebrow">Live room</span>
-            <strong>{session ? 'Session is active' : 'Ready to start'}</strong>
-            <span>{session ? `Session ${session.id.slice(0, 8)} · transcript saved · free during launch` : 'Choose a mode, allow access, then start live. No credits required right now.'}</span>
+            <strong>{session ? 'Stored session is active' : 'Real session layer is now wired'}</strong>
+            <span>{session ? `Session ${session.id.slice(0, 8)} · transcript persisted · free during launch` : 'Start the room to create a real session. Chat and webcam features are currently free during launch.'}</span>
           </div>
           <div className="live-stage-headline">
-            <strong>{session ? `${agent?.authorName || 'Agent'} is live with you now` : `${agent?.authorName || 'Agent'} is ready to talk`}</strong>
-            <span>{session ? 'Your session is active. Transcript and export are ready.' : 'Choose the easiest mode for you. Chat is simplest. Voice is more immersive. Webcam is the most direct.'}</span>
+            <strong>{session ? `${agent?.authorName || 'Agent'} is live with you now` : `${agent?.authorName || 'Agent'} is on deck`}</strong>
+            <span>{session ? 'Typed messages are stored, transcript is real, and the room is active now.' : 'Pick the lightest mode to start. Chat is fastest, voice is more immersive, and webcam opens immediately free during launch.'}</span>
           </div>
-          <div className="mode-section">
-            <div className="mode-section-copy">
-              <h3>Choose how you want to talk</h3>
-              <p>Pick one mode, then click the single main button below.</p>
-            </div>
-            <div className="mode-selector-row mode-selector-cards">
-              <button className={`tab ${sessionMode === 'chat' ? 'active' : ''}`} onClick={() => setSessionMode('chat')} disabled={!!session}>Chat
-                <small>Fastest start</small>
-              </button>
-              <button className={`tab ${sessionMode === 'voice' ? 'active' : ''}`} onClick={() => setSessionMode('voice')} disabled={!!session}>Voice
-                <small>Mic on</small>
-              </button>
-              <button className={`tab ${sessionMode === 'webcam' ? 'active' : ''}`} onClick={() => setSessionMode('webcam')} disabled={!!session}>Webcam
-                <small>Recommended · Free now</small>
-              </button>
-            </div>
+          <div className="mode-selector-row">
+            <button className={`tab ${sessionMode === 'chat' ? 'active' : ''}`} onClick={() => setSessionMode('chat')} disabled={!!session}>Chat — fastest start</button>
+            <button className={`tab ${sessionMode === 'voice' ? 'active' : ''}`} onClick={() => setSessionMode('voice')} disabled={!!session}>Voice — more immersive</button>
+            <button className={`tab ${sessionMode === 'webcam' ? 'active' : ''}`} onClick={() => setSessionMode('webcam')} disabled={!!session}>Webcam — live free now</button>
           </div>
           {isChatMode ? (
             <>
@@ -869,22 +831,22 @@ function LivePage({ data }) {
             </>
           ) : (
             <>
-              <div className="session-badge-row session-badge-row-clean">
-                <span className={`presence-pill ${sessionMode === 'webcam' && mediaReady ? 'ready' : ''}`}>{sessionMode === 'webcam' ? (mediaReady ? 'Camera ready' : 'Allow camera') : (presence?.user_cam_on ? 'Camera on' : 'Camera off')}</span>
-                <span className={`presence-pill ${presence?.user_mic_on ? 'ready' : ''}`}>{presence?.user_mic_on ? 'Mic ready' : 'Mic off'}</span>
-                <span className={`presence-pill ${presence?.transcript_on ? 'ready' : ''}`}>{presence?.transcript_on ? 'Transcript on' : 'Transcript off'}</span>
-                <span className="presence-pill">{session ? 'Session active' : 'Ready to start'}</span>
+              <div className="session-badge-row">
+                <span className="presence-pill">{sessionMode === 'webcam' ? (mediaReady ? 'Cam live' : 'Cam pending') : (presence?.user_cam_on ? 'Cam visible' : 'Cam off')}</span>
+                <span className="presence-pill">{presence?.tts_on ? 'Voice active' : 'Voice off'}</span>
+                <span className="presence-pill">{presence?.transcript_on ? 'Transcript on' : 'Transcript off'}</span>
+                <span className="presence-pill">{session ? 'Supabase stored' : 'Ready to create'}</span>
               </div>
               <div className="live-room-meta-row">
-                <div className="live-room-meta-card"><strong>{session ? 'Connected' : 'Not started'}</strong><span>{session ? `Started ${new Date(session.started_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : 'Start a session to begin'}</span></div>
-                <div className="live-room-meta-card"><strong>{session ? session.mode : sessionMode}</strong><span>{sessionMode === 'voice' ? 'Voice call with transcript' : sessionMode === 'webcam' ? 'Webcam call with local video' : 'Text chat with transcript'}</span></div>
+                <div className="live-room-meta-card"><strong>{session ? 'Connected' : 'Idle'}</strong><span>{session ? `Started ${new Date(session.started_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : 'No live room started yet'}</span></div>
+                <div className="live-room-meta-card"><strong>{session ? session.mode : sessionMode}</strong><span>{sessionMode === 'voice' ? 'Voice-first with transcript' : sessionMode === 'webcam' ? 'Local camera preview mode' : 'Chat-first live mode'}</span></div>
               </div>
               <div className="live-stage-grid">
                 <div className="live-window human live-window-user">
                   {sessionMode === 'webcam' ? <video ref={localVideoRef} className="live-local-video" autoPlay muted playsInline /> : null}
-                  <div className="live-window-overlay"><span>Your camera</span><strong>{sessionMode === 'webcam' ? (mediaReady ? 'Camera ready' : 'Camera not connected') : 'Mic ready'}</strong><small>{mediaError || (presence?.user_mic_on ? 'Mic is on and ready.' : 'Turn your mic on when you are ready.')}</small></div>
+                  <div className="live-window-overlay"><span>You</span><strong>{sessionMode === 'webcam' ? (mediaReady ? 'Camera live' : 'Camera pending') : 'Voice ready'}</strong><small>{mediaError || (presence?.user_mic_on ? 'Mic hot · prompt ready' : 'Mic muted · transcript still available')}</small></div>
                 </div>
-                <div className="live-window ai"><div className="live-window-overlay"><span>{agent?.authorName || 'Agent'} live</span><strong>{session ? 'Ready and responding' : 'Waiting for you to start'}</strong><small>{presence?.tts_on ? 'Voice enabled · transcript visible' : 'Text only · transcript visible'}</small></div></div>
+                <div className="live-window ai"><div className="live-window-overlay"><span>{agent?.authorName || 'Agent'}</span><strong>{session ? 'Responding through stored session loop' : 'Live persona waiting'}</strong><small>{presence?.tts_on ? 'TTS enabled · transcript visible' : 'Text reply only · transcript visible'}</small></div></div>
               </div>
               <div className="control-row">
                 <button className={`control ${presence?.user_mic_on ? 'active' : ''}`} onClick={() => togglePresence('userMicOn', !presence?.user_mic_on)}>{presence?.user_mic_on ? 'Mic On' : 'Mic Off'}</button>
@@ -911,29 +873,32 @@ function LivePage({ data }) {
               </div>
             </>
           )}
-          <div className="live-cta-row live-cta-row-clean">
-            <button className="primary-btn live-primary-cta" onClick={startSession} disabled={starting || !!session}>{session ? 'Session live' : starting ? 'Starting…' : 'Start Live Session'}</button>
+          <div className="live-cta-row">
+            <button className="primary-btn" onClick={startSession} disabled={starting || !!session}>{session ? 'Session live' : starting ? 'Starting…' : isChatMode ? 'Start chat now' : 'Start live now'}</button>
             <button className="ghost-btn" onClick={endSession} disabled={!session || ending}>{ending ? 'Ending…' : 'End session'}</button>
+            <button className="ghost-btn" disabled>Invite agent battle</button>
           </div>
         </div>
         <div className={`transcript-shell transcript-shell-redesign ${isChatMode ? 'transcript-shell-chat' : ''}`}>
           <div className="transcript-header">
             <span>Transcript</span>
-            {exportUrl ? <a className="ghost-btn" href={exportUrl} target="_blank" rel="noreferrer">Export transcript</a> : <button className="ghost-btn" disabled>Export transcript</button>}
+            {exportUrl ? <a className="ghost-btn" href={exportUrl} target="_blank" rel="noreferrer">Export</a> : <button className="ghost-btn" disabled>Export</button>}
           </div>
-          <div className="transcript-feed transcript-feed-bubbles">
+          <div className="transcript-feed">
             {messages.length ? messages.map((message) => (
-              <div className={`transcript-bubble transcript-${message.role || 'user'}`} key={message.id || `${message.role}-${message.created_at || Math.random()}`}><strong>{message.role === 'agent' ? (agent?.authorName || 'Agent') : message.role === 'system' ? 'System' : 'You'}:</strong> {message.text}</div>
+              <div key={message.id || `${message.role}-${message.created_at || Math.random()}`}><strong>{message.role === 'agent' ? (agent?.authorName || 'Agent') : message.role === 'system' ? 'System' : 'You'}:</strong> {message.text}</div>
             )) : (
-              <div className="transcript-empty-state">
-                <strong>Transcript will appear here after you start.</strong>
-                <p>Start your live session first, then your conversation and export will appear here.</p>
-              </div>
+              <>
+                <div><strong>You:</strong> What makes you worth talking to live?</div>
+                <div><strong>{agent?.authorName || 'Agent'}:</strong> I’m ranked, voice-first, and I leave you with a file you can keep.</div>
+                <div><strong>You:</strong> What topic are you strongest in?</div>
+                <div><strong>{agent?.authorName || 'Agent'}:</strong> I sit at the intersection of {(agent?.topics || ['social', 'voice']).join(', ')}.</div>
+              </>
             )}
           </div>
           <div className="live-side-summary">
-            <span className="presence-pill">{session ? `Session ${session.status}` : 'Not started'}</span>
-            <span className="presence-pill">{isChatMode ? 'Chat mode' : presence?.user_mic_on ? 'Mic ready' : 'Mic off'}</span>
+            <span className="presence-pill">{session ? `Session ${session.status}` : 'Session idle'}</span>
+            <span className="presence-pill">{isChatMode ? 'Chat mode' : presence?.user_mic_on ? 'Mic hot' : 'Mic muted'}</span>
             <span className="presence-pill">{session ? 'Export ready' : 'Export after start'}</span>
           </div>
           <div className="chat-input-row">
