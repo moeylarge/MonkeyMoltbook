@@ -548,7 +548,7 @@ export async function searchAuthorEvidence({ query, limit = 20 } = {}) {
     'seed phrase': `or=(title.ilike.%25seed%20phrase%25,snippet.ilike.%25seed%20phrase%25,snippet.ilike.%25private%20key%25,snippet.ilike.%25wallet%20recovery%25,snippet.ilike.%25recovery%20phrase%25,snippet.ilike.%25connect%20wallet%20to%20claim%25)`,
     drainer: `or=(title.ilike.%25drainer%25,snippet.ilike.%25drainer%25,snippet.ilike.%25wallet%20drainer%25,snippet.ilike.%25clipboard%20drainer%25,snippet.ilike.%25stealer%25,snippet.ilike.%25seed%20phrase%25,snippet.ilike.%25private%20key%25)`,
     malware: `or=(title.ilike.%25malware%25,snippet.ilike.%25malware%25,snippet.ilike.%25virus%25,snippet.ilike.%25keygen%25,snippet.ilike.%25stealer%25,snippet.ilike.%25rat%25,snippet.ilike.%25remote%20access%20trojan%25)`,
-    exploit: `or=(title.ilike.%25exploit%25,snippet.ilike.%25exploit%25,snippet.ilike.%25wallet%20exploit%25,snippet.ilike.%25drainer%25,snippet.ilike.%25seed%20phrase%25,snippet.ilike.%25private%20key%25)`,
+    exploit: `or=(snippet.ilike.%25wallet%20exploit%25,snippet.ilike.%25verify%20your%20wallet%25,snippet.ilike.%25connect%20wallet%20to%20claim%25,snippet.ilike.%25wallet%20drainer%25,snippet.ilike.%25clipboard%20drainer%25,snippet.ilike.%25seed%20phrase%25,snippet.ilike.%25private%20key%25,snippet.ilike.%25stealer%25)`,
     claim: `or=(snippet.ilike.%25claim%20now%25,snippet.ilike.%25claim%20your%20reward%25,snippet.ilike.%25connect%20wallet%20to%20claim%25,snippet.ilike.%25claim%20airdrop%25,snippet.ilike.%25airdrop%20claim%25,snippet.ilike.%25verify%20your%20wallet%25,snippet.ilike.%25wallet%20connect%25)`,
     airdrop: `or=(title.ilike.%25airdrop%25,snippet.ilike.%25airdrop%25,snippet.ilike.%25claim%20your%20reward%25,snippet.ilike.%25connect%20wallet%20to%20claim%25,snippet.ilike.%25wallet%20connect%25,snippet.ilike.%25seed%20phrase%25)`
   };
@@ -599,7 +599,7 @@ export async function searchAuthorEvidence({ query, limit = 20 } = {}) {
     'seed phrase': 2,
     drainer: 2,
     malware: 1,
-    exploit: 1,
+    exploit: 2,
     claim: 2,
     airdrop: 1
   };

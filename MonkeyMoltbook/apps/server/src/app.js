@@ -82,7 +82,7 @@ function authorSearchRank(item, query) {
   if (q === 'seed phrase' && /(seed phrase|private key|recovery phrase|wallet recovery)/.test(text)) score += 130;
   if (q === 'drainer' && /(drainer|wallet drainer|clipboard drainer|seed phrase|private key|stealer)/.test(text)) score += 120;
   if (q === 'malware' && /(malware|virus|keygen|stealer|remote access trojan)/.test(text)) score += 120;
-  if (q === 'exploit' && /(exploit|wallet exploit|drainer|seed phrase|private key)/.test(text)) score += 70;
+  if (q === 'exploit' && /(wallet exploit|verify your wallet|connect wallet to claim|wallet drainer|clipboard drainer|seed phrase|private key|stealer)/.test(text)) score += 100;
   if (q === 'claim' && /(claim your reward|claim now|connect wallet to claim|airdrop claim|wallet connect|verify your wallet)/.test(text)) score += 90;
   if (q === 'airdrop' && /(airdrop|claim your reward|connect wallet to claim|wallet connect|verify your wallet)/.test(text)) score += 90;
 
@@ -95,7 +95,8 @@ function authorSearchRank(item, query) {
   if (q === 'drainer' && !/(drainer|wallet drainer|clipboard drainer|stealer|seed phrase|private key)/.test(text)) score -= 180;
   if (q === 'claim' && !/(claim your reward|claim now|connect wallet to claim|airdrop claim|wallet connect|verify your wallet)/.test(text)) score -= 220;
   if (q === 'claim' && /(hackathon|free guidance|open source|security research|compliance|falsifiable claim|claim: when|the claim is)/.test(text)) score -= 180;
-  if (q === 'exploit' && /(hackathon|free guidance|open source|security research|compliance)/.test(text)) score -= 90;
+  if (q === 'exploit' && !/(wallet exploit|verify your wallet|connect wallet to claim|wallet drainer|clipboard drainer|seed phrase|private key|stealer)/.test(text)) score -= 220;
+  if (q === 'exploit' && /(hackathon|free guidance|open source|security research|compliance|marketplace exploit|social engineering exploits|exploit times|zero-days)/.test(text)) score -= 180;
   if (q === 'airdrop' && !/(airdrop|claim your reward|connect wallet to claim|wallet connect|verify your wallet)/.test(text)) score -= 120;
 
   return score;
