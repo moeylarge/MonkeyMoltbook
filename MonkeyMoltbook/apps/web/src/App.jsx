@@ -599,6 +599,7 @@ function LivePage({ data }) {
   const [wallet, setWallet] = useState(null);
   const [products, setProducts] = useState([]);
   const [spendingAction, setSpendingAction] = useState('');
+  const [lastSentText, setLastSentText] = useState('');
   const [sessionMode, setSessionMode] = useState('webcam');
   const [mediaReady, setMediaReady] = useState(false);
   const [mediaError, setMediaError] = useState('');
@@ -607,6 +608,7 @@ function LivePage({ data }) {
   const [requestingMedia, setRequestingMedia] = useState(false);
   const localVideoRef = useRef(null);
   const localStreamRef = useRef(null);
+  const streamAbortRef = useRef(null);
 
   const loadWallet = async () => {
     const response = await fetch(`${API}/wallet?userId=demo-user`);
@@ -737,6 +739,13 @@ function LivePage({ data }) {
     return () => stopStream();
   }, [sessionMode]);
 
+  const loadTranscript = async (sessionId) => {
+    if (!sessionId) return;
+    const transcript = await fetch(`${API}/live/session/${sessionId}/transcript`);
+    const transcriptPayload = await transcript.json();
+    setMessages(transcriptPayload.messages || []);
+  };
+
   const startSession = async () => {
     if (session || starting) return;
     setStarting(true);
@@ -759,6 +768,9 @@ function LivePage({ data }) {
     setSession(createdSession);
     setPresence(nextPresence);
     setMessages([]);
+    if (createdSession?.id) {
+      localStorage.setItem(`molt-live-session:${slug}`, createdSession.id);
+    }
 
     if (createdSession?.id) {
       const desiredPresence = {
@@ -778,6 +790,17 @@ function LivePage({ data }) {
     }
 
     setStarting(false);
+  };
+
+  const cancelGeneration = () => {
+    streamAbortRef.current?.abort?.();
+    setSending(false);
+    setMessages((current) => current.map((msg) => msg.streaming ? { ...msg, streaming: false, text: msg.text || '[stopped]' } : msg));
+  };
+
+  const retryLastMessage = async () => {
+    if (!lastSentText || sending) return;
+    setDraft(lastSentText);
   };
 
   const sendMessage = async () => {
@@ -800,13 +823,18 @@ function LivePage({ data }) {
     };
 
     setMessages((prev) => [...prev, optimisticUser, streamingAgent]);
+    setLastSentText(text);
     setDraft('');
     setSending(true);
+
+    const controller = new AbortController();
+    streamAbortRef.current = controller;
 
     const response = await fetch(`${API}/live/session/${session.id}/message/stream`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text })
+      body: JSON.stringify({ text }),
+      signal: controller.signal
     });
 
     const reader = response.body?.getReader();
@@ -825,23 +853,31 @@ function LivePage({ data }) {
       }
     };
 
-    while (reader) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const parts = buffer.split('\n\n');
-      buffer = parts.pop() || '';
-      for (const part of parts) {
-        const eventMatch = part.match(/^event: (.+)$/m);
-        const dataMatch = part.match(/^data: (.+)$/m);
-        if (!dataMatch) continue;
-        const eventName = eventMatch ? eventMatch[1].trim() : 'message';
-        const payload = JSON.parse(dataMatch[1]);
-        applyEvent(eventName, payload);
+    try {
+      while (reader) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split('\n\n');
+        buffer = parts.pop() || '';
+        for (const part of parts) {
+          const eventMatch = part.match(/^event: (.+)$/m);
+          const dataMatch = part.match(/^data: (.+)$/m);
+          if (!dataMatch) continue;
+          const eventName = eventMatch ? eventMatch[1].trim() : 'message';
+          const payload = JSON.parse(dataMatch[1]);
+          applyEvent(eventName, payload);
+        }
       }
+    } catch (error) {
+      if (error?.name !== 'AbortError') {
+        setMessages((current) => current.map((msg) => msg.id === streamingAgentId ? { ...msg, streaming: false, text: msg.text || '[message failed — retry]' } : msg));
+      }
+    } finally {
+      streamAbortRef.current = null;
+      setSending(false);
+      await loadTranscript(session?.id);
     }
-
-    setSending(false);
   };
 
   const togglePresence = async (field, value) => {
@@ -887,6 +923,23 @@ function LivePage({ data }) {
     }
     setSpendingAction('');
   };
+
+  useEffect(() => {
+    const restoreSession = async () => {
+      const savedId = localStorage.getItem(`molt-live-session:${slug}`);
+      if (!savedId || session) return;
+      try {
+        const response = await fetch(`${API}/live/session/${savedId}`);
+        const payload = await response.json();
+        if (payload?.session?.status === 'active') {
+          setSession(payload.session);
+          setPresence(payload.presence || null);
+          await loadTranscript(savedId);
+        }
+      } catch {}
+    };
+    restoreSession();
+  }, [slug, session]);
 
   const exportUrl = session?.id ? `${API}/live/session/${session.id}/export` : null;
   const isChatMode = (session?.mode || sessionMode) === 'chat';
@@ -1113,6 +1166,8 @@ function LivePage({ data }) {
               <div className="chat-input-row chat-input-row-sticky">
                 <textarea className="chat-input chat-input-live" rows={2} placeholder={isChatMode ? 'Ask anything, start the conversation, or drop a quick prompt…' : 'Type a prompt while voice is on…'} value={draft} onChange={(e) => setDraft(e.target.value)} />
                 <button className="primary-btn" onClick={sendMessage} disabled={!session || sending}>{sending ? 'Sending…' : 'Send'}</button>
+                {sending ? <button className="ghost-btn" onClick={cancelGeneration}>Stop</button> : null}
+                {!sending && lastSentText ? <button className="ghost-btn" onClick={retryLastMessage}>Retry last</button> : null}
               </div>
               <div className="session-meta">{`Session state: ${session.status} · export ready · launch access is free`}</div>
             </>
