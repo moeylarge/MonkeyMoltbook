@@ -475,8 +475,10 @@ export async function searchCommunityEvidence({ query, limit = 20 } = {}) {
   const normalized = q.toLowerCase();
   const mintIntentTerms = new Set(['mint', 'mbc20', 'mbc-20', 'hackai', 'bot', 'wang']);
   const claimIntentTerms = new Set(['claim', 'claim now', 'claim your reward', 'claim your airdrop', 'airdrop claim', 'eligible for airdrop', 'redeem', 'redeem now']);
+  const walletIntentTerms = new Set(['wallet', 'wallet connect', 'connect wallet to claim', 'verify your wallet', 'wallet recovery', 'seed phrase', 'private key']);
   const isMintIntent = mintIntentTerms.has(normalized);
   const isClaimIntent = claimIntentTerms.has(normalized);
+  const isWalletIntent = walletIntentTerms.has(normalized);
   const safeQuery = encodeURIComponent(`%${q}%`);
   const mintClauses = [
     'select=submolt_name,title,snippet,score,comment_count,payload',
@@ -484,7 +486,19 @@ export async function searchCommunityEvidence({ query, limit = 20 } = {}) {
     `limit=${Math.max(10, Math.min(Number(limit) * 12 || 60, 240))}`,
     'order=score.desc.nullslast'
   ];
-  const clauses = isMintIntent ? mintClauses : [
+  const claimClauses = [
+    'select=submolt_name,title,snippet,score,comment_count,payload',
+    'or=(title.ilike.%25claim%25,title.ilike.%25airdrop%25,snippet.ilike.%25claim%20now%25,snippet.ilike.%25claim%20your%20reward%25,snippet.ilike.%25claim%20your%20airdrop%25,snippet.ilike.%25claim%20your%20tokens%25,snippet.ilike.%25airdrop%20claim%25,snippet.ilike.%25eligible%20for%20airdrop%25,snippet.ilike.%25check%20your%20eligibility%25,snippet.ilike.%25connect%20wallet%20to%20claim%25,snippet.ilike.%25redeem%20now%25,snippet.ilike.%25redeem%20your%20reward%25,snippet.ilike.%25unlock%20your%20reward%25,snippet.ilike.%25verify%20your%20wallet%25,snippet.ilike.%25wallet%20connect%25)',
+    `limit=${Math.max(10, Math.min(Number(limit) * 12 || 60, 240))}`,
+    'order=score.desc.nullslast'
+  ];
+  const walletClauses = [
+    'select=submolt_name,title,snippet,score,comment_count,payload',
+    'or=(title.ilike.%25wallet%25,title.ilike.%25seed%20phrase%25,title.ilike.%25private%20key%25,snippet.ilike.%25wallet%20connect%25,snippet.ilike.%25connect%20wallet%25,snippet.ilike.%25verify%20your%20wallet%25,snippet.ilike.%25wallet%20recovery%25,snippet.ilike.%25recover%20your%20wallet%25,snippet.ilike.%25import%20your%20wallet%25,snippet.ilike.%25seed%20phrase%25,snippet.ilike.%25private%20key%25,snippet.ilike.%25connect%20wallet%20to%20claim%25,snippet.ilike.%25wallet%20drainer%25,snippet.ilike.%25clipboard%20drainer%25)',
+    `limit=${Math.max(10, Math.min(Number(limit) * 12 || 60, 240))}`,
+    'order=score.desc.nullslast'
+  ];
+  const clauses = isMintIntent ? mintClauses : isClaimIntent ? claimClauses : isWalletIntent ? walletClauses : [
     'select=submolt_name,title,snippet,score,comment_count,payload',
     `or=(submolt_name.ilike.${safeQuery},title.ilike.${safeQuery},snippet.ilike.${safeQuery})`,
     `limit=${Math.max(5, Math.min(Number(limit) * 10 || 50, 200))}`,
@@ -519,7 +533,9 @@ export async function searchCommunityEvidence({ query, limit = 20 } = {}) {
       || (/hackai/.test(text) && /mint/.test(text))
       || (/\bbot\b/.test(text) && /mint|\"tick\"/.test(text))
       || (/\bwang\b/.test(text) && /mint|claim|\"tick\"/.test(text));
-    if (strongMintPattern) entry.specializedEvidence += 1;
+    const strongClaimPattern = /claim now|claim your reward|claim your airdrop|claim your tokens|airdrop claim|eligible for airdrop|check your eligibility|connect wallet to claim|redeem now|redeem your reward|unlock your reward|verify your wallet|wallet connect/.test(text);
+    const strongWalletPattern = /wallet connect|connect wallet|verify your wallet|wallet recovery|recover your wallet|import your wallet|seed phrase|private key|connect wallet to claim|wallet drainer|clipboard drainer/.test(text);
+    if (strongMintPattern || (isClaimIntent && strongClaimPattern) || (isWalletIntent && strongWalletPattern)) entry.specializedEvidence += 1;
     if (row.title && entry.sampleTitles.length < 8) entry.sampleTitles.push(safeText(row.title));
   }
   return [...grouped.values()]

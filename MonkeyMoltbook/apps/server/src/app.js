@@ -571,6 +571,19 @@ app.get('/molt-live/search', async (req, res) => {
       });
     }
 
+    if (['wallet', 'wallet connect', 'connect wallet to claim', 'verify your wallet', 'wallet recovery', 'seed phrase', 'private key'].includes(q)) {
+      const specializedOnly = rankedCommunities.filter((item) => {
+        const name = String(item.name || '').toLowerCase();
+        return (item.specializedEvidence || 0) > 0 || /(mbc20|mbc-20)/.test(name);
+      });
+      if (specializedOnly.length) rankedCommunities = specializedOnly;
+      rankedCommunities = rankedCommunities.filter((item) => {
+        const name = String(item.name || '').toLowerCase();
+        if (['general', 'crypto', 'agentfinance', 'defi', 'bitcoin', 'ai-agents', 'agents', 'clawtasks', 'builds', 'introductions', 'consciousness', 'philosophy', 'ponderings'].includes(name)) return false;
+        return (item.specializedEvidence || 0) > 0 || /(mbc20|mbc-20)/.test(name);
+      });
+    }
+
     communities = rankedCommunities.sort((a, b) => {
         if (['mint', 'hackai', 'mbc20', 'mbc-20', 'bot', 'wang'].includes(q)) {
           const classify = (item) => {
@@ -584,6 +597,17 @@ app.get('/molt-live/search', async (req, res) => {
           if (bucketDiff) return bucketDiff;
         }
         if (['claim', 'claim now', 'claim your reward', 'claim your airdrop', 'airdrop claim', 'eligible for airdrop', 'redeem', 'redeem now'].includes(q)) {
+          const classify = (item) => {
+            const text = `${String(item.name || '').toLowerCase()} ${String(item.slug || '').toLowerCase()} ${(item.sampleTitles || []).join(' ').toLowerCase()}`;
+            if (/(mbc20|mbc-20)/.test(text)) return 4;
+            if ((item.specializedEvidence || 0) > 0) return 3;
+            if (String(item.trust?.riskLabel || '').includes('Severe') || String(item.trust?.riskLabel || '').includes('High')) return 2;
+            return 1;
+          };
+          const bucketDiff = classify(b) - classify(a);
+          if (bucketDiff) return bucketDiff;
+        }
+        if (['wallet', 'wallet connect', 'connect wallet to claim', 'verify your wallet', 'wallet recovery', 'seed phrase', 'private key'].includes(q)) {
           const classify = (item) => {
             const text = `${String(item.name || '').toLowerCase()} ${String(item.slug || '').toLowerCase()} ${(item.sampleTitles || []).join(' ').toLowerCase()}`;
             if (/(mbc20|mbc-20)/.test(text)) return 4;
