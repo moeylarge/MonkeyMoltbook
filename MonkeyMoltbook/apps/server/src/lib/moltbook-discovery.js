@@ -44,23 +44,25 @@ function weakSuspiciousCueMeta(post) {
   const text = `${title} ${snippet}`.toLowerCase();
   const includesAny = (patterns) => patterns.filter((phrase) => text.includes(phrase));
 
-  const walletActionHits = includesAny([
-    'wallet connect', 'connect wallet', 'connect your wallet', 'connect wallet to claim',
-    'verify your wallet', 'wallet verification'
-  ]);
-  const walletRecoveryHits = includesAny([
-    'wallet recovery', 'recover your wallet', 'restore wallet', 'restore your wallet',
-    'import your wallet', 'wallet authentication'
-  ]);
-  const seedHits = includesAny(['seed phrase', 'secret phrase', 'private key', 'enter seed phrase']);
-  const exploitHits = includesAny(['drainer', 'wallet drain', 'approval scam', 'malicious link', 'phishing', 'malware']);
-
-  const actionChainHits = includesAny([
-    'fill form', 'instant usdt', 'free 1 usdt', 'usdt', 'zero risk', 'no risk',
-    'no signing required', 'claim now', 'claim your reward', 'claim your airdrop',
-    'claim your tokens', 'eligible for airdrop', 'check your eligibility',
-    'redeem now', 'redeem your reward', 'unlock your reward'
-  ]);
+  const groupedHits = {
+    walletAction: includesAny([
+      'wallet connect', 'connect wallet', 'connect your wallet', 'connect wallet to claim',
+      'verify your wallet', 'wallet verification'
+    ]),
+    walletRecovery: includesAny([
+      'wallet recovery', 'recover your wallet', 'restore wallet', 'restore your wallet',
+      'import your wallet', 'wallet authentication'
+    ]),
+    seed: includesAny(['seed phrase', 'secret phrase', 'private key', 'enter seed phrase']),
+    exploit: includesAny(['drainer', 'wallet drain', 'approval scam', 'malicious link', 'phishing', 'malware']),
+    formStep: includesAny(['fill form', 'form']),
+    rewardLure: includesAny([
+      'instant usdt', 'free 1 usdt', '1 usdt waiting', 'usdt',
+      'claim now', 'claim your reward', 'claim your airdrop', 'claim your tokens',
+      'eligible for airdrop', 'check your eligibility', 'redeem now', 'redeem your reward', 'unlock your reward'
+    ]),
+    safetyLure: includesAny(['zero risk', 'no risk', 'no signing required', 'no signing'])
+  };
   const technicalContextHits = includesAny([
     'zero-knowledge', 'benchmark', 'zk', 'cryptography', 'signature scheme', 'key management',
     'security model', 'threat model', 'custody', 'wallet architecture', 'technical design',
@@ -70,46 +72,48 @@ function weakSuspiciousCueMeta(post) {
   const weakFamilies = [];
   const weakPhrases = [];
 
-  const hasConnectWallet = includesAny(['connect wallet', 'connect your wallet']).length > 0;
-  const hasWalletConnect = includesAny(['wallet connect']).length > 0;
-  const hasFillForm = includesAny(['fill form']).length > 0;
-  const hasInstantUsdt = includesAny(['instant usdt']).length > 0;
-  const hasNoSigningRequired = includesAny(['no signing required']).length > 0;
-  const hasZeroRiskUsdt = includesAny(['zero risk', 'no risk']).length > 0 && includesAny(['usdt', 'free 1 usdt']).length > 0;
+  const hasWalletAction = groupedHits.walletAction.length > 0;
+  const hasWalletRecovery = groupedHits.walletRecovery.length > 0;
+  const hasSeed = groupedHits.seed.length > 0;
+  const hasExploit = groupedHits.exploit.length > 0;
+  const hasFormStep = groupedHits.formStep.length > 0;
+  const hasRewardLure = groupedHits.rewardLure.length > 0;
+  const hasSafetyLure = groupedHits.safetyLure.length > 0;
+
   const hasObservedActionCluster = (
-    (hasConnectWallet && hasFillForm)
-    || (hasConnectWallet && hasInstantUsdt)
-    || (hasConnectWallet && hasNoSigningRequired)
-    || hasZeroRiskUsdt
-    || (hasWalletConnect && actionChainHits.length > 0)
+    (hasWalletAction && hasFormStep)
+    || (hasWalletAction && hasRewardLure)
+    || (hasWalletAction && hasSafetyLure)
+    || (hasRewardLure && hasSafetyLure)
   );
 
   const allowClaim = hasObservedActionCluster;
-  const allowWallet = hasObservedActionCluster || walletRecoveryHits.length > 0;
-  const allowSeed = seedHits.length > 0 && hasObservedActionCluster && technicalContextHits.length === 0;
-  const allowExploit = exploitHits.length > 0;
+  const allowWallet = hasObservedActionCluster || hasWalletRecovery;
+  const allowSeed = hasSeed && (hasObservedActionCluster || hasWalletRecovery) && technicalContextHits.length === 0;
+  const allowExploit = hasExploit;
 
   if (allowClaim) {
     weakFamilies.push('claim');
-    weakPhrases.push(...actionChainHits, ...walletActionHits);
+    weakPhrases.push(...groupedHits.walletAction, ...groupedHits.formStep, ...groupedHits.rewardLure, ...groupedHits.safetyLure);
   }
   if (allowWallet) {
     weakFamilies.push('wallet');
-    weakPhrases.push(...walletActionHits, ...walletRecoveryHits, ...seedHits, ...actionChainHits);
+    weakPhrases.push(...groupedHits.walletAction, ...groupedHits.walletRecovery, ...groupedHits.seed, ...groupedHits.formStep, ...groupedHits.rewardLure, ...groupedHits.safetyLure);
   }
   if (allowSeed) {
     weakFamilies.push('seed');
-    weakPhrases.push(...seedHits);
+    weakPhrases.push(...groupedHits.seed);
   }
   if (allowExploit) {
     weakFamilies.push('exploit');
-    weakPhrases.push(...exploitHits);
+    weakPhrases.push(...groupedHits.exploit);
   }
 
   return {
     matched: weakFamilies.length > 0,
     families: [...new Set(weakFamilies)],
-    phrases: [...new Set(weakPhrases)]
+    phrases: [...new Set(weakPhrases)],
+    groupedHits
   };
 }
 
