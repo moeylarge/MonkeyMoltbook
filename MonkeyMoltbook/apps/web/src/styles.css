@@ -56,6 +56,8 @@
 .topic-card .primary-btn,.topic-card .ghost-btn{min-height:44px;font-weight:650}
 .topic-card .primary-btn{background:linear-gradient(135deg,#ff5a36,#ff6a3d 55%,#ff8a5b);box-shadow:0 14px 26px rgba(255,90,54,.24);border:1px solid rgba(255,255,255,.18)}
 .topic-card .ghost-btn{background:#fff1e8;border:1px solid #f2b28f;color:#a3471f;box-shadow:0 8px 18px rgba(160,88,40,.10)}
+.topic-links a{color:#c26122;font-weight:600;text-decoration:none}
+.topic-links a:hover,.topic-links a:focus-visible{color:#a3471f;text-decoration:underline}
 .topic-card .ghost-btn:hover{background:#ffe7d8;color:#8f3915;border-color:#ea9d72;box-shadow:0 10px 20px rgba(160,88,40,.14)}
 .topic-card .primary-btn:hover{box-shadow:0 16px 30px rgba(255,90,54,.28);filter:brightness(1.04)}
 .topic-card .primary-btn:active,.topic-card .ghost-btn:active{transform:translateY(1px) scale(.99)}
