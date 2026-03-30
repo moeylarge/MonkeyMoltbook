@@ -843,7 +843,11 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
           : 'moltbook-expanded-ingest';
   const savedJob = (mode === 'cursor' || suspiciousLikeMode || candidateMode || actionProbeMode) ? await getIngestionJob(jobName) : null;
   const savedCursor = savedJob?.cursor_json?.nextCursor || null;
-  const cursor = req.query.cursor ? String(req.query.cursor) : savedCursor;
+  const hasExplicitCursorParam = Object.prototype.hasOwnProperty.call(req.query || {}, 'cursor');
+  const rawCursor = hasExplicitCursorParam ? req.query.cursor : undefined;
+  const cursor = hasExplicitCursorParam
+    ? (rawCursor === '' || rawCursor === 'reset' ? null : String(rawCursor))
+    : savedCursor;
   const phaseStartedAt = Date.now();
   const phaseTimings = [];
   const liveProbePhases = [];
