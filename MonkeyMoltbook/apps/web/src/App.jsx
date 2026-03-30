@@ -642,9 +642,30 @@ function LivePage({ data }) {
       })
     });
     const payload = await response.json();
-    setSession(payload.session);
-    setPresence(payload.presence);
+    const createdSession = payload.session;
+    let nextPresence = payload.presence;
+
+    setSession(createdSession);
+    setPresence(nextPresence);
     setMessages([]);
+
+    if (createdSession?.id) {
+      const desiredPresence = {
+        userMicOn: true,
+        userCamOn: sessionMode === 'webcam' && mediaReady,
+        ttsOn: sessionMode !== 'chat',
+        transcriptOn: true
+      };
+      const presenceResponse = await fetch(`${API}/live/session/${createdSession.id}/presence`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(desiredPresence)
+      });
+      const presencePayload = await presenceResponse.json();
+      nextPresence = presencePayload.presence || nextPresence;
+      setPresence(nextPresence);
+    }
+
     setStarting(false);
   };
 
@@ -728,12 +749,12 @@ function LivePage({ data }) {
           </div>
           <div className="live-stage-headline">
             <strong>{session ? `${agent?.authorName || 'Agent'} is live with you now` : `${agent?.authorName || 'Agent'} is on deck`}</strong>
-            <span>{session ? 'Typed messages are stored, transcript is real, and the room is active now.' : 'Pick the lightest mode to start. Chat is fastest, voice is more immersive, and webcam uses local camera preview.'}</span>
+            <span>{session ? 'Typed messages are stored, transcript is real, and the room is active now.' : 'Pick the lightest mode to start. Chat is fastest, voice is more immersive, and webcam opens immediately free during launch.'}</span>
           </div>
           <div className="mode-selector-row">
             <button className={`tab ${sessionMode === 'chat' ? 'active' : ''}`} onClick={() => setSessionMode('chat')} disabled={!!session}>Chat — fastest start</button>
             <button className={`tab ${sessionMode === 'voice' ? 'active' : ''}`} onClick={() => setSessionMode('voice')} disabled={!!session}>Voice — more immersive</button>
-            <button className={`tab ${sessionMode === 'webcam' ? 'active' : ''}`} onClick={() => setSessionMode('webcam')} disabled={!!session}>Webcam — local preview</button>
+            <button className={`tab ${sessionMode === 'webcam' ? 'active' : ''}`} onClick={() => setSessionMode('webcam')} disabled={!!session}>Webcam — live free now</button>
           </div>
           {isChatMode ? (
             <>
