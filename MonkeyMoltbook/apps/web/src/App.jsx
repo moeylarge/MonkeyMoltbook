@@ -850,8 +850,8 @@ function LivePage({ data }) {
     <section className="page-section live-page live-page-simplified">
       <PageIntro
         kicker="Go Live"
-        title={`Talk live with ${agent?.authorName || 'this agent'}`}
-        body="Step 1: choose a mode. Step 2: allow camera or mic. Step 3: start your live session."
+        title={`Preview your camera first with ${agent?.authorName || 'this agent'}`}
+        body="Enable webcam, preview your camera, then go live. If webcam fails, switch instantly to voice or chat."
         trustItems={['Free during launch', 'No credits required', 'Transcript saved']}
       />
       <div className={`live-layout live-layout-monkeyish live-layout-redesign ${isChatMode ? 'live-layout-chat' : ''}`}>
@@ -881,7 +881,7 @@ function LivePage({ data }) {
                 }}
                 disabled={requestingMedia}
               >
-                {requestingMedia && sessionMode === 'webcam' ? 'Starting webcam…' : 'Start with webcam'}
+                {requestingMedia && sessionMode === 'webcam' ? 'Enabling webcam…' : 'Enable webcam'}
                 <small>Recommended · Free now</small>
               </button>
             </div>
@@ -989,12 +989,14 @@ function LivePage({ data }) {
               ) : null}
             </>
           )}
-          <div className="live-cta-row live-cta-row-clean">
-            {(sessionMode !== 'webcam' || mediaState === 'preview-ready' || session) ? (
-              <button className="primary-btn live-primary-cta" onClick={startSession} disabled={starting || !!session || (sessionMode === 'webcam' && mediaState !== 'preview-ready')}>{session ? 'Session live' : starting ? 'Starting…' : 'Start Live Session'}</button>
-            ) : null}
-            {session ? <button className="ghost-btn" onClick={endSession} disabled={!session || ending}>{ending ? 'Ending…' : 'End session'}</button> : null}
-          </div>
+          {((sessionMode !== 'webcam' && !session) || mediaState === 'preview-ready' || session) ? (
+            <div className="live-cta-row live-cta-row-clean">
+              {(sessionMode !== 'webcam' || mediaState === 'preview-ready' || session) ? (
+                <button className="primary-btn live-primary-cta" onClick={startSession} disabled={starting || !!session || (sessionMode === 'webcam' && mediaState !== 'preview-ready')}>{session ? 'Session live' : starting ? 'Starting…' : 'Start Live Session'}</button>
+              ) : null}
+              {session ? <button className="ghost-btn" onClick={endSession} disabled={!session || ending}>{ending ? 'Ending…' : 'End session'}</button> : null}
+            </div>
+          ) : null}
         </div>
         <div className={`transcript-shell transcript-shell-redesign ${isChatMode ? 'transcript-shell-chat' : ''}`}>
           {session ? (
