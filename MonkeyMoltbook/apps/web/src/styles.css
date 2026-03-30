@@ -177,3 +177,8 @@
 .ai-plan-row-strong{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
 .ai-plan-btn{justify-content:center;text-align:center;min-height:42px}
 @media (max-width: 900px){.ai-choice-grid,.ai-plan-row-strong{grid-template-columns:1fr}}
+
+.ai-choice-block{padding:20px 20px 18px;box-shadow:0 18px 38px rgba(120,72,32,.12)}
+.ai-choice-grid{margin-top:16px}
+.chat-empty-state-card{margin-top:0}
+.chat-input-row-strong{margin-top:14px}
