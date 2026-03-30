@@ -601,6 +601,7 @@ function LivePage({ data }) {
   const [sessionMode, setSessionMode] = useState('chat');
   const [mediaReady, setMediaReady] = useState(false);
   const [mediaError, setMediaError] = useState('');
+  const [requestingMedia, setRequestingMedia] = useState(false);
   const localVideoRef = useRef(null);
   const localStreamRef = useRef(null);
 
@@ -621,48 +622,53 @@ function LivePage({ data }) {
     loadProducts();
   }, []);
 
-  useEffect(() => {
-    const stopStream = () => {
-      if (localStreamRef.current) {
-        localStreamRef.current.getTracks().forEach((track) => track.stop());
-        localStreamRef.current = null;
+  const stopStream = () => {
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach((track) => track.stop());
+      localStreamRef.current = null;
+    }
+    if (localVideoRef.current) localVideoRef.current.srcObject = null;
+    setMediaReady(false);
+  };
+
+  const requestMediaAccess = async () => {
+    if (requestingMedia) return;
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setMediaError('Camera/mic not supported in this browser.');
+      return;
+    }
+    setRequestingMedia(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: sessionMode === 'webcam',
+        audio: true
+      });
+      stopStream();
+      localStreamRef.current = stream;
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = stream;
+        localVideoRef.current.muted = true;
+        localVideoRef.current.playsInline = true;
+        try { await localVideoRef.current.play(); } catch {}
       }
-      if (localVideoRef.current) localVideoRef.current.srcObject = null;
+      setMediaReady(true);
+      setMediaError('');
+    } catch (error) {
       setMediaReady(false);
-    };
+      setMediaError(sessionMode === 'webcam' ? 'Camera access was blocked or unavailable. Click Allow camera to retry.' : 'Mic access was blocked or unavailable. Click Allow mic to retry.');
+    } finally {
+      setRequestingMedia(false);
+    }
+  };
 
-    const setupMedia = async () => {
-      if (sessionMode === 'chat') {
-        stopStream();
-        setMediaError('');
-        return;
-      }
-      if (!navigator.mediaDevices?.getUserMedia) {
-        setMediaError('Camera/mic not supported in this browser.');
-        return;
-      }
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: sessionMode === 'webcam',
-          audio: true
-        });
-        stopStream();
-        localStreamRef.current = stream;
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = stream;
-          localVideoRef.current.muted = true;
-          localVideoRef.current.playsInline = true;
-          try { await localVideoRef.current.play(); } catch {}
-        }
-        setMediaReady(true);
-        setMediaError('');
-      } catch (error) {
-        setMediaReady(false);
-        setMediaError(sessionMode === 'webcam' ? 'Camera access was blocked or unavailable.' : 'Mic access was blocked or unavailable.');
-      }
-    };
-
-    setupMedia();
+  useEffect(() => {
+    if (sessionMode === 'chat') {
+      stopStream();
+      setMediaError('');
+      return () => stopStream();
+    }
+    stopStream();
+    setMediaError('');
     return () => stopStream();
   }, [sessionMode]);
 
@@ -831,7 +837,15 @@ function LivePage({ data }) {
           ) : (
             <>
               <div className="session-badge-row session-badge-row-clean">
-                <span className={`presence-pill ${sessionMode === 'webcam' && mediaReady ? 'ready' : ''}`}>{sessionMode === 'webcam' ? (mediaReady ? 'Camera ready' : 'Allow camera') : (presence?.user_cam_on ? 'Camera on' : 'Camera off')}</span>
+                {sessionMode === 'webcam' ? (
+                  <button className={`presence-pill ${mediaReady ? 'ready' : ''}`} onClick={requestMediaAccess} disabled={requestingMedia || !!session}>
+                    {mediaReady ? 'Camera ready' : requestingMedia ? 'Allowing camera…' : 'Allow camera'}
+                  </button>
+                ) : (
+                  <button className={`presence-pill ${mediaReady ? 'ready' : ''}`} onClick={requestMediaAccess} disabled={requestingMedia || !!session}>
+                    {mediaReady ? 'Mic ready' : requestingMedia ? 'Allowing mic…' : 'Allow mic'}
+                  </button>
+                )}
                 <span className={`presence-pill ${presence?.user_mic_on ? 'ready' : ''}`}>{presence?.user_mic_on ? 'Mic ready' : 'Mic off'}</span>
                 <span className={`presence-pill ${presence?.transcript_on ? 'ready' : ''}`}>{presence?.transcript_on ? 'Transcript on' : 'Transcript off'}</span>
                 <span className="presence-pill">{session ? 'Session active' : 'Ready to start'}</span>
