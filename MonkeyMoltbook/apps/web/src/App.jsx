@@ -850,25 +850,34 @@ function LivePage({ data }) {
     <section className="page-section live-page live-page-simplified">
       <PageIntro
         kicker="Go Live"
-        title={`Preview your camera first with ${agent?.authorName || 'this agent'}`}
-        body="Enable webcam, preview your camera, then go live. If webcam fails, switch instantly to voice or chat."
-        trustItems={['Free during launch', 'No credits required', 'Transcript saved']}
+        title="Preview your camera first"
+        body="Enable webcam, preview yourself, then go live."
+        trustItems={['Free during launch', 'No credits required']}
       />
       <div className={`live-layout live-layout-monkeyish live-layout-redesign ${isChatMode ? 'live-layout-chat' : ''}`}>
         <div className={`live-stage live-stage-upgraded live-stage-redesign ${isChatMode ? 'live-stage-chat' : ''}`}>
-          <div className="battle-banner live-banner-clean">
-            <span className="eyebrow">Live room</span>
-            <strong>{session ? 'Session is active' : 'Ready to start'}</strong>
-            <span>{session ? `Session ${session.id.slice(0, 8)} · transcript saved · free during launch` : 'Choose a mode, allow access, then start live. No credits required right now.'}</span>
-          </div>
-          <div className="live-stage-headline">
-            <strong>{session ? `${agent?.authorName || 'Agent'} is live with you now` : `${agent?.authorName || 'Agent'} is ready to talk`}</strong>
-            <span>{session ? 'Your session is active. Transcript and export are ready.' : 'Choose the easiest mode for you. Chat is simplest. Voice is more immersive. Webcam is the most direct.'}</span>
-          </div>
+          {session ? (
+            <>
+              <div className="battle-banner live-banner-clean">
+                <span className="eyebrow">Live room</span>
+                <strong>Session is active</strong>
+                <span>{`Session ${session.id.slice(0, 8)} · transcript saved · free during launch`}</span>
+              </div>
+              <div className="live-stage-headline">
+                <strong>{`${agent?.authorName || 'Agent'} is live with you now`}</strong>
+                <span>Your session is active. Transcript and export are ready.</span>
+              </div>
+            </>
+          ) : (
+            <div className="live-stage-headline pre-session-headline">
+              <strong>Preview first. Go live second.</strong>
+              <span>Enable webcam, approve access, and make sure your preview looks right before entering the live room.</span>
+            </div>
+          )}
           <div className="mode-section">
             <div className="mode-section-copy">
-              <h3>Start with webcam</h3>
-              <p>Use the main webcam button first. Voice and chat stay available as fallback options.</p>
+              <h3>Enable webcam</h3>
+              <p>We’ll ask for camera access next so you can preview yourself before going live.</p>
             </div>
             <div className="mode-selector-row mode-selector-cards single-webcam-cta-row">
               <button
@@ -885,10 +894,12 @@ function LivePage({ data }) {
                 <small>Recommended · Free now</small>
               </button>
             </div>
-            <div className="fallback-mode-row">
-              <button className={`tab fallback-mode-btn ${sessionMode === 'voice' ? 'active' : ''}`} onClick={() => setSessionMode('voice')} disabled={!!session && sessionMode !== 'voice'}>Continue with voice</button>
-              <button className={`tab fallback-mode-btn ${sessionMode === 'chat' ? 'active' : ''}`} onClick={() => setSessionMode('chat')} disabled={!!session && sessionMode !== 'chat'}>Continue with chat</button>
-            </div>
+            {mediaState !== 'preview-ready' && !session ? (
+              <div className="fallback-mode-row">
+                <button className={`tab fallback-mode-btn ${sessionMode === 'voice' ? 'active' : ''}`} onClick={() => setSessionMode('voice')}>Use voice instead</button>
+                <button className={`tab fallback-mode-btn ${sessionMode === 'chat' ? 'active' : ''}`} onClick={() => setSessionMode('chat')}>Use chat instead</button>
+              </div>
+            ) : null}
           </div>
           {isChatMode ? (
             <>
@@ -999,7 +1010,12 @@ function LivePage({ data }) {
           ) : null}
         </div>
         <div className={`transcript-shell transcript-shell-redesign ${isChatMode ? 'transcript-shell-chat' : ''}`}>
-          {session ? (
+          {!session && mediaState !== 'failed' ? (
+            <div className="transcript-empty-state pre-session-empty-state">
+              <strong>Step 1: Enable webcam</strong>
+              <p>Approve camera access and preview yourself. The live room, transcript, and controls appear after that.</p>
+            </div>
+          ) : session ? (
             <>
               <div className="transcript-header">
                 <span>Transcript</span>
