@@ -933,7 +933,30 @@ function LivePage({ data }) {
                 </div>
                 <div className="live-window ai"><div className="live-window-overlay"><span>{agent?.authorName || 'Agent'} live</span><strong>{session ? 'Ready and responding' : 'Waiting for you to start'}</strong><small>{presence?.tts_on ? 'Voice enabled · transcript visible' : 'Text only · transcript visible'}</small></div></div>
               </div>
-              {mediaDebug ? (
+              {mediaState === 'failed' ? (
+                <div className="wallet-balance-card wallet-balance-card-muted wallet-balance-card-full media-failure-card">
+                  <span className="eyebrow">Camera setup issue</span>
+                  <strong>
+                    {mediaDebug?.failureKind === 'no_devices' ? 'No camera detected on this device' :
+                     mediaDebug?.failureKind === 'permission_denied_or_dismissed' ? 'Camera permission was blocked' :
+                     mediaDebug?.failureKind === 'device_busy_or_os_blocked' ? 'Camera is busy or blocked by the system' :
+                     mediaDebug?.failureKind === 'insecure_context' ? 'This browser session is not secure enough for camera access' :
+                     'Camera setup failed'}
+                  </strong>
+                  <p>
+                    {mediaDebug?.failureKind === 'no_devices' ? 'We could not find a camera device in this browser session. You can continue with voice or chat right now.' :
+                     mediaDebug?.failureKind === 'permission_denied_or_dismissed' ? 'Please allow camera access when prompted, then try again. You can also continue with voice or chat.' :
+                     mediaDebug?.failureKind === 'device_busy_or_os_blocked' ? 'Another app or your system settings may be blocking the camera. You can retry, or continue with voice or chat.' :
+                     'You can retry camera, or continue with voice or chat right now.'}
+                  </p>
+                  <div className="media-failure-actions">
+                    <button className="primary-btn" onClick={requestMediaAccess} disabled={requestingMedia}>{requestingMedia ? 'Retrying…' : 'Try camera again'}</button>
+                    <button className="ghost-btn" onClick={() => setSessionMode('voice')}>Continue with voice</button>
+                    <button className="ghost-btn" onClick={() => setSessionMode('chat')}>Continue with chat</button>
+                  </div>
+                  {mediaDebug ? <pre className="media-debug-pre">{JSON.stringify(mediaDebug, null, 2)}</pre> : null}
+                </div>
+              ) : mediaDebug ? (
                 <div className="wallet-balance-card wallet-balance-card-muted wallet-balance-card-full">
                   <span className="eyebrow">Media diagnostics</span>
                   <strong>{mediaDebug.status || mediaDebug.failureKind || 'idle'}</strong>
