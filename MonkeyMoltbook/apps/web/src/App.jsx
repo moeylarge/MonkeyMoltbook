@@ -933,9 +933,9 @@ function LivePage({ data }) {
               <div className="live-stage-grid">
                 <div className="live-window human live-window-user">
                   {sessionMode === 'webcam' ? <video ref={localVideoRef} className="live-local-video" autoPlay muted playsInline /> : null}
-                  <div className="live-window-overlay"><span>Your camera</span><strong>{sessionMode === 'webcam' ? (mediaReady ? 'Camera ready' : 'Camera not connected') : 'Mic ready'}</strong><small>{mediaError || (presence?.user_mic_on ? 'Mic is on and ready.' : 'Turn your mic on when you are ready.')}</small></div>
+                  <div className="live-window-overlay"><span>Your camera</span><strong>{sessionMode === 'webcam' ? (mediaReady ? 'Camera ready' : mediaState === 'requesting' ? 'Requesting camera access' : 'Camera not connected') : 'Mic ready'}</strong><small>{mediaError || (mediaState === 'requesting' ? 'Approve the browser prompt to continue.' : 'Click the main webcam button to preview your camera before going live.')}</small></div>
                 </div>
-                <div className="live-window ai"><div className="live-window-overlay"><span>{agent?.authorName || 'Agent'} live</span><strong>{session ? 'Ready and responding' : 'Waiting for you to start'}</strong><small>{presence?.tts_on ? 'Voice enabled · transcript visible' : 'Text only · transcript visible'}</small></div></div>
+                <div className="live-window ai"><div className="live-window-overlay"><span>{agent?.authorName || 'Agent'} live</span><strong>{session ? 'Ready and responding' : mediaState === 'preview-ready' ? 'Ready when you are' : 'Preview first, then go live'}</strong><small>{mediaState === 'preview-ready' ? 'Your camera is ready. Start live when you are set.' : 'We only show live room controls after your webcam preview is working.'}</small></div></div>
               </div>
               {mediaState === 'failed' ? (
                 <div className="wallet-balance-card wallet-balance-card-muted wallet-balance-card-full media-failure-card">
@@ -968,12 +968,14 @@ function LivePage({ data }) {
                   <pre className="media-debug-pre">{JSON.stringify(mediaDebug, null, 2)}</pre>
                 </div>
               ) : null}
-              <div className="control-row">
-                <button className={`control ${presence?.user_mic_on ? 'active' : ''}`} onClick={() => togglePresence('userMicOn', !presence?.user_mic_on)}>{presence?.user_mic_on ? 'Mic On' : 'Mic Off'}</button>
-                <button className={`control ${presence?.user_cam_on ? 'active' : ''}`} onClick={() => togglePresence('userCamOn', !presence?.user_cam_on)}>{presence?.user_cam_on ? 'Cam On' : 'Cam Off'}</button>
-                <button className={`control ${presence?.tts_on ? 'active' : ''}`} onClick={() => togglePresence('ttsOn', !presence?.tts_on)}>{presence?.tts_on ? 'TTS Enabled' : 'TTS Off'}</button>
-                <button className={`control ${presence?.transcript_on ? 'active' : ''}`} onClick={() => togglePresence('transcriptOn', !presence?.transcript_on)}>{presence?.transcript_on ? 'Transcribing' : 'Transcript Off'}</button>
-              </div>
+              {session && mediaState === 'preview-ready' ? (
+                <div className="control-row">
+                  <button className={`control ${presence?.user_mic_on ? 'active' : ''}`} onClick={() => togglePresence('userMicOn', !presence?.user_mic_on)}>{presence?.user_mic_on ? 'Mic On' : 'Mic Off'}</button>
+                  <button className={`control ${presence?.user_cam_on ? 'active' : ''}`} onClick={() => togglePresence('userCamOn', !presence?.user_cam_on)}>{presence?.user_cam_on ? 'Cam On' : 'Cam Off'}</button>
+                  <button className={`control ${presence?.tts_on ? 'active' : ''}`} onClick={() => togglePresence('ttsOn', !presence?.tts_on)}>{presence?.tts_on ? 'TTS Enabled' : 'TTS Off'}</button>
+                  <button className={`control ${presence?.transcript_on ? 'active' : ''}`} onClick={() => togglePresence('transcriptOn', !presence?.transcript_on)}>{presence?.transcript_on ? 'Transcribing' : 'Transcript Off'}</button>
+                </div>
+              ) : null}
               {session ? (
                 <div className="wallet-panel wallet-panel-secondary">
                   <div className="wallet-actions-grid">
@@ -988,35 +990,46 @@ function LivePage({ data }) {
             </>
           )}
           <div className="live-cta-row live-cta-row-clean">
-            <button className="primary-btn live-primary-cta" onClick={startSession} disabled={starting || !!session || (sessionMode === 'webcam' && mediaState !== 'preview-ready')}>{session ? 'Session live' : starting ? 'Starting…' : sessionMode === 'webcam' && mediaState !== 'preview-ready' ? 'Start with webcam first' : 'Start Live Session'}</button>
-            <button className="ghost-btn" onClick={endSession} disabled={!session || ending}>{ending ? 'Ending…' : 'End session'}</button>
+            {(sessionMode !== 'webcam' || mediaState === 'preview-ready' || session) ? (
+              <button className="primary-btn live-primary-cta" onClick={startSession} disabled={starting || !!session || (sessionMode === 'webcam' && mediaState !== 'preview-ready')}>{session ? 'Session live' : starting ? 'Starting…' : 'Start Live Session'}</button>
+            ) : null}
+            {session ? <button className="ghost-btn" onClick={endSession} disabled={!session || ending}>{ending ? 'Ending…' : 'End session'}</button> : null}
           </div>
         </div>
         <div className={`transcript-shell transcript-shell-redesign ${isChatMode ? 'transcript-shell-chat' : ''}`}>
-          <div className="transcript-header">
-            <span>Transcript</span>
-            {exportUrl ? <a className="ghost-btn" href={exportUrl} target="_blank" rel="noreferrer">Export transcript</a> : <button className="ghost-btn" disabled>Export transcript</button>}
-          </div>
-          <div className="transcript-feed transcript-feed-bubbles">
-            {messages.length ? messages.map((message) => (
-              <div className={`transcript-bubble transcript-${message.role || 'user'}`} key={message.id || `${message.role}-${message.created_at || Math.random()}`}><strong>{message.role === 'agent' ? (agent?.authorName || 'Agent') : message.role === 'system' ? 'System' : 'You'}:</strong> {message.text}</div>
-            )) : (
-              <div className="transcript-empty-state">
-                <strong>Transcript will appear here after you start.</strong>
-                <p>Start your live session first, then your conversation and export will appear here.</p>
+          {session ? (
+            <>
+              <div className="transcript-header">
+                <span>Transcript</span>
+                {exportUrl ? <a className="ghost-btn" href={exportUrl} target="_blank" rel="noreferrer">Export transcript</a> : <button className="ghost-btn" disabled>Export transcript</button>}
               </div>
-            )}
-          </div>
-          <div className="live-side-summary">
-            <span className="presence-pill">{session ? `Session ${session.status}` : 'Not started'}</span>
-            <span className="presence-pill">{isChatMode ? 'Chat mode' : presence?.user_mic_on ? 'Mic ready' : 'Mic off'}</span>
-            <span className="presence-pill">{session ? 'Export ready' : 'Export after start'}</span>
-          </div>
-          <div className="chat-input-row">
-            <input className="chat-input" placeholder={isChatMode ? 'Type a message to start the chat…' : 'Type a prompt while voice is on…'} value={draft} onChange={(e) => setDraft(e.target.value)} />
-            <button className="primary-btn" onClick={sendMessage} disabled={!session || sending}>{sending ? 'Sending…' : 'Send'}</button>
-          </div>
-          <div className="session-meta">{session ? `Session state: ${session.status} · export ready · launch access is free` : 'Session state: start a session to create a real transcript'}</div>
+              <div className="transcript-feed transcript-feed-bubbles">
+                {messages.length ? messages.map((message) => (
+                  <div className={`transcript-bubble transcript-${message.role || 'user'}`} key={message.id || `${message.role}-${message.created_at || Math.random()}`}><strong>{message.role === 'agent' ? (agent?.authorName || 'Agent') : message.role === 'system' ? 'System' : 'You'}:</strong> {message.text}</div>
+                )) : (
+                  <div className="transcript-empty-state">
+                    <strong>Transcript will appear here after you start.</strong>
+                    <p>Start your live session first, then your conversation and export will appear here.</p>
+                  </div>
+                )}
+              </div>
+              <div className="live-side-summary">
+                <span className="presence-pill">{`Session ${session.status}`}</span>
+                <span className="presence-pill">{isChatMode ? 'Chat mode' : presence?.user_mic_on ? 'Mic ready' : 'Mic off'}</span>
+                <span className="presence-pill">Export ready</span>
+              </div>
+              <div className="chat-input-row">
+                <input className="chat-input" placeholder={isChatMode ? 'Type a message to start the chat…' : 'Type a prompt while voice is on…'} value={draft} onChange={(e) => setDraft(e.target.value)} />
+                <button className="primary-btn" onClick={sendMessage} disabled={!session || sending}>{sending ? 'Sending…' : 'Send'}</button>
+              </div>
+              <div className="session-meta">{`Session state: ${session.status} · export ready · launch access is free`}</div>
+            </>
+          ) : (
+            <div className="transcript-empty-state pre-session-empty-state">
+              <strong>Webcam preview comes first.</strong>
+              <p>Click the main webcam button, approve camera access, and preview your camera before the live room and transcript appear.</p>
+            </div>
+          )}
         </div>
       </div>
     </section>
