@@ -208,20 +208,31 @@ export async function upsertSubmolts(submolts) {
 
 export async function upsertPosts(posts, authorIdMap) {
   if (!posts?.length) return [];
-  const rows = posts.map((post) => ({
-    source_post_id: safeText(post.id),
-    source_author_id: safeText(post.author?.id),
-    author_id: authorIdMap.get(String(post.author?.id || '')) || null,
-    author_name: safeText(post.author?.name),
-    title: safeText(post.title),
-    snippet: safeText(post.content),
-    url: safeText(post.url),
-    submolt_name: safeText(post.submolt_name || post.submoltName),
-    score: safeNumber(post.score),
-    comment_count: safeNumber(post.comment_count ?? post.commentCount),
-    created_at_source: post.created_at || post.createdAt || null,
-    payload: sanitizeForJson(post)
-  })).filter((row) => row.source_post_id || row.title);
+  const rows = posts.map((post) => {
+    const derivedSubmoltName = safeText(
+      post.submolt_name
+      || post.submoltName
+      || (typeof post.submolt === 'string' ? post.submolt : null)
+      || post.submolt?.name
+      || post.submolt?.slug
+      || post.submolt?.title
+      || post.submolt?.display_name
+    );
+    return ({
+      source_post_id: safeText(post.id),
+      source_author_id: safeText(post.author?.id),
+      author_id: authorIdMap.get(String(post.author?.id || '')) || null,
+      author_name: safeText(post.author?.name),
+      title: safeText(post.title),
+      snippet: safeText(post.content),
+      url: safeText(post.url),
+      submolt_name: derivedSubmoltName,
+      score: safeNumber(post.score),
+      comment_count: safeNumber(post.comment_count ?? post.commentCount),
+      created_at_source: post.created_at || post.createdAt || null,
+      payload: sanitizeForJson(post)
+    });
+  }).filter((row) => row.source_post_id || row.title);
 
   const merged = [];
   for (const batch of chunkArray(rows, 50)) {
