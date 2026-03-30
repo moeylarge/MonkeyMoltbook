@@ -871,6 +871,17 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
       ? await fetchSuspiciousLanguageProbe({ cursor, limit: perPage, steps, delayMs, onProgress: markProbePhase })
       : await fetchCursorBackfillSample({ cursor, limit: perPage, steps, delayMs });
 
+  await markPhase('before_sample_fetched_write', {
+    sampledPosts: (sample.posts || []).length,
+    suspiciousMatchedCount: sample.suspiciousMatchedCount || null,
+    firstCursorStat: sample.firstCursorStat || null,
+    probePhases: sample.probePhases || null,
+    familyCounts: sample.familyCounts || null,
+    errors: sample.errors || [],
+    nextCursor: sample.nextCursor || null,
+    hasMore: !!sample.hasMore
+  });
+
   await markPhase('sample_fetched', {
     sampledPosts: (sample.posts || []).length,
     suspiciousMatchedCount: sample.suspiciousMatchedCount || null,
@@ -880,6 +891,12 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
     errors: sample.errors || [],
     nextCursor: sample.nextCursor || null,
     hasMore: !!sample.hasMore
+  });
+
+  await markPhase('after_sample_fetched_write', {
+    sampledPosts: (sample.posts || []).length,
+    suspiciousMatchedCount: sample.suspiciousMatchedCount || null,
+    familyCounts: sample.familyCounts || null
   });
 
   const posts = sample.posts || [];

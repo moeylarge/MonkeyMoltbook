@@ -289,6 +289,10 @@ export async function fetchSuspiciousLanguageProbe({ cursor = null, limit = 25, 
     firstCursorStat: sample.cursorStats?.[0] || null
   });
 
+  await emitProgress(onProgress, 'probe_before_filter_matches', {
+    fetchedPosts: (sample.posts || []).length
+  });
+
   const matchedPosts = [];
   const familyCounts = { claim: 0, wallet: 0, exploit: 0 };
 
@@ -304,6 +308,12 @@ export async function fetchSuspiciousLanguageProbe({ cursor = null, limit = 25, 
     });
     if (matchedPosts.length >= 100) break;
   }
+
+  await emitProgress(onProgress, 'probe_after_filter_matches', {
+    iteratedPosts: (sample.posts || []).length,
+    suspiciousMatchedCount: matchedPosts.length,
+    familyCounts
+  });
 
   probePhases.push({
     phase: 'probe_filtered_matches',
