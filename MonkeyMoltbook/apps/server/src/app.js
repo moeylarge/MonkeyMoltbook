@@ -233,6 +233,7 @@ app.get('/molt-live/search', async (req, res) => {
   const tab = String(req.query.tab || 'all');
   const limit = Math.max(1, Math.min(Number(req.query.limit) || 20, 50));
 
+  const suspiciousAuthorQuery = /(wallet|seed phrase|seed|drainer|malware|exploit|claim|airdrop|private key|wallet connect)/i.test(q);
   let authors = (intel.authors || []).filter((row) => {
     if (!q) return true;
     return `${row.authorName || ''} ${row.description || ''} ${(row.topics || []).join(' ')} ${row.reason || ''}`.toLowerCase().includes(q);
@@ -337,10 +338,17 @@ app.get('/molt-live/search', async (req, res) => {
     }
 
     authors = [...mergedByAuthor.values()]
+      .filter((row) => {
+        if (!suspiciousAuthorQuery) return true;
+        const riskLabel = String(row.trust?.riskLabel || '');
+        return (row.matchedPostCount || 0) > 0 || /Caution|High|Severe/.test(riskLabel);
+      })
       .sort((a, b) => authorSearchRank(b, q) - authorSearchRank(a, q) || (b.matchedPostCount || 0) - (a.matchedPostCount || 0) || (b.postCount || b.observedPosts || 0) - (a.postCount || a.observedPosts || 0))
       .slice(0, rowLimit);
   } else {
-    authors = authors.slice(0, tab === 'all' ? 12 : limit);
+    authors = suspiciousAuthorQuery
+      ? authors.filter((row) => (row.matchedPostCount || 0) > 0 || /Caution|High|Severe/.test(String(row.trust?.riskLabel || ''))).slice(0, tab === 'all' ? 12 : limit)
+      : authors.slice(0, tab === 'all' ? 12 : limit);
   }
 
   const topics = (intel.signals?.topicClusters || []).filter((row) => {
