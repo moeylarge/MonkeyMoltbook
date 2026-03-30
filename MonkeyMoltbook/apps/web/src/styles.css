@@ -134,3 +134,15 @@
 .chat-pre-session-headline{margin-bottom:12px}
 .chat-mode-summary-strong{margin-bottom:12px}
 @media (max-width: 900px){.chat-input-row{grid-template-columns:1fr}.transcript-bubble{max-width:100%}}
+
+/* final premium chat polish */
+.live-layout-chat{grid-template-columns:minmax(0,1fr)}
+.live-stage-chat{display:none}
+.transcript-shell-chat{max-width:980px;margin:0 auto;background:#fffdfb;border:1px solid #ead8cb;box-shadow:0 16px 40px rgba(120,72,32,.10)}
+.transcript-feed-chat-dominant{min-height:420px;padding:8px 4px}
+.chat-input-row-sticky{position:sticky;bottom:0;background:linear-gradient(180deg,rgba(255,253,251,0),#fffdfb 20%,#fffdfb 100%);padding-top:14px;margin-top:10px}
+.chat-input-live{min-height:84px;font-size:15px}
+.transcript-agent.streaming{border-color:#f2b28f;background:#fff7f1;box-shadow:0 12px 24px rgba(255,90,54,.10)}
+.transcript-agent.streaming strong{color:#a3471f}
+.transcript-agent.streaming::after{content:'Generating…';display:block;margin-top:8px;font-size:12px;font-weight:700;color:#a3471f}
+.live-side-summary{margin-top:10px}

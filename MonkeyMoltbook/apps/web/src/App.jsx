@@ -1015,15 +1015,6 @@ function LivePage({ data }) {
                 <div className="live-room-meta-card"><strong>{session ? 'Connected' : 'Chat ready'}</strong><span>{session ? `Started ${new Date(session.started_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : 'Fastest way to start talking'}</span></div>
                 <div className="live-room-meta-card"><strong>Free during launch</strong><span>Chat Direct is open right now.</span></div>
               </div>
-              {session ? (
-                <div className="wallet-panel wallet-panel-secondary">
-                  <div className="wallet-actions-grid wallet-actions-grid-compact">
-                    <button className="ghost-btn" onClick={() => spendCredits('chat_unlock')} disabled={spendingAction === 'chat_unlock'}>{spendingAction === 'chat_unlock' ? 'Processing…' : 'Chat boost · Free'}</button>
-                    <button className="ghost-btn" onClick={() => spendCredits('priority_prompt')} disabled={spendingAction === 'priority_prompt'}>{spendingAction === 'priority_prompt' ? 'Processing…' : 'Priority prompt · Free'}</button>
-                    <button className="ghost-btn" onClick={() => spendCredits('session_extend_5m')} disabled={spendingAction === 'session_extend_5m'}>{spendingAction === 'session_extend_5m' ? 'Processing…' : '+5 min · Free'}</button>
-                  </div>
-                </div>
-              ) : null}
             </>
           ) : (
             <>
@@ -1110,7 +1101,7 @@ function LivePage({ data }) {
               ) : null}
             </>
           )}
-          {(mediaState === 'preview-ready' || session) ? (
+          {(!isChatMode && (mediaState === 'preview-ready' || session)) ? (
             <div className="live-cta-row live-cta-row-clean">
               {(mediaState === 'preview-ready' || session) ? (
                 <button className="primary-btn live-primary-cta" onClick={startSession} disabled={starting || !!session || (sessionMode === 'webcam' && mediaState !== 'preview-ready')}>{session ? '🔴 Session live' : starting ? 'Starting…' : '▶ Start Live Session'}</button>
@@ -1148,9 +1139,9 @@ function LivePage({ data }) {
                 <span>Transcript</span>
                 {exportUrl ? <a className="ghost-btn" href={exportUrl} target="_blank" rel="noreferrer">Export transcript</a> : <button className="ghost-btn" disabled>Export transcript</button>}
               </div>
-              <div className="transcript-feed transcript-feed-bubbles">
+              <div className="transcript-feed transcript-feed-bubbles transcript-feed-chat-dominant">
                 {messages.length ? messages.map((message) => (
-                  <div className={`transcript-bubble transcript-${message.role || 'user'}`} key={message.id || `${message.role}-${message.created_at || Math.random()}`}><strong>{message.role === 'agent' ? (agent?.authorName || 'Agent') : message.role === 'system' ? 'System' : 'You'}:</strong> {message.text}</div>
+                  <div className={`transcript-bubble transcript-${message.role || 'user'} ${message.streaming ? 'streaming' : ''}`} key={message.id || `${message.role}-${message.created_at || Math.random()}`}><strong>{message.role === 'agent' ? (agent?.authorName || 'Agent') : message.role === 'system' ? 'System' : 'You'}:</strong> {message.text}</div>
                 )) : (
                   <div className="transcript-empty-state">
                     <strong>Transcript will appear here after you start.</strong>
