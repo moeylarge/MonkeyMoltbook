@@ -4,7 +4,7 @@ import path from 'node:path';
 import { getAgentStats, getNextAgentHook, getNextAgentHooks, listAgents } from './lib/agents.js';
 import { authorsToCsv, buildGrowthMetrics, snapshotsToCsv } from './lib/moltbook-export.js';
 import { getMoltbookIntel, getMoltbookStats, getMoltbookAgents } from './lib/moltbook.js';
-import { buildAuthorCoverage, buildCommunityIndex, buildSubmoltIndex, fetchExpandedUniverseSample, fetchCursorBackfillSample, fetchPaginatedUniverseSample, fetchSuspiciousLanguageSample } from './lib/moltbook-discovery.js';
+import { MOLTBOOK_BASE, buildAuthorCoverage, buildCommunityIndex, buildSubmoltIndex, fetchExpandedUniverseSample, fetchCursorBackfillSample, fetchJson, fetchPaginatedUniverseSample, fetchSuspiciousLanguageProbe, normalizePosts } from './lib/moltbook-discovery.js';
 import { getSchedulerState, startScheduler, stopScheduler } from './lib/moltbook-scheduler.js';
 import { getResponse, getResponseStats } from './lib/responses.js';
 import { buildSearchDocumentsFromState, getAuthorsByIds, getAuthorsBySourceIds, getCommunityBySlug, getEntityRiskScore, getIngestionJob, isSupabaseStorageEnabled, listEvidenceBackedSuspiciousAuthors, listMintAbuseAuthors, persistMoltbookSnapshot, searchAuthors, searchAuthorEvidence, searchCommunities, searchCommunityEvidence, searchDocuments, upsertCommunities, upsertEntityRiskScores, upsertIngestionJob, upsertPosts, upsertSearchDocuments, upsertSubmolts, upsertAuthors } from './lib/supabase-storage.js';
@@ -928,6 +928,52 @@ app.get('/moltbook/export/snapshots.csv', async (_req, res) => { const intel = a
 app.get('/moltbook/export/report.json', async (_req, res) => { const intel = await getMoltbookIntel(); res.json({ phase: PHASE, intel, growth: buildGrowthMetrics(intel) }); });
 app.get('/moltbook/scheduler', (_req, res) => res.json({ phase: PHASE, ...getSchedulerState() }));
 app.get('/moltbook/storage/status', (_req, res) => res.json({ phase: PHASE, provider: 'supabase', enabled: isSupabaseStorageEnabled() }));
+app.get('/moltbook/probe/fetch', async (req, res) => {
+  const sort = String(req.query.sort || 'new');
+  const limit = Math.max(1, Math.min(Number(req.query.limit) || 25, 100));
+  const timeoutMs = Math.max(250, Math.min(Number(req.query.timeoutMs) || 3500, 10000));
+  const cursor = req.query.cursor ? String(req.query.cursor) : null;
+  const params = new URLSearchParams({ sort, limit: String(limit) });
+  if (cursor) params.set('cursor', cursor);
+  const url = `${MOLTBOOK_BASE}?${params.toString()}`;
+  const startedAt = Date.now();
+  try {
+    const payload = await fetchJson(url, timeoutMs);
+    const posts = normalizePosts(payload);
+    res.json({
+      phase: PHASE,
+      ok: true,
+      started: true,
+      timeoutHit: false,
+      elapsedMs: Date.now() - startedAt,
+      status: 'ok',
+      sort,
+      limit,
+      timeoutMs,
+      usedCursor: cursor,
+      count: posts.length,
+      nextCursor: payload?.next_cursor || null,
+      hasMore: Boolean(payload?.has_more)
+    });
+  } catch (error) {
+    const message = String(error?.message || error || 'unknown');
+    const timeoutHit = /aborted|abort|timed out|timeout/i.test(message);
+    res.status(timeoutHit ? 504 : 502).json({
+      phase: PHASE,
+      ok: false,
+      started: true,
+      timeoutHit,
+      elapsedMs: Date.now() - startedAt,
+      status: 'error',
+      sort,
+      limit,
+      timeoutMs,
+      usedCursor: cursor,
+      error: message
+    });
+  }
+});
+
 app.get('/moltbook/storage/debug', async (_req, res) => {
   const intel = await getMoltbookIntel();
   res.json({

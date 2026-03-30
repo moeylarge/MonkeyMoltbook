@@ -13,7 +13,7 @@ function uniqueBy(items, keyFn) {
   return out;
 }
 
-async function fetchJson(url, timeoutMs = FETCH_TIMEOUT_MS) {
+export async function fetchJson(url, timeoutMs = FETCH_TIMEOUT_MS) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
