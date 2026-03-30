@@ -14,6 +14,28 @@ import { createCheckoutSession, creditsEnabled, ensureCreditProducts, getSpendRu
 
 export const app = express();
 app.use(express.json());
+
+function communitySearchRank(item, query) {
+  const q = String(query || '').trim().toLowerCase();
+  if (!q) return 0;
+  const name = String(item.name || item.title || '').toLowerCase();
+  const slug = String(item.slug || '').toLowerCase();
+  const desc = String(item.description || '').toLowerCase();
+  const titles = Array.isArray(item.sampleTitles) ? item.sampleTitles.join(' ').toLowerCase() : '';
+  let score = 0;
+
+  if (name === q || slug === q) score += 120;
+  if (name.includes(q) || slug.includes(q)) score += 55;
+  if (desc.includes(q)) score += 18;
+  if (titles.includes(q)) score += 26;
+  if (item.matchedPostCount) score += Math.min(40, item.matchedPostCount * 8);
+  if (/(mint|hackai|wallet|seed|claim|drainer|bot|exploit|malware)/i.test(q) && String(item.trust?.riskLabel || '').includes('High')) score += 45;
+  if (/(mint|hackai|wallet|seed|claim|drainer|bot|exploit|malware)/i.test(q) && String(item.trust?.riskLabel || '').includes('Caution')) score += 22;
+  if (name === 'general') score -= 35;
+  if (slug === 'general') score -= 35;
+  if (name === 'crypto') score -= 8;
+  return score;
+}
 app.use((req, res, next) => {
   if (req.url.startsWith('/api/')) req.url = req.url.slice(4);
   else if (req.url === '/api') req.url = '/';
@@ -199,7 +221,7 @@ app.get('/molt-live/search', async (req, res) => {
     }
     communities = [...mergedBySlug.values()]
       .map((base) => ({ ...base, trust: scoreCommunityRisk(base) }))
-      .sort((a, b) => (b.matchedPostCount || 0) - (a.matchedPostCount || 0) || (b.postCount || 0) - (a.postCount || 0))
+      .sort((a, b) => communitySearchRank(b, q) - communitySearchRank(a, q) || (b.matchedPostCount || 0) - (a.matchedPostCount || 0) || (b.postCount || 0) - (a.postCount || 0))
       .slice(0, rowLimit);
   }
 
