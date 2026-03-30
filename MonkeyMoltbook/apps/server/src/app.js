@@ -36,10 +36,11 @@ function communitySearchRank(item, query) {
   if (suspiciousQuery && String(item.trust?.riskLabel || '').includes('High')) score += 50;
   if (suspiciousQuery && String(item.trust?.riskLabel || '').includes('Caution')) score += 24;
 
-  if (name === 'general') score -= suspiciousQuery ? 70 : 35;
-  if (slug === 'general') score -= suspiciousQuery ? 70 : 35;
-  if (name === 'crypto') score -= suspiciousQuery ? 22 : 8;
-  if (slug === 'crypto') score -= suspiciousQuery ? 22 : 8;
+  if (name === 'general') score -= suspiciousQuery ? 120 : 35;
+  if (slug === 'general') score -= suspiciousQuery ? 120 : 35;
+  if (name === 'crypto') score -= suspiciousQuery ? 40 : 8;
+  if (slug === 'crypto') score -= suspiciousQuery ? 40 : 8;
+  if (suspiciousQuery && (item.matchedPostCount || 0) <= 1 && (name === 'general' || slug === 'general')) score -= 80;
   return score;
 }
 app.use((req, res, next) => {
