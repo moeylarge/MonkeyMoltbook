@@ -19,3 +19,14 @@
 .primary-webcam-cta:hover .cta-icon,.primary-webcam-cta:focus-visible .cta-icon{transform:translateY(-1px) scale(1.08) rotate(-4deg);filter:brightness(1.08)}
 .live-primary-cta:hover,.live-primary-cta:focus-visible{transform:translateY(-1px) scale(1.01)}
 .fallback-mode-btn:hover,.fallback-mode-btn:focus-visible{transform:translateY(-1px)}
+
+/* Strong first-glance click affordance */
+.primary-btn,.primary-webcam-cta,.ghost-btn,.fallback-mode-btn,.nav-link,.mobile-link,.tab,.presence-pill{position:relative}
+.primary-btn,.primary-webcam-cta{border:1px solid rgba(255,255,255,.18);text-shadow:0 1px 0 rgba(0,0,0,.08)}
+.ghost-btn,.fallback-mode-btn,.nav-link,.mobile-link,.tab,.presence-pill{border:1px solid #cfd6df;background:#fff;box-shadow:0 6px 14px rgba(15,23,42,.06)}
+.ghost-btn,.fallback-mode-btn{font-weight:650}
+.primary-btn::after,.primary-webcam-cta::after,.ghost-btn::after,.fallback-mode-btn::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:inset 0 1px 0 rgba(255,255,255,.18);pointer-events:none}
+.live-primary-cta,.primary-webcam-cta{min-height:52px}
+.ghost-btn,.fallback-mode-btn{min-height:42px}
+.ghost-btn:hover,.fallback-mode-btn:hover,.nav-link:hover,.mobile-link:hover,.tab:hover,.presence-pill:hover{box-shadow:0 10px 20px rgba(15,23,42,.10)}
+.ghost-btn:active,.fallback-mode-btn:active,.nav-link:active,.mobile-link:active,.tab:active,.presence-pill:active{transform:translateY(1px) scale(.99)}
