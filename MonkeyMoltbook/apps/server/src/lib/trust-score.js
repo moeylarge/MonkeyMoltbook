@@ -233,6 +233,8 @@ export function scoreCommunityRisk(community = {}) {
   const flags = collectPhraseFlags(text);
   const benignHits = benignHitCount(text);
   const mintSpamHits = mintSpamHitCount(text);
+  const normalizedName = String(community.name || community.title || '').toLowerCase();
+  const postCount = Number(community.postCount || community.post_count || 0);
   let contentRisk = 0;
   let linkRisk = 0;
   let densityRisk = 0;
@@ -248,7 +250,7 @@ export function scoreCommunityRisk(community = {}) {
     linkRisk += 14;
     flags.push('links:many');
   }
-  if ((community.postCount || 0) >= 20 && hasRepeatedPattern((community.sampleTitles || []).join(' '))) {
+  if (postCount >= 20 && hasRepeatedPattern((community.sampleTitles || []).join(' '))) {
     densityRisk += 14;
     flags.push('community:risky-density');
   }
@@ -259,9 +261,16 @@ export function scoreCommunityRisk(community = {}) {
     densityRisk += 20;
     flags.push('mint:spam');
   }
-  if ((community.postCount || 0) >= 10 && mintSpamHits >= 2) {
+  if (/(^|\b)(mbc20|mbc-20)(\b|$)/i.test(normalizedName)) {
     densityRisk += 18;
+    flags.push('mint:spam');
+  }
+  if (postCount >= 10 && (mintSpamHits >= 1 || /(^|\b)(mbc20|mbc-20)(\b|$)/i.test(normalizedName))) {
+    densityRisk += 22;
     flags.push('community:risky-density');
+  }
+  if (postCount >= 20 && (mintSpamHits >= 1 || /(^|\b)(mbc20|mbc-20)(\b|$)/i.test(normalizedName))) {
+    densityRisk += 10;
   }
 
   let score = contentRisk + linkRisk + densityRisk;
