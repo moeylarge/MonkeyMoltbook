@@ -806,15 +806,24 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
   const perPageInput = parseOptionalNumber(req.query.perPage);
   const stepsInput = parseOptionalNumber(req.query.steps);
   const delayInput = parseOptionalNumber(req.query.delayMs);
-  const defaultPerPage = mode === 'suspicious' ? 25 : (mode === 'cursor' ? 50 : 100);
-  const defaultSteps = mode === 'suspicious' ? 1 : 5;
-  const defaultDelayMs = mode === 'suspicious' ? 0 : 750;
+  const suspiciousLikeMode = mode === 'suspicious' || mode === 'suspicious-targeted';
+  const targetFamily = suspiciousLikeMode ? String(req.query.family || req.query.target || '').trim().toLowerCase() || null : null;
+  const defaultPerPage = suspiciousLikeMode ? 25 : (mode === 'cursor' ? 50 : 100);
+  const defaultSteps = suspiciousLikeMode ? 1 : 5;
+  const defaultDelayMs = suspiciousLikeMode ? 0 : 750;
   const pages = Math.max(1, Math.min(pagesInput ?? 3, 10));
   const perPage = Math.max(10, Math.min(perPageInput ?? defaultPerPage, 200));
   const steps = Math.max(1, Math.min(stepsInput ?? defaultSteps, 20));
   const delayMs = Math.max(0, Math.min(delayInput ?? defaultDelayMs, 5000));
-  const jobName = mode === 'suspicious' ? 'moltbook-suspicious-ingest' : 'moltbook-expanded-ingest';
-  const savedJob = (mode === 'cursor' || mode === 'suspicious') ? await getIngestionJob(jobName) : null;
+  const targetedJobName = mode === 'suspicious-targeted' && targetFamily
+    ? `moltbook-suspicious-targeted-${targetFamily}`
+    : null;
+  const jobName = mode === 'suspicious'
+    ? 'moltbook-suspicious-ingest'
+    : mode === 'suspicious-targeted'
+      ? (targetedJobName || 'moltbook-suspicious-targeted')
+      : 'moltbook-expanded-ingest';
+  const savedJob = (mode === 'cursor' || suspiciousLikeMode) ? await getIngestionJob(jobName) : null;
   const savedCursor = savedJob?.cursor_json?.nextCursor || null;
   const cursor = req.query.cursor ? String(req.query.cursor) : savedCursor;
   const phaseStartedAt = Date.now();
@@ -822,7 +831,7 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
   const liveProbePhases = [];
   const markPhase = async (phase, extra = {}) => {
     phaseTimings.push({ phase, ms: Date.now() - phaseStartedAt, ...extra });
-    if (mode !== 'suspicious') return;
+    if (!suspiciousLikeMode) return;
     await upsertIngestionJob({
       job_name: jobName,
       status: 'running',
@@ -841,7 +850,7 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
     }).catch(() => null);
   };
   const markProbePhase = async (phase, extra = {}) => {
-    if (mode !== 'suspicious') return;
+    if (!suspiciousLikeMode) return;
     liveProbePhases.push({ phase, ms: Date.now() - phaseStartedAt, ...extra });
     await upsertIngestionJob({
       job_name: jobName,
@@ -867,8 +876,8 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
 
   const sample = mode === 'page'
     ? await fetchPaginatedUniverseSample({ pages, perPage })
-    : mode === 'suspicious'
-      ? await fetchSuspiciousLanguageProbe({ cursor, limit: perPage, steps, delayMs, onProgress: markProbePhase })
+    : suspiciousLikeMode
+      ? await fetchSuspiciousLanguageProbe({ cursor, limit: perPage, steps, delayMs, onProgress: markProbePhase, filterFamily: targetFamily })
       : await fetchCursorBackfillSample({ cursor, limit: perPage, steps, delayMs });
 
   await markPhase('before_sample_fetched_write', {
@@ -944,7 +953,7 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
     upsertedSubmolts = await upsertSubmolts(submolts);
     await markPhase('communities_submolts_upserted', { upsertedCommunities: upsertedCommunities.length, upsertedSubmolts: upsertedSubmolts.length });
 
-    if (mode === 'suspicious') {
+    if (suspiciousLikeMode) {
       searchDocs = [];
     } else {
       searchDocs = await upsertSearchDocuments([
@@ -964,7 +973,7 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
   const job = await upsertIngestionJob({
     job_name: jobName,
     status: 'ok',
-    cursor_json: (mode === 'cursor' || mode === 'suspicious') ? { mode, nextCursor, steps, perPage, hasMore: !!sample.hasMore } : { mode, pages, perPage },
+    cursor_json: (mode === 'cursor' || suspiciousLikeMode) ? { mode, targetFamily, nextCursor, steps, perPage, hasMore: !!sample.hasMore } : { mode, pages, perPage },
     last_run_at: new Date().toISOString(),
     last_success_at: new Date().toISOString(),
     stats_json: {
@@ -981,7 +990,7 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
     }
   });
 
-  res.json({ phase: PHASE, ok: true, mode, pages, perPage, steps, delayMs, resumedFromSavedCursor: (mode === 'cursor' || mode === 'suspicious') && !req.query.cursor && !!savedCursor, nextCursor, hasMore: !!sample.hasMore, sampledPosts: posts.length, authors: authors.length, communities: communities.length, submolts: submolts.length, indexed: searchDocs.length, pageStats: sample.pageStats || [], cursorStats: sample.cursorStats || [], familyCounts: sample.familyCounts || null, errors: sample.errors || [], job });
+  res.json({ phase: PHASE, ok: true, mode, targetFamily, pages, perPage, steps, delayMs, resumedFromSavedCursor: (mode === 'cursor' || suspiciousLikeMode) && !req.query.cursor && !!savedCursor, nextCursor, hasMore: !!sample.hasMore, sampledPosts: posts.length, authors: authors.length, communities: communities.length, submolts: submolts.length, indexed: searchDocs.length, pageStats: sample.pageStats || [], cursorStats: sample.cursorStats || [], familyCounts: sample.familyCounts || null, matchedPostPreview: sample.matchedPostPreview || [], errors: sample.errors || [], job });
 });
 app.get('/moltbook/export/authors.csv', async (_req, res) => { const intel = await getMoltbookIntel(); res.type('text/csv').send(authorsToCsv(intel.authors ?? [])); });
 app.get('/moltbook/export/snapshots.csv', async (_req, res) => { const intel = await getMoltbookIntel(); res.type('text/csv').send(snapshotsToCsv(intel.snapshots ?? [])); });

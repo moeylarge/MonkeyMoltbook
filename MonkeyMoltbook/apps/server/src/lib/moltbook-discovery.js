@@ -331,11 +331,11 @@ export async function fetchCursorBackfillSample({ cursor = null, limit = 50, ste
   };
 }
 
-export async function fetchSuspiciousLanguageProbe({ cursor = null, limit = 25, steps = 1, delayMs = 0, onProgress = null } = {}) {
-  await emitProgress(onProgress, 'probe_entered', { cursor: cursor || null, limit, steps, delayMs });
+export async function fetchSuspiciousLanguageProbe({ cursor = null, limit = 25, steps = 1, delayMs = 0, onProgress = null, filterFamily = null } = {}) {
+  await emitProgress(onProgress, 'probe_entered', { cursor: cursor || null, limit, steps, delayMs, filterFamily: filterFamily || null });
   const sample = await fetchCursorBackfillSample({ cursor, limit, steps, delayMs, onProgress });
   const probePhases = [
-    { phase: 'probe_entered', cursor: cursor || null, limit, steps, delayMs },
+    { phase: 'probe_entered', cursor: cursor || null, limit, steps, delayMs, filterFamily: filterFamily || null },
     {
       phase: 'probe_fetch_completed',
       fetchedPosts: (sample.posts || []).length,
@@ -382,6 +382,15 @@ export async function fetchSuspiciousLanguageProbe({ cursor = null, limit = 25, 
     }
 
     if (!meta.matched) continue;
+    if (filterFamily) {
+      const familyAliases = filterFamily === 'seed'
+        ? ['wallet']
+        : [filterFamily];
+      const phraseGate = filterFamily === 'seed'
+        ? meta.phrases.some((phrase) => ['seed phrase', 'secret phrase', 'private key', 'seed phrase required', 'enter your seed phrase'].includes(phrase))
+        : true;
+      if (!familyAliases.some((family) => meta.families.includes(family)) || !phraseGate) continue;
+    }
     for (const family of meta.families) familyCounts[family] += 1;
     matchedPosts.push({
       ...post,
