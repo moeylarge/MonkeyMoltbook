@@ -22,25 +22,33 @@ function communitySearchRank(item, query) {
   const slug = String(item.slug || '').toLowerCase();
   const desc = String(item.description || '').toLowerCase();
   const titles = Array.isArray(item.sampleTitles) ? item.sampleTitles.join(' ').toLowerCase() : '';
+  const text = `${name} ${slug} ${desc} ${titles}`;
   const suspiciousQuery = /(mint|hackai|wallet|seed|claim|drainer|bot|exploit|malware|mbc20|mbc-20)/i.test(q);
   let score = 0;
 
-  if (name === q || slug === q) score += 140;
-  if (name.includes(q) || slug.includes(q)) score += 70;
-  if (desc.includes(q)) score += 18;
-  if (titles.includes(q)) score += 30;
-  if (item.matchedPostCount) score += Math.min(90, item.matchedPostCount * 18);
+  if (name === q || slug === q) score += 160;
+  if (name.includes(q) || slug.includes(q)) score += 80;
+  if (desc.includes(q)) score += 14;
+  if (titles.includes(q)) score += 24;
+  if (item.matchedPostCount) score += Math.min(140, item.matchedPostCount * 20);
 
-  if (suspiciousQuery && /(mbc20|mbc-20|hackai|bot)/i.test(`${name} ${slug} ${titles}`)) score += 75;
-  if (suspiciousQuery && /(mbc20|mbc-20)/i.test(`${name} ${slug}`)) score += 90;
-  if (suspiciousQuery && String(item.trust?.riskLabel || '').includes('High')) score += 50;
-  if (suspiciousQuery && String(item.trust?.riskLabel || '').includes('Caution')) score += 24;
+  if (suspiciousQuery && /(mbc20|mbc-20|hackai|bot|wang)/i.test(text)) score += 95;
+  if (suspiciousQuery && /(mbc20|mbc-20)/i.test(`${name} ${slug}`)) score += 120;
+  if (q === 'hackai' && /hackai/.test(text)) score += 120;
+  if (q === 'mint' && /(mint|mbc20|mbc-20|hackai|bot|wang)/.test(text)) score += 90;
+  if (q === 'claim' && /(claim|wang|mbc20|mbc-20)/.test(text)) score += 90;
+  if (q === 'wallet' && /(wallet|drainer|seed)/.test(text)) score += 80;
 
-  if (name === 'general') score -= suspiciousQuery ? 120 : 35;
-  if (slug === 'general') score -= suspiciousQuery ? 120 : 35;
-  if (name === 'crypto') score -= suspiciousQuery ? 40 : 8;
-  if (slug === 'crypto') score -= suspiciousQuery ? 40 : 8;
-  if (suspiciousQuery && (item.matchedPostCount || 0) <= 1 && (name === 'general' || slug === 'general')) score -= 80;
+  if (suspiciousQuery && String(item.trust?.riskLabel || '').includes('Severe')) score += 90;
+  else if (suspiciousQuery && String(item.trust?.riskLabel || '').includes('High')) score += 60;
+  else if (suspiciousQuery && String(item.trust?.riskLabel || '').includes('Caution')) score += 28;
+
+  if (name === 'general' || slug === 'general') score -= suspiciousQuery ? 220 : 35;
+  if (name === 'crypto' || slug === 'crypto') score -= suspiciousQuery ? 70 : 8;
+  if (suspiciousQuery && (item.matchedPostCount || 0) <= 3 && (name === 'general' || slug === 'general')) score -= 120;
+  if (q === 'mint' && (name === 'general' || slug === 'general')) score -= 160;
+  if (q === 'wallet' && (name === 'general' || slug === 'general')) score -= 120;
+
   return score;
 }
 app.use((req, res, next) => {
