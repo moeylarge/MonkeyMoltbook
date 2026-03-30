@@ -237,6 +237,14 @@ app.get('/molt-live/search', async (req, res) => {
     }
     communities = [...mergedBySlug.values()]
       .map((base) => ({ ...base, trust: scoreCommunityRisk(base) }))
+      .filter((item) => {
+        if (q !== 'mint') return true;
+        const name = String(item.name || '').toLowerCase();
+        const titles = Array.isArray(item.sampleTitles) ? item.sampleTitles.join(' ').toLowerCase() : '';
+        const strongMintEvidence = /(mbc20|mbc-20|hackai|wang|bot)/.test(`${name} ${titles}`) || String(item.trust?.riskLabel || '').includes('High') || String(item.trust?.riskLabel || '').includes('Severe');
+        if (name === 'general' && !strongMintEvidence) return false;
+        return true;
+      })
       .sort((a, b) => communitySearchRank(b, q) - communitySearchRank(a, q) || (b.matchedPostCount || 0) - (a.matchedPostCount || 0) || (b.postCount || 0) - (a.postCount || 0))
       .slice(0, rowLimit);
   }
