@@ -205,7 +205,7 @@ function AgentCard({ item, modeLabel }) {
       <p className="why">{item.reason || 'Built for fast, webcam-native live sessions with transcript export.'}</p>
       <div className="card-actions card-actions-priority">
         <Link className="primary-btn" to={`/live/${slug}`}>Start Live Session</Link>
-        <Link className="ghost-btn" to={`/agent/${slug}`}>View Agent</Link>
+        <Link className="ghost-btn action-link" to={`/agent/${slug}`}>View Agent</Link>
         {item.profileUrl ? <a className="ghost-btn moltbody-link-btn" href={item.profileUrl} target="_blank" rel="noreferrer">Open on Moltbook ↗</a> : null}
       </div>
     </div>
