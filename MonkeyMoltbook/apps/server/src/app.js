@@ -7,7 +7,7 @@ import { getMoltbookIntel, getMoltbookStats, getMoltbookAgents } from './lib/mol
 import { buildAuthorCoverage, buildCommunityIndex, buildSubmoltIndex, fetchExpandedUniverseSample, fetchCursorBackfillSample, fetchPaginatedUniverseSample } from './lib/moltbook-discovery.js';
 import { getSchedulerState, startScheduler, stopScheduler } from './lib/moltbook-scheduler.js';
 import { getResponse, getResponseStats } from './lib/responses.js';
-import { buildSearchDocumentsFromState, getCommunityBySlug, getEntityRiskScore, getIngestionJob, isSupabaseStorageEnabled, persistMoltbookSnapshot, searchCommunities, searchDocuments, upsertCommunities, upsertEntityRiskScores, upsertIngestionJob, upsertPosts, upsertSearchDocuments, upsertSubmolts, upsertAuthors } from './lib/supabase-storage.js';
+import { buildSearchDocumentsFromState, getCommunityBySlug, getEntityRiskScore, getIngestionJob, isSupabaseStorageEnabled, persistMoltbookSnapshot, searchCommunities, searchCommunityEvidence, searchDocuments, upsertCommunities, upsertEntityRiskScores, upsertIngestionJob, upsertPosts, upsertSearchDocuments, upsertSubmolts, upsertAuthors } from './lib/supabase-storage.js';
 import { scoreAuthorRisk, scoreCommunityRisk } from './lib/trust-score.js';
 import { addAgentReply, addLiveMessage, createLiveSession, endLiveSession, exportTranscriptText, getLiveSession, listTranscript, liveSessionsEnabled, updateLivePresence } from './lib/live-sessions.js';
 import { createCheckoutSession, creditsEnabled, ensureCreditProducts, getSpendRules, getWallet, grantCredits, listCreditProducts, listCreditTransactions, spendCredits } from './lib/credits.js';
@@ -162,8 +162,13 @@ app.get('/molt-live/search', async (req, res) => {
 
   let communities = [];
   if (isSupabaseStorageEnabled() && (tab === 'all' || tab === 'groups')) {
-    const rows = await searchCommunities({ query: q, limit: tab === 'all' ? 6 : limit }).catch(() => []);
-    communities = rows.map((row) => {
+    const rowLimit = tab === 'all' ? 6 : limit;
+    const [storedRows, evidenceRows] = await Promise.all([
+      searchCommunities({ query: q, limit: rowLimit }).catch(() => []),
+      searchCommunityEvidence({ query: q, limit: rowLimit }).catch(() => [])
+    ]);
+    const mergedBySlug = new Map();
+    for (const row of storedRows) {
       const base = {
         id: row.id,
         slug: row.slug || row.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || '',
@@ -175,11 +180,27 @@ app.get('/molt-live/search', async (req, res) => {
         memberCount: row.member_count || 0,
         source: 'community'
       };
-      return {
-        ...base,
-        trust: scoreCommunityRisk(base)
-      };
-    });
+      mergedBySlug.set(base.slug, base);
+    }
+    for (const row of evidenceRows) {
+      const slug = row.slug || row.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || '';
+      const prev = mergedBySlug.get(slug);
+      if (!prev) {
+        mergedBySlug.set(slug, row);
+        continue;
+      }
+      mergedBySlug.set(slug, {
+        ...prev,
+        description: prev.description || row.description,
+        sampleTitles: [...new Set([...(prev.sampleTitles || []), ...(row.sampleTitles || [])])].slice(0, 8),
+        postCount: Math.max(prev.postCount || 0, row.postCount || 0),
+        matchedPostCount: Math.max(prev.matchedPostCount || 0, row.matchedPostCount || 0)
+      });
+    }
+    communities = [...mergedBySlug.values()]
+      .map((base) => ({ ...base, trust: scoreCommunityRisk(base) }))
+      .sort((a, b) => (b.matchedPostCount || 0) - (a.matchedPostCount || 0) || (b.postCount || 0) - (a.postCount || 0))
+      .slice(0, rowLimit);
   }
 
   const submolts = (intel.signals?.topSubmolts || intel.discovery?.submolts || []).filter((row) => {

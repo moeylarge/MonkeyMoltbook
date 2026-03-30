@@ -457,6 +457,47 @@ export async function searchCommunities({ query, limit = 20 } = {}) {
   return result.data || [];
 }
 
+export async function searchCommunityEvidence({ query, limit = 20 } = {}) {
+  if (!isSupabaseStorageEnabled()) return [];
+  const q = String(query || '').trim();
+  if (!q) return [];
+  const safeQuery = encodeURIComponent(`%${q}%`);
+  const clauses = [
+    'select=submolt_name,title,snippet,score,comment_count,payload',
+    `or=(submolt_name.ilike.${safeQuery},title.ilike.${safeQuery},snippet.ilike.${safeQuery})`,
+    `limit=${Math.max(5, Math.min(Number(limit) * 10 || 50, 200))}`,
+    'order=score.desc.nullslast'
+  ];
+  const result = await supabaseFetch('posts', { query: clauses.join('&') });
+  const rows = result.data || [];
+  const grouped = new Map();
+  for (const row of rows) {
+    const name = safeText(row.submolt_name);
+    if (!name) continue;
+    if (!grouped.has(name)) {
+      grouped.set(name, {
+        name,
+        slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        title: name,
+        description: safeText(row.snippet) || safeText(row.title) || 'Community evidence from post matches.',
+        sampleTitles: [],
+        postCount: 0,
+        matchedPostCount: 0,
+        totalScore: 0,
+        source: 'post-evidence'
+      });
+    }
+    const entry = grouped.get(name);
+    entry.matchedPostCount += 1;
+    entry.postCount = Math.max(entry.postCount, entry.matchedPostCount);
+    entry.totalScore += safeNumber(row.score) || 0;
+    if (row.title && entry.sampleTitles.length < 8) entry.sampleTitles.push(safeText(row.title));
+  }
+  return [...grouped.values()]
+    .sort((a, b) => b.matchedPostCount - a.matchedPostCount || b.totalScore - a.totalScore)
+    .slice(0, Math.max(1, Math.min(Number(limit) || 20, 50)));
+}
+
 export async function upsertEntityRiskScores(rows) {
   if (!rows?.length) return [];
   const payload = rows.map((row) => ({
