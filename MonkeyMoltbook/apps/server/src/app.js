@@ -804,6 +804,7 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
   const cursor = req.query.cursor ? String(req.query.cursor) : savedCursor;
   const phaseStartedAt = Date.now();
   const phaseTimings = [];
+  const liveProbePhases = [];
   const markPhase = async (phase, extra = {}) => {
     phaseTimings.push({ phase, ms: Date.now() - phaseStartedAt, ...extra });
     if (mode !== 'suspicious') return;
@@ -815,6 +816,28 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
       stats_json: {
         phase,
         phaseTimings,
+        probePhases: liveProbePhases,
+        pages,
+        perPage,
+        steps,
+        delayMs,
+        ...extra
+      }
+    }).catch(() => null);
+  };
+  const markProbePhase = async (phase, extra = {}) => {
+    if (mode !== 'suspicious') return;
+    liveProbePhases.push({ phase, ms: Date.now() - phaseStartedAt, ...extra });
+    await upsertIngestionJob({
+      job_name: jobName,
+      status: 'running',
+      cursor_json: { mode, nextCursor: savedCursor || null, steps, perPage, hasMore: true },
+      last_run_at: new Date().toISOString(),
+      stats_json: {
+        phase: 'inside_probe',
+        probePhase: phase,
+        phaseTimings,
+        probePhases: liveProbePhases,
         pages,
         perPage,
         steps,
@@ -830,7 +853,7 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
   const sample = mode === 'page'
     ? await fetchPaginatedUniverseSample({ pages, perPage })
     : mode === 'suspicious'
-      ? await fetchSuspiciousLanguageProbe({ cursor, limit: perPage })
+      ? await fetchSuspiciousLanguageProbe({ cursor, limit: perPage, steps, delayMs, onProgress: markProbePhase })
       : await fetchCursorBackfillSample({ cursor, limit: perPage, steps, delayMs });
 
   await markPhase('sample_fetched', {

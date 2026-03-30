@@ -29,6 +29,11 @@ async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+async function emitProgress(onProgress, phase, extra = {}) {
+  if (typeof onProgress !== 'function') return;
+  await onProgress(phase, extra);
+}
+
 export function normalizePosts(payload) {
   return Array.isArray(payload?.posts) ? payload.posts : [];
 }
@@ -219,7 +224,7 @@ export async function fetchPaginatedUniverseSample({ pages = 3, perPage = 100 } 
   };
 }
 
-export async function fetchCursorBackfillSample({ cursor = null, limit = 50, steps = 5, delayMs = 750 } = {}) {
+export async function fetchCursorBackfillSample({ cursor = null, limit = 50, steps = 5, delayMs = 750, onProgress = null } = {}) {
   const posts = [];
   const errors = [];
   const cursorStats = [];
@@ -232,18 +237,24 @@ export async function fetchCursorBackfillSample({ cursor = null, limit = 50, ste
     const usedCursor = nextCursor || null;
     const url = `${MOLTBOOK_BASE}?${params.toString()}`;
     const fetchStartedAt = Date.now();
+    await emitProgress(onProgress, 'probe_before_raw_fetch', { step, usedCursor, url });
     try {
       const payload = await fetchJson(url);
       const pagePosts = normalizePosts(payload).map((post) => ({ ...post, discoverySurface: 'new', discoveryStep: step }));
       posts.push(...pagePosts);
-      cursorStats.push({ step, count: pagePosts.length, usedCursor, nextCursor: payload?.next_cursor || null, hasMore: Boolean(payload?.has_more), fetchMs: Date.now() - fetchStartedAt });
+      const stat = { step, count: pagePosts.length, usedCursor, nextCursor: payload?.next_cursor || null, hasMore: Boolean(payload?.has_more), fetchMs: Date.now() - fetchStartedAt };
+      cursorStats.push(stat);
+      await emitProgress(onProgress, 'probe_after_raw_fetch', stat);
       nextCursor = payload?.next_cursor || null;
       hasMore = Boolean(payload?.has_more);
       if (!hasMore || !nextCursor || pagePosts.length === 0) break;
       if (delayMs > 0) await sleep(delayMs);
     } catch (error) {
-      errors.push(`cursor:step:${step}:${String(error?.message || error || 'unknown')}`);
-      cursorStats.push({ step, count: 0, usedCursor, nextCursor: null, hasMore: false, fetchMs: Date.now() - fetchStartedAt, error: String(error?.message || error || 'unknown') });
+      const message = String(error?.message || error || 'unknown');
+      errors.push(`cursor:step:${step}:${message}`);
+      const stat = { step, count: 0, usedCursor, nextCursor: null, hasMore: false, fetchMs: Date.now() - fetchStartedAt, error: message };
+      cursorStats.push(stat);
+      await emitProgress(onProgress, 'probe_fetch_failed', stat);
       break;
     }
   }
@@ -260,8 +271,9 @@ export async function fetchCursorBackfillSample({ cursor = null, limit = 50, ste
   };
 }
 
-export async function fetchSuspiciousLanguageProbe({ cursor = null, limit = 25, steps = 1, delayMs = 0 } = {}) {
-  const sample = await fetchCursorBackfillSample({ cursor, limit, steps, delayMs });
+export async function fetchSuspiciousLanguageProbe({ cursor = null, limit = 25, steps = 1, delayMs = 0, onProgress = null } = {}) {
+  await emitProgress(onProgress, 'probe_entered', { cursor: cursor || null, limit, steps, delayMs });
+  const sample = await fetchCursorBackfillSample({ cursor, limit, steps, delayMs, onProgress });
   const probePhases = [
     { phase: 'probe_entered', cursor: cursor || null, limit, steps, delayMs },
     {
@@ -271,6 +283,12 @@ export async function fetchSuspiciousLanguageProbe({ cursor = null, limit = 25, 
       firstCursorStat: sample.cursorStats?.[0] || null
     }
   ];
+  await emitProgress(onProgress, 'probe_fetch_completed', {
+    fetchedPosts: (sample.posts || []).length,
+    errors: sample.errors || [],
+    firstCursorStat: sample.cursorStats?.[0] || null
+  });
+
   const matchedPosts = [];
   const familyCounts = { claim: 0, wallet: 0, exploit: 0 };
 
@@ -289,6 +307,10 @@ export async function fetchSuspiciousLanguageProbe({ cursor = null, limit = 25, 
 
   probePhases.push({
     phase: 'probe_filtered_matches',
+    suspiciousMatchedCount: matchedPosts.length,
+    familyCounts
+  });
+  await emitProgress(onProgress, 'probe_filtered_matches', {
     suspiciousMatchedCount: matchedPosts.length,
     familyCounts
   });
