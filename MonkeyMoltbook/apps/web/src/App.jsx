@@ -890,14 +890,14 @@ function LivePage({ data }) {
                 }}
                 disabled={requestingMedia}
               >
-                {requestingMedia && sessionMode === 'webcam' ? 'Enabling webcam…' : 'Enable webcam'}
-                <small>Recommended · Free now</small>
+                <span>📷 {requestingMedia && sessionMode === 'webcam' ? 'Enabling webcam…' : 'Enable webcam'}</span>
+                <small>Preview before going live · Free now</small>
               </button>
             </div>
             {mediaState !== 'preview-ready' && !session ? (
               <div className="fallback-mode-row">
-                <button className={`tab fallback-mode-btn ${sessionMode === 'voice' ? 'active' : ''}`} onClick={() => setSessionMode('voice')}>Use voice instead</button>
-                <button className={`tab fallback-mode-btn ${sessionMode === 'chat' ? 'active' : ''}`} onClick={() => setSessionMode('chat')}>Use chat instead</button>
+                <button className={`tab fallback-mode-btn ${sessionMode === 'voice' ? 'active' : ''}`} onClick={() => setSessionMode('voice')}>🎤 Use voice instead</button>
+                <button className={`tab fallback-mode-btn ${sessionMode === 'chat' ? 'active' : ''}`} onClick={() => setSessionMode('chat')}>💬 Use chat instead</button>
               </div>
             ) : null}
           </div>
@@ -1003,7 +1003,7 @@ function LivePage({ data }) {
           {((sessionMode !== 'webcam' && !session) || mediaState === 'preview-ready' || session) ? (
             <div className="live-cta-row live-cta-row-clean">
               {(sessionMode !== 'webcam' || mediaState === 'preview-ready' || session) ? (
-                <button className="primary-btn live-primary-cta" onClick={startSession} disabled={starting || !!session || (sessionMode === 'webcam' && mediaState !== 'preview-ready')}>{session ? 'Session live' : starting ? 'Starting…' : 'Start Live Session'}</button>
+                <button className="primary-btn live-primary-cta" onClick={startSession} disabled={starting || !!session || (sessionMode === 'webcam' && mediaState !== 'preview-ready')}>{session ? '🔴 Session live' : starting ? 'Starting…' : '▶ Start Live Session'}</button>
               ) : null}
               {session ? <button className="ghost-btn" onClick={endSession} disabled={!session || ending}>{ending ? 'Ending…' : 'End session'}</button> : null}
             </div>
