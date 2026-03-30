@@ -119,14 +119,14 @@ Active product direction now includes:
 ## Next step for the next chat
 
 Do this first:
-1. apply the new trust tables in Supabase SQL (`entity_risk_scores`, `entity_risk_events`, `risky_domains`) because production storage does not have them yet
-2. audit whether Vercel cron runs are actually growing data coverage
+1. treat expanded/backfill ingestion as the main source of stronger community coverage; rolling collector alone was too thin and repeated the same window
+2. verify Vercel cron / ingest strategy is actually deepening community rows, not just refreshing shallow slices
 3. inspect backend/debug counts for authors, posts, communities, search documents
-4. re-test Groups search and a few `/community/:slug` pages after collector runs
-5. if growth is good, improve search ordering/relevance next
-6. continue tuning trust heuristics from live corpus examples before stronger ranking/demotion is enabled
+4. re-test Groups search and `/community/:slug` pages after richer ingest runs
+5. continue tuning trust heuristics from live corpus examples before stronger ranking/demotion is enabled
+6. improve group/community search so suspicious queries like `mint` / `hackai` can surface risky communities from richer stored evidence, not just community name matches
 7. if growth is weak, investigate better/internal Moltbook data sources more aggressively
-8. keep the future trust/safety layer in view as a major differentiator
+8. keep the trust/safety layer in view as a major differentiator
 
 ## Strong current judgment
 
