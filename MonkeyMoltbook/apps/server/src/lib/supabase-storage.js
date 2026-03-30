@@ -550,6 +550,19 @@ export async function getAuthorsBySourceIds(sourceIds = []) {
   return result.data || [];
 }
 
+export async function getAuthorsByIds(authorIds = []) {
+  if (!isSupabaseStorageEnabled()) return [];
+  const ids = [...new Set((authorIds || []).map((v) => String(v || '').trim()).filter(Boolean))];
+  if (!ids.length) return [];
+  const clauses = [
+    'select=*',
+    `or=(${ids.map((id) => `id.eq.${encodeURIComponent(id)}`).join(',')})`,
+    `limit=${Math.max(1, Math.min(ids.length, 500))}`
+  ];
+  const result = await supabaseFetch('authors', { query: clauses.join('&') });
+  return result.data || [];
+}
+
 export async function searchAuthorEvidence({ query, limit = 20 } = {}) {
   if (!isSupabaseStorageEnabled()) return [];
   const q = String(query || '').trim();

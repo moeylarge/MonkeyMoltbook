@@ -7,7 +7,7 @@ import { getMoltbookIntel, getMoltbookStats, getMoltbookAgents } from './lib/mol
 import { buildAuthorCoverage, buildCommunityIndex, buildSubmoltIndex, fetchExpandedUniverseSample, fetchCursorBackfillSample, fetchPaginatedUniverseSample } from './lib/moltbook-discovery.js';
 import { getSchedulerState, startScheduler, stopScheduler } from './lib/moltbook-scheduler.js';
 import { getResponse, getResponseStats } from './lib/responses.js';
-import { buildSearchDocumentsFromState, getAuthorsBySourceIds, getCommunityBySlug, getEntityRiskScore, getIngestionJob, isSupabaseStorageEnabled, listEvidenceBackedSuspiciousAuthors, listMintAbuseAuthors, persistMoltbookSnapshot, searchAuthors, searchAuthorEvidence, searchCommunities, searchCommunityEvidence, searchDocuments, upsertCommunities, upsertEntityRiskScores, upsertIngestionJob, upsertPosts, upsertSearchDocuments, upsertSubmolts, upsertAuthors } from './lib/supabase-storage.js';
+import { buildSearchDocumentsFromState, getAuthorsByIds, getAuthorsBySourceIds, getCommunityBySlug, getEntityRiskScore, getIngestionJob, isSupabaseStorageEnabled, listEvidenceBackedSuspiciousAuthors, listMintAbuseAuthors, persistMoltbookSnapshot, searchAuthors, searchAuthorEvidence, searchCommunities, searchCommunityEvidence, searchDocuments, upsertCommunities, upsertEntityRiskScores, upsertIngestionJob, upsertPosts, upsertSearchDocuments, upsertSubmolts, upsertAuthors } from './lib/supabase-storage.js';
 import { scoreAuthorRisk, scoreCommunityRisk } from './lib/trust-score.js';
 import { addAgentReply, addLiveMessage, createLiveSession, endLiveSession, exportTranscriptText, getLiveSession, listTranscript, liveSessionsEnabled, updateLivePresence } from './lib/live-sessions.js';
 import { createCheckoutSession, creditsEnabled, ensureCreditProducts, getSpendRules, getWallet, grantCredits, listCreditProducts, listCreditTransactions, spendCredits } from './lib/credits.js';
@@ -304,8 +304,8 @@ app.get('/moltbook/history', async (_req, res) => { const intel = await getMoltb
 app.get('/moltbook/audit/suspicious-authors', async (req, res) => {
   const limit = Math.max(1, Math.min(Number(req.query.limit) || 50, 200));
   const rows = await listEvidenceBackedSuspiciousAuthors({ limit }).catch(() => []);
-  const intel = await getMoltbookIntel();
-  const authorMap = new Map((intel.authors || []).map((row) => [String(row.authorId || row.sourceAuthorId || ''), row]));
+  const storedAuthors = await getAuthorsByIds(rows.map((row) => row.entity_id)).catch(() => []);
+  const authorMap = new Map(storedAuthors.map((row) => [String(row.id || ''), row]));
   res.json({
     phase: PHASE,
     ok: true,
@@ -320,8 +320,8 @@ app.get('/moltbook/audit/suspicious-authors', async (req, res) => {
 app.get('/moltbook/audit/mint-authors', async (req, res) => {
   const limit = Math.max(1, Math.min(Number(req.query.limit) || 50, 200));
   const rows = await listMintAbuseAuthors({ limit }).catch(() => []);
-  const intel = await getMoltbookIntel();
-  const authorMap = new Map((intel.authors || []).map((row) => [String(row.authorId || row.sourceAuthorId || ''), row]));
+  const storedAuthors = await getAuthorsByIds(rows.map((row) => row.entity_id)).catch(() => []);
+  const authorMap = new Map(storedAuthors.map((row) => [String(row.id || ''), row]));
   res.json({
     phase: PHASE,
     ok: true,
