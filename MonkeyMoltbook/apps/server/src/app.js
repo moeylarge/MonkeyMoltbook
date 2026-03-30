@@ -237,17 +237,22 @@ app.get('/molt-live/search', async (req, res) => {
         matchedPostCount: Math.max(prev.matchedPostCount || 0, row.matchedPostCount || 0)
       });
     }
-    communities = [...mergedBySlug.values()]
-      .map((base) => ({ ...base, trust: scoreCommunityRisk(base) }))
-      .filter((item) => {
-        if (q !== 'mint') return true;
+    let rankedCommunities = [...mergedBySlug.values()]
+      .map((base) => ({ ...base, trust: scoreCommunityRisk(base) }));
+
+    if (q === 'mint') {
+      const specializedOnly = rankedCommunities.filter((item) => (item.specializedEvidence || 0) > 0);
+      if (specializedOnly.length) rankedCommunities = specializedOnly;
+      rankedCommunities = rankedCommunities.filter((item) => {
         const name = String(item.name || '').toLowerCase();
         const titles = Array.isArray(item.sampleTitles) ? item.sampleTitles.join(' ').toLowerCase() : '';
         const strongMintEvidence = /(mbc20|mbc-20|hackai|wang|bot)/.test(`${name} ${titles}`) || String(item.trust?.riskLabel || '').includes('High') || String(item.trust?.riskLabel || '').includes('Severe');
         if (name === 'general' && !strongMintEvidence) return false;
         return true;
-      })
-      .sort((a, b) => {
+      });
+    }
+
+    communities = rankedCommunities.sort((a, b) => {
         if (q === 'mint') {
           const classify = (item) => {
             const text = `${String(item.name || '').toLowerCase()} ${String(item.slug || '').toLowerCase()} ${(item.sampleTitles || []).join(' ').toLowerCase()}`;
