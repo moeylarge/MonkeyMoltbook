@@ -655,36 +655,74 @@ export async function fetchSuspiciousCandidateSample({ cursor = null, limit = 10
 export async function fetchActionChainProbeSample({ cursor = null, limit = 100, steps = 20, delayMs = 0, onProgress = null } = {}) {
   await emitProgress(onProgress, 'action_chain_probe_entered', { cursor: cursor || null, limit, steps, delayMs });
   const sample = await fetchCursorBackfillSample({ cursor, limit, steps, delayMs, onProgress });
-  const actionPatterns = [
-    'connect wallet',
-    'connect wallet to claim',
-    'wallet connect',
-    'fill form',
-    'instant usdt',
-    'zero risk',
-    'no signing required'
-  ];
+  const actionPatternGroups = {
+    walletAction: [
+      'connect wallet',
+      'connect your wallet',
+      'connect wallet to claim',
+      'wallet connect'
+    ],
+    formAction: [
+      'fill form',
+      'form'
+    ],
+    rewardAction: [
+      'instant usdt',
+      'free 1 usdt',
+      '1 usdt waiting',
+      'claim your 500 agt',
+      '500 agt free instantly',
+      'receive 500 agt free instantly',
+      'secure your share now'
+    ],
+    safetyLure: [
+      'zero risk',
+      'no risk',
+      'no signing required',
+      'no signing'
+    ]
+  };
   const matches = [];
 
   for (const post of sample.posts || []) {
     const title = String(post?.title || '');
     const snippet = String(post?.snippet || post?.body || post?.description || post?.content || '');
     const text = `${title} ${snippet}`.toLowerCase();
-    const matchedPatterns = actionPatterns.filter((phrase) => text.includes(phrase));
-    if (!matchedPatterns.length) continue;
+    const matchedGroups = Object.fromEntries(
+      Object.entries(actionPatternGroups).map(([group, patterns]) => [group, patterns.filter((phrase) => text.includes(phrase))])
+    );
+    const matchedActionPatterns = [...new Set(Object.values(matchedGroups).flat())];
+    const actionClusterScore = Object.values(matchedGroups).filter((hits) => hits.length > 0).length;
+    const hasWalletAction = matchedGroups.walletAction.length > 0;
+    const hasFormAction = matchedGroups.formAction.length > 0;
+    const hasRewardAction = matchedGroups.rewardAction.length > 0;
+    const hasSafetyLure = matchedGroups.safetyLure.length > 0;
+    const isActionChainMatch = (
+      (hasWalletAction && hasFormAction)
+      || (hasWalletAction && hasRewardAction)
+      || (hasWalletAction && hasSafetyLure)
+      || (hasRewardAction && hasSafetyLure)
+    );
+
+    if (!isActionChainMatch) continue;
     matches.push({
       ...post,
-      matchedActionPatterns: matchedPatterns,
+      matchedActionPatterns,
+      matchedActionPatternGroups: matchedGroups,
+      actionClusterScore,
       discoverySurface: post.discoverySurface || 'new'
     });
     if (matches.length >= 100) break;
   }
 
-  const uniqueMatches = uniqueBy(matches, (post) => post.id);
+  const uniqueMatches = uniqueBy(matches, (post) => post.id)
+    .sort((a, b) => (b.actionClusterScore || 0) - (a.actionClusterScore || 0) || (b.matchedActionPatterns?.length || 0) - (a.matchedActionPatterns?.length || 0));
   const matchPreview = uniqueMatches.slice(0, 20).map((post) => ({
     postId: String(post?.id || ''),
     title: String(post?.title || ''),
     matchedActionPatterns: post?.matchedActionPatterns || [],
+    matchedActionPatternGroups: post?.matchedActionPatternGroups || {},
+    actionClusterScore: post?.actionClusterScore || 0,
     submolt: typeof post?.submolt === 'string'
       ? post.submolt
       : post?.submolt?.name || post?.submolt?.slug || post?.submolt?.title || null,
@@ -695,7 +733,7 @@ export async function fetchActionChainProbeSample({ cursor = null, limit = 100, 
     ...sample,
     posts: uniqueMatches,
     matchCount: uniqueMatches.length,
-    actionPatterns,
+    actionPatterns: actionPatternGroups,
     matchPreview,
     firstCursorStat: sample.cursorStats?.[0] || null
   };
