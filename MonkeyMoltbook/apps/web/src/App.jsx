@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { BrowserRouter, Link, NavLink, Route, Routes, useLocation, useParams } from 'react-router-dom';
+import { BrowserRouter, Link, NavLink, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 function SeoHead({ title, description, canonical }) {
   useEffect(() => {
@@ -586,6 +586,7 @@ function AgentProfilePage({ data }) {
 
 function LivePage({ data }) {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const top = data.report?.topSources || [];
   const agent = top.find((x) => slugify(x.authorName) === slug) || top[0];
   const liveName = agent?.authorName || 'Agent';
@@ -958,6 +959,9 @@ function LivePage({ data }) {
         body="Enable webcam, preview yourself, then go live."
         trustItems={[]}
       />
+      <div className="live-back-row">
+        <button className="ghost-btn live-back-btn" onClick={() => navigate(-1)}>← Back</button>
+      </div>
       <div className={`live-layout live-layout-monkeyish live-layout-redesign ${isChatMode ? 'live-layout-chat' : ''}`}>
         <div className={`live-stage live-stage-upgraded live-stage-redesign ${isChatMode ? 'live-stage-chat' : ''}`}>
           {session ? (
