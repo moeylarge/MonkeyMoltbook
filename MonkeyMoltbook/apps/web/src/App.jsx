@@ -653,6 +653,18 @@ function LivePage({ data }) {
       }
       setMediaReady(true);
       setMediaError('');
+      if (session?.id) {
+        const presenceResponse = await fetch(`${API}/live/session/${session.id}/presence`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userMicOn: true,
+            userCamOn: sessionMode === 'webcam',
+          })
+        });
+        const presencePayload = await presenceResponse.json();
+        setPresence(presencePayload.presence || null);
+      }
     } catch (error) {
       setMediaReady(false);
       setMediaError(sessionMode === 'webcam' ? 'Camera access was blocked or unavailable. Click Allow camera to retry.' : 'Mic access was blocked or unavailable. Click Allow mic to retry.');
@@ -838,11 +850,11 @@ function LivePage({ data }) {
             <>
               <div className="session-badge-row session-badge-row-clean">
                 {sessionMode === 'webcam' ? (
-                  <button className={`presence-pill ${mediaReady ? 'ready' : ''}`} onClick={requestMediaAccess} disabled={requestingMedia || !!session}>
+                  <button className={`presence-pill ${mediaReady ? 'ready' : ''}`} onClick={requestMediaAccess} disabled={requestingMedia}>
                     {mediaReady ? 'Camera ready' : requestingMedia ? 'Allowing camera…' : 'Allow camera'}
                   </button>
                 ) : (
-                  <button className={`presence-pill ${mediaReady ? 'ready' : ''}`} onClick={requestMediaAccess} disabled={requestingMedia || !!session}>
+                  <button className={`presence-pill ${mediaReady ? 'ready' : ''}`} onClick={requestMediaAccess} disabled={requestingMedia}>
                     {mediaReady ? 'Mic ready' : requestingMedia ? 'Allowing mic…' : 'Allow mic'}
                   </button>
                 )}
