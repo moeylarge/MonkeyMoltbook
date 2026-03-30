@@ -186,6 +186,12 @@ export function scoreAuthorRisk(author = {}) {
   const promoHits = [
     'airdrop', 'claim your reward', 'claim your airdrop', 'claim your tokens', 'redeem now', 'redeem your reward', 'unlock your reward', 'eligible for airdrop', 'check your eligibility'
   ].filter((pattern) => text.includes(pattern)).length;
+  const ctaHits = [
+    'first 30 agents', 'how to claim', 'join now', 'join today', 'get 3.33m', 'tokens airdropped', 'claim now', 'claim your reward', 'claim your airdrop', 'claim your tokens', 'redeem now', 'unlock your reward', 'check your eligibility', 'eligible for airdrop'
+  ].filter((pattern) => text.includes(pattern)).length;
+  const analysisHits = [
+    'capital architect', 'structural lens', 'obvious utility', 'deeper capital flow', 'it\'s tempting to chase volume', 'i ask:', 'tracking a wallet', 'potential airdrop', 'airdrop farming'
+  ].filter((pattern) => text.includes(pattern)).length;
 
   if (descriptionLength < 20 && postCount > 0 && !isClaimed) {
     accountThinnessRisk += 16;
@@ -209,14 +215,14 @@ export function scoreAuthorRisk(author = {}) {
   if (suspiciousHits >= 4) evidenceRisk += 10;
   if (phraseDiversity >= 2) evidenceRisk += 12;
   if (phraseDiversity >= 3) evidenceRisk += 10;
-  if (promoHits >= 2) {
+  if (promoHits >= 2 && ctaHits >= 1) {
     evidenceRisk += 16;
     flags.push('scam:promo-airdrop');
-  } else if (promoHits === 1) {
+  } else if (promoHits >= 1 && ctaHits >= 1) {
     evidenceRisk += 8;
     flags.push('scam:promo-airdrop');
   }
-  if (matchedPostCount >= 2 && promoHits >= 1) flags.push('behavior:repetitive');
+  if (matchedPostCount >= 2 && promoHits >= 1 && ctaHits >= 1) flags.push('behavior:repetitive');
 
   for (const hit of flags) {
     if (hit.startsWith('phishing:')) languageRisk += 18;
@@ -229,10 +235,11 @@ export function scoreAuthorRisk(author = {}) {
   if (isClaimed) score -= 6;
   if (karma >= 500) score -= 8;
   if (benignHits) score -= benignHits * 8;
+  if (analysisHits) score -= analysisHits * 10;
   if (flags.length <= 1 && postCount <= 2 && matchedPostCount === 0 && !flags.includes('mint:spam')) score -= 8;
   if (flags.includes('mint:spam')) score = Math.max(score, 28);
-  if (promoHits >= 2 && matchedPostCount >= 2) score = Math.max(score, 28);
-  if ((phraseDiversity >= 2 && suspiciousHits >= 2) || (matchedPostCount >= 3 && suspiciousHits >= 2)) score = Math.max(score, 25);
+  if (promoHits >= 2 && ctaHits >= 1 && matchedPostCount >= 2) score = Math.max(score, 28);
+  if ((phraseDiversity >= 2 && suspiciousHits >= 2) || (matchedPostCount >= 3 && suspiciousHits >= 2 && ctaHits >= 1)) score = Math.max(score, 25);
   score = clamp(score);
   const reasons = buildReason(flags);
 
@@ -251,6 +258,8 @@ export function scoreAuthorRisk(author = {}) {
       suspiciousHits,
       phraseDiversity,
       promoHits,
+      ctaHits,
+      analysisHits,
       flags
     },
     version: 'trust-v1'
