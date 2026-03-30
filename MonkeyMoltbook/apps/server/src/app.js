@@ -39,7 +39,7 @@ function communitySearchRank(item, query) {
   if (q === 'hackai' && /hackai/.test(text)) score += 120;
   if (q === 'mint' && /(mint|mbc20|mbc-20|hackai|bot|wang)/.test(text)) score += 90;
   if (q === 'mint' && /(mbc20|mbc-20|hackai|bot|wang)/.test(text)) score += 140;
-  if (q === 'claim' && /(claim|wang|mbc20|mbc-20)/.test(text)) score += 90;
+  if (['claim', 'claim now', 'claim your reward', 'claim your airdrop', 'airdrop claim', 'eligible for airdrop', 'redeem', 'redeem now'].includes(q) && /(claim now|claim your reward|claim your airdrop|claim your tokens|airdrop claim|eligible for airdrop|check your eligibility|connect wallet to claim|redeem now|redeem your reward|unlock your reward|verify your wallet|wallet connect|wang|mbc20|mbc-20)/.test(text)) score += 110;
   if (q === 'wallet' && /(wallet|drainer|seed)/.test(text)) score += 80;
 
   if (suspiciousQuery && String(item.trust?.riskLabel || '').includes('Severe')) score += 90;

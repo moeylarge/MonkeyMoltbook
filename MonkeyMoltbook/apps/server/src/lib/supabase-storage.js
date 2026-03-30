@@ -472,8 +472,11 @@ export async function searchCommunityEvidence({ query, limit = 20 } = {}) {
   if (!isSupabaseStorageEnabled()) return [];
   const q = String(query || '').trim();
   if (!q) return [];
+  const normalized = q.toLowerCase();
   const mintIntentTerms = new Set(['mint', 'mbc20', 'mbc-20', 'hackai', 'bot', 'wang']);
-  const isMintIntent = mintIntentTerms.has(q.toLowerCase());
+  const claimIntentTerms = new Set(['claim', 'claim now', 'claim your reward', 'claim your airdrop', 'airdrop claim', 'eligible for airdrop', 'redeem', 'redeem now']);
+  const isMintIntent = mintIntentTerms.has(normalized);
+  const isClaimIntent = claimIntentTerms.has(normalized);
   const safeQuery = encodeURIComponent(`%${q}%`);
   const mintClauses = [
     'select=submolt_name,title,snippet,score,comment_count,payload',
