@@ -472,8 +472,15 @@ export async function searchCommunityEvidence({ query, limit = 20 } = {}) {
   if (!isSupabaseStorageEnabled()) return [];
   const q = String(query || '').trim();
   if (!q) return [];
+  const isMintIntent = q.toLowerCase() === 'mint';
   const safeQuery = encodeURIComponent(`%${q}%`);
-  const clauses = [
+  const mintClauses = [
+    'select=submolt_name,title,snippet,score,comment_count,payload',
+    `or=(submolt_name.ilike.%25mbc20%25,submolt_name.ilike.%25mbc-20%25,title.ilike.%25hackai%25,title.ilike.%25bot%25,title.ilike.%25wang%25,title.ilike.%25mint%25,snippet.ilike.%25mbc-20%25,snippet.ilike.%25mbc20%25,snippet.ilike.%25hackai%25,snippet.ilike.%25bot%25,snippet.ilike.%25wang%25,snippet.ilike.%25\"op\":\"mint\"%25,snippet.ilike.%25mint%25)` ,
+    `limit=${Math.max(10, Math.min(Number(limit) * 12 || 60, 240))}`,
+    'order=score.desc.nullslast'
+  ];
+  const clauses = isMintIntent ? mintClauses : [
     'select=submolt_name,title,snippet,score,comment_count,payload',
     `or=(submolt_name.ilike.${safeQuery},title.ilike.${safeQuery},snippet.ilike.${safeQuery})`,
     `limit=${Math.max(5, Math.min(Number(limit) * 10 || 50, 200))}`,
@@ -495,17 +502,20 @@ export async function searchCommunityEvidence({ query, limit = 20 } = {}) {
         postCount: 0,
         matchedPostCount: 0,
         totalScore: 0,
+        specializedEvidence: 0,
         source: 'post-evidence'
       });
     }
     const entry = grouped.get(name);
+    const text = `${safeText(row.title)} ${safeText(row.snippet)}`.toLowerCase();
     entry.matchedPostCount += 1;
     entry.postCount = Math.max(entry.postCount, entry.matchedPostCount);
     entry.totalScore += safeNumber(row.score) || 0;
+    if (/(mbc20|mbc-20|hackai|bot|wang|\"op\":\"mint\")/.test(text)) entry.specializedEvidence += 1;
     if (row.title && entry.sampleTitles.length < 8) entry.sampleTitles.push(safeText(row.title));
   }
   return [...grouped.values()]
-    .sort((a, b) => b.matchedPostCount - a.matchedPostCount || b.totalScore - a.totalScore)
+    .sort((a, b) => b.specializedEvidence - a.specializedEvidence || b.matchedPostCount - a.matchedPostCount || b.totalScore - a.totalScore)
     .slice(0, Math.max(1, Math.min(Number(limit) || 20, 50)));
 }
 
