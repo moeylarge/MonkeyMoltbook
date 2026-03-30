@@ -273,6 +273,7 @@ export async function fetchSuspiciousLanguageSample({ cursor = null, limit = 100
       suspiciousPhrases: meta.phrases,
       discoverySurface: post.discoverySurface || 'new'
     });
+    if (matchedPosts.length >= 100) break;
   }
 
   return {

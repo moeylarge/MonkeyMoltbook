@@ -813,6 +813,7 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
   };
 
   await markPhase('start', { resumedFromSavedCursor: !!savedCursor });
+  await markPhase('before_sample_fetch', { mode, cursor: cursor || null, perPage, steps, delayMs });
 
   const sample = mode === 'page'
     ? await fetchPaginatedUniverseSample({ pages, perPage })
