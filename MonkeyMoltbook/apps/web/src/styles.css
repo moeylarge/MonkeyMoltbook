@@ -9,3 +9,13 @@
 .fallback-mode-btn:hover,.ghost-btn:hover{transform:translateY(-1px);background:#eef2f7;color:#18212f;border-color:#c8d0db}
 .fallback-mode-btn:active,.ghost-btn:active{transform:translateY(1px) scale(.99)}
 .live-primary-cta{font-weight:700;letter-spacing:.01em}
+
+.primary-webcam-cta{position:relative;overflow:hidden;width:100%}
+.primary-webcam-cta::before{content:"";position:absolute;inset:-1px;border-radius:inherit;background:linear-gradient(135deg,rgba(255,255,255,.22),rgba(255,255,255,0));opacity:.0;transition:opacity .18s ease}
+.primary-webcam-cta:hover::before,.primary-webcam-cta:focus-visible::before{opacity:1}
+.primary-webcam-cta:focus-visible,.live-primary-cta:focus-visible,.fallback-mode-btn:focus-visible,.ghost-btn:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(255,255,255,.9),0 0 0 6px rgba(255,90,54,.42),0 16px 34px rgba(255,90,54,.22)}
+.cta-icon-label{display:inline-flex;align-items:center;gap:10px}
+.cta-icon{display:inline-flex;transition:transform .18s ease,filter .18s ease}
+.primary-webcam-cta:hover .cta-icon,.primary-webcam-cta:focus-visible .cta-icon{transform:translateY(-1px) scale(1.08) rotate(-4deg);filter:brightness(1.08)}
+.live-primary-cta:hover,.live-primary-cta:focus-visible{transform:translateY(-1px) scale(1.01)}
+.fallback-mode-btn:hover,.fallback-mode-btn:focus-visible{transform:translateY(-1px)}

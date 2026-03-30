@@ -890,7 +890,7 @@ function LivePage({ data }) {
                 }}
                 disabled={requestingMedia}
               >
-                <span>📷 {requestingMedia && sessionMode === 'webcam' ? 'Enabling webcam…' : 'Enable webcam'}</span>
+                <span className="cta-icon-label"><span className="cta-icon" aria-hidden="true">📷</span><span>{requestingMedia && sessionMode === 'webcam' ? 'Enabling webcam…' : 'Enable webcam'}</span></span>
                 <small>Preview before going live · Free now</small>
               </button>
             </div>
