@@ -7,7 +7,7 @@ import { getMoltbookIntel, getMoltbookStats, getMoltbookAgents } from './lib/mol
 import { buildAuthorCoverage, buildCommunityIndex, buildSubmoltIndex, fetchExpandedUniverseSample, fetchCursorBackfillSample, fetchPaginatedUniverseSample } from './lib/moltbook-discovery.js';
 import { getSchedulerState, startScheduler, stopScheduler } from './lib/moltbook-scheduler.js';
 import { getResponse, getResponseStats } from './lib/responses.js';
-import { buildSearchDocumentsFromState, getCommunityBySlug, getEntityRiskScore, getIngestionJob, isSupabaseStorageEnabled, persistMoltbookSnapshot, searchAuthors, searchAuthorEvidence, searchCommunities, searchCommunityEvidence, searchDocuments, upsertCommunities, upsertEntityRiskScores, upsertIngestionJob, upsertPosts, upsertSearchDocuments, upsertSubmolts, upsertAuthors } from './lib/supabase-storage.js';
+import { buildSearchDocumentsFromState, getCommunityBySlug, getEntityRiskScore, getIngestionJob, isSupabaseStorageEnabled, listEvidenceBackedSuspiciousAuthors, listMintAbuseAuthors, persistMoltbookSnapshot, searchAuthors, searchAuthorEvidence, searchCommunities, searchCommunityEvidence, searchDocuments, upsertCommunities, upsertEntityRiskScores, upsertIngestionJob, upsertPosts, upsertSearchDocuments, upsertSubmolts, upsertAuthors } from './lib/supabase-storage.js';
 import { scoreAuthorRisk, scoreCommunityRisk } from './lib/trust-score.js';
 import { addAgentReply, addLiveMessage, createLiveSession, endLiveSession, exportTranscriptText, getLiveSession, listTranscript, liveSessionsEnabled, updateLivePresence } from './lib/live-sessions.js';
 import { createCheckoutSession, creditsEnabled, ensureCreditProducts, getSpendRules, getWallet, grantCredits, listCreditProducts, listCreditTransactions, spendCredits } from './lib/credits.js';
@@ -301,6 +301,38 @@ app.get('/agents', async (_req, res) => res.json({ phase: PHASE, agents: await l
 app.get('/moltbook/intel', async (_req, res) => res.json({ phase: PHASE, ...(await getMoltbookIntel()) }));
 app.get('/moltbook/rankings', async (_req, res) => { const intel = await getMoltbookIntel(); res.json({ phase: PHASE, lastFetchedAt: intel.lastFetchedAt, rankings: intel.rankings ?? [] }); });
 app.get('/moltbook/history', async (_req, res) => { const intel = await getMoltbookIntel(); res.json({ phase: PHASE, lastFetchedAt: intel.lastFetchedAt, snapshots: intel.snapshots ?? [], authorHistory: intel.authorHistory ?? {} }); });
+app.get('/moltbook/audit/suspicious-authors', async (req, res) => {
+  const limit = Math.max(1, Math.min(Number(req.query.limit) || 50, 200));
+  const rows = await listEvidenceBackedSuspiciousAuthors({ limit }).catch(() => []);
+  const intel = await getMoltbookIntel();
+  const authorMap = new Map((intel.authors || []).map((row) => [String(row.authorId || row.sourceAuthorId || ''), row]));
+  res.json({
+    phase: PHASE,
+    ok: true,
+    kind: 'evidence-backed-suspicious-authors',
+    count: rows.length,
+    rows: rows.map((row) => ({
+      ...row,
+      author: authorMap.get(String(row.entity_id || '')) || null
+    }))
+  });
+});
+app.get('/moltbook/audit/mint-authors', async (req, res) => {
+  const limit = Math.max(1, Math.min(Number(req.query.limit) || 50, 200));
+  const rows = await listMintAbuseAuthors({ limit }).catch(() => []);
+  const intel = await getMoltbookIntel();
+  const authorMap = new Map((intel.authors || []).map((row) => [String(row.authorId || row.sourceAuthorId || ''), row]));
+  res.json({
+    phase: PHASE,
+    ok: true,
+    kind: 'mint-abuse-authors',
+    count: rows.length,
+    rows: rows.map((row) => ({
+      ...row,
+      author: authorMap.get(String(row.entity_id || '')) || null
+    }))
+  });
+});
 app.get('/moltbook/report', async (_req, res) => { const intel = await getMoltbookIntel(); const authors = intel.authors ?? []; const fallback = authors.length === 0 ? await buildSeedFallback() : null; const allAuthors = fallback ? [...fallback.topSources, ...fallback.rising, ...fallback.hot].filter((row, index, arr) => arr.findIndex((x) => x.authorId === row.authorId) === index) : authors; const topSources = fallback?.topSources ?? authors.filter((row) => row.label !== 'reject').sort((a, b) => b.fitScore - a.fitScore).slice(0, 100); const activeAuthors = fallback?.topSources ?? authors; const liveReady = fallback?.liveReady ?? authors.filter((row) => row.label !== 'reject').filter((row) => (row.signalScore || 0) >= 45 || (row.fitScore || 0) >= 70).sort((a, b) => (b.signalScore || 0) - (a.signalScore || 0) || (b.fitScore || 0) - (a.fitScore || 0)).slice(0, 25); res.json({ phase: PHASE, lastFetchedAt: intel.lastFetchedAt, summary: { authorCount: activeAuthors.length, admitCount: activeAuthors.filter((row) => row.label === 'admit').length, watchCount: activeAuthors.filter((row) => row.label === 'watch').length, rejectCount: activeAuthors.filter((row) => row.label === 'reject').length, discoverySurfaces: intel.discovery?.surfaces ?? [], discoveredSubmolts: (intel.discovery?.submolts ?? []).length, coveredAuthors: (intel.discovery?.coverage ?? []).length }, topSources, liveReady, allAuthors, admits: activeAuthors.filter((row) => row.label === 'admit').sort((a, b) => b.fitScore - a.fitScore), watch: activeAuthors.filter((row) => row.label === 'watch').sort((a, b) => b.fitScore - a.fitScore).slice(0, 50), rejects: activeAuthors.filter((row) => row.label === 'reject').sort((a, b) => (b.weakHits || 0) - (a.weakHits || 0)).slice(0, 50) }); });
 app.get('/moltbook/discovery', async (_req, res) => { const intel = await getMoltbookIntel(); res.json({ phase: PHASE, lastFetchedAt: intel.lastFetchedAt, surfaces: intel.discovery?.surfaces ?? [], errors: intel.discovery?.errors ?? [], submolts: intel.discovery?.submolts ?? [], coverage: intel.discovery?.coverage ?? [] }); });
 app.get('/moltbook/growth', async (_req, res) => { const intel = await getMoltbookIntel(); res.json({ phase: PHASE, ...buildGrowthMetrics(intel) }); });

@@ -661,6 +661,39 @@ export async function getEntityRiskScore(entityType, entityId, version = 'trust-
   return result.data?.[0] || null;
 }
 
+export async function listEvidenceBackedSuspiciousAuthors({ limit = 50 } = {}) {
+  if (!isSupabaseStorageEnabled()) return [];
+  const rowLimit = Math.max(1, Math.min(Number(limit) || 50, 200));
+  const result = await supabaseFetch('entity_risk_scores', {
+    query: [
+      'select=*',
+      'entity_type=eq.author',
+      'version=eq.trust-v1',
+      'or=(evidence_summary->>matchedPostCount.gt.0,evidence_summary->>suspiciousHits.gt.0,evidence_summary->>phraseDiversity.gt.0)',
+      'order=risk_score.desc,updated_at.desc',
+      `limit=${rowLimit}`
+    ].join('&')
+  });
+  return result.data || [];
+}
+
+export async function listMintAbuseAuthors({ limit = 50 } = {}) {
+  if (!isSupabaseStorageEnabled()) return [];
+  const rowLimit = Math.max(1, Math.min(Number(limit) || 50, 200));
+  const result = await supabaseFetch('entity_risk_scores', {
+    query: [
+      'select=*',
+      'entity_type=eq.author',
+      'version=eq.trust-v1',
+      'reason_short=ilike.%25mint%2Fticker%20spam%20pattern%25',
+      'or=(evidence_summary.is.null,evidence_summary->>matchedPostCount.eq.0)',
+      'order=risk_score.desc,updated_at.desc',
+      `limit=${rowLimit}`
+    ].join('&')
+  });
+  return result.data || [];
+}
+
 export async function getIngestionJob(jobName) {
   if (!isSupabaseStorageEnabled()) return null;
   const result = await supabaseFetch('ingestion_jobs', { query: `job_name=eq.${encodeURIComponent(jobName)}&select=*` });
