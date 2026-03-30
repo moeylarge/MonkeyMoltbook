@@ -1174,7 +1174,20 @@ app.post('/live/session/:id/message', async (req, res) => {
   const state = await getLiveSession(sessionId);
   const transcript = await listTranscript(sessionId);
   const agentName = state?.session?.agent_name || 'Agent';
+  const mode = String(state?.session?.mode || '').toLowerCase();
   const userMessage = await addLiveMessage(sessionId, { role: 'user', messageType: 'typed', text });
+
+  if (mode === 'chat') {
+    return res.json({
+      phase: PHASE,
+      ok: true,
+      userMessage,
+      agentReply: null,
+      humanChatDefault: true,
+      waitingForPeer: true,
+    });
+  }
+
   const agentText = await createOpenAiChatCompletion({ agentName, userText: text, transcript });
   const agentReply = await addLiveMessage(sessionId, {
     role: 'agent',
@@ -1191,8 +1204,8 @@ app.post('/live/session/:id/message/stream', async (req, res) => {
   const state = await getLiveSession(sessionId);
   const transcript = await listTranscript(sessionId);
   const agentName = state?.session?.agent_name || 'Agent';
+  const mode = String(state?.session?.mode || '').toLowerCase();
   const userMessage = await addLiveMessage(sessionId, { role: 'user', messageType: 'typed', text });
-  const agentText = await createOpenAiChatCompletion({ agentName, userText: text, transcript });
 
   res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
   res.setHeader('Cache-Control', 'no-cache, no-transform');
@@ -1206,6 +1219,17 @@ app.post('/live/session/:id/message/stream', async (req, res) => {
 
   sendEvent('user', { userMessage });
 
+  if (mode === 'chat') {
+    sendEvent('waiting', {
+      humanChatDefault: true,
+      waitingForPeer: true,
+      text: 'Your message was sent. Human chat is the default here, so this session is waiting for another person to join.'
+    });
+    sendEvent('done', { userMessage, agentReply: null, humanChatDefault: true, waitingForPeer: true });
+    return res.end();
+  }
+
+  const agentText = await createOpenAiChatCompletion({ agentName, userText: text, transcript });
   const words = agentText.split(/(\s+)/).filter(Boolean);
   let built = '';
   for (const word of words) {

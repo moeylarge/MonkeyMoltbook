@@ -823,8 +823,9 @@ function LivePage({ data }) {
       created_at: new Date().toISOString(),
       streaming: true,
     };
+    const shouldExpectAiReply = !isChatMode;
 
-    setMessages((prev) => [...prev, optimisticUser, streamingAgent]);
+    setMessages((prev) => shouldExpectAiReply ? [...prev, optimisticUser, streamingAgent] : [...prev, optimisticUser]);
     setLastSentText(text);
     setDraft('');
     setSending(true);
@@ -849,6 +850,14 @@ function LivePage({ data }) {
       }
       if (eventName === 'chunk') {
         setMessages((current) => current.map((msg) => msg.id === streamingAgentId ? { ...msg, text: payload?.text || '', streaming: true } : msg));
+      }
+      if (eventName === 'waiting' && payload?.text) {
+        setMessages((current) => [...current, {
+          id: `system-${Date.now()}`,
+          role: 'system',
+          text: payload.text,
+          created_at: new Date().toISOString(),
+        }]);
       }
       if (eventName === 'done' && payload?.agentReply) {
         setMessages((current) => current.map((msg) => msg.id === streamingAgentId ? { ...payload.agentReply, streaming: false } : msg));
@@ -1035,8 +1044,8 @@ function LivePage({ data }) {
           {isChatMode ? (
             <>
               <div className="live-stage-headline pre-session-headline chat-pre-session-headline">
-                <strong>{session ? `${agent?.authorName || 'Agent'} is chatting with you now` : `Start chatting with ${agent?.authorName || 'this agent'}`}</strong>
-                <span>{session ? 'Your chat session is active. Messages and export are ready.' : 'Type your first message to start a fast live chat. No webcam setup required.'}</span>
+                <strong>{session ? `Chat session is active` : `Start human chat`}</strong>
+                <span>{session ? 'Your chat session is active. Messages and export are ready.' : 'Type your first message to start a human-to-human chat. No webcam setup required.'}</span>
               </div>
               <div className="chat-mode-summary chat-mode-summary-strong">
                 <div className="live-room-meta-card"><strong>{session ? 'Connected' : 'Chat ready'}</strong><span>{session ? `Started ${new Date(session.started_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : 'Fastest way to start talking'}</span></div>
