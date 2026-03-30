@@ -36,6 +36,7 @@ function communitySearchRank(item, query) {
   if (suspiciousQuery && /(mbc20|mbc-20)/i.test(`${name} ${slug}`)) score += 120;
   if (q === 'hackai' && /hackai/.test(text)) score += 120;
   if (q === 'mint' && /(mint|mbc20|mbc-20|hackai|bot|wang)/.test(text)) score += 90;
+  if (q === 'mint' && /(mbc20|mbc-20|hackai|bot|wang)/.test(text)) score += 140;
   if (q === 'claim' && /(claim|wang|mbc20|mbc-20)/.test(text)) score += 90;
   if (q === 'wallet' && /(wallet|drainer|seed)/.test(text)) score += 80;
 
@@ -46,7 +47,7 @@ function communitySearchRank(item, query) {
   if (name === 'general' || slug === 'general') score -= suspiciousQuery ? 220 : 35;
   if (name === 'crypto' || slug === 'crypto') score -= suspiciousQuery ? 70 : 8;
   if (suspiciousQuery && (item.matchedPostCount || 0) <= 3 && (name === 'general' || slug === 'general')) score -= 120;
-  if (q === 'mint' && (name === 'general' || slug === 'general')) score -= 160;
+  if (q === 'mint' && (name === 'general' || slug === 'general')) score -= 260;
   if (q === 'wallet' && (name === 'general' || slug === 'general')) score -= 120;
 
   return score;
