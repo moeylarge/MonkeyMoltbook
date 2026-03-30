@@ -707,6 +707,21 @@ app.get('/moltbook/backfill/status', async (_req, res) => {
   const job = await getIngestionJob('moltbook-full-backfill');
   res.json({ phase: PHASE, ok: true, job });
 });
+app.get('/moltbook/ingest/status', async (req, res) => {
+  const requested = String(req.query.job || req.query.name || 'expanded').trim().toLowerCase();
+  const allowlist = {
+    expanded: 'moltbook-expanded-ingest',
+    suspicious: 'moltbook-suspicious-ingest',
+    rolling: 'moltbook-rolling-collector',
+    full: 'moltbook-full-backfill'
+  };
+  const jobName = allowlist[requested] || (Object.values(allowlist).includes(requested) ? requested : null);
+  if (!jobName) {
+    return res.status(400).json({ phase: PHASE, ok: false, error: 'invalid_job_name' });
+  }
+  const job = await getIngestionJob(jobName);
+  res.json({ phase: PHASE, ok: true, jobName, job });
+});
 app.post('/moltbook/reindex/search', async (_req, res) => {
   const intel = await getMoltbookIntel();
   const docs = await buildSearchDocumentsFromState({
