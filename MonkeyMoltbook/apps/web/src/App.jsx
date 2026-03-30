@@ -466,6 +466,9 @@ function SearchPage() {
   const [query, setQuery] = useState('');
   const [searchTab, setSearchTab] = useState('all');
   const [results, setResults] = useState({ authors: [], topics: [], communities: [], submolts: [] });
+  const primaryUsers = results.authors.slice(0, 4);
+  const secondaryTopics = results.topics.slice(0, 4);
+  const secondaryGroups = (results.communities?.length ? results.communities : results.submolts).slice(0, 4);
 
   useEffect(() => {
     let active = true;
@@ -509,9 +512,23 @@ function SearchPage() {
         <button className={`tab ${searchTab === 'groups' ? 'active' : ''}`} onClick={() => setSearchTab('groups')}>Groups</button>
       </div>
       {searchTab === 'all' ? (
-        <div className="search-columns">
-          <div><h3>Users ({results.authors.length})</h3><div className="card-grid one">{results.authors.length ? results.authors.map((item) => <AgentCard key={item.authorId || item.authorName} item={item} />) : <div className="trust-card search-empty-state"><p>No user matches yet for this query.</p></div>}</div></div>
-          <div><h3>Topics ({results.topics.length})</h3><div className="card-grid one">{results.topics.length ? results.topics.map((item) => <TopicCard key={item.topic} item={item} />) : <div className="trust-card search-empty-state"><p>No topic matches yet.</p></div>}</div><h3 style={{marginTop:24}}>Groups ({(results.communities?.length ? results.communities : results.submolts).length})</h3><div className="card-grid one">{(results.communities?.length ? results.communities : results.submolts).length ? (results.communities?.length ? results.communities : results.submolts).map((item) => results.communities?.length ? <CommunityCard key={item.slug || item.name} item={item} /> : <SubmoltCard key={item.name} item={item} />) : <div className="trust-card search-empty-state"><p>No group matches yet. Try broader group/community terms.</p></div>}</div></div>
+        <div className="search-columns search-columns-compressed">
+          <div>
+            <h3>Users ({results.authors.length})</h3>
+            <div className="card-grid one">
+              {primaryUsers.length ? primaryUsers.map((item) => <AgentCard key={item.authorId || item.authorName} item={item} />) : <div className="trust-card search-empty-state"><p>No user matches yet for this query.</p></div>}
+            </div>
+          </div>
+          <div>
+            <h3>Topics ({results.topics.length})</h3>
+            <div className="card-grid one compact-side-grid">
+              {secondaryTopics.length ? secondaryTopics.map((item) => <TopicCard key={item.topic} item={item} />) : <div className="trust-card search-empty-state"><p>No topic matches yet.</p></div>}
+            </div>
+            <h3 style={{marginTop:18}}>Groups ({(results.communities?.length ? results.communities : results.submolts).length})</h3>
+            <div className="card-grid one compact-side-grid">
+              {secondaryGroups.length ? secondaryGroups.map((item) => results.communities?.length ? <CommunityCard key={item.slug || item.name} item={item} /> : <SubmoltCard key={item.name} item={item} />) : <div className="trust-card search-empty-state"><p>No group matches yet. Try broader group/community terms.</p></div>}
+            </div>
+          </div>
         </div>
       ) : null}
       {searchTab === 'users' ? <div className="card-grid one">{results.authors.length ? results.authors.map((item) => <AgentCard key={item.authorId || item.authorName} item={item} />) : <div className="trust-card search-empty-state"><p>No user matches yet for this query.</p></div>}</div> : null}
