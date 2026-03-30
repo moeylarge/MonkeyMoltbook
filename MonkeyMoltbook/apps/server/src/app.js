@@ -816,8 +816,8 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
   const delayInput = parseOptionalNumber(req.query.delayMs);
   const suspiciousLikeMode = mode === 'suspicious' || mode === 'suspicious-targeted';
   const targetFamily = suspiciousLikeMode ? String(req.query.family || req.query.target || '').trim().toLowerCase() || null : null;
-  const defaultPerPage = suspiciousLikeMode ? 25 : (mode === 'cursor' ? 50 : 100);
-  const defaultSteps = suspiciousLikeMode ? 1 : 5;
+  const defaultPerPage = suspiciousLikeMode ? (mode === 'suspicious-targeted' ? 100 : 25) : (mode === 'cursor' ? 50 : 100);
+  const defaultSteps = suspiciousLikeMode ? (mode === 'suspicious-targeted' ? 20 : 1) : 5;
   const defaultDelayMs = suspiciousLikeMode ? 0 : 750;
   const pages = Math.max(1, Math.min(pagesInput ?? 3, 10));
   const perPage = Math.max(10, Math.min(perPageInput ?? defaultPerPage, 200));
