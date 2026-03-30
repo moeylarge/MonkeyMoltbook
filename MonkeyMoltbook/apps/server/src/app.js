@@ -277,6 +277,7 @@ app.get('/molt-live/search', async (req, res) => {
       }),
       matchedPostCount: 0,
       suspiciousHits: 0,
+      phraseDiversity: 0,
       sampleTitles: [],
       sampleSnippets: [],
       submolts: []
@@ -292,6 +293,7 @@ app.get('/molt-live/search', async (req, res) => {
         postCount: Math.max(prev.postCount || prev.observedPosts || 0, row.postCount || row.observedPosts || 0),
         observedPosts: Math.max(prev.observedPosts || prev.postCount || 0, row.observedPosts || row.postCount || 0),
         submolts: [...new Set([...(prev.submolts || []), ...(row.submolts || [])])],
+        phraseDiversity: Math.max(prev.phraseDiversity || 0, row.phraseDiversity || 0),
         sampleTitles: [...new Set([...(prev.sampleTitles || []), ...(row.sampleTitles || [])])].slice(0, 6),
         sampleSnippets: [...new Set([...(prev.sampleSnippets || []), ...(row.sampleSnippets || [])])].slice(0, 4)
       } : row);
@@ -312,6 +314,7 @@ app.get('/molt-live/search', async (req, res) => {
         karma: 0,
         isClaimed: false,
         submolts: [],
+        phraseDiversity: 0,
         sampleTitles: [],
         sampleSnippets: []
       };
@@ -326,6 +329,7 @@ app.get('/molt-live/search', async (req, res) => {
         observedPosts: Math.max(base.observedPosts || base.postCount || 0, row.matchedPostCount || 0),
         matchedPostCount: Math.max(base.matchedPostCount || 0, row.matchedPostCount || 0),
         suspiciousHits: Math.max(base.suspiciousHits || 0, row.suspiciousHits || 0),
+        phraseDiversity: Math.max(base.phraseDiversity || 0, row.phraseDiversity || 0),
         submolts: [...new Set([...(base.submolts || []), ...(row.submolts || [])])],
         sampleTitles: [...new Set([...(base.sampleTitles || []), ...(row.sampleTitles || [])])].slice(0, 6),
         sampleSnippets: [...new Set([...(base.sampleSnippets || []), ...(row.sampleSnippets || [])])].slice(0, 4)

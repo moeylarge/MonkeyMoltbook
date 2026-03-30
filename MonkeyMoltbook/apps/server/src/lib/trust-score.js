@@ -165,7 +165,7 @@ export function scorePostRisk(post = {}) {
 }
 
 export function scoreAuthorRisk(author = {}) {
-  const text = textParts(author.authorName, author.description, author.reason);
+  const text = textParts(author.authorName, author.description, author.reason, ...(author.sampleTitles || []), ...(author.sampleSnippets || []));
   const flags = collectPhraseFlags(text);
   const benignHits = benignHitCount(text);
   const mintSpamHits = mintSpamHitCount(text);
@@ -173,12 +173,19 @@ export function scoreAuthorRisk(author = {}) {
   let behaviorRisk = 0;
   let networkRisk = 0;
   let languageRisk = 0;
+  let evidenceRisk = 0;
 
   const postCount = Number(author.postCount ?? author.observedPosts ?? 0);
   const karma = Number(author.karma ?? 0);
   const descriptionLength = String(author.description || '').trim().length;
   const submoltCount = Array.isArray(author.submolts) ? author.submolts.length : 0;
   const isClaimed = Boolean(author.isClaimed ?? author.is_claimed);
+  const matchedPostCount = Number(author.matchedPostCount ?? 0);
+  const suspiciousHits = Number(author.suspiciousHits ?? 0);
+  const phraseDiversity = Number(author.phraseDiversity ?? 0);
+  const promoHits = [
+    'airdrop', 'claim your reward', 'claim your airdrop', 'claim your tokens', 'redeem now', 'redeem your reward', 'unlock your reward', 'eligible for airdrop', 'check your eligibility'
+  ].filter((pattern) => text.includes(pattern)).length;
 
   if (descriptionLength < 20 && postCount > 0 && !isClaimed) {
     accountThinnessRisk += 16;
@@ -196,6 +203,21 @@ export function scoreAuthorRisk(author = {}) {
     flags.push('mint:spam');
   }
 
+  if (matchedPostCount >= 2) evidenceRisk += 12;
+  if (matchedPostCount >= 3) evidenceRisk += 10;
+  if (suspiciousHits >= 2) evidenceRisk += 12;
+  if (suspiciousHits >= 4) evidenceRisk += 10;
+  if (phraseDiversity >= 2) evidenceRisk += 12;
+  if (phraseDiversity >= 3) evidenceRisk += 10;
+  if (promoHits >= 2) {
+    evidenceRisk += 16;
+    flags.push('scam:promo-airdrop');
+  } else if (promoHits === 1) {
+    evidenceRisk += 8;
+    flags.push('scam:promo-airdrop');
+  }
+  if (matchedPostCount >= 2 && promoHits >= 1) flags.push('behavior:repetitive');
+
   for (const hit of flags) {
     if (hit.startsWith('phishing:')) languageRisk += 18;
     else if (hit.startsWith('malware:')) languageRisk += 16;
@@ -203,12 +225,14 @@ export function scoreAuthorRisk(author = {}) {
     else if (hit.startsWith('urgency:')) languageRisk += 6;
   }
 
-  let score = accountThinnessRisk + behaviorRisk + networkRisk + languageRisk;
+  let score = accountThinnessRisk + behaviorRisk + networkRisk + languageRisk + evidenceRisk;
   if (isClaimed) score -= 6;
   if (karma >= 500) score -= 8;
   if (benignHits) score -= benignHits * 8;
-  if (flags.length <= 1 && postCount <= 2 && !flags.includes('mint:spam')) score -= 8;
+  if (flags.length <= 1 && postCount <= 2 && matchedPostCount === 0 && !flags.includes('mint:spam')) score -= 8;
   if (flags.includes('mint:spam')) score = Math.max(score, 28);
+  if (promoHits >= 2 && matchedPostCount >= 2) score = Math.max(score, 28);
+  if ((phraseDiversity >= 2 && suspiciousHits >= 2) || (matchedPostCount >= 3 && suspiciousHits >= 2)) score = Math.max(score, 25);
   score = clamp(score);
   const reasons = buildReason(flags);
 
@@ -222,6 +246,11 @@ export function scoreAuthorRisk(author = {}) {
       behaviorRisk,
       networkRisk,
       languageRisk,
+      evidenceRisk,
+      matchedPostCount,
+      suspiciousHits,
+      phraseDiversity,
+      promoHits,
       flags
     },
     version: 'trust-v1'
