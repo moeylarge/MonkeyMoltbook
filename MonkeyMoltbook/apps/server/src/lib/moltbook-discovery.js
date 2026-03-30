@@ -29,7 +29,7 @@ async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function normalizePosts(payload) {
+export function normalizePosts(payload) {
   return Array.isArray(payload?.posts) ? payload.posts : [];
 }
 
