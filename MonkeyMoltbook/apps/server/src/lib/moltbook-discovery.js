@@ -43,35 +43,49 @@ function suspiciousMatchMeta(post) {
   const snippet = String(post?.snippet || post?.body || post?.description || post?.content || '');
   const text = `${title} ${snippet}`.toLowerCase();
 
-  const familyPatterns = {
-    claim: [
-      'claim now', 'claim your reward', 'claim your tokens', 'claim your airdrop',
-      'airdrop claim', 'eligible for airdrop', 'check your eligibility',
-      'redeem now', 'redeem your reward', 'unlock your reward'
-    ],
-    wallet: [
-      'wallet connect', 'connect wallet', 'connect your wallet', 'connect wallet to claim', 'verify your wallet',
-      'wallet verification', 'wallet required', 'wallet login', 'reconnect wallet', 'sync your wallet',
-      'authorize wallet', 'confirm wallet', 'validate wallet', 'wallet recovery', 'recover your wallet',
-      'import your wallet', 'seed phrase', 'secret phrase', 'private key',
-      'seed phrase required', 'enter your seed phrase', 'restore your wallet', 'wallet authentication'
-    ],
-    exploit: [
-      'wallet drainer', 'clipboard drainer', 'drain your wallet', 'wallet drain', 'drainer',
-      'wallet drained', 'sweep wallet', 'compromised wallet', 'compromised account',
-      'fake airdrop', 'malicious link', 'approval scam', 'malicious wallet', 'stealer', 'malware', 'keygen',
-      'remote access trojan', 'wallet exploit', 'fake wallet connect'
-    ]
-  };
+  const includesAny = (patterns) => patterns.filter((phrase) => text.includes(phrase));
+
+  const claimDirect = includesAny([
+    'claim now', 'claim your reward', 'claim your tokens', 'claim your airdrop',
+    'airdrop claim', 'eligible for airdrop', 'check your eligibility',
+    'redeem now', 'redeem your reward', 'unlock your reward'
+  ]);
+  const walletDirect = includesAny([
+    'wallet connect', 'connect wallet', 'connect your wallet', 'connect wallet to claim', 'verify your wallet',
+    'wallet verification', 'wallet required', 'wallet login', 'reconnect wallet', 'sync your wallet',
+    'authorize wallet', 'confirm wallet', 'validate wallet', 'wallet recovery', 'recover your wallet',
+    'import your wallet', 'seed phrase required', 'enter your seed phrase', 'restore your wallet', 'wallet authentication'
+  ]);
+  const exploitDirect = includesAny([
+    'wallet drainer', 'clipboard drainer', 'drain your wallet', 'wallet drain', 'drainer',
+    'wallet drained', 'sweep wallet', 'compromised wallet', 'compromised account',
+    'fake airdrop', 'malicious link', 'approval scam', 'malicious wallet', 'stealer', 'keygen',
+    'remote access trojan', 'wallet exploit', 'fake wallet connect'
+  ]);
 
   const families = [];
   const phrases = [];
-  for (const [family, patterns] of Object.entries(familyPatterns)) {
-    const matchedFamilyPhrases = patterns.filter((phrase) => text.includes(phrase));
-    if (matchedFamilyPhrases.length) {
-      families.push(family);
-      phrases.push(...matchedFamilyPhrases);
-    }
+
+  if (claimDirect.length) {
+    families.push('claim');
+    phrases.push(...claimDirect);
+  }
+  if (walletDirect.length) {
+    families.push('wallet');
+    phrases.push(...walletDirect);
+  }
+  if (exploitDirect.length) {
+    families.push('exploit');
+    phrases.push(...exploitDirect);
+  }
+
+  const walletActionContext = ['enter', 'import', 'verify', 'connect wallet', 'recover', 'restore', 'claim'];
+  const seedTerms = ['seed phrase', 'secret phrase', 'private key'];
+  const matchedSeedTerms = seedTerms.filter((phrase) => text.includes(phrase));
+  const hasWalletActionContext = walletActionContext.some((phrase) => text.includes(phrase));
+  if (matchedSeedTerms.length && hasWalletActionContext) {
+    families.push('wallet');
+    phrases.push(...matchedSeedTerms);
   }
 
   const phishingContext = text.includes('phishing') && (
@@ -99,10 +113,37 @@ function suspiciousMatchMeta(post) {
     phrases.push('airdrop');
   }
 
+  const informationalExploitContext = (
+    text.includes('edr evasion')
+    || text.includes('red team')
+    || text.includes('statistical analysis')
+    || text.includes('protection')
+    || text.includes('tax strategy')
+    || text.includes('tax reports')
+  );
+
+  const dedupedFamilies = [...new Set(families)].filter((family) => {
+    if (family !== 'exploit') return true;
+    const exploitPhrases = [...new Set(phrases.filter((phrase) => [
+      'wallet drainer', 'clipboard drainer', 'drain your wallet', 'wallet drain', 'drainer',
+      'wallet drained', 'sweep wallet', 'compromised wallet', 'compromised account',
+      'fake airdrop', 'malicious link', 'approval scam', 'malicious wallet', 'stealer', 'keygen',
+      'remote access trojan', 'wallet exploit', 'fake wallet connect', 'phishing'
+    ].includes(phrase)))];
+    if (!exploitPhrases.length) return false;
+    if (informationalExploitContext && exploitPhrases.every((phrase) => ['malware', 'phishing'].includes(phrase))) return false;
+    return true;
+  });
+
+  const dedupedPhrases = [...new Set(phrases)].filter((phrase) => {
+    if (phrase !== 'malware') return true;
+    return !informationalExploitContext;
+  });
+
   return {
-    matched: families.length > 0,
-    families: [...new Set(families)],
-    phrases: [...new Set(phrases)]
+    matched: dedupedFamilies.length > 0,
+    families: dedupedFamilies,
+    phrases: dedupedPhrases
   };
 }
 
