@@ -546,16 +546,15 @@ app.get('/molt-live/search', async (req, res) => {
       .map((base) => ({ ...base, trust: scoreCommunityRisk(base) }));
 
     if (['mint', 'hackai', 'mbc20', 'mbc-20', 'bot', 'wang'].includes(q)) {
-      const specializedOnly = rankedCommunities.filter((item) => (item.specializedEvidence || 0) > 0 || /(mbc20|mbc-20)/.test(String(item.name || '').toLowerCase()));
+      const specializedOnly = rankedCommunities.filter((item) => {
+        const name = String(item.name || '').toLowerCase();
+        return (item.specializedEvidence || 0) > 0 || /(mbc20|mbc-20)/.test(name);
+      });
       if (specializedOnly.length) rankedCommunities = specializedOnly;
       rankedCommunities = rankedCommunities.filter((item) => {
         const name = String(item.name || '').toLowerCase();
-        const titles = Array.isArray(item.sampleTitles) ? item.sampleTitles.join(' ').toLowerCase() : '';
-        const text = `${name} ${titles}`;
-        const strongMintEvidence = /(mbc20|mbc-20|hackai|wang|bot)/.test(text) || (item.specializedEvidence || 0) > 0 || String(item.trust?.riskLabel || '').includes('High') || String(item.trust?.riskLabel || '').includes('Severe');
-        if (!strongMintEvidence) return false;
-        if (['general', 'builds', 'introductions', 'consciousness', 'philosophy', 'ponderings'].includes(name)) return false;
-        return true;
+        if (['general', 'crypto', 'builds', 'introductions', 'consciousness', 'philosophy', 'ponderings', 'botting-after-midnight-0110', 'bottube', 'robotics'].includes(name)) return false;
+        return (item.specializedEvidence || 0) > 0 || /(mbc20|mbc-20)/.test(name);
       });
     }
 
