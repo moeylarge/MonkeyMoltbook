@@ -90,7 +90,13 @@ function weakSuspiciousCueMeta(post) {
   const allowClaim = hasObservedActionCluster;
   const allowWallet = hasObservedActionCluster || hasWalletRecovery;
   const allowSeed = hasSeed && (hasObservedActionCluster || hasWalletRecovery) && technicalContextHits.length === 0;
-  const allowExploit = hasExploit;
+  const allowExploit = hasExploit && (
+    hasWalletAction
+    || hasWalletRecovery
+    || hasSeed
+    || hasRewardLure
+    || hasSafetyLure
+  ) && technicalContextHits.length === 0;
 
   if (allowClaim) {
     weakFamilies.push('claim');
