@@ -835,6 +835,8 @@ app.post('/moltbook/ingest/expanded', async (req, res) => {
 
   await markPhase('sample_fetched', {
     sampledPosts: (sample.posts || []).length,
+    suspiciousMatchedCount: sample.suspiciousMatchedCount || null,
+    firstCursorStat: sample.firstCursorStat || null,
     familyCounts: sample.familyCounts || null,
     errors: sample.errors || [],
     nextCursor: sample.nextCursor || null,

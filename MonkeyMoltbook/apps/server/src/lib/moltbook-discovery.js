@@ -260,7 +260,7 @@ export async function fetchCursorBackfillSample({ cursor = null, limit = 50, ste
   };
 }
 
-export async function fetchSuspiciousLanguageSample({ cursor = null, limit = 100, steps = 12, delayMs = 250 } = {}) {
+export async function fetchSuspiciousLanguageSample({ cursor = null, limit = 25, steps = 1, delayMs = 0 } = {}) {
   const sample = await fetchCursorBackfillSample({ cursor, limit, steps, delayMs });
   const matchedPosts = [];
   const familyCounts = { claim: 0, wallet: 0, exploit: 0 };
@@ -281,6 +281,8 @@ export async function fetchSuspiciousLanguageSample({ cursor = null, limit = 100
   return {
     ...sample,
     posts: uniqueBy(matchedPosts, (post) => post.id),
-    familyCounts
+    familyCounts,
+    suspiciousMatchedCount: matchedPosts.length,
+    firstCursorStat: sample.cursorStats?.[0] || null
   };
 }
