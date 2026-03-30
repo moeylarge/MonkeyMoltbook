@@ -38,6 +38,50 @@ export function normalizePosts(payload) {
   return Array.isArray(payload?.posts) ? payload.posts : [];
 }
 
+function suspiciousMatchMeta(post) {
+  const title = String(post?.title || '');
+  const snippet = String(post?.snippet || post?.body || post?.description || post?.content || '');
+  const text = `${title} ${snippet}`.toLowerCase();
+
+  const familyPatterns = {
+    claim: [
+      'claim now', 'claim your reward', 'claim your tokens', 'claim your airdrop',
+      'airdrop claim', 'eligible for airdrop', 'check your eligibility',
+      'redeem now', 'redeem your reward', 'unlock your reward'
+    ],
+    wallet: [
+      'wallet connect', 'connect wallet', 'connect wallet to claim', 'verify your wallet',
+      'wallet verification', 'wallet recovery', 'recover your wallet', 'import your wallet',
+      'seed phrase', 'secret phrase', 'private key'
+    ],
+    exploit: [
+      'wallet drainer', 'clipboard drainer', 'drain your wallet', 'drainer',
+      'stealer', 'malware', 'keygen', 'remote access trojan', 'wallet exploit'
+    ]
+  };
+
+  const families = [];
+  const phrases = [];
+  for (const [family, patterns] of Object.entries(familyPatterns)) {
+    const matchedFamilyPhrases = patterns.filter((phrase) => text.includes(phrase));
+    if (matchedFamilyPhrases.length) {
+      families.push(family);
+      phrases.push(...matchedFamilyPhrases);
+    }
+  }
+
+  if (text.includes('airdrop') && !families.includes('claim')) {
+    families.push('claim');
+    phrases.push('airdrop');
+  }
+
+  return {
+    matched: families.length > 0,
+    families: [...new Set(families)],
+    phrases: [...new Set(phrases)]
+  };
+}
+
 export async function fetchExpandedPublicPosts() {
   const surfaces = [
     { key: 'new', url: `${MOLTBOOK_BASE}?sort=new&limit=100` },
