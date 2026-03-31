@@ -413,7 +413,7 @@
   .page-section{padding:18px 2px}
   .hero-copy h1,.content-page-hero-main .section-header h2{font-size:clamp(32px,9vw,42px);line-height:1.02}
   .hero-copy p,.section-header p,.page-section>p,.what-is-page-premium .trust-card p,.faq-page-premium .trust-card p,.legal-page-premium .trust-card p,.faq-item-accordion p{font-size:16px;line-height:1.72;max-width:30ch}
-  .agent-card p,.submolt-card p,.topic-card p,.feed-note,.agent-sub,.why{font-size:15px;line-height:1.65;max-width:30ch}
+  .agent-card p,.submolt-card p,.topic-card p,.feed-note,.agent-sub,.why{font-size:14px;line-height:1.6;max-width:28ch}
   .content-page-hero,.what-is-page-premium .trust-card,.faq-page-premium .trust-card,.legal-page-premium .trust-card,.agent-card,.submolt-card,.topic-card,.profile-card,.transcript-shell,.live-stage,.wallet-balance-card{padding:18px 16px;border-radius:22px}
   .agent-card,.submolt-card,.topic-card{display:flex;flex-direction:column;justify-content:space-between;min-height:0}
   .agent-card .card-actions,.submolt-card .card-actions,.topic-card .card-actions{margin-top:auto;padding-top:14px}
@@ -426,6 +426,7 @@
   .ghost-btn,.primary-btn,.mobile-link,.tab,.fallback-mode-btn,.attachment-action-btn,.live-back-btn,.footer-legal-links a,.agent-live-cta,.live-primary-cta,.mobile-sticky-cta{transition:transform .18s ease,filter .18s ease,box-shadow .18s ease,background .18s ease,color .18s ease}
   .card-actions .primary-btn,.agent-live-cta,.live-primary-cta,.mobile-sticky-cta{border-radius:18px;box-shadow:0 14px 26px rgba(255,90,54,.18), inset 0 1px 0 rgba(255,255,255,.16)}
   .card-actions .primary-btn,.card-actions .ghost-btn,.listing-page .page-intro-cta,.search-page-redesign .page-intro-cta,.mobile-sticky-cta{width:100%;justify-content:center}
+  .card-actions .ghost-btn:not(:first-child),.content-link-row .ghost-btn:not(:first-child){display:none}
   .card-actions .primary-btn:active,.agent-live-cta:active,.live-primary-cta:active,.mobile-sticky-cta:active,.primary-btn:active,.ghost-btn:active,.mobile-link:active,.tab:active{transform:translateY(1px) scale(.982);filter:brightness(.96)}
   .primary-btn:focus-visible,.ghost-btn:focus-visible,.mobile-link:focus-visible,.tab:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(255,255,255,.92),0 0 0 5px rgba(255,173,122,.18),0 12px 22px rgba(120,72,32,.10)}
   .primary-btn.loading,.ghost-btn.loading{opacity:.92;filter:saturate(.96)}
@@ -440,6 +441,7 @@
   .listing-mobile-summary{margin:0 0 14px;padding:0;border:none}
   .listing-page .feed-note,.search-page-redesign .feed-note{display:none}
   .listing-page .section-header p,.search-page-redesign .section-header p{display:none}
+  .listing-page .section-header h2,.search-page-redesign .section-header h2{margin-bottom:6px}
   .listing-mobile-summary summary{list-style:none;display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-radius:18px;background:#fff7f1;border:1px solid #ecd8ca;box-shadow:0 10px 22px rgba(120,72,32,.08);font-weight:800;color:#1b1917;cursor:pointer;min-height:56px}
   .listing-mobile-summary summary::-webkit-details-marker{display:none}
   .listing-mobile-summary[open] summary{margin-bottom:10px}
@@ -457,8 +459,8 @@
   .topbar{flex-direction:column;align-items:stretch}
   .brand{justify-content:center}
   .mobile-sticky-cta-bar{position:fixed;left:10px;right:10px;bottom:74px;z-index:21;padding-bottom:env(safe-area-inset-bottom, 0px);display:flex;justify-content:center;pointer-events:none}
-  .mobile-sticky-cta{width:100%;min-height:58px;border-radius:18px;pointer-events:auto;box-shadow:0 14px 28px rgba(255,90,54,.18)}
-  .listing-page .page-intro-cta,.search-page-redesign .page-intro-cta{position:sticky;bottom:74px;z-index:19}
+  .mobile-sticky-cta{width:100%;min-height:60px;border-radius:18px;pointer-events:auto;box-shadow:0 14px 28px rgba(255,90,54,.18)}
+  .listing-page .page-intro-cta,.search-page-redesign .page-intro-cta{position:sticky;bottom:74px;z-index:19;min-height:60px}
   .listing-page .page-intro-card,.search-page-redesign .page-intro-card{padding-bottom:18px}
   .listing-page .page-intro-cta,.search-page-redesign .page-intro-cta,.live-page .mobile-sticky-cta{min-height:60px}
 }
