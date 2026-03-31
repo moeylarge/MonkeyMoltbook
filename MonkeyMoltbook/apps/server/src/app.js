@@ -1262,6 +1262,15 @@ app.post('/live/session/:id/message/stream', async (req, res) => {
     return res.end();
   }
 
+  if (mode === 'chat-ai') {
+    sendEvent('waiting', {
+      premiumLocked: true,
+      text: 'Premium AI requires verified paid entitlement before chat can start.'
+    });
+    sendEvent('done', { userMessage, agentReply: null, premiumLocked: true, error: 'premium_entitlement_required' });
+    return res.end();
+  }
+
   const agentText = await createOpenAiChatCompletion({ agentName, userText: text, transcript });
   const words = agentText.split(/(\s+)/).filter(Boolean);
   let built = '';

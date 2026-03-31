@@ -666,7 +666,14 @@ function LivePage({ data }) {
       setChatKind('ai');
       setChatChoiceMade(true);
       setWallet(payload.wallet);
+      return;
     }
+    setMessages((current) => [...current, {
+      id: `system-${Date.now()}`,
+      role: 'system',
+      text: payload?.message || 'Premium AI requires verified paid entitlement before it can unlock.',
+      created_at: new Date().toISOString(),
+    }]);
   };
 
   const loadProducts = async () => {
