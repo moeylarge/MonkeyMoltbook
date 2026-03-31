@@ -385,7 +385,9 @@ function getFallbackTrust(trust) {
   return {
     riskLabel: 'Low Risk',
     riskScore: 12,
-    reasonShort: 'no strong risk indicators'
+    confidenceLabel: 'Low Confidence',
+    confidenceScore: 28,
+    reasonShort: 'low risk based on current signals, but limited profile coverage increases uncertainty'
   };
 }
 
@@ -395,10 +397,10 @@ function TrustBadge({ trust }) {
   return (
     <div className={`trust-badge trust-${tone}`}>
       <div className="trust-badge-top">
-        <span>{resolvedTrust.riskLabel}</span>
+        <span>{resolvedTrust.riskLabel} • {resolvedTrust.confidenceLabel}</span>
         <strong>{Math.round(resolvedTrust.riskScore || 0)}</strong>
       </div>
-      <p>{resolvedTrust.reasonShort || 'no strong risk indicators'}</p>
+      <p>{resolvedTrust.reasonShort || 'low risk based on current signals, but limited profile coverage increases uncertainty'}</p>
     </div>
   );
 }

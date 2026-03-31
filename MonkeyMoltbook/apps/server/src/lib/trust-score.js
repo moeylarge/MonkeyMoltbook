@@ -102,6 +102,12 @@ export function labelForRisk(score) {
   return 'Very Low Risk';
 }
 
+export function labelForConfidence(score) {
+  if (score >= 76) return 'High Confidence';
+  if (score >= 46) return 'Medium Confidence';
+  return 'Low Confidence';
+}
+
 function uniqueParts(parts = []) {
   const seen = new Set();
   const out = [];
@@ -113,7 +119,7 @@ function uniqueParts(parts = []) {
   return out;
 }
 
-function buildAuthorExplanation({ score, isClaimed, karma, postCount, totalComments, strongHits, weakHits, descriptionLength, submoltCount, topicCount, profileUrl, isActive, daysSinceLatestPost, matchedPostCount, suspiciousHits, phraseDiversity, promoHits, ctaHits, benignHits, analysisHits, flags = [] }) {
+function buildAuthorExplanation({ score, confidenceScore, isClaimed, karma, postCount, totalComments, strongHits, weakHits, descriptionLength, submoltCount, topicCount, profileUrl, isActive, daysSinceLatestPost, matchedPostCount, suspiciousHits, phraseDiversity, promoHits, ctaHits, benignHits, analysisHits, flags = [] }) {
   const positives = uniqueParts([
     (karma >= 10000 || totalComments >= 10000) ? 'strong profile depth and stable activity reduce current risk' : null,
     (!(karma >= 10000 || totalComments >= 10000) && (karma >= 2500 || totalComments >= 1000)) ? 'established account history lowers current risk' : null,
@@ -165,8 +171,34 @@ function buildAuthorExplanation({ score, isClaimed, karma, postCount, totalComme
   }
 
   const finalParts = uniqueParts(parts).slice(0, 2);
-  if (!finalParts.length) return 'limited trust data available; score uses incomplete signals';
-  return finalParts.join(' + ');
+  if (!finalParts.length) {
+    return confidenceScore >= 76
+      ? 'low risk with strong profile depth and consistent activity'
+      : 'low risk based on current signals, but limited profile coverage increases uncertainty';
+  }
+
+  if (score <= 15 && confidenceScore < 46 && !finalParts.some((x) => x.includes('uncertainty') || x.includes('limited trust'))) {
+    finalParts[1] = 'limited profile coverage increases uncertainty';
+  }
+
+  return uniqueParts(finalParts).slice(0, 2).join(' + ');
+}
+
+function computeConfidenceScore({ karma, totalComments, postCount, topicCount, strongHits, profileUrl, isActive, daysSinceLatestPost, weakHits, descriptionLength, isClaimed }) {
+  let score = 0;
+  score += Math.min(24, Math.log10(Math.max(karma, 1)) * 6);
+  score += Math.min(20, Math.log10(Math.max(totalComments, 1)) * 5);
+  score += Math.min(16, Math.log10(Math.max(postCount, 1)) * 10);
+  score += Math.min(12, topicCount * 2.5);
+  score += Math.min(16, strongHits * 4);
+  if (profileUrl) score += 6;
+  if (isActive) score += 6;
+  if (descriptionLength >= 20) score += 4;
+  if (isClaimed) score += 4;
+  if (daysSinceLatestPost !== null && daysSinceLatestPost <= 30) score += 6;
+  else if (daysSinceLatestPost !== null && daysSinceLatestPost <= 90) score += 3;
+  score -= Math.min(10, weakHits * 2);
+  return clamp(Math.round(score), 0, 100);
 }
 
 export function scorePostRisk(post = {}) {
@@ -367,8 +399,23 @@ export function scoreAuthorRisk(author = {}) {
 
   score = clamp(score);
   const reasons = buildReason(flags);
+  const confidenceScore = computeConfidenceScore({
+    karma,
+    totalComments,
+    postCount,
+    topicCount,
+    strongHits,
+    profileUrl,
+    isActive,
+    daysSinceLatestPost,
+    weakHits,
+    descriptionLength,
+    isClaimed
+  });
+
   const explanation = buildAuthorExplanation({
     score,
+    confidenceScore,
     isClaimed,
     karma,
     postCount,
@@ -394,6 +441,8 @@ export function scoreAuthorRisk(author = {}) {
   return {
     riskScore: score,
     riskLabel: labelForRisk(score),
+    confidenceScore,
+    confidenceLabel: labelForConfidence(confidenceScore),
     reasonShort: explanation,
     topSignals: reasons,
     signalBreakdown: {
