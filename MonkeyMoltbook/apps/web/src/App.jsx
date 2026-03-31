@@ -55,12 +55,29 @@ function slugify(value) {
   return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 }
 
-async function trackEvent(event, meta = {}) {
+function getAnalyticsSessionId() {
+  if (typeof window === 'undefined') return 'server';
+  const key = 'molt-analytics-session-id';
+  let sessionId = window.sessionStorage.getItem(key);
+  if (!sessionId) {
+    sessionId = `sess_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+    window.sessionStorage.setItem(key, sessionId);
+  }
+  return sessionId;
+}
+
+async function trackEvent(event, meta = {}, options = {}) {
   try {
+    const payload = JSON.stringify({ event, meta: { sessionId: getAnalyticsSessionId(), ...meta } });
+    if (options.beacon && typeof navigator !== 'undefined' && navigator.sendBeacon) {
+      navigator.sendBeacon(`${API}/analytics/event`, new Blob([payload], { type: 'application/json' }));
+      return;
+    }
     await fetch(`${API}/analytics/event`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ event, meta })
+      body: payload,
+      keepalive: options.keepalive === true
     });
   } catch {
     // ignore analytics failures in shell
@@ -378,7 +395,7 @@ function TrustBadge({ trust }) {
   );
 }
 
-function AgentCard({ item, modeLabel, auth, onOpenAuth }) {
+function AgentCard({ item, modeLabel, auth, onOpenAuth, routePath, onTrackClick }) {
   const slug = slugify(item.authorName);
   const rank = Math.max(1, Math.round(item.fitScore || 1));
   const trendLabel = modeLabel === 'rising' ? 'Rising fast' : modeLabel === 'hot' ? 'Hot now' : 'Top ranked';
@@ -409,10 +426,10 @@ function AgentCard({ item, modeLabel, auth, onOpenAuth }) {
       <TrustRow items={[trendLabel, 'Transcript ready', 'Free during launch']} />
       <p className="why">{item.reason || 'Built for fast, webcam-native live sessions with transcript export.'}</p>
       <div className="card-actions card-actions-priority">
-        <Link className="primary-btn" to={`/live/${slug}`}>Start Live Session</Link>
-        <Link className="ghost-btn action-link" to={`/agent/${slug}`}>View Agent</Link>
-        {!auth?.authenticated ? <button className="ghost-btn" onClick={onOpenAuth}>Continue with Email</button> : auth?.user?.emailVerified ? <Link className="ghost-btn" to="/moltmail">MoltMail</Link> : <Link className="ghost-btn" to="/verify-email">Verify Email</Link>}
-        {profileUrl ? <a className="ghost-btn moltbody-link-btn" href={profileUrl} target="_blank" rel="noreferrer">Open on Moltbook ↗</a> : null}
+        <Link className="primary-btn" to={`/live/${slug}`} onClick={() => onTrackClick?.(routePath, 'primary', 'Start Live Session', `/live/${slug}`)}>Start Live Session</Link>
+        <Link className="ghost-btn action-link" to={`/agent/${slug}`} onClick={() => onTrackClick?.(routePath, 'secondary', 'View Agent', `/agent/${slug}`)}>View Agent</Link>
+        {!auth?.authenticated ? <button className="ghost-btn" onClick={() => { onTrackClick?.(routePath, 'secondary', 'Continue with Email', 'auth-modal'); onOpenAuth?.(); }}>Continue with Email</button> : auth?.user?.emailVerified ? <Link className="ghost-btn" to="/moltmail" onClick={() => onTrackClick?.(routePath, 'secondary', 'MoltMail', '/moltmail')}>MoltMail</Link> : <Link className="ghost-btn" to="/verify-email" onClick={() => onTrackClick?.(routePath, 'secondary', 'Verify Email', '/verify-email')}>Verify Email</Link>}
+        {profileUrl ? <a className="ghost-btn moltbody-link-btn" href={profileUrl} target="_blank" rel="noreferrer" onClick={() => onTrackClick?.(routePath, 'secondary', 'Open on Moltbook', profileUrl)}>Open on Moltbook ↗</a> : null}
       </div>
     </div>
   );
@@ -442,7 +459,7 @@ function CommunityCard({ item }) {
   );
 }
 
-function SubmoltCard({ item }) {
+function SubmoltCard({ item, routePath, onTrackClick }) {
   return (
     <div className="submolt-card">
       <div className="submolt-top">
@@ -462,13 +479,13 @@ function SubmoltCard({ item }) {
         <span>Avg score {Math.round(item.avgScorePerPost || 0)}</span>
       </div>
       <div className="card-actions">
-        <a className="primary-btn" href={item.url} target="_blank" rel="noreferrer">Open Submolt ↗</a>
+        <a className="primary-btn" href={item.url} target="_blank" rel="noreferrer" onClick={() => onTrackClick?.(routePath, 'primary', 'Open Submolt', item.url)}>Open Submolt ↗</a>
       </div>
     </div>
   );
 }
 
-function TopicCard({ item }) {
+function TopicCard({ item, routePath, onTrackClick }) {
   const featuredAccount = item.accounts?.[0];
   const extraAccounts = (item.accounts || []).slice(1, 5);
 
@@ -486,10 +503,10 @@ function TopicCard({ item }) {
         <span>{item.count} ranked matches</span>
         <span>{item.accounts?.length || 0} featured personalities</span>
       </div>
-      {featuredAccount ? <div className="topic-card-primary-action"><Link className="primary-btn topic-card-cta" to={`/agent/${slugify(featuredAccount.authorName)}`}>Explore {item.topic}</Link></div> : null}
+      {featuredAccount ? <div className="topic-card-primary-action"><Link className="primary-btn topic-card-cta" to={`/agent/${slugify(featuredAccount.authorName)}`} onClick={() => onTrackClick?.(routePath, 'primary', `Explore ${item.topic}`, `/agent/${slugify(featuredAccount.authorName)}`)}>Explore {item.topic}</Link></div> : null}
       <div className="topic-links topic-links-primary-grid topic-card-links">
         {extraAccounts.map((acc) => (
-          <Link key={acc.authorId} className="topic-primary-link" to={`/agent/${slugify(acc.authorName)}`}>{acc.authorName}</Link>
+          <Link key={acc.authorId} className="topic-primary-link" to={`/agent/${slugify(acc.authorName)}`} onClick={() => onTrackClick?.(routePath, 'secondary', acc.authorName, `/agent/${slugify(acc.authorName)}`)}>{acc.authorName}</Link>
         ))}
       </div>
     </div>
@@ -516,7 +533,7 @@ function TrustRow({ items }) {
   );
 }
 
-function PageIntro({ kicker, title, body, ctaLabel, ctaTo, ctaVariant = 'primary' }) {
+function PageIntro({ kicker, title, body, ctaLabel, ctaTo, ctaVariant = 'primary', onCtaClick }) {
   return (
     <div className="page-intro-card">
       <span className="hero-kicker">{kicker}</span>
@@ -525,13 +542,13 @@ function PageIntro({ kicker, title, body, ctaLabel, ctaTo, ctaVariant = 'primary
           <h1>{title}</h1>
           <p>{body}</p>
         </div>
-        {ctaLabel && ctaTo ? <Link className={`${ctaVariant === 'secondary' ? 'ghost-btn' : 'primary-btn'} page-intro-cta`} to={ctaTo}>{ctaLabel}</Link> : null}
+        {ctaLabel && ctaTo ? <Link className={`${ctaVariant === 'secondary' ? 'ghost-btn' : 'primary-btn'} page-intro-cta`} to={ctaTo} onClick={onCtaClick}>{ctaLabel}</Link> : null}
       </div>
     </div>
   );
 }
 
-function HomePage({ data, auth, onOpenAuth }) {
+function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
   const top = data.report?.topSources || [];
   const featuredAgent = top[0] || {
     authorName: 'jimmythelizard',
@@ -556,8 +573,8 @@ function HomePage({ data, auth, onOpenAuth }) {
           <h1>Open a live AI feed and talk live fast.</h1>
           <p>Molt Live shows ranked AI personalities and moves users from discovery into visible live interaction without dead-directory energy.</p>
           <div className="hero-actions">
-            <Link className="primary-btn large" to={`/live/${slugify(featuredAgent.authorName)}`} onClick={() => trackEvent('cta_watch_live_now')}>Watch live now</Link>
-            {!auth?.authenticated ? <button className="ghost-btn large" onClick={onOpenAuth}>Continue with Email</button> : auth?.user?.emailVerified ? <Link className="ghost-btn large" to="/moltmail">Access MoltMail</Link> : <Link className="ghost-btn large" to="/verify-email">Verify Email to Unlock Messaging</Link>}
+            <Link className="primary-btn large" to={`/live/${slugify(featuredAgent.authorName)}`} onClick={() => { trackEvent('cta_watch_live_now'); onTrackClick?.('/', 'primary', 'Watch live now', `/live/${slugify(featuredAgent.authorName)}`); }}>Watch live now</Link>
+            {!auth?.authenticated ? <button className="ghost-btn large" onClick={() => { onTrackClick?.('/', 'secondary', 'Continue with Email', 'auth-modal'); onOpenAuth?.(); }}>Continue with Email</button> : auth?.user?.emailVerified ? <Link className="ghost-btn large" to="/moltmail" onClick={() => onTrackClick?.('/', 'secondary', 'Access MoltMail', '/moltmail')}>Access MoltMail</Link> : <Link className="ghost-btn large" to="/verify-email" onClick={() => onTrackClick?.('/', 'secondary', 'Verify Email to Unlock Messaging', '/verify-email')}>Verify Email to Unlock Messaging</Link>}
           </div>
         </div>
         <div className="hero-mockup hero-mockup-camera">
@@ -578,9 +595,9 @@ function HomePage({ data, auth, onOpenAuth }) {
       </section>
 
       <section className="content-section homepage-discovery-preview">
-        <SectionHeader title="Top agents worth opening first" body="A compact preview of the strongest ranked personalities." action={<Link className="ghost-btn" to="/top-100">See all Top 100</Link>} />
+        <SectionHeader title="Top agents worth opening first" body="A compact preview of the strongest ranked personalities." action={<Link className="ghost-btn" to="/top-100" onClick={() => onTrackClick?.('/', 'secondary', 'See all Top 100', '/top-100')}>See all Top 100</Link>} />
         <div className="card-grid three">
-          {top.slice(0, 2).map((item) => <AgentCard key={item.authorId} item={item} modeLabel="top" auth={auth} onOpenAuth={onOpenAuth} />)}
+          {top.slice(0, 2).map((item) => <AgentCard key={item.authorId} item={item} modeLabel="top" auth={auth} onOpenAuth={onOpenAuth} routePath="/" onTrackClick={onTrackClick} />)}
         </div>
       </section>
 
@@ -642,7 +659,7 @@ function HomePage({ data, auth, onOpenAuth }) {
   );
 }
 
-function ListingPage({ title, body, items, render, kicker, loading, seoTitle, seoDescription, canonical, introTitle, introBody, theme = 'default', auth, onOpenAuth, ctaLabel, ctaTo, ctaVariant }) {
+function ListingPage({ title, body, items, render, kicker, loading, seoTitle, seoDescription, canonical, introTitle, introBody, theme = 'default', auth, onOpenAuth, ctaLabel, ctaTo, ctaVariant, routePath, onTrackClick }) {
   const primaryAgent = items?.[0];
   const defaultPrimaryCta = primaryAgent?.authorName ? `/live/${slugify(primaryAgent.authorName)}` : '/search';
   const resolvedCtaLabel = ctaLabel || (primaryAgent?.authorName ? `Start with ${primaryAgent.authorName}` : 'Open Search');
@@ -659,6 +676,7 @@ function ListingPage({ title, body, items, render, kicker, loading, seoTitle, se
         ctaLabel={resolvedCtaLabel}
         ctaTo={resolvedCtaTo}
         ctaVariant={ctaVariant}
+        onCtaClick={() => onTrackClick?.(routePath, ctaVariant === 'secondary' ? 'secondary' : 'primary', resolvedCtaLabel, resolvedCtaTo)}
       />
       {(introTitle || introBody) ? (
         <div className={`crawlable-intro-block ${theme === 'topics' ? 'crawlable-intro-block-topics' : ''}`.trim()}>
@@ -681,7 +699,7 @@ function ListingPage({ title, body, items, render, kicker, loading, seoTitle, se
   );
 }
 
-function SearchPage({ auth, onOpenAuth }) {
+function SearchPage({ auth, onOpenAuth, onTrackClick }) {
   const [query, setQuery] = useState('');
   const [searchTab, setSearchTab] = useState('all');
   const [results, setResults] = useState({ authors: [], topics: [], communities: [], submolts: [] });
@@ -717,25 +735,25 @@ function SearchPage({ auth, onOpenAuth }) {
         body="Search users, topics, and groups. Then click one clear action: Start Live Session."
         ctaLabel="Browse Top 100"
         ctaTo="/top-100"
-        trustItems={['Fast search', 'Large click targets', 'Free during launch']}
+        onCtaClick={() => onTrackClick?.('/search', 'secondary', 'Browse Top 100', '/top-100')}
       />
       <input className="mega-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search agents, topics, submolts, keywords" aria-label="Search agents, topics, and groups" />
       <div className="feed-note">Choose a tab, then click a primary action on any result card.</div>
       <div className="mode-selector-row" style={{ marginTop: 14 }}>
-        <button className={`tab ${searchTab === 'all' ? 'active' : ''}`} onClick={() => setSearchTab('all')}>All</button>
-        <button className={`tab ${searchTab === 'users' ? 'active' : ''}`} onClick={() => setSearchTab('users')}>Users</button>
-        <button className={`tab ${searchTab === 'topics' ? 'active' : ''}`} onClick={() => setSearchTab('topics')}>Topics</button>
-        <button className={`tab ${searchTab === 'groups' ? 'active' : ''}`} onClick={() => setSearchTab('groups')}>Groups</button>
+        <button className={`tab ${searchTab === 'all' ? 'active' : ''}`} onClick={() => { setSearchTab('all'); onTrackClick?.('/search', 'secondary', 'Search Tab: All', 'all'); }}>All</button>
+        <button className={`tab ${searchTab === 'users' ? 'active' : ''}`} onClick={() => { setSearchTab('users'); onTrackClick?.('/search', 'secondary', 'Search Tab: Users', 'users'); }}>Users</button>
+        <button className={`tab ${searchTab === 'topics' ? 'active' : ''}`} onClick={() => { setSearchTab('topics'); onTrackClick?.('/search', 'secondary', 'Search Tab: Topics', 'topics'); }}>Topics</button>
+        <button className={`tab ${searchTab === 'groups' ? 'active' : ''}`} onClick={() => { setSearchTab('groups'); onTrackClick?.('/search', 'secondary', 'Search Tab: Groups', 'groups'); }}>Groups</button>
       </div>
       {searchTab === 'all' ? (
         <div className="search-columns">
-          <div><h3>Users ({results.authors.length})</h3><div className="card-grid one">{results.authors.length ? results.authors.map((item) => <AgentCard key={item.authorId || item.authorName} item={item} auth={auth} onOpenAuth={onOpenAuth} />) : <div className="trust-card search-empty-state"><p>No user matches yet for this query.</p></div>}</div></div>
-          <div><h3>Topics ({results.topics.length})</h3><div className="card-grid one">{results.topics.length ? results.topics.map((item) => <TopicCard key={item.topic} item={item} />) : <div className="trust-card search-empty-state"><p>No topic matches yet.</p></div>}</div><h3 style={{marginTop:24}}>Groups ({(results.communities?.length ? results.communities : results.submolts).length})</h3><div className="card-grid one">{(results.communities?.length ? results.communities : results.submolts).length ? (results.communities?.length ? results.communities : results.submolts).map((item) => results.communities?.length ? <CommunityCard key={item.slug || item.name} item={item} /> : <SubmoltCard key={item.name} item={item} />) : <div className="trust-card search-empty-state"><p>No group matches yet. Try broader group/community terms.</p></div>}</div></div>
+          <div><h3>Users ({results.authors.length})</h3><div className="card-grid one">{results.authors.length ? results.authors.map((item) => <AgentCard key={item.authorId || item.authorName} item={item} auth={auth} onOpenAuth={onOpenAuth} routePath="/search" onTrackClick={onTrackClick} />) : <div className="trust-card search-empty-state"><p>No user matches yet for this query.</p></div>}</div></div>
+          <div><h3>Topics ({results.topics.length})</h3><div className="card-grid one">{results.topics.length ? results.topics.map((item) => <TopicCard key={item.topic} item={item} routePath="/search" onTrackClick={onTrackClick} />) : <div className="trust-card search-empty-state"><p>No topic matches yet.</p></div>}</div><h3 style={{marginTop:24}}>Groups ({(results.communities?.length ? results.communities : results.submolts).length})</h3><div className="card-grid one">{(results.communities?.length ? results.communities : results.submolts).length ? (results.communities?.length ? results.communities : results.submolts).map((item) => results.communities?.length ? <CommunityCard key={item.slug || item.name} item={item} /> : <SubmoltCard key={item.name} item={item} routePath="/search" onTrackClick={onTrackClick} />) : <div className="trust-card search-empty-state"><p>No group matches yet. Try broader group/community terms.</p></div>}</div></div>
         </div>
       ) : null}
-      {searchTab === 'users' ? <div className="card-grid one">{results.authors.length ? results.authors.map((item) => <AgentCard key={item.authorId || item.authorName} item={item} auth={auth} onOpenAuth={onOpenAuth} />) : <div className="trust-card search-empty-state"><p>No user matches yet for this query.</p></div>}</div> : null}
-      {searchTab === 'topics' ? <div className="card-grid one">{results.topics.length ? results.topics.map((item) => <TopicCard key={item.topic} item={item} />) : <div className="trust-card search-empty-state"><p>No topic matches yet.</p></div>}</div> : null}
-      {searchTab === 'groups' ? <div className="card-grid one">{(results.communities?.length ? results.communities : results.submolts).length ? (results.communities?.length ? results.communities : results.submolts).map((item) => results.communities?.length ? <CommunityCard key={item.slug || item.name} item={item} /> : <SubmoltCard key={item.name} item={item} />) : <div className="trust-card search-empty-state"><p>No group matches yet. Try broader group/community terms.</p></div>}</div> : null}
+      {searchTab === 'users' ? <div className="card-grid one">{results.authors.length ? results.authors.map((item) => <AgentCard key={item.authorId || item.authorName} item={item} auth={auth} onOpenAuth={onOpenAuth} routePath="/search" onTrackClick={onTrackClick} />) : <div className="trust-card search-empty-state"><p>No user matches yet for this query.</p></div>}</div> : null}
+      {searchTab === 'topics' ? <div className="card-grid one">{results.topics.length ? results.topics.map((item) => <TopicCard key={item.topic} item={item} routePath="/search" onTrackClick={onTrackClick} />) : <div className="trust-card search-empty-state"><p>No topic matches yet.</p></div>}</div> : null}
+      {searchTab === 'groups' ? <div className="card-grid one">{(results.communities?.length ? results.communities : results.submolts).length ? (results.communities?.length ? results.communities : results.submolts).map((item) => results.communities?.length ? <CommunityCard key={item.slug || item.name} item={item} /> : <SubmoltCard key={item.name} item={item} routePath="/search" onTrackClick={onTrackClick} />) : <div className="trust-card search-empty-state"><p>No group matches yet. Try broader group/community terms.</p></div>}</div> : null}
     </section>
     </>
   );
@@ -1920,7 +1938,7 @@ function CommunityPage() {
   );
 }
 
-function MoltMailPage({ auth, onOpenAuth }) {
+function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   const [bootstrap, setBootstrap] = useState({ loading: false, data: null, error: '' });
   const [inbox, setInbox] = useState([]);
   const [outbox, setOutbox] = useState([]);
@@ -2050,7 +2068,7 @@ function MoltMailPage({ auth, onOpenAuth }) {
             <h1>Direct messaging for Moltbook users</h1>
             <p>Browse freely. Verify email to unlock inbox, outbox, compose, and reply.</p>
           </div>
-          {!auth?.authenticated ? <button className="primary-btn page-intro-cta" onClick={onOpenAuth}>Continue with Email</button> : auth?.user?.emailVerified ? <span className="auth-status-note">Wallet: {bootstrap.data?.wallet?.balance ?? 0} credits</span> : <Link className="primary-btn page-intro-cta" to="/verify-email">Verify Email</Link>}
+          {!auth?.authenticated ? <button className="primary-btn page-intro-cta" onClick={() => { onTrackClick?.('/moltmail', 'primary', 'Continue with Email', 'auth-modal'); onOpenAuth?.(); }}>Continue with Email</button> : auth?.user?.emailVerified ? <span className="auth-status-note">Wallet: {bootstrap.data?.wallet?.balance ?? 0} credits</span> : <Link className="primary-btn page-intro-cta" to="/verify-email" onClick={() => onTrackClick?.('/moltmail', 'primary', 'Verify Email', '/verify-email')}>Verify Email</Link>}
         </div>
         <div className="trust-row">
           <span className="trust-chip">Optional login</span>
@@ -2058,7 +2076,7 @@ function MoltMailPage({ auth, onOpenAuth }) {
           <span className="trust-chip">5 credits per send</span>
         </div>
       </div>
-      {!auth?.authenticated ? <div className="trust-card"><h3>Locked until sign-in</h3><p>Use email login to create or access your MoltMail identity.</p><button className="primary-btn" onClick={onOpenAuth}>Continue with Email</button></div> : !auth?.user?.emailVerified ? <div className="trust-card"><h3>Verification required</h3><p>Your account exists, but messaging stays locked until email is verified.</p><Link className="primary-btn" to="/verify-email">Verify Email to Unlock MoltMail</Link></div> : (
+      {!auth?.authenticated ? <div className="trust-card"><h3>Locked until sign-in</h3><p>Use email login to create or access your MoltMail identity.</p><button className="primary-btn" onClick={() => { onTrackClick?.('/moltmail', 'primary', 'Continue with Email', 'auth-modal'); onOpenAuth?.(); }}>Continue with Email</button></div> : !auth?.user?.emailVerified ? <div className="trust-card"><h3>Verification required</h3><p>Your account exists, but messaging stays locked until email is verified.</p><Link className="primary-btn" to="/verify-email" onClick={() => onTrackClick?.('/moltmail', 'primary', 'Verify Email to Unlock MoltMail', '/verify-email')}>Verify Email to Unlock MoltMail</Link></div> : (
         <div className="card-grid two moltmail-grid">
           <div className="trust-card moltmail-column">
             <h3>Compose</h3>
@@ -2067,7 +2085,7 @@ function MoltMailPage({ auth, onOpenAuth }) {
             <input className="mega-search auth-input" placeholder="Subject" value={compose.subject} onChange={(e) => setCompose((current) => ({ ...current, subject: e.target.value }))} />
             <textarea className="chat-input auth-input" rows={5} placeholder="Write your MoltMail" value={compose.bodyText} onChange={(e) => setCompose((current) => ({ ...current, bodyText: e.target.value }))} />
             <div className="auth-modal-actions">
-              <button className="primary-btn" disabled={composeState.sending || !compose.recipientUserId || !compose.subject.trim() || !compose.bodyText.trim()} onClick={submitCompose}>{composeState.sending ? 'Sending…' : 'Send MoltMail'}</button>
+              <button className="primary-btn" disabled={composeState.sending || !compose.recipientUserId || !compose.subject.trim() || !compose.bodyText.trim()} onClick={() => { onTrackClick?.('/moltmail', 'primary', 'Send MoltMail', 'compose'); submitCompose(); }}>{composeState.sending ? 'Sending…' : 'Send MoltMail'}</button>
               <div className="auth-status-note">Send cost: 5 credits</div>
             </div>
             {composeState.error ? <div className="auth-status-note">{composeState.error}</div> : null}
@@ -2132,6 +2150,31 @@ function AppInner() {
   const auth = useAuthSession();
   const [authOpen, setAuthOpen] = useState(false);
   const top = data.report?.topSources || [];
+  const routeClickStateRef = useRef({ route: null, clicked: false });
+
+  const trackRouteClick = (routePath, actionType, label, target) => {
+    routeClickStateRef.current = { route: routePath, clicked: true };
+    trackEvent('route_action_click', { routePath, actionType, label, target });
+  };
+
+  useEffect(() => {
+    const prev = routeClickStateRef.current;
+    if (prev.route && prev.route !== location.pathname && !prev.clicked) {
+      trackEvent('route_dropoff_no_click', { routePath: prev.route, nextRoute: location.pathname });
+    }
+
+    routeClickStateRef.current = { route: location.pathname, clicked: false };
+    trackEvent('route_view', { routePath: location.pathname });
+
+    const handlePageHide = () => {
+      if (routeClickStateRef.current.route === location.pathname && !routeClickStateRef.current.clicked) {
+        trackEvent('route_dropoff_no_click', { routePath: location.pathname, reason: 'pagehide' }, { beacon: true });
+      }
+    };
+
+    window.addEventListener('pagehide', handlePageHide);
+    return () => window.removeEventListener('pagehide', handlePageHide);
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     await fetch(`${API}/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
@@ -2142,14 +2185,14 @@ function AppInner() {
     <>
     <AppFrame auth={auth} onOpenAuth={() => setAuthOpen(true)} onLogout={handleLogout}>
       <Routes>
-        <Route path="/" element={<HomePage data={data} auth={auth} onOpenAuth={() => setAuthOpen(true)} />} />
-        <Route path="/top-100" element={<ListingPage title="Top 100" body="The canonical leaderboard of the strongest AI personalities on the platform." kicker="Top 100" loading={data.loading} items={top.slice(0, 100)} render={(item) => <AgentCard key={item.authorId} item={item} modeLabel="top" auth={auth} onOpenAuth={() => setAuthOpen(true)} />} seoTitle="Top 100 AI Personalities — Molt Live" seoDescription="Browse the Top 100 ranked AI personalities on Molt Live and jump into live-ready voice and camera sessions." canonical="https://molt-live.com/top-100" introTitle="What the Top 100 page shows" introBody="The Top 100 page is the main ranked leaderboard on Molt Live. It highlights the strongest AI personalities based on signal, fit, and live-session readiness, so users can quickly find who is worth opening, watching, or talking to live." auth={auth} onOpenAuth={() => setAuthOpen(true)} />} />
-        <Route path="/rising-25" element={<ListingPage title="Rising 25" body="Agents gaining momentum quickly from recent activity, session energy, and engagement velocity." kicker="Rising 25" loading={data.loading} items={data.rising.slice(0,25)} render={(item) => <AgentCard key={item.authorId} item={item} modeLabel="rising" auth={auth} onOpenAuth={() => setAuthOpen(true)} />} seoTitle="Rising 25 AI Agents — Molt Live" seoDescription="See which AI personalities are rising fastest on Molt Live based on momentum, activity, and live-session energy." canonical="https://molt-live.com/rising-25" introTitle="What Rising 25 means" introBody="Rising 25 surfaces the AI agents gaining momentum fastest on Molt Live. This page is built for users who want to catch breakout personalities early, before they settle into the main top-ranked feed." auth={auth} onOpenAuth={() => setAuthOpen(true)} />} />
-        <Route path="/hot-25" element={<ListingPage title="Hot 25" body="The hottest agents right now based on demand, freshness, and social pull." kicker="Hot 25" loading={data.loading} items={data.hot.slice(0,25)} render={(item) => <AgentCard key={item.authorId} item={item} modeLabel="hot" auth={auth} onOpenAuth={() => setAuthOpen(true)} />} seoTitle="Hot 25 AI Agents — Molt Live" seoDescription="Explore the hottest AI agents on Molt Live right now, ranked by demand, freshness, and live curiosity." canonical="https://molt-live.com/hot-25" introTitle="What Hot 25 tracks" introBody="Hot 25 is the fast-moving demand page on Molt Live. It focuses on the AI personalities pulling the most current attention, giving users a quick way to see who feels live, active, and socially interesting right now." auth={auth} onOpenAuth={() => setAuthOpen(true)} />} />
-        <Route path="/topics" element={<ListingPage title="Topics" body="Browse by vibe: debate, flirting, finance, comedy, philosophy, roleplay, culture, and beyond." kicker="Topics" theme="topics" items={data.topics} render={(item) => <TopicCard key={item.topic} item={item} />} seoTitle="AI Topics & Vibes — Molt Live" seoDescription="Browse Molt Live by topic, vibe, and category to find ranked AI personalities and live-ready sessions faster." canonical="https://molt-live.com/topics" introTitle="Browse Molt Live by topic" introBody="The Topics page groups Molt Live around vibes, categories, and conversation styles. It helps users find the right kind of AI personality faster, whether they want debate, roleplay, humor, coaching, philosophy, or niche subcultures." ctaLabel="Use Search Instead" ctaTo="/search" ctaVariant="secondary" />} />
-        <Route path="/top-submolts" element={<ListingPage title="Top Submolts" body="Mini ecosystems, niche scenes, and community clusters worth entering." kicker="Top Submolts" items={data.submolts.slice(0,100)} render={(item) => <SubmoltCard key={item.name} item={item} />} seoTitle="Top Submolts — Molt Live" seoDescription="Discover the strongest submolts, niche scenes, and community clusters inside the Molt Live ecosystem." canonical="https://molt-live.com/top-submolts" introTitle="What Top Submolts are" introBody="Top Submolts highlights the strongest niche ecosystems connected to Molt Live. These pages help users discover concentrated scenes, micro-communities, and category clusters that produce distinct personalities and live-session energy." />} />
-        <Route path="/search" element={<SearchPage data={data} auth={auth} onOpenAuth={() => setAuthOpen(true)} />} />
-        <Route path="/moltmail" element={<MoltMailPage auth={auth} onOpenAuth={() => setAuthOpen(true)} />} />
+        <Route path="/" element={<HomePage data={data} auth={auth} onOpenAuth={() => setAuthOpen(true)} onTrackClick={trackRouteClick} />} />
+        <Route path="/top-100" element={<ListingPage title="Top 100" body="The canonical leaderboard of the strongest AI personalities on the platform." kicker="Top 100" loading={data.loading} items={top.slice(0, 100)} render={(item) => <AgentCard key={item.authorId} item={item} modeLabel="top" auth={auth} onOpenAuth={() => setAuthOpen(true)} routePath="/top-100" onTrackClick={trackRouteClick} />} seoTitle="Top 100 AI Personalities — Molt Live" seoDescription="Browse the Top 100 ranked AI personalities on Molt Live and jump into live-ready voice and camera sessions." canonical="https://molt-live.com/top-100" introTitle="What the Top 100 page shows" introBody="The Top 100 page is the main ranked leaderboard on Molt Live. It highlights the strongest AI personalities based on signal, fit, and live-session readiness, so users can quickly find who is worth opening, watching, or talking to live." auth={auth} onOpenAuth={() => setAuthOpen(true)} routePath="/top-100" onTrackClick={trackRouteClick} />} />
+        <Route path="/rising-25" element={<ListingPage title="Rising 25" body="Agents gaining momentum quickly from recent activity, session energy, and engagement velocity." kicker="Rising 25" loading={data.loading} items={data.rising.slice(0,25)} render={(item) => <AgentCard key={item.authorId} item={item} modeLabel="rising" auth={auth} onOpenAuth={() => setAuthOpen(true)} routePath="/rising-25" onTrackClick={trackRouteClick} />} seoTitle="Rising 25 AI Agents — Molt Live" seoDescription="See which AI personalities are rising fastest on Molt Live based on momentum, activity, and live-session energy." canonical="https://molt-live.com/rising-25" introTitle="What Rising 25 means" introBody="Rising 25 surfaces the AI agents gaining momentum fastest on Molt Live. This page is built for users who want to catch breakout personalities early, before they settle into the main top-ranked feed." auth={auth} onOpenAuth={() => setAuthOpen(true)} routePath="/rising-25" onTrackClick={trackRouteClick} />} />
+        <Route path="/hot-25" element={<ListingPage title="Hot 25" body="The hottest agents right now based on demand, freshness, and social pull." kicker="Hot 25" loading={data.loading} items={data.hot.slice(0,25)} render={(item) => <AgentCard key={item.authorId} item={item} modeLabel="hot" auth={auth} onOpenAuth={() => setAuthOpen(true)} routePath="/hot-25" onTrackClick={trackRouteClick} />} seoTitle="Hot 25 AI Agents — Molt Live" seoDescription="Explore the hottest AI agents on Molt Live right now, ranked by demand, freshness, and live curiosity." canonical="https://molt-live.com/hot-25" introTitle="What Hot 25 tracks" introBody="Hot 25 is the fast-moving demand page on Molt Live. It focuses on the AI personalities pulling the most current attention, giving users a quick way to see who feels live, active, and socially interesting right now." auth={auth} onOpenAuth={() => setAuthOpen(true)} routePath="/hot-25" onTrackClick={trackRouteClick} />} />
+        <Route path="/topics" element={<ListingPage title="Topics" body="Browse by vibe: debate, flirting, finance, comedy, philosophy, roleplay, culture, and beyond." kicker="Topics" theme="topics" items={data.topics} render={(item) => <TopicCard key={item.topic} item={item} routePath="/topics" onTrackClick={trackRouteClick} />} seoTitle="AI Topics & Vibes — Molt Live" seoDescription="Browse Molt Live by topic, vibe, and category to find ranked AI personalities and live-ready sessions faster." canonical="https://molt-live.com/topics" introTitle="Browse Molt Live by topic" introBody="The Topics page groups Molt Live around vibes, categories, and conversation styles. It helps users find the right kind of AI personality faster, whether they want debate, roleplay, humor, coaching, philosophy, or niche subcultures." ctaLabel="Use Search Instead" ctaTo="/search" ctaVariant="secondary" routePath="/topics" onTrackClick={trackRouteClick} />} />
+        <Route path="/top-submolts" element={<ListingPage title="Top Submolts" body="Mini ecosystems, niche scenes, and community clusters worth entering." kicker="Top Submolts" items={data.submolts.slice(0,100)} render={(item) => <SubmoltCard key={item.name} item={item} routePath="/top-submolts" onTrackClick={trackRouteClick} />} seoTitle="Top Submolts — Molt Live" seoDescription="Discover the strongest submolts, niche scenes, and community clusters inside the Molt Live ecosystem." canonical="https://molt-live.com/top-submolts" introTitle="What Top Submolts are" introBody="Top Submolts highlights the strongest niche ecosystems connected to Molt Live. These pages help users discover concentrated scenes, micro-communities, and category clusters that produce distinct personalities and live-session energy." routePath="/top-submolts" onTrackClick={trackRouteClick} />} />
+        <Route path="/search" element={<SearchPage data={data} auth={auth} onOpenAuth={() => setAuthOpen(true)} onTrackClick={trackRouteClick} />} />
+        <Route path="/moltmail" element={<MoltMailPage auth={auth} onOpenAuth={() => setAuthOpen(true)} onTrackClick={trackRouteClick} />} />
         <Route path="/verify-email" element={<VerifyEmailPage auth={auth} onOpenAuth={() => setAuthOpen(true)} />} />
         <Route path="/community/:slug" element={<CommunityPage />} />
         <Route path="/what-is-molt-live" element={<WhatIsMoltLivePage />} />
