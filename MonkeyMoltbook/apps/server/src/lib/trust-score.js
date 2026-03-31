@@ -115,11 +115,11 @@ function uniqueParts(parts = []) {
 
 function buildAuthorExplanation({ score, isClaimed, karma, postCount, totalComments, strongHits, weakHits, descriptionLength, submoltCount, topicCount, profileUrl, isActive, daysSinceLatestPost, matchedPostCount, suspiciousHits, phraseDiversity, promoHits, ctaHits, benignHits, analysisHits, flags = [] }) {
   const positives = uniqueParts([
-    isClaimed ? 'claimed account ownership reduces current risk' : null,
-    (karma >= 10000 || totalComments >= 10000) ? 'long account history and strong engagement reduce current risk' : null,
+    (karma >= 10000 || totalComments >= 10000) ? 'strong profile depth and stable activity reduce current risk' : null,
     (!(karma >= 10000 || totalComments >= 10000) && (karma >= 2500 || totalComments >= 1000)) ? 'established account history lowers current risk' : null,
     (strongHits >= 5 || (topicCount >= 3 && postCount >= 3)) ? 'broad profile coverage reduces uncertainty' : null,
-    analysisHits > 0 ? 'analysis-style posting lowers current scam risk' : null
+    analysisHits > 0 ? 'analysis-style posting lowers current scam risk' : null,
+    isClaimed ? 'claimed account ownership slightly reduces current risk' : null
   ]);
 
   const negatives = uniqueParts([
@@ -152,9 +152,12 @@ function buildAuthorExplanation({ score, isClaimed, karma, postCount, totalComme
   } else if (score >= 36) {
     parts.push(...negatives.slice(0, 1));
     if (parts.length < 2) parts.push(...uncertainty.slice(0, 1));
-  } else if (score >= 16) {
-    parts.push(...negatives.slice(0, 1));
+  } else if (score >= 26) {
+    parts.push(...uncertainty.slice(0, 1));
     if (parts.length < 2) parts.push(...positives.slice(0, 1));
+    if (parts.length < 2) parts.push(...negatives.slice(0, 1));
+  } else if (score >= 11) {
+    parts.push(...positives.slice(0, 1));
     if (parts.length < 2) parts.push(...uncertainty.slice(0, 1));
   } else {
     parts.push(...positives.slice(0, 2));
@@ -272,14 +275,14 @@ export function scoreAuthorRisk(author = {}) {
     accountThinnessRisk += 16;
     flags.push('account:thin');
   }
-  if (!profileUrl) accountThinnessRisk += 8;
-  if (topicCount === 0) accountThinnessRisk += 10;
-  else if (topicCount === 1) accountThinnessRisk += 6;
+  if (!profileUrl) accountThinnessRisk += 6;
+  if (topicCount === 0) accountThinnessRisk += 8;
+  else if (topicCount === 1) accountThinnessRisk += 4;
   if (!isActive) accountThinnessRisk += 10;
-  if (postCount <= 1) accountThinnessRisk += 10;
-  else if (postCount <= 3) accountThinnessRisk += 4;
-  if (strongHits === 0) accountThinnessRisk += 10;
-  else if (strongHits === 1) accountThinnessRisk += 6;
+  if (postCount <= 1) accountThinnessRisk += 8;
+  else if (postCount <= 3) accountThinnessRisk += 3;
+  if (strongHits === 0) accountThinnessRisk += 8;
+  else if (strongHits === 1) accountThinnessRisk += 4;
   if (postCount >= 8 && submoltCount >= 4) behaviorRisk += 14;
   if (postCount >= 12 && karma <= 5) behaviorRisk += 18;
   if (submoltCount >= 6) networkRisk += 10;
@@ -319,45 +322,47 @@ export function scoreAuthorRisk(author = {}) {
   }
 
   let score = accountThinnessRisk + behaviorRisk + networkRisk + languageRisk + evidenceRisk;
-  if (isClaimed) score -= 3;
-  if (karma >= 2500) score -= 2;
-  if (karma >= 10000) score -= 3;
-  if (karma >= 50000) score -= 3;
-  if (totalComments >= 1000) score -= 2;
-  if (totalComments >= 10000) score -= 2;
-  if (totalComments >= 50000) score -= 2;
-  if (strongHits >= 2) score -= 2;
-  if (strongHits >= 5) score -= 3;
-  if (fitScore >= 100000) score -= 2;
-  if (signalScore >= 50000) score -= 2;
-  if (postCount >= 5) score -= 2;
-  if (postCount >= 20) score -= 2;
-  if (topicCount >= 3) score -= 2;
-  if (benignHits) score -= benignHits * 8;
-  if (analysisHits) score -= analysisHits * 10;
+  if (isClaimed) score -= 1;
+  const karmaCredit = Math.min(8, Math.log10(Math.max(karma, 1)) * 2.2 - 0.7);
+  const commentCredit = Math.min(7, Math.log10(Math.max(totalComments, 1)) * 1.8 - 0.5);
+  const postCredit = Math.min(6, Math.log10(Math.max(postCount, 1)) * 4);
+  const topicCredit = Math.min(4, topicCount * 1.2);
+  const strengthCredit = Math.min(6, strongHits * 1.5);
+  const fitCredit = fitScore >= 100000 ? 2 : fitScore >= 10000 ? 1 : 0;
+  const signalCredit = signalScore >= 50000 ? 2 : signalScore >= 10000 ? 1 : 0;
+  score -= Math.max(0, karmaCredit);
+  score -= Math.max(0, commentCredit);
+  score -= Math.max(0, postCredit);
+  score -= Math.max(0, topicCredit);
+  score -= Math.max(0, strengthCredit);
+  score -= fitCredit;
+  score -= signalCredit;
+  if (benignHits) score -= benignHits * 5;
+  if (analysisHits) score -= analysisHits * 6;
   if (flags.length <= 1 && postCount <= 2 && matchedPostCount === 0 && !flags.includes('mint:spam')) score -= 4;
   if (flags.includes('mint:spam') && (mintSpamHits >= 2 || matchedPostCount >= 2 || suspiciousHits >= 2)) score = Math.max(score, 28);
   if (promoHits >= 2 && ctaHits >= 1 && matchedPostCount >= 2) score = Math.max(score, 28);
   if ((phraseDiversity >= 2 && suspiciousHits >= 2) || (matchedPostCount >= 3 && suspiciousHits >= 2 && ctaHits >= 1)) score = Math.max(score, 25);
 
   if (matchedPostCount === 0 && suspiciousHits === 0 && !flags.includes('mint:spam')) {
-    let lowSignalFloor = 0;
-    if (postCount <= 1) lowSignalFloor += 10;
-    else if (postCount <= 3) lowSignalFloor += 4;
-    if (topicCount === 0) lowSignalFloor += 8;
-    else if (topicCount === 1) lowSignalFloor += 4;
-    if (strongHits === 0) lowSignalFloor += 8;
-    else if (strongHits === 1) lowSignalFloor += 4;
-    if (weakHits >= 1) lowSignalFloor += weakHits * 5;
-    if (daysSinceLatestPost !== null && daysSinceLatestPost > 45) lowSignalFloor += 3;
-    if (daysSinceLatestPost !== null && daysSinceLatestPost > 90) lowSignalFloor += 3;
-    if (strongHits >= 3) lowSignalFloor -= 2;
-    if (karma >= 10000) lowSignalFloor -= 3;
-    if (karma >= 50000) lowSignalFloor -= 2;
-    if (totalComments >= 10000) lowSignalFloor -= 2;
-    if (totalComments >= 50000) lowSignalFloor -= 2;
-    if (postCount >= 5) lowSignalFloor -= 2;
-    score = Math.max(score, clamp(lowSignalFloor, 0, 32));
+    const maturityPenalty =
+      (postCount <= 1 ? 9 : postCount <= 3 ? 4 : 0) +
+      (topicCount === 0 ? 8 : topicCount === 1 ? 4 : 0) +
+      (strongHits === 0 ? 8 : strongHits === 1 ? 4 : 0) +
+      (!profileUrl ? 6 : 0) +
+      (!isActive ? 8 : 0) +
+      (daysSinceLatestPost !== null && daysSinceLatestPost > 90 ? 6 : daysSinceLatestPost !== null && daysSinceLatestPost > 45 ? 3 : 0) +
+      Math.min(8, weakHits * 4);
+
+    const maturityCredit =
+      Math.min(8, Math.log10(Math.max(karma, 1)) * 2.0 - 0.5) +
+      Math.min(7, Math.log10(Math.max(totalComments, 1)) * 1.5 - 0.3) +
+      Math.min(5, Math.log10(Math.max(postCount, 1)) * 3.5) +
+      Math.min(4, topicCount * 1.1) +
+      Math.min(6, strongHits * 1.4);
+
+    const confidenceFloor = clamp(Math.round(maturityPenalty - maturityCredit + 6), 2, 38);
+    score = Math.max(score, confidenceFloor);
   }
 
   score = clamp(score);
