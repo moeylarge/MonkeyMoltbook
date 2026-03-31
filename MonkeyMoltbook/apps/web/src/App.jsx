@@ -1133,8 +1133,8 @@ function LivePage({ data }) {
     <section className="page-section live-page live-page-simplified">
       <PageIntro
         kicker="Go Live"
-        title="Preview your camera first"
-        body="Enable webcam, preview yourself, then go live."
+        title={isChatMode ? 'Start with chat' : 'Preview your camera first'}
+        body={isChatMode ? 'Pick human or AI, then start.' : 'Enable webcam, preview yourself, then go live.'}
         trustItems={[]}
       />
       <div className="live-back-row">
@@ -1218,18 +1218,18 @@ function LivePage({ data }) {
           {isChatMode ? (
             <>
               <div className="live-stage-headline pre-session-headline chat-pre-session-headline chat-stage-headline">
-                <strong>{session ? `Chat session is active` : `Choose your chat mode`}</strong>
-                <span>{session ? (session.mode === 'chat-ai' ? 'Your premium AI chat is active. Messages and export are ready.' : 'Your chat session is active. Messages and export are ready.') : 'Pick free human chat or premium AI chat before the composer appears.'}</span>
+                <strong>{session ? `Chat session is active` : `Pick chat mode`}</strong>
+                <span>{session ? (session.mode === 'chat-ai' ? 'Premium AI chat is active.' : 'Human chat is active.') : 'Choose human or AI, then start.'}</span>
               </div>
               {!session ? (
                 <div className="wallet-balance-card wallet-balance-card-muted wallet-balance-card-full ai-upgrade-card ai-choice-block ai-choice-hero ai-choice-stage-card">
-                  <span className="eyebrow">Choose chat mode</span>
-                  <strong>Free human chat or Premium AI chat</strong>
-                  <p>Choose how you want this conversation to work before the chat composer appears.</p>
+                  <span className="eyebrow">Chat mode</span>
+                  <strong>Human or AI</strong>
+                  <p>Pick one mode, then start.</p>
                   <div className="ai-choice-grid ai-choice-grid-hero">
                     <button className={`ghost-btn ai-choice-card ai-choice-card-hero ${chatKind === 'human' ? 'active' : ''}`} onClick={selectHumanChat}>
                       <span className="ai-choice-label">Human chat</span>
-                      <small>Free · default · person-to-person</small>
+                      <small>Free · default</small>
                     </button>
                     <button className={`primary-btn ai-choice-card ai-choice-card-hero ${chatKind === 'ai' ? 'active' : ''}`} onClick={chooseAiChat}>
                       <span className="ai-choice-label">AI chat</span>
@@ -1357,14 +1357,13 @@ function LivePage({ data }) {
               </div>
               <div className="transcript-feed transcript-feed-bubbles">
                 <div className="transcript-empty-state pre-session-empty-state pre-session-preview-card chat-empty-state-card">
-                  <strong>{chatChoiceMade ? (chatKind === 'ai' ? 'Premium AI chat is ready.' : 'Free human chat is ready.') : 'Choose your chat mode first.'}</strong>
-                  <p>{chatChoiceMade ? (chatKind === 'ai' ? 'This chat will use premium AI mode powered by your upgraded plan or credits.' : 'This chat will connect person-to-person by default. Start with a quick message to begin.') : 'Pick free human chat or premium AI chat before the composer appears.'}</p>
+                  <strong>{chatChoiceMade ? (chatKind === 'ai' ? 'Premium AI chat is ready.' : 'Human chat is ready.') : 'Choose a mode.'}</strong>
+                  <p>{chatChoiceMade ? (chatKind === 'ai' ? 'Premium AI is selected. Start when ready.' : 'Human chat is selected. Start when ready.') : 'Pick human or AI to continue.'}</p>
                 </div>
               </div>
               {chatChoiceMade ? (
-                <div className="chat-input-row chat-input-row-strong">
-                  <textarea className="chat-input chat-input-strong" rows={3} placeholder="Ask anything, start the conversation, or drop a quick prompt…" value={draft} onChange={(e) => setDraft(e.target.value)} />
-                  <button className="primary-btn" onClick={startSession} disabled={starting || !!session}>{starting ? 'Starting…' : chatKind === 'ai' ? 'Start AI chat' : 'Start human chat'}</button>
+                <div className="chat-input-row chat-input-row-strong chat-start-row">
+                  <button className="primary-btn chat-start-btn" onClick={startSession} disabled={starting || !!session}>{starting ? 'Starting…' : chatKind === 'ai' ? 'Start AI chat' : 'Start human chat'}</button>
                 </div>
               ) : null}
             </>
