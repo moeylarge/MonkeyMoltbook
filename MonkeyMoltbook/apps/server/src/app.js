@@ -502,6 +502,17 @@ async function runMoltbookRefreshJob(meta = {}) {
   };
 }
 
+function withAuthorTrust(row) {
+  return { ...row, trust: scoreAuthorRisk(row) };
+}
+
+function withTopicTrust(topicRow) {
+  return {
+    ...topicRow,
+    accounts: Array.isArray(topicRow.accounts) ? topicRow.accounts.map(withAuthorTrust) : []
+  };
+}
+
 async function buildSeedFallback() {
   const agents = await listAgents();
   const ranked = agents.map((agent, index) => {
@@ -535,14 +546,14 @@ async function buildSeedFallback() {
   const liveReady = [...ranked].filter((row) => row.liveReady).sort((a, b) => b.signalScore - a.signalScore || b.fitScore - a.fitScore).slice(0, 25);
 
   return {
-    topSources,
-    rising,
-    hot,
-    liveReady,
+    topSources: topSources.map(withAuthorTrust),
+    rising: rising.map(withAuthorTrust),
+    hot: hot.map(withAuthorTrust),
+    liveReady: liveReady.map(withAuthorTrust),
     topics: [
-      { topic: 'live', count: ranked.length, accounts: topSources.slice(0, 5) },
-      { topic: 'voice', count: ranked.length, accounts: rising.slice(0, 5) },
-      { topic: 'social', count: ranked.length, accounts: hot.slice(0, 5) },
+      { topic: 'live', count: ranked.length, accounts: topSources.slice(0, 5).map(withAuthorTrust) },
+      { topic: 'voice', count: ranked.length, accounts: rising.slice(0, 5).map(withAuthorTrust) },
+      { topic: 'social', count: ranked.length, accounts: hot.slice(0, 5).map(withAuthorTrust) },
     ],
   };
 }
@@ -586,12 +597,12 @@ app.get('/moltbook/audit/mint-authors', async (req, res) => {
     }))
   });
 });
-app.get('/moltbook/report', async (_req, res) => { const intel = await getMoltbookIntel(); const authors = intel.authors ?? []; const fallback = authors.length === 0 ? await buildSeedFallback() : null; const allAuthors = fallback ? [...fallback.topSources, ...fallback.rising, ...fallback.hot].filter((row, index, arr) => arr.findIndex((x) => x.authorId === row.authorId) === index) : authors; const topSources = fallback?.topSources ?? authors.filter((row) => row.label !== 'reject').sort((a, b) => b.fitScore - a.fitScore).slice(0, 100); const activeAuthors = fallback?.topSources ?? authors; const liveReady = fallback?.liveReady ?? authors.filter((row) => row.label !== 'reject').filter((row) => (row.signalScore || 0) >= 45 || (row.fitScore || 0) >= 70).sort((a, b) => (b.signalScore || 0) - (a.signalScore || 0) || (b.fitScore || 0) - (a.fitScore || 0)).slice(0, 25); res.json({ phase: PHASE, lastFetchedAt: intel.lastFetchedAt, summary: { authorCount: activeAuthors.length, admitCount: activeAuthors.filter((row) => row.label === 'admit').length, watchCount: activeAuthors.filter((row) => row.label === 'watch').length, rejectCount: activeAuthors.filter((row) => row.label === 'reject').length, discoverySurfaces: intel.discovery?.surfaces ?? [], discoveredSubmolts: (intel.discovery?.submolts ?? []).length, coveredAuthors: (intel.discovery?.coverage ?? []).length }, topSources, liveReady, allAuthors, admits: activeAuthors.filter((row) => row.label === 'admit').sort((a, b) => b.fitScore - a.fitScore), watch: activeAuthors.filter((row) => row.label === 'watch').sort((a, b) => b.fitScore - a.fitScore).slice(0, 50), rejects: activeAuthors.filter((row) => row.label === 'reject').sort((a, b) => (b.weakHits || 0) - (a.weakHits || 0)).slice(0, 50) }); });
+app.get('/moltbook/report', async (_req, res) => { const intel = await getMoltbookIntel(); const authors = intel.authors ?? []; const fallback = authors.length === 0 ? await buildSeedFallback() : null; const allAuthors = (fallback ? [...fallback.topSources, ...fallback.rising, ...fallback.hot].filter((row, index, arr) => arr.findIndex((x) => x.authorId === row.authorId) === index) : authors).map(withAuthorTrust); const topSources = (fallback?.topSources ?? authors.filter((row) => row.label !== 'reject').sort((a, b) => b.fitScore - a.fitScore).slice(0, 100)).map(withAuthorTrust); const activeAuthors = (fallback?.topSources ?? authors).map(withAuthorTrust); const liveReady = (fallback?.liveReady ?? authors.filter((row) => row.label !== 'reject').filter((row) => (row.signalScore || 0) >= 45 || (row.fitScore || 0) >= 70).sort((a, b) => (b.signalScore || 0) - (a.signalScore || 0) || (b.fitScore || 0) - (a.fitScore || 0)).slice(0, 25)).map(withAuthorTrust); res.json({ phase: PHASE, lastFetchedAt: intel.lastFetchedAt, summary: { authorCount: activeAuthors.length, admitCount: activeAuthors.filter((row) => row.label === 'admit').length, watchCount: activeAuthors.filter((row) => row.label === 'watch').length, rejectCount: activeAuthors.filter((row) => row.label === 'reject').length, discoverySurfaces: intel.discovery?.surfaces ?? [], discoveredSubmolts: (intel.discovery?.submolts ?? []).length, coveredAuthors: (intel.discovery?.coverage ?? []).length }, topSources, liveReady, allAuthors, admits: activeAuthors.filter((row) => row.label === 'admit').sort((a, b) => b.fitScore - a.fitScore), watch: activeAuthors.filter((row) => row.label === 'watch').sort((a, b) => b.fitScore - a.fitScore).slice(0, 50), rejects: activeAuthors.filter((row) => row.label === 'reject').sort((a, b) => (b.weakHits || 0) - (a.weakHits || 0)).slice(0, 50) }); });
 app.get('/moltbook/discovery', async (_req, res) => { const intel = await getMoltbookIntel(); res.json({ phase: PHASE, lastFetchedAt: intel.lastFetchedAt, surfaces: intel.discovery?.surfaces ?? [], errors: intel.discovery?.errors ?? [], submolts: intel.discovery?.submolts ?? [], coverage: intel.discovery?.coverage ?? [] }); });
 app.get('/moltbook/growth', async (_req, res) => { const intel = await getMoltbookIntel(); res.json({ phase: PHASE, ...buildGrowthMetrics(intel) }); });
-app.get('/moltbook/rising', async (_req, res) => { const intel = await getMoltbookIntel(); const fallback = !(intel.signals?.rising?.length) ? await buildSeedFallback() : null; res.json({ phase: PHASE, lastFetchedAt: intel.lastFetchedAt, rising: fallback?.rising ?? intel.signals?.rising ?? [] }); });
-app.get('/moltbook/hot', async (_req, res) => { const intel = await getMoltbookIntel(); const fallback = !(intel.signals?.hot?.length) ? await buildSeedFallback() : null; res.json({ phase: PHASE, lastFetchedAt: intel.lastFetchedAt, hot: fallback?.hot ?? intel.signals?.hot ?? [] }); });
-app.get('/moltbook/topics', async (_req, res) => { const intel = await getMoltbookIntel(); const fallback = !(intel.signals?.topicClusters?.length) ? await buildSeedFallback() : null; res.json({ phase: PHASE, lastFetchedAt: intel.lastFetchedAt, topics: fallback?.topics ?? intel.signals?.topicClusters ?? [] }); });
+app.get('/moltbook/rising', async (_req, res) => { const intel = await getMoltbookIntel(); const fallback = !(intel.signals?.rising?.length) ? await buildSeedFallback() : null; res.json({ phase: PHASE, lastFetchedAt: intel.lastFetchedAt, rising: (fallback?.rising ?? intel.signals?.rising ?? []).map(withAuthorTrust) }); });
+app.get('/moltbook/hot', async (_req, res) => { const intel = await getMoltbookIntel(); const fallback = !(intel.signals?.hot?.length) ? await buildSeedFallback() : null; res.json({ phase: PHASE, lastFetchedAt: intel.lastFetchedAt, hot: (fallback?.hot ?? intel.signals?.hot ?? []).map(withAuthorTrust) }); });
+app.get('/moltbook/topics', async (_req, res) => { const intel = await getMoltbookIntel(); const fallback = !(intel.signals?.topicClusters?.length) ? await buildSeedFallback() : null; res.json({ phase: PHASE, lastFetchedAt: intel.lastFetchedAt, topics: (fallback?.topics ?? intel.signals?.topicClusters ?? []).map(withTopicTrust) }); });
 app.get('/moltbook/top-submolts', async (_req, res) => { const intel = await getMoltbookIntel(); res.json({ phase: PHASE, lastFetchedAt: intel.lastFetchedAt, submolts: intel.signals?.topSubmolts ?? [] }); });
 app.get('/molt-live/search', async (req, res) => {
   const intel = await getMoltbookIntel();
