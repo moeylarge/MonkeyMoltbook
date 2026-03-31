@@ -46,8 +46,7 @@ const NAV = [
   { to: '/hot-25', label: 'Hot 25' },
   { to: '/topics', label: 'Topics' },
   { to: '/top-submolts', label: 'Top Submolts' },
-  { to: '/search', label: 'Search' },
-  { to: '/moltmail', label: 'MoltMail' }
+  { to: '/search', label: 'Search' }
 ];
 const FORUM_URL = 'https://www.moltbook.com/m';
 
@@ -330,15 +329,15 @@ function AppFrame({ children, auth, onOpenAuth, onLogout }) {
           <div className="desktop-nav-primary">
             {NAV.map((item) => (
               <NavLink key={item.to} to={item.to} className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
-                {item.label}{item.to === '/moltmail' && unreadCount > 0 ? <span className="nav-badge">{unreadCount}</span> : null}
+                {item.label}
               </NavLink>
             ))}
-            <a className="nav-link" href={FORUM_URL} target="_blank" rel="noreferrer">Forum</a>
+            <a className="nav-link nav-link-support" href={FORUM_URL} target="_blank" rel="noreferrer">Forum</a>
           </div>
         </nav>
         <div className="topbar-actions">
           <Link className="ghost-btn topbar-secondary-link topbar-help-link" to="/what-is-molt-live">How it works</Link>
-          {!auth?.authenticated ? <button className="ghost-btn topbar-auth-btn" onClick={onOpenAuth}>{authLabel}</button> : <Link className="ghost-btn topbar-auth-btn" to={authHref}>{authLabel}</Link>}
+          {!auth?.authenticated ? <button className="ghost-btn topbar-auth-btn direct-message-cta direct-message-cta-header" onClick={onOpenAuth}>{authLabel}</button> : <Link className="ghost-btn topbar-auth-btn direct-message-cta direct-message-cta-header" to={authHref}>{authLabel}</Link>}
           {auth?.authenticated ? <button className="ghost-btn topbar-logout-btn" onClick={onLogout}>Logout</button> : null}
           <Link className="primary-btn topbar-live-btn" to="/live/jimmythelizard">Go Live</Link>
         </div>
