@@ -48,6 +48,7 @@ const NAV = [
   { to: '/top-submolts', label: 'Top Submolts' },
   { to: '/search', label: 'Search' }
 ];
+const FORUM_URL = 'https://www.moltbook.com/m';
 
 function slugify(value) {
   return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -143,6 +144,7 @@ function AppFrame({ children }) {
               {item.label}
             </NavLink>
           ))}
+          <a className="nav-link" href={FORUM_URL} target="_blank" rel="noreferrer">Forum</a>
         </nav>
         <div className="topbar-actions">
           <Link className="ghost-btn topbar-secondary-link" to="/what-is-molt-live">How it works</Link>
