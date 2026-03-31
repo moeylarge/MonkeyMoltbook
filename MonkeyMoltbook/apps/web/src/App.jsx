@@ -1133,8 +1133,8 @@ function LivePage({ data }) {
     <section className="page-section live-page live-page-simplified">
       <PageIntro
         kicker="Go Live"
-        title={isChatMode ? 'Start with chat' : 'Preview your camera first'}
-        body={isChatMode ? 'Pick human or AI, then start.' : 'Enable webcam, preview yourself, then go live.'}
+        title={isChatMode ? 'Start with chat' : 'Enable your camera'}
+        body={isChatMode ? 'Pick human or AI, then start.' : 'Preview first, then start live.'}
         trustItems={[]}
       />
       <div className="live-back-row">
@@ -1185,13 +1185,13 @@ function LivePage({ data }) {
           ) : (
             <div className="live-stage-headline pre-session-headline">
               <strong>Preview first. Go live second.</strong>
-              <span>Enable webcam, approve access, and make sure your preview looks right before entering the live room.</span>
+              <span>Turn on your camera and check the preview.</span>
             </div>
           )}
           {!isChatMode ? <div className="mode-section">
             <div className="mode-section-copy webcam-mode-copy">
-              <h3>Enable webcam</h3>
-              <p>Click the main button below. We’ll ask for camera access next so you can preview yourself before going live.</p>
+              <h3>Enable camera</h3>
+              <p>Tap once to turn it on and preview.</p>
             </div>
             <div className="mode-selector-row mode-selector-cards single-webcam-cta-row">
               <button
@@ -1205,13 +1205,13 @@ function LivePage({ data }) {
                 disabled={requestingMedia}
               >
                 <span className="cta-icon-label"><span className="cta-icon" aria-hidden="true">📷</span><span>{requestingMedia && sessionMode === 'webcam' ? 'Enabling webcam…' : 'Enable webcam'}</span></span>
-                <small>Preview before going live · Free now</small>
+                <small>Preview first · Free now</small>
               </button>
             </div>
             {mediaState !== 'preview-ready' && !session ? (
               <div className="fallback-mode-row stronger-fallback-row">
-                <button className={`ghost-btn fallback-mode-btn ${sessionMode === 'voice' ? 'active' : ''}`} onClick={() => setSessionMode('voice')}>🎤 Use voice instead</button>
-                <button className={`ghost-btn fallback-mode-btn ${sessionMode === 'chat' ? 'active' : ''}`} onClick={() => setSessionMode('chat')}>💬 Use chat instead</button>
+                <button className={`ghost-btn fallback-mode-btn ${sessionMode === 'voice' ? 'active' : ''}`} onClick={() => setSessionMode('voice')}>🎤 Use voice</button>
+                <button className={`ghost-btn fallback-mode-btn ${sessionMode === 'chat' ? 'active' : ''}`} onClick={() => setSessionMode('chat')}>💬 Use chat</button>
               </div>
             ) : null}
           </div> : null}
@@ -1282,9 +1282,9 @@ function LivePage({ data }) {
                 <div className="live-stage-grid">
                   <button className="live-window human live-window-user live-window-cta" onClick={requestMediaAccess} disabled={requestingMedia || mediaState === 'preview-ready'}>
                     {sessionMode === 'webcam' ? <video ref={localVideoRef} className="live-local-video" autoPlay muted playsInline /> : null}
-                    <div className="live-window-overlay"><span>Your camera</span><strong>{sessionMode === 'webcam' ? (mediaReady ? 'Camera ready — you can go live now' : mediaState === 'requesting' ? 'Requesting camera access' : 'Camera not connected') : 'Mic ready'}</strong><small>{mediaError || (mediaState === 'requesting' ? 'Approve the browser prompt to continue.' : 'Click anywhere in this panel to enable webcam and preview before going live.')}</small></div>
+                    <div className="live-window-overlay"><span>Your camera</span><strong>{sessionMode === 'webcam' ? (mediaReady ? 'Camera ready' : mediaState === 'requesting' ? 'Requesting camera access' : 'Camera not connected') : 'Mic ready'}</strong><small>{mediaError || (mediaState === 'requesting' ? 'Approve the browser prompt to continue.' : 'Tap here to turn on your camera.')}</small></div>
                   </button>
-                  <div className="live-window ai"><div className="live-window-overlay"><span>{agent?.authorName || 'Agent'} live</span><strong>{session ? 'Ready and responding' : mediaState === 'preview-ready' ? 'Ready when you are' : 'Preview first, then go live'}</strong><small>{mediaState === 'preview-ready' ? 'Your camera is ready. Start live when you are set.' : 'We only show live room controls after your webcam preview is working.'}</small></div></div>
+                  <div className="live-window ai"><div className="live-window-overlay"><span>{agent?.authorName || 'Agent'} live</span><strong>{session ? 'Ready and responding' : mediaState === 'preview-ready' ? 'Ready when you are' : 'Preview first, then go live'}</strong><small>{mediaState === 'preview-ready' ? 'Your camera is ready. Start when you are.' : 'Live controls appear after preview.'}</small></div></div>
                 </div>
               ) : null}
               {mediaState === 'failed' ? (
@@ -1369,8 +1369,8 @@ function LivePage({ data }) {
             </>
           ) : !session ? (
             <div className="transcript-empty-state pre-session-empty-state pre-session-preview-card">
-              <strong>Step 1: Enable webcam</strong>
-              <p>Approve camera access and preview yourself. The live room, transcript, and controls appear after that.</p>
+              <strong>Step 1: Enable camera</strong>
+              <p>Preview first. Then the live room opens.</p>
             </div>
           ) : session ? (
             <>
