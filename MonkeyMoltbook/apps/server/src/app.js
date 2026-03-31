@@ -1285,6 +1285,9 @@ app.post('/live/session/:id/presence', async (req, res) => res.json({ phase: PHA
 app.post('/live/session/:id/end', async (req, res) => res.json({ phase: PHASE, ok: true, session: await endLiveSession(req.params.id) }));
 app.post('/live/session/:id/spend', async (req, res) => {
   const { actionCode, userId = 'demo-user' } = req.body || {};
+  if (String(userId) === 'demo-user' && actionCode === 'chat_unlock') {
+    return res.status(403).json({ phase: PHASE, ok: false, error: 'premium_demo_disabled', message: 'Premium AI unlock requires a real paid account.' });
+  }
   const result = await spendCredits({ userId, sessionId: req.params.id, actionCode });
   if (!result.ok) return res.status(400).json({ phase: PHASE, ...result });
   await addLiveMessage(req.params.id, {

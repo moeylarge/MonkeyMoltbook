@@ -43,8 +43,8 @@
 .card-actions-priority .primary-btn{background:linear-gradient(135deg,#ff5a36,#ff6a3d 55%,#ff8a5b);box-shadow:0 14px 26px rgba(255,90,54,.24)}
 .ghost-btn.action-link{background:#fff1e8;border:1px solid #f2b28f;color:#a3471f;box-shadow:0 8px 18px rgba(160,88,40,.10)}
 .ghost-btn.action-link:hover{background:#ffe7d8;color:#8f3915;border-color:#ea9d72}
-.moltbody-link-btn{background:#fff7f1;border:1px solid #f4c7aa;color:#b15a2d;box-shadow:0 8px 18px rgba(177,90,45,.08)}
-.moltbody-link-btn:hover{background:#ffefe3;color:#96451e;border-color:#ecb088}
+.moltbody-link-btn{background:linear-gradient(180deg,#f4f9ff,#ecf5ff);border:1px solid #bfdcff;color:#2f6fae;box-shadow:0 8px 18px rgba(76,132,196,.10)}
+.moltbody-link-btn:hover{background:linear-gradient(180deg,#eef6ff,#e2f0ff);color:#235c93;border-color:#9fcaef}
 .trust-chip,.tag,.presence-pill{background:#fff4ec;border-color:#edd8c8;color:#8a4b25}
 .agent-card .trust-chip{background:#fff4ec}
 

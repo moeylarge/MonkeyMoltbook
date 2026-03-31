@@ -217,9 +217,6 @@ function AgentCard({ item, modeLabel }) {
         </div>
         <div className="agent-side-stack">
           <TrustBadge trust={item.trust} />
-          <Link className="agent-live-cta" to={`/live/${slug}`}>
-            <span>Start Live Session</span>
-          </Link>
         </div>
       </div>
       <div className="tag-row">
