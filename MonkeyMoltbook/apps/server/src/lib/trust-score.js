@@ -273,9 +273,13 @@ export function scoreAuthorRisk(author = {}) {
     flags.push('account:thin');
   }
   if (!profileUrl) accountThinnessRisk += 8;
-  if (topicCount === 0) accountThinnessRisk += 6;
+  if (topicCount === 0) accountThinnessRisk += 10;
+  else if (topicCount === 1) accountThinnessRisk += 6;
   if (!isActive) accountThinnessRisk += 10;
-  if (postCount <= 1) accountThinnessRisk += 4;
+  if (postCount <= 1) accountThinnessRisk += 10;
+  else if (postCount <= 3) accountThinnessRisk += 4;
+  if (strongHits === 0) accountThinnessRisk += 10;
+  else if (strongHits === 1) accountThinnessRisk += 6;
   if (postCount >= 8 && submoltCount >= 4) behaviorRisk += 14;
   if (postCount >= 12 && karma <= 5) behaviorRisk += 18;
   if (submoltCount >= 6) networkRisk += 10;
@@ -315,17 +319,19 @@ export function scoreAuthorRisk(author = {}) {
   }
 
   let score = accountThinnessRisk + behaviorRisk + networkRisk + languageRisk + evidenceRisk;
-  if (isClaimed) score -= 6;
-  if (karma >= 500) score -= 4;
-  if (karma >= 2500) score -= 4;
-  if (karma >= 10000) score -= 4;
-  if (totalComments >= 1000) score -= 3;
-  if (totalComments >= 10000) score -= 3;
-  if (strongHits >= 2) score -= 4;
-  if (strongHits >= 5) score -= 4;
-  if (fitScore >= 100000) score -= 3;
-  if (signalScore >= 50000) score -= 3;
-  if (postCount >= 5) score -= 3;
+  if (isClaimed) score -= 3;
+  if (karma >= 2500) score -= 2;
+  if (karma >= 10000) score -= 3;
+  if (karma >= 50000) score -= 3;
+  if (totalComments >= 1000) score -= 2;
+  if (totalComments >= 10000) score -= 2;
+  if (totalComments >= 50000) score -= 2;
+  if (strongHits >= 2) score -= 2;
+  if (strongHits >= 5) score -= 3;
+  if (fitScore >= 100000) score -= 2;
+  if (signalScore >= 50000) score -= 2;
+  if (postCount >= 5) score -= 2;
+  if (postCount >= 20) score -= 2;
   if (topicCount >= 3) score -= 2;
   if (benignHits) score -= benignHits * 8;
   if (analysisHits) score -= analysisHits * 10;
@@ -336,14 +342,22 @@ export function scoreAuthorRisk(author = {}) {
 
   if (matchedPostCount === 0 && suspiciousHits === 0 && !flags.includes('mint:spam')) {
     let lowSignalFloor = 0;
-    if (postCount <= 1) lowSignalFloor += 6;
-    if (topicCount <= 1) lowSignalFloor += 4;
+    if (postCount <= 1) lowSignalFloor += 10;
+    else if (postCount <= 3) lowSignalFloor += 4;
+    if (topicCount === 0) lowSignalFloor += 8;
+    else if (topicCount === 1) lowSignalFloor += 4;
+    if (strongHits === 0) lowSignalFloor += 8;
+    else if (strongHits === 1) lowSignalFloor += 4;
     if (weakHits >= 1) lowSignalFloor += weakHits * 5;
     if (daysSinceLatestPost !== null && daysSinceLatestPost > 45) lowSignalFloor += 3;
+    if (daysSinceLatestPost !== null && daysSinceLatestPost > 90) lowSignalFloor += 3;
     if (strongHits >= 3) lowSignalFloor -= 2;
     if (karma >= 10000) lowSignalFloor -= 3;
+    if (karma >= 50000) lowSignalFloor -= 2;
     if (totalComments >= 10000) lowSignalFloor -= 2;
-    score = Math.max(score, clamp(lowSignalFloor, 0, 20));
+    if (totalComments >= 50000) lowSignalFloor -= 2;
+    if (postCount >= 5) lowSignalFloor -= 2;
+    score = Math.max(score, clamp(lowSignalFloor, 0, 32));
   }
 
   score = clamp(score);
