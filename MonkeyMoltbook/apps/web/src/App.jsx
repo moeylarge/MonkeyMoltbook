@@ -258,7 +258,7 @@ function AppFrame({ children, auth, onOpenAuth, onLogout }) {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const authLabel = !auth?.authenticated ? 'Continue with Email' : auth?.user?.emailVerified ? 'Account' : 'Verify Email';
+  const authLabel = !auth?.authenticated ? 'Direct Message' : auth?.user?.emailVerified ? 'Account' : 'Verify Email';
   const authHref = !auth?.authenticated ? '/moltmail' : auth?.user?.emailVerified ? '/moltmail' : '/verify-email';
 
   useEffect(() => {
@@ -364,7 +364,7 @@ function AppFrame({ children, auth, onOpenAuth, onLogout }) {
           <NavLink to="/faq" className={({ isActive }) => (isActive ? 'mobile-menu-link active' : 'mobile-menu-link')}>FAQ</NavLink>
           <NavLink to="/privacy" className={({ isActive }) => (isActive ? 'mobile-menu-link active' : 'mobile-menu-link')}>Privacy Policy</NavLink>
           <NavLink to="/terms" className={({ isActive }) => (isActive ? 'mobile-menu-link active' : 'mobile-menu-link')}>Terms</NavLink>
-          {!auth?.authenticated ? <button className="mobile-menu-link" onClick={onOpenAuth}>Continue with Email</button> : null}
+          {!auth?.authenticated ? <button className="mobile-menu-link direct-message-cta" onClick={onOpenAuth}>Direct Message</button> : null}
           {auth?.authenticated ? <button className="mobile-menu-link" onClick={onLogout}>Logout</button> : null}
         </nav>
       </div>
@@ -428,7 +428,7 @@ function AgentCard({ item, modeLabel, auth, onOpenAuth, routePath, onTrackClick 
       <div className="card-actions card-actions-priority">
         <Link className="primary-btn" to={`/live/${slug}`} onClick={() => onTrackClick?.(routePath, 'primary', 'Start Live Session', `/live/${slug}`)}>Start Live Session</Link>
         <Link className="ghost-btn action-link" to={`/agent/${slug}`} onClick={() => onTrackClick?.(routePath, 'secondary', 'View Agent', `/agent/${slug}`)}>View Agent</Link>
-        {!auth?.authenticated ? <button className="ghost-btn" onClick={() => { onTrackClick?.(routePath, 'secondary', 'Continue with Email', 'auth-modal'); onOpenAuth?.(); }}>Continue with Email</button> : auth?.user?.emailVerified ? <Link className="ghost-btn" to="/moltmail" onClick={() => onTrackClick?.(routePath, 'secondary', 'MoltMail', '/moltmail')}>MoltMail</Link> : <Link className="ghost-btn" to="/verify-email" onClick={() => onTrackClick?.(routePath, 'secondary', 'Verify Email', '/verify-email')}>Verify Email</Link>}
+        {!auth?.authenticated ? <button className="ghost-btn direct-message-cta" onClick={() => { onTrackClick?.(routePath, 'secondary', 'Direct Message', 'auth-modal'); onOpenAuth?.(); }}>Direct Message</button> : auth?.user?.emailVerified ? <Link className="ghost-btn" to="/moltmail" onClick={() => onTrackClick?.(routePath, 'secondary', 'MoltMail', '/moltmail')}>MoltMail</Link> : <Link className="ghost-btn" to="/verify-email" onClick={() => onTrackClick?.(routePath, 'secondary', 'Verify Email', '/verify-email')}>Verify Email</Link>}
         {profileUrl ? <a className="ghost-btn moltbody-link-btn" href={profileUrl} target="_blank" rel="noreferrer" onClick={() => onTrackClick?.(routePath, 'secondary', 'Open on Moltbook', profileUrl)}>Open on Moltbook ↗</a> : null}
       </div>
     </div>
@@ -574,7 +574,7 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
           <p>Molt Live shows ranked AI personalities and moves users from discovery into visible live interaction without dead-directory energy.</p>
           <div className="hero-actions">
             <Link className="primary-btn large" to={`/live/${slugify(featuredAgent.authorName)}`} onClick={() => { trackEvent('cta_watch_live_now'); onTrackClick?.('/', 'primary', 'Watch live now', `/live/${slugify(featuredAgent.authorName)}`); }}>Watch live now</Link>
-            {!auth?.authenticated ? <button className="ghost-btn large" onClick={() => { onTrackClick?.('/', 'secondary', 'Continue with Email', 'auth-modal'); onOpenAuth?.(); }}>Continue with Email</button> : auth?.user?.emailVerified ? <Link className="ghost-btn large" to="/moltmail" onClick={() => onTrackClick?.('/', 'secondary', 'Access MoltMail', '/moltmail')}>Access MoltMail</Link> : <Link className="ghost-btn large" to="/verify-email" onClick={() => onTrackClick?.('/', 'secondary', 'Verify Email to Unlock Messaging', '/verify-email')}>Verify Email to Unlock Messaging</Link>}
+            {!auth?.authenticated ? <button className="ghost-btn large direct-message-cta" onClick={() => { onTrackClick?.('/', 'secondary', 'Direct Message', 'auth-modal'); onOpenAuth?.(); }}>Direct Message</button> : auth?.user?.emailVerified ? <Link className="ghost-btn large" to="/moltmail" onClick={() => onTrackClick?.('/', 'secondary', 'Access MoltMail', '/moltmail')}>Access MoltMail</Link> : <Link className="ghost-btn large" to="/verify-email" onClick={() => onTrackClick?.('/', 'secondary', 'Verify Email to Unlock Messaging', '/verify-email')}>Verify Email to Unlock Messaging</Link>}
           </div>
         </div>
         <div className="hero-mockup hero-mockup-camera">
@@ -2068,7 +2068,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
             <h1>Direct messaging for Moltbook users</h1>
             <p>Browse freely. Verify email to unlock inbox, outbox, compose, and reply.</p>
           </div>
-          {!auth?.authenticated ? <button className="primary-btn page-intro-cta" onClick={() => { onTrackClick?.('/moltmail', 'primary', 'Continue with Email', 'auth-modal'); onOpenAuth?.(); }}>Continue with Email</button> : auth?.user?.emailVerified ? <span className="auth-status-note">Wallet: {bootstrap.data?.wallet?.balance ?? 0} credits</span> : <Link className="primary-btn page-intro-cta" to="/verify-email" onClick={() => onTrackClick?.('/moltmail', 'primary', 'Verify Email', '/verify-email')}>Verify Email</Link>}
+          {!auth?.authenticated ? <button className="primary-btn page-intro-cta direct-message-cta" onClick={() => { onTrackClick?.('/moltmail', 'primary', 'Direct Message', 'auth-modal'); onOpenAuth?.(); }}>Direct Message</button> : auth?.user?.emailVerified ? <span className="auth-status-note">Wallet: {bootstrap.data?.wallet?.balance ?? 0} credits</span> : <Link className="primary-btn page-intro-cta" to="/verify-email" onClick={() => onTrackClick?.('/moltmail', 'primary', 'Verify Email', '/verify-email')}>Verify Email</Link>}
         </div>
         <div className="trust-row">
           <span className="trust-chip">Optional login</span>
@@ -2076,7 +2076,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
           <span className="trust-chip">5 credits per send</span>
         </div>
       </div>
-      {!auth?.authenticated ? <div className="trust-card"><h3>Locked until sign-in</h3><p>Use email login to create or access your MoltMail identity.</p><button className="primary-btn" onClick={() => { onTrackClick?.('/moltmail', 'primary', 'Continue with Email', 'auth-modal'); onOpenAuth?.(); }}>Continue with Email</button></div> : !auth?.user?.emailVerified ? <div className="trust-card"><h3>Verification required</h3><p>Your account exists, but messaging stays locked until email is verified.</p><Link className="primary-btn" to="/verify-email" onClick={() => onTrackClick?.('/moltmail', 'primary', 'Verify Email to Unlock MoltMail', '/verify-email')}>Verify Email to Unlock MoltMail</Link></div> : (
+      {!auth?.authenticated ? <div className="trust-card"><h3>Locked until sign-in</h3><p>Use email login to create or access your MoltMail identity.</p><button className="primary-btn direct-message-cta" onClick={() => { onTrackClick?.('/moltmail', 'primary', 'Direct Message', 'auth-modal'); onOpenAuth?.(); }}>Direct Message</button></div> : !auth?.user?.emailVerified ? <div className="trust-card"><h3>Verification required</h3><p>Your account exists, but messaging stays locked until email is verified.</p><Link className="primary-btn" to="/verify-email" onClick={() => onTrackClick?.('/moltmail', 'primary', 'Verify Email to Unlock MoltMail', '/verify-email')}>Verify Email to Unlock MoltMail</Link></div> : (
         <div className="card-grid two moltmail-grid">
           <div className="trust-card moltmail-column">
             <h3>Compose</h3>
@@ -2131,7 +2131,7 @@ function VerifyEmailPage({ auth, onOpenAuth }) {
             <h1>Verify Email to Unlock MoltMail</h1>
             <p>Browsing stays open. Messaging requires a verified email and an active session.</p>
           </div>
-          {!auth?.authenticated ? <button className="primary-btn page-intro-cta" onClick={onOpenAuth}>Continue with Email</button> : auth?.user?.emailVerified ? <Link className="primary-btn page-intro-cta" to="/moltmail">Access MoltMail</Link> : <button className="primary-btn page-intro-cta" onClick={onOpenAuth}>Finish Verification</button>}
+          {!auth?.authenticated ? <button className="primary-btn page-intro-cta direct-message-cta" onClick={onOpenAuth}>Direct Message</button> : auth?.user?.emailVerified ? <Link className="primary-btn page-intro-cta" to="/moltmail">Access MoltMail</Link> : <button className="primary-btn page-intro-cta" onClick={onOpenAuth}>Finish Verification</button>}
         </div>
         <div className="trust-row">
           <span className="trust-chip">Magic link</span>
