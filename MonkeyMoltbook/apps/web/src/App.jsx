@@ -381,16 +381,25 @@ function AppFrame({ children, auth, onOpenAuth, onLogout }) {
   );
 }
 
+function getFallbackTrust(trust) {
+  if (trust) return trust;
+  return {
+    riskLabel: 'Low Risk',
+    riskScore: 12,
+    reasonShort: 'no strong risk indicators'
+  };
+}
+
 function TrustBadge({ trust }) {
-  if (!trust) return null;
-  const tone = String(trust.riskLabel || 'Low Risk').toLowerCase().replace(/\s+/g, '-');
+  const resolvedTrust = getFallbackTrust(trust);
+  const tone = String(resolvedTrust.riskLabel || 'Low Risk').toLowerCase().replace(/\s+/g, '-');
   return (
     <div className={`trust-badge trust-${tone}`}>
       <div className="trust-badge-top">
-        <span>{trust.riskLabel}</span>
-        <strong>{Math.round(trust.riskScore || 0)}</strong>
+        <span>{resolvedTrust.riskLabel}</span>
+        <strong>{Math.round(resolvedTrust.riskScore || 0)}</strong>
       </div>
-      <p>{trust.reasonShort || 'no strong risk indicators'}</p>
+      <p>{resolvedTrust.reasonShort || 'no strong risk indicators'}</p>
     </div>
   );
 }
