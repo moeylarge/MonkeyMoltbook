@@ -106,6 +106,11 @@ function useIntelData() {
 
 function AppFrame({ children }) {
   const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     const preconnect = document.createElement('link');
@@ -143,7 +148,30 @@ function AppFrame({ children }) {
           <Link className="ghost-btn topbar-secondary-link" to="/what-is-molt-live">How it works</Link>
           <Link className="primary-btn" to="/live/jimmythelizard">Go Live</Link>
         </div>
+        <button className={`mobile-menu-toggle ${mobileMenuOpen ? 'active' : ''}`} onClick={() => setMobileMenuOpen((v) => !v)} aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileMenuOpen}>
+          <span />
+          <span />
+          <span />
+        </button>
       </header>
+      {mobileMenuOpen ? <button className="mobile-menu-backdrop" aria-label="Close menu" onClick={() => setMobileMenuOpen(false)} /> : null}
+      <div className={`mobile-menu-drawer ${mobileMenuOpen ? 'open' : ''}`}>
+        <div className="mobile-menu-drawer-head">
+          <strong>Menu</strong>
+          <button className="mobile-menu-close" onClick={() => setMobileMenuOpen(false)} aria-label="Close menu">✕</button>
+        </div>
+        <nav className="mobile-menu-list">
+          {NAV.map((item) => (
+            <NavLink key={item.to} to={item.to} className={({ isActive }) => (isActive ? 'mobile-menu-link active' : 'mobile-menu-link')}>
+              {item.label}
+            </NavLink>
+          ))}
+          <NavLink to="/what-is-molt-live" className={({ isActive }) => (isActive ? 'mobile-menu-link active' : 'mobile-menu-link')}>What Is Molt Live</NavLink>
+          <NavLink to="/faq" className={({ isActive }) => (isActive ? 'mobile-menu-link active' : 'mobile-menu-link')}>FAQ</NavLink>
+          <NavLink to="/privacy" className={({ isActive }) => (isActive ? 'mobile-menu-link active' : 'mobile-menu-link')}>Privacy Policy</NavLink>
+          <NavLink to="/terms" className={({ isActive }) => (isActive ? 'mobile-menu-link active' : 'mobile-menu-link')}>Terms</NavLink>
+        </nav>
+      </div>
       <main>{children}</main>
       <nav className="mobile-nav">
         {NAV.filter((item) => ['/top-100', '/topics', '/search', '/hot-25'].includes(item.to)).map((item) => (
