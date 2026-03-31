@@ -382,6 +382,83 @@ function readJsonl(filePath) {
   }).filter(Boolean);
 }
 
+function resolveAnalyticsWindow(windowValue = 'all') {
+  const now = Date.now();
+  if (windowValue === '24h') return { key: '24h', sinceMs: now - (24 * 60 * 60 * 1000) };
+  if (windowValue === '7d') return { key: '7d', sinceMs: now - (7 * 24 * 60 * 60 * 1000) };
+  return { key: 'all', sinceMs: 0 };
+}
+
+function shouldCountAnalyticsEvent(row, dedupeMap) {
+  const createdMs = Date.parse(row?.createdAt || '') || 0;
+  const sessionId = String(row?.meta?.sessionId || 'anon');
+  const routePath = String(row?.meta?.routePath || 'unknown');
+  const actionType = String(row?.meta?.actionType || '');
+  const label = String(row?.meta?.label || '');
+  const event = String(row?.event || 'unknown');
+  const dedupeKey = [sessionId, routePath, event, actionType, label].join('|');
+  const lastSeen = dedupeMap.get(dedupeKey);
+  if (lastSeen && (createdMs - lastSeen) < 5000) return false;
+  dedupeMap.set(dedupeKey, createdMs);
+  return true;
+}
+
+function buildAnalyticsSummary(rows, windowValue = 'all') {
+  const { key, sinceMs } = resolveAnalyticsWindow(windowValue);
+  const filteredRows = rows.filter((row) => (Date.parse(row?.createdAt || '') || 0) >= sinceMs);
+  const routes = {};
+  const ctas = {};
+  const dedupeMap = new Map();
+
+  for (const row of filteredRows) {
+    if (!shouldCountAnalyticsEvent(row, dedupeMap)) continue;
+    const routePath = String(row?.meta?.routePath || 'unknown');
+    if (!routes[routePath]) {
+      routes[routePath] = {
+        views: 0,
+        primaryClicks: 0,
+        secondaryClicks: 0,
+        dropoffCount: 0,
+        primaryCtr: 0,
+        secondaryCtr: 0,
+        dropoffRate: 0,
+        ctas: {}
+      };
+    }
+
+    if (row.event === 'route_view') routes[routePath].views += 1;
+    if (row.event === 'route_dropoff_no_click') routes[routePath].dropoffCount += 1;
+    if (row.event === 'route_action_click') {
+      const actionType = row?.meta?.actionType === 'primary' ? 'primary' : 'secondary';
+      const label = String(row?.meta?.label || 'unknown');
+      const target = String(row?.meta?.target || 'unknown');
+      if (actionType === 'primary') routes[routePath].primaryClicks += 1;
+      else routes[routePath].secondaryClicks += 1;
+
+      if (!routes[routePath].ctas[label]) routes[routePath].ctas[label] = { actionType, target, clicks: 0 };
+      routes[routePath].ctas[label].clicks += 1;
+
+      const ctaKey = `${routePath}::${label}`;
+      if (!ctas[ctaKey]) ctas[ctaKey] = { routePath, label, actionType, target, clicks: 0 };
+      ctas[ctaKey].clicks += 1;
+    }
+  }
+
+  for (const route of Object.values(routes)) {
+    const views = route.views || 0;
+    route.primaryCtr = views ? route.primaryClicks / views : 0;
+    route.secondaryCtr = views ? route.secondaryClicks / views : 0;
+    route.dropoffRate = views ? route.dropoffCount / views : 0;
+  }
+
+  return {
+    window: key,
+    totalEvents: filteredRows.length,
+    routes,
+    ctas: Object.values(ctas).sort((a, b) => b.clicks - a.clicks)
+  };
+}
+
 async function runMoltbookRefreshJob(meta = {}) {
   const mode = meta.mode || 'default';
   const triggerSource = meta.source || 'manual';
@@ -1278,20 +1355,8 @@ app.get('/analytics/pixel', (req, res) => {
 });
 app.get('/analytics/summary', (req, res) => {
   const rows = readJsonl(ANALYTICS_FILE);
-  const routes = {};
-  for (const row of rows) {
-    const routePath = row?.meta?.routePath || 'unknown';
-    if (!routes[routePath]) routes[routePath] = { views: 0, primaryClicks: 0, secondaryClicks: 0, dropoffs: 0, labels: {} };
-    if (row.event === 'route_view') routes[routePath].views += 1;
-    if (row.event === 'route_action_click') {
-      if (row?.meta?.actionType === 'primary') routes[routePath].primaryClicks += 1;
-      else routes[routePath].secondaryClicks += 1;
-      const label = row?.meta?.label || 'unknown';
-      routes[routePath].labels[label] = (routes[routePath].labels[label] || 0) + 1;
-    }
-    if (row.event === 'route_dropoff_no_click') routes[routePath].dropoffs += 1;
-  }
-  res.json({ ok: true, totalEvents: rows.length, routes });
+  const windowValue = String(req.query?.window || 'all');
+  res.json({ ok: true, ...buildAnalyticsSummary(rows, windowValue) });
 });
 app.get('/hook', async (_req, res) => res.json(await getNextAgentHook()));
 app.get('/preload', async (req, res) => { const requested = Number.parseInt(req.query.count, 10); const count = Number.isFinite(requested) && requested > 0 ? Math.min(requested, DEFAULT_PRELOAD_COUNT) : DEFAULT_PRELOAD_COUNT; res.json({ phase: PHASE, count, hooks: await getNextAgentHooks(count) }); });
