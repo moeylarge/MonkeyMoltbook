@@ -338,3 +338,158 @@
     justify-content:center;
   }
 }
+
+/* non-homepage click system enforcement */
+.listing-page .page-intro-cta,
+.search-page-redesign .page-intro-cta,
+.agent-profile .primary-btn,
+.live-page .primary-btn,
+.what-is-page .primary-btn,
+.listing-page .card-actions .primary-btn,
+.search-page-redesign .card-actions .primary-btn,
+.agent-profile .hero-actions .primary-btn,
+.live-page .live-primary-cta,
+.live-page .primary-webcam-cta,
+.live-page .ai-choice-card.primary-btn,
+.live-page .ai-plan-btn,
+.live-page .wallet-actions-grid .primary-btn,
+.live-page .chat-input-row-sticky .primary-btn,
+.live-page .page-intro-cta{
+  background:linear-gradient(135deg,#ff5a36 0%,#ff6438 52%,#ff8a5b 100%) !important;
+  color:#fff !important;
+  border:1px solid rgba(255,255,255,.22) !important;
+  box-shadow:0 18px 34px rgba(255,90,54,.26), inset 0 1px 0 rgba(255,255,255,.18) !important;
+  font-weight:800 !important;
+  cursor:pointer;
+}
+
+.listing-page .page-intro-cta:hover,
+.search-page-redesign .page-intro-cta:hover,
+.agent-profile .primary-btn:hover,
+.live-page .primary-btn:hover,
+.what-is-page .primary-btn:hover,
+.listing-page .card-actions .primary-btn:hover,
+.search-page-redesign .card-actions .primary-btn:hover,
+.agent-profile .hero-actions .primary-btn:hover,
+.live-page .live-primary-cta:hover,
+.live-page .primary-webcam-cta:hover,
+.live-page .ai-choice-card.primary-btn:hover,
+.live-page .ai-plan-btn:hover,
+.live-page .wallet-actions-grid .primary-btn:hover,
+.live-page .chat-input-row-sticky .primary-btn:hover,
+.listing-page .page-intro-cta:focus-visible,
+.search-page-redesign .page-intro-cta:focus-visible,
+.agent-profile .primary-btn:focus-visible,
+.live-page .primary-btn:focus-visible,
+.what-is-page .primary-btn:focus-visible,
+.listing-page .card-actions .primary-btn:focus-visible,
+.search-page-redesign .card-actions .primary-btn:focus-visible,
+.agent-profile .hero-actions .primary-btn:focus-visible,
+.live-page .live-primary-cta:focus-visible,
+.live-page .primary-webcam-cta:focus-visible,
+.live-page .ai-choice-card.primary-btn:focus-visible,
+.live-page .ai-plan-btn:focus-visible,
+.live-page .wallet-actions-grid .primary-btn:focus-visible,
+.live-page .chat-input-row-sticky .primary-btn:focus-visible{
+  transform:translateY(-2px) scale(1.012);
+  filter:brightness(1.05);
+  box-shadow:0 22px 40px rgba(255,90,54,.30),0 0 0 3px rgba(255,255,255,.92),0 0 0 6px rgba(255,90,54,.20) !important;
+  outline:none;
+}
+
+.listing-page .page-intro-cta:active,
+.search-page-redesign .page-intro-cta:active,
+.agent-profile .primary-btn:active,
+.live-page .primary-btn:active,
+.what-is-page .primary-btn:active,
+.listing-page .card-actions .primary-btn:active,
+.search-page-redesign .card-actions .primary-btn:active,
+.agent-profile .hero-actions .primary-btn:active,
+.live-page .live-primary-cta:active,
+.live-page .primary-webcam-cta:active,
+.live-page .ai-choice-card.primary-btn:active,
+.live-page .ai-plan-btn:active,
+.live-page .wallet-actions-grid .primary-btn:active,
+.live-page .chat-input-row-sticky .primary-btn:active{
+  transform:translateY(1px) scale(.992);
+}
+
+.listing-page .ghost-btn,
+.search-page-redesign .ghost-btn,
+.agent-profile .ghost-btn,
+.live-page .ghost-btn,
+.what-is-page .ghost-btn,
+.live-page .fallback-mode-btn,
+.live-page .attachment-action-btn,
+.live-page .live-back-btn,
+.listing-page .tab,
+.search-page-redesign .tab,
+.live-page .tab{
+  background:linear-gradient(180deg,#fffdfa 0%,#fff3e8 100%) !important;
+  border:1px solid #efc5a8 !important;
+  color:#8e421a !important;
+  box-shadow:0 10px 22px rgba(160,88,40,.12), inset 0 1px 0 rgba(255,255,255,.72) !important;
+  font-weight:750;
+  cursor:pointer;
+}
+
+.listing-page .ghost-btn:hover,
+.search-page-redesign .ghost-btn:hover,
+.agent-profile .ghost-btn:hover,
+.live-page .ghost-btn:hover,
+.what-is-page .ghost-btn:hover,
+.live-page .fallback-mode-btn:hover,
+.live-page .attachment-action-btn:hover,
+.live-page .live-back-btn:hover,
+.listing-page .tab:hover,
+.search-page-redesign .tab:hover,
+.live-page .tab:hover,
+.listing-page .ghost-btn:focus-visible,
+.search-page-redesign .ghost-btn:focus-visible,
+.agent-profile .ghost-btn:focus-visible,
+.live-page .ghost-btn:focus-visible,
+.what-is-page .ghost-btn:focus-visible,
+.live-page .fallback-mode-btn:focus-visible,
+.live-page .attachment-action-btn:focus-visible,
+.live-page .live-back-btn:focus-visible,
+.listing-page .tab:focus-visible,
+.search-page-redesign .tab:focus-visible,
+.live-page .tab:focus-visible{
+  background:linear-gradient(180deg,#fff7f1 0%,#ffe8d9 100%) !important;
+  border-color:#e8ab84 !important;
+  color:#7f3512 !important;
+  transform:translateY(-2px);
+  box-shadow:0 16px 28px rgba(160,88,40,.16),0 0 0 3px rgba(255,255,255,.92),0 0 0 6px rgba(255,90,54,.14) !important;
+  outline:none;
+}
+
+.listing-page .card-actions a,
+.search-page-redesign .card-actions a,
+.agent-profile .hero-actions a,
+.live-page button,
+.live-page a,
+.live-page .live-window-cta,
+.live-page .ai-choice-card,
+.live-page .wallet-actions-grid button,
+.live-page .wallet-actions-grid a,
+.live-page .chat-input-row-sticky button{
+  cursor:pointer;
+}
+
+.listing-page .page-intro-card,
+.search-page-redesign .page-intro-card,
+.agent-profile .profile-card,
+.live-page .wallet-balance-card,
+.live-page .live-stage,
+.live-page .transcript-shell,
+.listing-page .agent-card,
+.listing-page .submolt-card,
+.listing-page .topic-card,
+.search-page-redesign .trust-card{
+  animation:ctaLiftIn .2s ease both;
+}
+
+@keyframes ctaLiftIn{
+  from{opacity:.0;transform:translateY(8px)}
+  to{opacity:1;transform:translateY(0)}
+}
