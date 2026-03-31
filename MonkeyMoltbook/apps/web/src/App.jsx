@@ -50,6 +50,8 @@ const NAV = [
   { to: '/moltmail', label: 'MoltMail' }
 ];
 const FORUM_URL = 'https://www.moltbook.com/m';
+const DESKTOP_NAV_PRIMARY = ['/top-100', '/rising-25', '/topics', '/search', '/moltmail'];
+const DESKTOP_NAV_SECONDARY = ['/hot-25', '/top-submolts'];
 
 function slugify(value) {
   return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -310,18 +312,27 @@ function AppFrame({ children, auth, onOpenAuth, onLogout }) {
           </span>
         </Link>
         <nav className="desktop-nav">
-          {NAV.map((item) => (
-            <NavLink key={item.to} to={item.to} className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
-              {item.label}{item.to === '/moltmail' && unreadCount > 0 ? <span className="nav-badge">{unreadCount}</span> : null}
-            </NavLink>
-          ))}
-          <a className="nav-link" href={FORUM_URL} target="_blank" rel="noreferrer">Forum</a>
+          <div className="desktop-nav-primary">
+            {NAV.filter((item) => DESKTOP_NAV_PRIMARY.includes(item.to)).map((item) => (
+              <NavLink key={item.to} to={item.to} className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
+                {item.label}{item.to === '/moltmail' && unreadCount > 0 ? <span className="nav-badge">{unreadCount}</span> : null}
+              </NavLink>
+            ))}
+          </div>
+          <div className="desktop-nav-secondary">
+            {NAV.filter((item) => DESKTOP_NAV_SECONDARY.includes(item.to)).map((item) => (
+              <NavLink key={item.to} to={item.to} className={({ isActive }) => (isActive ? 'topbar-secondary-link active' : 'topbar-secondary-link')}>
+                {item.label}
+              </NavLink>
+            ))}
+            <a className="topbar-secondary-link" href={FORUM_URL} target="_blank" rel="noreferrer">Forum</a>
+          </div>
         </nav>
         <div className="topbar-actions">
-          <Link className="ghost-btn topbar-secondary-link" to="/what-is-molt-live">How it works</Link>
-          {!auth?.authenticated ? <button className="ghost-btn" onClick={onOpenAuth}>{authLabel}</button> : <Link className="ghost-btn" to={authHref}>{authLabel}</Link>}
-          {auth?.authenticated ? <button className="ghost-btn" onClick={onLogout}>Logout</button> : null}
-          <Link className="primary-btn" to="/live/jimmythelizard">Go Live</Link>
+          <Link className="ghost-btn topbar-secondary-link topbar-help-link" to="/what-is-molt-live">How it works</Link>
+          {!auth?.authenticated ? <button className="ghost-btn topbar-auth-btn" onClick={onOpenAuth}>{authLabel}</button> : <Link className="ghost-btn topbar-auth-btn" to={authHref}>{authLabel}</Link>}
+          {auth?.authenticated ? <button className="ghost-btn topbar-logout-btn" onClick={onLogout}>Logout</button> : null}
+          <Link className="primary-btn topbar-live-btn" to="/live/jimmythelizard">Go Live</Link>
         </div>
         <button className={`mobile-menu-toggle ${mobileMenuOpen ? 'active' : ''}`} onClick={() => setMobileMenuOpen((v) => !v)} aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileMenuOpen}>
           <span />
