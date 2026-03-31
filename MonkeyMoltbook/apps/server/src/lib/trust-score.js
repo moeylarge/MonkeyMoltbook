@@ -102,17 +102,21 @@ export function labelForRisk(score) {
   return 'Very Low Risk';
 }
 
-function buildAuthorExplanation({ score, isClaimed, karma, postCount, descriptionLength, submoltCount, matchedPostCount, suspiciousHits, phraseDiversity, promoHits, ctaHits, benignHits, analysisHits, flags = [] }) {
+function buildAuthorExplanation({ score, isClaimed, karma, postCount, totalComments, strongHits, weakHits, descriptionLength, submoltCount, topicCount, profileUrl, isActive, daysSinceLatestPost, matchedPostCount, suspiciousHits, phraseDiversity, promoHits, ctaHits, benignHits, analysisHits, flags = [] }) {
   const positives = [];
   const negatives = [];
   const uncertainty = [];
 
   if (isClaimed) positives.push('claimed account ownership reduces current risk');
-  if (karma >= 500) positives.push('strong account history lowers current risk');
-  if (postCount >= 8 && benignHits > 0) positives.push('broader normal activity offsets some risk');
+  if (karma >= 10000 || totalComments >= 10000) positives.push('long account history and strong engagement reduce current risk');
+  else if (karma >= 2500 || totalComments >= 1000) positives.push('established account history lowers current risk');
+  if (strongHits >= 5 || (topicCount >= 3 && postCount >= 3)) positives.push('broad profile coverage reduces uncertainty');
   if (analysisHits > 0) positives.push('analysis-style posting lowers current scam risk');
 
   if (descriptionLength < 20 && !isClaimed) negatives.push('limited profile maturity increases uncertainty');
+  if (!profileUrl) negatives.push('missing profile links increase uncertainty');
+  if (!isActive) negatives.push('inactive profile signals increase uncertainty');
+  if (daysSinceLatestPost !== null && daysSinceLatestPost > 90) negatives.push('stale activity increases uncertainty');
   if (matchedPostCount >= 2) negatives.push('multiple flagged posts increase current risk');
   if (suspiciousHits >= 2) negatives.push('suspicious phrase density raises current risk');
   if (phraseDiversity >= 2) negatives.push('multiple risky language patterns raise concern');
@@ -124,6 +128,7 @@ function buildAuthorExplanation({ score, isClaimed, karma, postCount, descriptio
 
   if (postCount <= 1 && matchedPostCount === 0) uncertainty.push('limited trust data available; score uses incomplete signals');
   else if (postCount <= 3 && !isClaimed && descriptionLength < 20) uncertainty.push('limited trust data available; weak profile depth increases uncertainty');
+  else if (weakHits > 0 && matchedPostCount === 0) uncertainty.push('minor low-signal patterns raise some uncertainty');
 
   const parts = [];
   if (score <= 15 && positives.length) parts.push(positives[0]);
@@ -212,9 +217,19 @@ export function scoreAuthorRisk(author = {}) {
 
   const postCount = Number(author.postCount ?? author.observedPosts ?? 0);
   const karma = Number(author.karma ?? 0);
+  const totalComments = Number(author.totalComments ?? author.total_comments ?? 0);
+  const strongHits = Number(author.strongHits ?? author.strong_hits ?? 0);
+  const weakHits = Number(author.weakHits ?? author.weak_hits ?? 0);
+  const fitScore = Number(author.fitScore ?? 0);
+  const signalScore = Number(author.signalScore ?? 0);
   const descriptionLength = String(author.description || '').trim().length;
   const submoltCount = Array.isArray(author.submolts) ? author.submolts.length : 0;
+  const topicCount = Array.isArray(author.topics) ? author.topics.length : 0;
   const isClaimed = Boolean(author.isClaimed ?? author.is_claimed);
+  const isActive = Boolean(author.isActive ?? author.is_active);
+  const profileUrl = Boolean(author.profileUrl ?? author.profile_url);
+  const latestPostMs = Date.parse(String(author.latestPostAt || author.latest_post_at || '')) || 0;
+  const daysSinceLatestPost = latestPostMs ? Math.max(0, Math.floor((Date.now() - latestPostMs) / 86400000)) : null;
   const matchedPostCount = Number(author.matchedPostCount ?? 0);
   const suspiciousHits = Number(author.suspiciousHits ?? 0);
   const phraseDiversity = Number(author.phraseDiversity ?? 0);
@@ -232,9 +247,17 @@ export function scoreAuthorRisk(author = {}) {
     accountThinnessRisk += 16;
     flags.push('account:thin');
   }
+  if (!profileUrl) accountThinnessRisk += 8;
+  if (topicCount === 0) accountThinnessRisk += 6;
+  if (!isActive) accountThinnessRisk += 10;
+  if (postCount <= 1) accountThinnessRisk += 4;
   if (postCount >= 8 && submoltCount >= 4) behaviorRisk += 14;
   if (postCount >= 12 && karma <= 5) behaviorRisk += 18;
   if (submoltCount >= 6) networkRisk += 10;
+  if (weakHits >= 2) behaviorRisk += 8;
+  if (weakHits >= 4) behaviorRisk += 8;
+  if (daysSinceLatestPost !== null && daysSinceLatestPost > 45) behaviorRisk += 6;
+  if (daysSinceLatestPost !== null && daysSinceLatestPost > 90) behaviorRisk += 6;
   if (mintSpamHits >= 2) {
     behaviorRisk += 34;
     networkRisk += 10;
@@ -268,10 +291,20 @@ export function scoreAuthorRisk(author = {}) {
 
   let score = accountThinnessRisk + behaviorRisk + networkRisk + languageRisk + evidenceRisk;
   if (isClaimed) score -= 6;
-  if (karma >= 500) score -= 8;
+  if (karma >= 500) score -= 4;
+  if (karma >= 2500) score -= 4;
+  if (karma >= 10000) score -= 4;
+  if (totalComments >= 1000) score -= 3;
+  if (totalComments >= 10000) score -= 3;
+  if (strongHits >= 2) score -= 4;
+  if (strongHits >= 5) score -= 4;
+  if (fitScore >= 100000) score -= 3;
+  if (signalScore >= 50000) score -= 3;
+  if (postCount >= 5) score -= 3;
+  if (topicCount >= 3) score -= 2;
   if (benignHits) score -= benignHits * 8;
   if (analysisHits) score -= analysisHits * 10;
-  if (flags.length <= 1 && postCount <= 2 && matchedPostCount === 0 && !flags.includes('mint:spam')) score -= 8;
+  if (flags.length <= 1 && postCount <= 2 && matchedPostCount === 0 && !flags.includes('mint:spam')) score -= 4;
   if (flags.includes('mint:spam') && (mintSpamHits >= 2 || matchedPostCount >= 2 || suspiciousHits >= 2)) score = Math.max(score, 28);
   if (promoHits >= 2 && ctaHits >= 1 && matchedPostCount >= 2) score = Math.max(score, 28);
   if ((phraseDiversity >= 2 && suspiciousHits >= 2) || (matchedPostCount >= 3 && suspiciousHits >= 2 && ctaHits >= 1)) score = Math.max(score, 25);
@@ -282,8 +315,15 @@ export function scoreAuthorRisk(author = {}) {
     isClaimed,
     karma,
     postCount,
+    totalComments,
+    strongHits,
+    weakHits,
     descriptionLength,
     submoltCount,
+    topicCount,
+    profileUrl,
+    isActive,
+    daysSinceLatestPost,
     matchedPostCount,
     suspiciousHits,
     phraseDiversity,
