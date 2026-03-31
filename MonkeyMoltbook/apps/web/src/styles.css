@@ -339,6 +339,36 @@
   }
 }
 
+/* premium editorial redesign for what-is + faq only */
+.what-is-page-premium,.faq-page-premium{max-width:1040px}
+.what-is-page-premium{padding-top:30px;padding-bottom:48px}
+.faq-page-premium{padding-top:30px;padding-bottom:48px}
+.content-page-hero{padding:28px 30px 24px;border-radius:32px;background:linear-gradient(180deg,#fffdfb 0%,#fff6ef 100%);border:1px solid #ecd8ca;box-shadow:0 22px 48px rgba(120,72,32,.10);margin-bottom:28px;animation:ctaLiftIn .22s ease both}
+.content-page-hero-main .section-header{display:block;margin-bottom:0}
+.content-page-hero-main .section-header h2{font-size:clamp(38px,5vw,58px);line-height:.98;letter-spacing:-.045em;max-width:820px;margin-bottom:12px}
+.content-page-hero-main .section-header p{max-width:700px;font-size:18px;line-height:1.72;color:#5f5650}
+.content-proof-chips{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.content-proof-chips .trust-chip{background:#fff;border-color:#efddcf;color:#8a4b25;box-shadow:0 10px 22px rgba(120,72,32,.08)}
+.content-stack-premium{gap:20px}
+.what-is-page-premium .trust-card,.faq-page-premium .trust-card{padding:24px 24px 22px;border-radius:28px;background:linear-gradient(180deg,#fffdfb 0%,#fff8f3 100%);border:1px solid #ecd8ca;box-shadow:0 16px 36px rgba(120,72,32,.08);animation:ctaLiftIn .22s ease both}
+.what-is-page-premium .trust-card:nth-child(even),.faq-page-premium .trust-card:nth-child(even){background:linear-gradient(180deg,#fffaf6 0%,#fff4ec 100%)}
+.what-is-page-premium .trust-card h3,.faq-page-premium .trust-card h3{font-size:28px;line-height:1.08;letter-spacing:-.03em;margin-bottom:12px}
+.what-is-page-premium .trust-card p,.faq-page-premium .trust-card p{max-width:68ch;font-size:17px;line-height:1.78;color:#5f5650}
+.what-is-page-premium .content-link-row{margin-top:18px;gap:12px}
+.faq-group-list{display:grid;gap:18px}
+.faq-group-card>h3{margin:0 0 14px;font-size:24px;color:#1b1917}
+.faq-list-accordion{gap:12px}
+.faq-item-accordion{padding:0;border-radius:22px;background:#fff;border:1px solid #ecd8ca;box-shadow:0 10px 24px rgba(120,72,32,.06);overflow:hidden}
+.faq-item-accordion summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 20px;cursor:pointer;font-size:18px;font-weight:800;color:#1b1917;line-height:1.35}
+.faq-item-accordion summary::-webkit-details-marker{display:none}
+.faq-item-accordion p{margin:0;padding:0 20px 18px;max-width:72ch;font-size:16px;line-height:1.72;color:#5f5650}
+.faq-item-accordion:hover{transform:translateY(-1px);box-shadow:0 14px 28px rgba(120,72,32,.10)}
+.faq-chevron{font-size:18px;color:#a3471f;transition:transform .18s ease}
+.faq-item-accordion[open] .faq-chevron{transform:rotate(180deg)}
+.what-is-page-premium .hero-kicker,.faq-page-premium .hero-kicker{margin-bottom:14px}
+.what-is-page-premium .primary-btn,.faq-page-premium .primary-btn,.what-is-page-premium .ghost-btn,.faq-page-premium .ghost-btn{min-height:48px}
+@media (max-width:900px){.content-page-hero{padding:22px 20px}.content-page-hero-main .section-header h2{font-size:40px}.what-is-page-premium .trust-card h3,.faq-page-premium .trust-card h3{font-size:24px}.what-is-page-premium .trust-card p,.faq-page-premium .trust-card p,.faq-item-accordion p{font-size:16px}.faq-item-accordion summary{font-size:17px}}
+
 /* non-homepage click system enforcement */
 .listing-page .page-intro-cta,
 .search-page-redesign .page-intro-cta,

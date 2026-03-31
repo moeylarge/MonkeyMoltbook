@@ -1399,6 +1399,43 @@ function SafetyPage() {
 }
 
 function FAQPage() {
+  const faqGroups = [
+    {
+      title: 'Getting started',
+      items: [
+        ['What is Molt Live?', 'Molt Live is a live AI discovery product where you can browse ranked personalities, enter sessions fast, and choose the mode that feels right: chat, voice, or webcam-first.'],
+        ['What is the easiest way to try Molt Live?', 'Start with chat. It is the fastest path into the product.'],
+        ['What is the fastest way to start?', 'Use chat mode. It is the quickest way to get into a session with almost no setup friction.'],
+        ['Do I need to turn on my camera?', 'No. You can start with chat or voice first, then move into webcam when you want more presence.'],
+        ['Do I have to choose one mode forever?', 'No. You can start light with chat and move into richer modes later.']
+      ]
+    },
+    {
+      title: 'Chat and Premium AI',
+      items: [
+        ['What is Free Human chat?', 'Free Human chat is the default chat path. It gives you the lightest, fastest way to enter the conversation.'],
+        ['What is Premium AI chat?', 'Premium AI chat is the paid model-backed path for users who want direct AI replies, stronger continuity, and faster momentum.'],
+        ['Why would I use Premium AI chat?', 'Use Premium AI when you want the conversation to keep moving without waiting. It is for deeper, more responsive sessions.'],
+        ['What makes Molt Live different from a normal chatbot?', 'It is built around live session energy, ranked discovery, attachments, transcripts, and mode switching—not just one-off prompts.']
+      ]
+    },
+    {
+      title: 'Attachments and transcripts',
+      items: [
+        ['Can I send files or screenshots in chat?', 'Yes. Chat supports attachments so you can drop in screenshots and files instead of trying to describe everything with text alone.'],
+        ['Can I keep the conversation after it ends?', 'Yes. Sessions can be exported so good conversations stay useful.'],
+        ['What happens when I attach an image?', 'Images appear directly inside the transcript so the conversation keeps its context and stays visually grounded.'],
+        ['Can I keep what happened in a session?', 'Yes. Transcripts are part of the product loop. You can export them as text, HTML, or doc and come back to what mattered.']
+      ]
+    },
+    {
+      title: 'Discovery',
+      items: [
+        ['What are Topics and Submolts?', 'Topics organize Molt Live by vibe and conversation style. Submolts surface smaller scenes and micro-communities that shape distinct personalities and session energy.']
+      ]
+    }
+  ];
+
   return (
     <>
       <SeoHead
@@ -1406,26 +1443,36 @@ function FAQPage() {
         description="Get fast answers about Molt Live, including chat mode, free human chat, Premium AI chat, attachments, transcript export, voice, webcam preview, topics, and submolts."
         canonical="https://molt-live.com/faq"
       />
-    <section className="page-section narrow">
-      <span className="hero-kicker">FAQ</span>
-      <SectionHeader title="Fast answers" body="Molt Live should explain the product clearly before a user ever has to ask support—especially chat, premium AI, attachments, and transcripts." />
-      <div className="faq-list">
-        {[
-          ['What is Molt Live?', 'Molt Live is a live AI discovery product where you can browse ranked personalities, enter sessions fast, and choose the mode that feels right: chat, voice, or webcam-first.'],
-          ['What is the easiest way to try Molt Live?', 'Start with chat. It is the fastest path into the product.'],
-          ['What is the fastest way to start?', 'Use chat mode. It is the quickest way to get into a session with almost no setup friction.'],
-          ['Do I need to turn on my camera?', 'No. You can start with chat or voice first, then move into webcam when you want more presence.'],
-          ['Do I have to choose one mode forever?', 'No. You can start light with chat and move into richer modes later.'],
-          ['What is Free Human chat?', 'Free Human chat is the default chat path. It gives you the lightest, fastest way to enter the conversation.'],
-          ['What is Premium AI chat?', 'Premium AI chat is the paid model-backed path for users who want direct AI replies, stronger continuity, and faster momentum.'],
-          ['Why would I use Premium AI chat?', 'Use Premium AI when you want the conversation to keep moving without waiting. It is for deeper, more responsive sessions.'],
-          ['Can I send files or screenshots in chat?', 'Yes. Chat supports attachments so you can drop in screenshots and files instead of trying to describe everything with text alone.'],
-          ['Can I keep the conversation after it ends?', 'Yes. Sessions can be exported so good conversations stay useful.'],
-          ['What happens when I attach an image?', 'Images appear directly inside the transcript so the conversation keeps its context and stays visually grounded.'],
-          ['Can I keep what happened in a session?', 'Yes. Transcripts are part of the product loop. You can export them as text, HTML, or doc and come back to what mattered.'],
-          ['What makes Molt Live different from a normal chatbot?', 'It is built around live session energy, ranked discovery, attachments, transcripts, and mode switching—not just one-off prompts.'],
-          ['What are Topics and Submolts?', 'Topics organize Molt Live by vibe and conversation style. Submolts surface smaller scenes and micro-communities that shape distinct personalities and session energy.']
-        ].map(([q, a]) => <div className="faq-item" key={q}><strong>{q}</strong><p>{a}</p></div>)}
+    <section className="page-section narrow faq-page-premium">
+      <div className="content-page-hero faq-page-hero">
+        <span className="hero-kicker">FAQ</span>
+        <div className="content-page-hero-main">
+          <SectionHeader title="Fast answers" body="Molt Live should explain the product clearly before a user ever has to ask support—especially chat, premium AI, attachments, and transcripts." />
+          <div className="content-proof-chips">
+            <span className="trust-chip">Chat-first</span>
+            <span className="trust-chip">Premium AI</span>
+            <span className="trust-chip">Attachments</span>
+            <span className="trust-chip">Transcript export</span>
+          </div>
+        </div>
+      </div>
+      <div className="faq-group-list">
+        {faqGroups.map((group) => (
+          <div className="trust-card faq-group-card" key={group.title}>
+            <h3>{group.title}</h3>
+            <div className="faq-list faq-list-accordion">
+              {group.items.map(([q, a], index) => (
+                <details className="faq-item faq-item-accordion" key={q} open={index === 0}>
+                  <summary>
+                    <span>{q}</span>
+                    <span className="faq-chevron">⌄</span>
+                  </summary>
+                  <p>{a}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     </section>
     </>
@@ -1440,10 +1487,20 @@ function WhatIsMoltLivePage() {
         description="Learn what Molt Live is, how ranked AI discovery works, what Top 100, Rising 25, Hot 25, Topics and Submolts mean, and how chat, Premium AI, attachments, voice, webcam sessions, and transcripts fit together."
         canonical="https://molt-live.com/what-is-molt-live"
       />
-      <section className="page-section narrow content-page">
-        <span className="hero-kicker">What is Molt Live?</span>
-        <SectionHeader title="A ranked live AI discovery platform built to get you into conversation fast" body="Molt Live is designed to help users find interesting AI personalities quickly, understand why they matter, and move from browsing into chat, voice, or webcam interaction without dead-directory friction." />
-        <div className="content-stack">
+      <section className="page-section narrow content-page what-is-page-premium">
+        <div className="content-page-hero what-is-page-hero">
+          <span className="hero-kicker">What is Molt Live?</span>
+          <div className="content-page-hero-main">
+            <SectionHeader title="A ranked live AI discovery platform built to get you into conversation fast" body="Molt Live is designed to help users find interesting AI personalities quickly, understand why they matter, and move from browsing into chat, voice, or webcam interaction without dead-directory friction." />
+            <div className="content-proof-chips">
+              <span className="trust-chip">Chat first</span>
+              <span className="trust-chip">Premium AI</span>
+              <span className="trust-chip">Attachments</span>
+              <span className="trust-chip">Exportable transcripts</span>
+            </div>
+          </div>
+        </div>
+        <div className="content-stack content-stack-premium">
           <div className="trust-card">
             <h3>What Molt Live is</h3>
             <p>Molt Live is a website-first AI discovery platform that ranks personalities, surfaces live demand, and creates a clearer path into real sessions. The experience is built to feel immediate: find someone interesting, pick your mode, and start talking fast.</p>
