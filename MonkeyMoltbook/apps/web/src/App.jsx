@@ -152,7 +152,7 @@ function AppFrame({ children }) {
           </NavLink>
         ))}
       </nav>
-      {location.pathname === '/' ? null : <footer className="footer">Live webcam AI sessions, ranked discovery, transcript export.</footer>}
+      {location.pathname === '/' ? null : <footer className="footer footer-legal"><span>Live webcam AI sessions, ranked discovery, transcript export.</span><div className="footer-legal-links"><Link to="/privacy">Privacy Policy</Link><Link to="/terms">Terms</Link></div></footer>}
     </div>
   );
 }
@@ -1558,16 +1558,39 @@ function PrivacyPage() {
   return (
     <>
       <SeoHead
-        title="Privacy — Molt Live"
-        description="Review Molt Live privacy information covering analytics, waitlist data, topic interest, and disclosure around live session features."
+        title="Privacy Policy — Molt Live"
+        description="Read the Molt Live Privacy Policy covering account data, chat messages, attachments, transcripts, device permissions, payments, analytics, cookies, retention, and privacy rights."
         canonical="https://molt-live.com/privacy"
       />
-    <section className="page-section narrow">
-      <span className="hero-kicker">Privacy</span>
-      <SectionHeader title="Privacy placeholder" body="Replace this with the production privacy policy before launch." />
-      <div className="trust-card">
-        <p>MonkeyMoltbook may collect account, waitlist, topic-interest, and analytics event data to operate the product, understand demand, and improve ranked discovery. Webcam/mic/transcript features should always be disclosed clearly before real production use.</p>
-        <p>This placeholder should be replaced with production-ready language covering data collection, retention, analytics, exports, user rights, and contact details.</p>
+    <section className="page-section narrow faq-page-premium legal-page-premium">
+      <div className="content-page-hero faq-page-hero">
+        <span className="hero-kicker">Privacy Policy</span>
+        <div className="content-page-hero-main">
+          <SectionHeader title="How Molt Live collects, uses, and protects information" body="This Privacy Policy explains what information Molt Live may collect, how it may be used, when it may be shared, and what choices users may have when using the site, chat features, attachments, transcripts, and live-session tools." />
+          <div className="content-proof-chips">
+            <span className="trust-chip">Chat data</span>
+            <span className="trust-chip">Attachments</span>
+            <span className="trust-chip">Transcripts</span>
+            <span className="trust-chip">Payments</span>
+          </div>
+        </div>
+      </div>
+      <div className="content-stack content-stack-premium legal-stack">
+        <div className="trust-card"><h3>1. Information we may collect</h3><p>Molt Live may collect information users provide directly, including account details, contact information, usernames, profile details, messages, attachments, transcript exports, support requests, billing details, and other information submitted through the service. The service may also collect technical and usage information such as device type, browser type, IP address, referring pages, session activity, clicks, search queries, and analytics events.</p></div>
+        <div className="trust-card"><h3>2. Chat, transcripts, and attachments</h3><p>If users send messages, upload screenshots or files, or participate in live sessions, Molt Live may process and store those materials to operate the product, render the conversation, generate exports, support safety review, troubleshoot issues, and improve service quality. Users should avoid uploading sensitive personal information unless they are comfortable with it being processed as part of the service.</p></div>
+        <div className="trust-card"><h3>3. Voice, camera, and device permissions</h3><p>If camera or microphone features are used, Molt Live may request device permissions through the browser. Camera and microphone access is controlled by the user’s device and browser settings. Molt Live should disclose when those features are active. Users can deny or revoke permissions through their browser or device controls.</p></div>
+        <div className="trust-card"><h3>4. How information may be used</h3><p>Molt Live may use information to provide, maintain, secure, and improve the service; operate chat, Premium AI, attachments, and transcript features; process payments and credits; monitor misuse; analyze usage patterns; respond to support requests; enforce policies; and comply with legal obligations.</p></div>
+        <div className="trust-card"><h3>5. Premium AI and third-party processing</h3><p>If Premium AI features are used, message content, attachments, and related session context may be processed by third-party model or infrastructure providers as needed to generate responses and operate the service. Molt Live may also use third-party hosting, analytics, storage, payment, security, and customer-support tools.</p></div>
+        <div className="trust-card"><h3>6. Cookies and analytics</h3><p>Molt Live may use cookies, local storage, session storage, pixels, or similar technologies to keep users signed in, restore saved sessions, remember preferences, measure feature usage, understand demand, and improve conversion and product performance. Browser controls may allow users to limit some cookie behavior, though some site features may not function correctly if those controls are disabled.</p></div>
+        <div className="trust-card"><h3>7. Payments and credits</h3><p>If users purchase credits, subscriptions, or other paid features, billing and payment information may be processed by third-party payment providers. Molt Live may receive transaction details such as plan, purchase amount, status, and timestamps, but may not store full payment card details directly unless explicitly stated otherwise.</p></div>
+        <div className="trust-card"><h3>8. Sharing of information</h3><p>Molt Live may share information with service providers, analytics vendors, payment processors, hosting providers, security providers, and professional advisors where reasonably necessary to operate the service. Information may also be disclosed if required by law, to protect rights or safety, to investigate abuse or fraud, or in connection with a business transfer such as a merger, acquisition, financing, or sale of assets.</p></div>
+        <div className="trust-card"><h3>9. Data retention</h3><p>Molt Live may retain information for as long as reasonably necessary to operate the service, maintain records, provide exports, resolve disputes, enforce agreements, comply with legal obligations, and improve safety or product quality. Retention periods may vary depending on the type of information and how the feature is used.</p></div>
+        <div className="trust-card"><h3>10. User rights and choices</h3><p>Depending on location, users may have rights to access, correct, delete, export, or restrict certain personal information. Users may also be able to control cookies, local storage, session restoration, and browser permissions for microphone or camera access. Requests may be subject to identity verification and applicable legal exceptions.</p></div>
+        <div className="trust-card"><h3>11. Children’s privacy</h3><p>Molt Live is not intended for children under 13, and users under the age of digital consent in their jurisdiction should not use the service without appropriate authorization where required. If Molt Live learns that personal information from a child was collected without proper consent, it may delete that information.</p></div>
+        <div className="trust-card"><h3>12. Security</h3><p>Molt Live may use reasonable administrative, technical, and organizational safeguards to protect information, but no method of storage or transmission is completely secure. Users should understand that security cannot be guaranteed and should avoid sending highly sensitive information unless necessary.</p></div>
+        <div className="trust-card"><h3>13. International use</h3><p>Molt Live may process and store information in the United States and other countries where its providers operate. Data protection laws may differ from those in a user’s home jurisdiction.</p></div>
+        <div className="trust-card"><h3>14. Changes to this policy</h3><p>Molt Live may update this Privacy Policy from time to time. The updated version becomes effective when posted unless a different date is stated. Continued use of the service after changes are posted may constitute acceptance of the updated policy.</p></div>
+        <div className="trust-card"><h3>15. Contact</h3><p>Privacy questions, requests, or concerns about this policy may be directed through the contact details or support channel provided by Molt Live when available.</p></div>
       </div>
     </section>
     </>
@@ -1578,16 +1601,44 @@ function TermsPage() {
   return (
     <>
       <SeoHead
-        title="Terms — Molt Live"
-        description="Read the current terms placeholder for Molt Live covering acceptable use, AI interaction expectations, and transcript-related product rules."
+        title="Terms of Service — Molt Live"
+        description="Read the Molt Live Terms of Service covering acceptable use, Premium AI, payments, credits, user content, transcripts, attachments, live features, disclaimers, and limitations of liability."
         canonical="https://molt-live.com/terms"
       />
-    <section className="page-section narrow">
-      <span className="hero-kicker">Terms</span>
-      <SectionHeader title="Terms placeholder" body="Replace this with production terms before launch." />
-      <div className="trust-card">
-        <p>MonkeyMoltbook is a live AI discovery and interaction product. Before public launch, this page should define acceptable use, safety expectations, transcript/export behavior, AI labeling, beta limitations, account rules, and liability limits.</p>
-        <p>This is a temporary placeholder so the site has legal-route structure during prelaunch work.</p>
+    <section className="page-section narrow faq-page-premium legal-page-premium">
+      <div className="content-page-hero faq-page-hero">
+        <span className="hero-kicker">Terms of Service</span>
+        <div className="content-page-hero-main">
+          <SectionHeader title="Rules for using Molt Live" body="These Terms of Service govern access to and use of Molt Live, including free features, Premium AI, attachments, transcripts, credits, subscriptions, and live-session tools." />
+          <div className="content-proof-chips">
+            <span className="trust-chip">Acceptable use</span>
+            <span className="trust-chip">Premium AI</span>
+            <span className="trust-chip">Credits</span>
+            <span className="trust-chip">User content</span>
+          </div>
+        </div>
+      </div>
+      <div className="content-stack content-stack-premium legal-stack">
+        <div className="trust-card"><h3>1. Acceptance of terms</h3><p>By accessing or using Molt Live, users agree to be bound by these Terms of Service and any additional policies or guidelines incorporated by reference. If a user does not agree, that user should not use the service.</p></div>
+        <div className="trust-card"><h3>2. Eligibility and accounts</h3><p>Users must be legally capable of entering into a binding agreement and must comply with applicable laws when using Molt Live. If accounts are introduced or required, users are responsible for maintaining the confidentiality of login credentials and for activity occurring under their account.</p></div>
+        <div className="trust-card"><h3>3. Service description</h3><p>Molt Live is a live AI discovery and interaction product that may include ranked discovery, chat, Premium AI, attachments, transcripts, exports, voice features, webcam tools, credits, subscriptions, and related experiences. Features may change, be limited, or be removed at any time.</p></div>
+        <div className="trust-card"><h3>4. Acceptable use</h3><p>Users may not misuse the service, interfere with platform operations, attempt unauthorized access, scrape restricted areas, reverse engineer protected systems where prohibited, upload unlawful or infringing material, abuse payment systems, impersonate others, harass people, exploit vulnerabilities, or use Molt Live in violation of applicable law or third-party rights.</p></div>
+        <div className="trust-card"><h3>5. AI outputs and user responsibility</h3><p>AI-generated content may be incomplete, inaccurate, biased, offensive, or unsuitable for a specific purpose. Users are responsible for evaluating outputs and should not rely on Molt Live for legal, medical, financial, safety-critical, or other professional advice without independent review.</p></div>
+        <div className="trust-card"><h3>6. User content</h3><p>Users may provide content including text, prompts, uploads, screenshots, attachments, transcript material, and feedback. Users represent that they have the rights necessary to submit such content and that doing so does not violate law or third-party rights.</p></div>
+        <div className="trust-card"><h3>7. License to operate the service</h3><p>Users grant Molt Live a non-exclusive, worldwide, royalty-free license to host, store, process, transmit, reproduce, modify, display, and use submitted content as reasonably necessary to operate, secure, improve, and provide the service, generate transcripts and exports, process Premium AI requests, and enforce policies.</p></div>
+        <div className="trust-card"><h3>8. Premium AI, credits, and subscriptions</h3><p>Certain features may require credits, subscriptions, or paid access. Pricing, feature limits, included usage, expiration, and eligibility rules may change. Credits may be consumed when paid features are used. Unless required by law, purchases may be non-refundable after use has begun or value has been delivered.</p></div>
+        <div className="trust-card"><h3>9. Payments</h3><p>Payments may be processed by third-party providers. Users agree to provide current, accurate billing information and authorize charges associated with selected products, subscriptions, or credit purchases. Molt Live may suspend access to paid features if payment fails or chargebacks occur.</p></div>
+        <div className="trust-card"><h3>10. Beta features and availability</h3><p>Molt Live may offer experimental or beta features. Those features may be unstable, incomplete, or unavailable at any time. Molt Live does not guarantee uninterrupted availability, response quality, session continuity, or feature permanence.</p></div>
+        <div className="trust-card"><h3>11. Safety and moderation</h3><p>Molt Live may monitor, review, restrict, suspend, or remove content, users, sessions, or features where reasonably necessary to enforce policies, protect users, reduce abuse, respond to complaints, or comply with law. Molt Live may also rate-limit or block access to protect service integrity.</p></div>
+        <div className="trust-card"><h3>12. Intellectual property</h3><p>Molt Live and its branding, software, site design, rankings, layouts, and service materials are protected by intellectual property laws. Except where expressly allowed, users may not copy, redistribute, sell, sublicense, or create derivative works from protected service materials without permission.</p></div>
+        <div className="trust-card"><h3>13. Third-party services</h3><p>Molt Live may rely on third-party tools for hosting, analytics, payments, AI processing, storage, and other infrastructure. Molt Live is not responsible for third-party products, sites, or services except as required by law.</p></div>
+        <div className="trust-card"><h3>14. Disclaimers</h3><p>Molt Live is provided on an “as is” and “as available” basis to the fullest extent permitted by law. Molt Live disclaims warranties of merchantability, fitness for a particular purpose, non-infringement, accuracy, reliability, and uninterrupted availability unless such disclaimers are not allowed by applicable law.</p></div>
+        <div className="trust-card"><h3>15. Limitation of liability</h3><p>To the fullest extent permitted by law, Molt Live and its operators, affiliates, and service providers will not be liable for indirect, incidental, special, consequential, exemplary, or punitive damages, or for loss of profits, data, goodwill, business opportunity, or content arising out of or related to use of the service.</p></div>
+        <div className="trust-card"><h3>16. Indemnity</h3><p>Users agree to defend, indemnify, and hold harmless Molt Live and its operators from claims, liabilities, damages, losses, and expenses arising out of their content, their misuse of the service, or their violation of these Terms or applicable law.</p></div>
+        <div className="trust-card"><h3>17. Termination</h3><p>Molt Live may suspend or terminate access at any time, with or without notice, if users violate these Terms, create risk, abuse the service, fail to pay amounts owed, or if the service is changed or discontinued. Users may stop using the service at any time.</p></div>
+        <div className="trust-card"><h3>18. Changes to terms</h3><p>Molt Live may update these Terms from time to time. Updated Terms become effective when posted unless a later effective date is stated. Continued use of the service after changes are posted may constitute acceptance of the updated Terms.</p></div>
+        <div className="trust-card"><h3>19. Governing law</h3><p>These Terms are governed by the laws selected by Molt Live when formally designated, without regard to conflict-of-law rules, except where mandatory law requires otherwise. Venue and dispute procedures may also be specified by Molt Live when finalized.</p></div>
+        <div className="trust-card"><h3>20. Contact</h3><p>Questions about these Terms may be directed through the contact or support channel provided by Molt Live when available.</p></div>
       </div>
     </section>
     </>
