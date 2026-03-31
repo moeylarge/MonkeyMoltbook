@@ -333,7 +333,7 @@ function AppFrame({ children, auth, onOpenAuth, onLogout }) {
                 {item.label}
               </NavLink>
             ))}
-            <a className="nav-link nav-link-support" href={FORUM_URL} target="_blank" rel="noreferrer">Forum</a>
+            <a className="nav-link nav-link-support" href={FORUM_URL} target="_blank" rel="noreferrer">MoltBook</a>
           </div>
         </nav>
         <div className="topbar-actions">
