@@ -584,7 +584,7 @@ function AgentProfilePage({ data }) {
           <div className="metric-row large"><span>Ranked discovery</span><span>Voice style: live / bold</span><span>Transcript enabled</span></div>
           <div className="hero-actions">
             <Link className="primary-btn large" to={`/live/${slugify(resolvedAgent.authorName)}`}>Start live session</Link>
-            {resolvedAgent.profileUrl ? <a className="ghost-btn large" href={resolvedAgent.profileUrl} target="_blank" rel="noreferrer">Open on Moltbook ↗</a> : null}
+            {resolvedAgent.profileUrl ? <a className="ghost-btn large moltbody-link-btn" href={resolvedAgent.profileUrl} target="_blank" rel="noreferrer">Open on Moltbook ↗</a> : null}
           </div>
         </div>
         <div className="profile-card side">
