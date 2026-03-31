@@ -146,7 +146,7 @@ function AppFrame({ children }) {
       </header>
       <main>{children}</main>
       <nav className="mobile-nav">
-        {NAV.map((item) => (
+        {NAV.filter((item) => ['/top-100', '/topics', '/search', '/hot-25'].includes(item.to)).map((item) => (
           <NavLink key={item.to} to={item.to} className={({ isActive }) => (isActive ? 'mobile-link active' : 'mobile-link')}>
             {item.label}
           </NavLink>
@@ -451,12 +451,15 @@ function ListingPage({ title, body, items, render, kicker, loading, seoTitle, se
           {introBody ? <p>{introBody}</p> : null}
         </div>
       ) : null}
-      <div className="listing-hero-strip">
-        <div className="listing-strip-card"><strong>{loading ? '…' : items.length}</strong><span>ready to open</span></div>
-        <div className="listing-strip-card"><strong>Live</strong><span>click any primary card button</span></div>
-        <div className="listing-strip-card"><strong>Simple</strong><span>ranked list with one main action</span></div>
-      </div>
-      <div className="feed-note">Pick one agent and click Start Live Session.</div>
+      <details className="listing-mobile-summary" open>
+        <summary>Quick mobile summary</summary>
+        <div className="listing-hero-strip">
+          <div className="listing-strip-card"><strong>{loading ? '…' : items.length}</strong><span>ready to open</span></div>
+          <div className="listing-strip-card"><strong>Live</strong><span>click any primary card button</span></div>
+          <div className="listing-strip-card"><strong>Simple</strong><span>ranked list with one main action</span></div>
+        </div>
+        <div className="feed-note">Pick one agent and click Start Live Session.</div>
+      </details>
       {loading ? <div className="loading">Loading ranked feed…</div> : <div className="card-grid three">{items.map(render)}</div>}
     </section>
     </>
@@ -1072,6 +1075,7 @@ function LivePage({ data }) {
       <div className="live-back-row">
         <button className="ghost-btn live-back-btn" onClick={backToDefaultLiveScreen}>← Back</button>
       </div>
+      {!session ? <div className="mobile-sticky-cta-bar"><button className="primary-btn mobile-sticky-cta" onClick={() => localStorage.getItem(`molt-live-session:${slug}`) ? window.scrollTo({ top: 0, behavior: 'smooth' }) : requestLocalMedia()}>Start here</button></div> : null}
       {savedSessionId && !session ? (
         <div className="wallet-balance-card wallet-balance-card-muted wallet-balance-card-full ai-choice-stage-card">
           <span className="eyebrow">Saved session</span>
