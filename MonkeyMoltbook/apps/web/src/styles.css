@@ -43,8 +43,8 @@
 .card-actions-priority .primary-btn{background:linear-gradient(135deg,#ff5a36,#ff6a3d 55%,#ff8a5b);box-shadow:0 14px 26px rgba(255,90,54,.24)}
 .ghost-btn.action-link{background:#fff1e8;border:1px solid #f2b28f;color:#a3471f;box-shadow:0 8px 18px rgba(160,88,40,.10)}
 .ghost-btn.action-link:hover{background:#ffe7d8;color:#8f3915;border-color:#ea9d72}
-.ghost-btn.moltbody-link-btn,.moltbody-link-btn{background:linear-gradient(180deg,#f4f9ff,#ecf5ff)!important;border:1px solid #bfdcff!important;color:#2f6fae!important;box-shadow:0 8px 18px rgba(76,132,196,.10)!important}
-.ghost-btn.moltbody-link-btn:hover,.ghost-btn.moltbody-link-btn:focus-visible,.moltbody-link-btn:hover,.moltbody-link-btn:focus-visible{background:linear-gradient(180deg,#eef6ff,#e2f0ff)!important;color:#235c93!important;border-color:#9fcaef!important}
+.ghost-btn.moltbody-link-btn,.moltbody-link-btn,.card-actions .moltbody-link-btn,.card-actions .ghost-btn.moltbody-link-btn{background:linear-gradient(180deg,#f4f9ff,#ecf5ff)!important;border:1px solid #bfdcff!important;color:#2f6fae!important;box-shadow:0 8px 18px rgba(76,132,196,.10)!important}
+.ghost-btn.moltbody-link-btn:hover,.ghost-btn.moltbody-link-btn:focus-visible,.moltbody-link-btn:hover,.moltbody-link-btn:focus-visible,.card-actions .moltbody-link-btn:hover,.card-actions .moltbody-link-btn:focus-visible{background:linear-gradient(180deg,#eef6ff,#e2f0ff)!important;color:#235c93!important;border-color:#9fcaef!important}
 .trust-chip,.tag,.presence-pill{background:#fff4ec;border-color:#edd8c8;color:#8a4b25}
 .agent-card .trust-chip{background:#fff4ec}
 
