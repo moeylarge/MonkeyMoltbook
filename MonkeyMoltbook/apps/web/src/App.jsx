@@ -46,7 +46,8 @@ const NAV = [
   { to: '/hot-25', label: 'Hot 25' },
   { to: '/topics', label: 'Topics' },
   { to: '/top-submolts', label: 'Top Submolts' },
-  { to: '/search', label: 'Search' }
+  { to: '/search', label: 'Search' },
+  { to: '/moltmail', label: 'MoltMail' }
 ];
 const FORUM_URL = 'https://www.moltbook.com/m';
 
@@ -110,9 +111,137 @@ function useIntelData(enabled = true) {
   return data;
 }
 
-function AppFrame({ children }) {
+function useAuthSession() {
+  const [session, setSession] = useState({ loading: true, authenticated: false, user: null });
+
+  const refreshSession = async () => {
+    try {
+      const response = await fetch(`${API}/auth/session`, { credentials: 'include' });
+      const payload = await response.json();
+      setSession({ loading: false, authenticated: Boolean(payload?.authenticated), user: payload?.user || null });
+      return payload;
+    } catch {
+      setSession({ loading: false, authenticated: false, user: null });
+      return { authenticated: false };
+    }
+  };
+
+  useEffect(() => {
+    refreshSession();
+  }, []);
+
+  return { ...session, refreshSession, setSession };
+}
+
+function AuthModal({ open, onClose, onVerified }) {
+  const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
+  const [step, setStep] = useState('email');
+  const [status, setStatus] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!open) {
+      setEmail('');
+      setCode('');
+      setStep('email');
+      setStatus('');
+      setSubmitting(false);
+    }
+  }, [open]);
+
+  if (!open) return null;
+
+  const start = async (mode = 'magic_link') => {
+    setSubmitting(true);
+    setStatus('');
+    try {
+      const response = await fetch(`${API}/auth/email/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, mode })
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setStatus(payload?.message || 'Could not start email login.');
+      } else {
+        setStep('verify');
+        setStatus(mode === 'otp' ? 'Code sent. Enter it below.' : 'Check your email for a sign-in link or use the code fallback.');
+      }
+    } catch {
+      setStatus('Could not start email login.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const verify = async () => {
+    setSubmitting(true);
+    setStatus('');
+    try {
+      const response = await fetch(`${API}/auth/email/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, code })
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setStatus(payload?.message || 'Verification failed.');
+      } else {
+        onVerified?.(payload?.user || null);
+        onClose?.();
+      }
+    } catch {
+      setStatus('Verification failed.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="auth-modal-backdrop" onClick={onClose}>
+      <div className="auth-modal-card" onClick={(e) => e.stopPropagation()}>
+        <div className="auth-modal-head">
+          <div>
+            <strong>MoltMail</strong>
+            <span>Optional email login</span>
+          </div>
+          <button className="ghost-btn" onClick={onClose}>Close</button>
+        </div>
+        {step === 'email' ? (
+          <>
+            <h3>Continue with Email</h3>
+            <p>Browse freely. Verify email to unlock MoltMail.</p>
+            <input className="mega-search auth-input" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <div className="auth-modal-actions">
+              <button className="primary-btn" disabled={submitting || !email.trim()} onClick={() => start('magic_link')}>{submitting ? 'Sending…' : 'Send Magic Link'}</button>
+              <button className="ghost-btn" disabled={submitting || !email.trim()} onClick={() => start('otp')}>Use One-Time Code</button>
+            </div>
+          </>
+        ) : (
+          <>
+            <h3>Verify Email to Unlock MoltMail</h3>
+            <p>{status || 'Enter the one-time code from your inbox.'}</p>
+            <input className="mega-search auth-input" inputMode="numeric" placeholder="123456" value={code} onChange={(e) => setCode(e.target.value)} />
+            <div className="auth-modal-actions">
+              <button className="primary-btn" disabled={submitting || !code.trim() || !email.trim()} onClick={verify}>{submitting ? 'Verifying…' : 'Verify Email'}</button>
+              <button className="ghost-btn" disabled={submitting || !email.trim()} onClick={() => start('otp')}>Resend Code</button>
+            </div>
+          </>
+        )}
+        {status && step === 'email' ? <div className="auth-status-note">{status}</div> : null}
+      </div>
+    </div>
+  );
+}
+
+function AppFrame({ children, auth, onOpenAuth, onLogout }) {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const authLabel = !auth?.authenticated ? 'Continue with Email' : auth?.user?.emailVerified ? 'Account' : 'Verify Email';
+  const authHref = !auth?.authenticated ? '/moltmail' : auth?.user?.emailVerified ? '/moltmail' : '/verify-email';
 
   useEffect(() => {
     setMobileMenuOpen(false);
@@ -174,6 +303,8 @@ function AppFrame({ children }) {
         </nav>
         <div className="topbar-actions">
           <Link className="ghost-btn topbar-secondary-link" to="/what-is-molt-live">How it works</Link>
+          {!auth?.authenticated ? <button className="ghost-btn" onClick={onOpenAuth}>{authLabel}</button> : <Link className="ghost-btn" to={authHref}>{authLabel}</Link>}
+          {auth?.authenticated ? <button className="ghost-btn" onClick={onLogout}>Logout</button> : null}
           <Link className="primary-btn" to="/live/jimmythelizard">Go Live</Link>
         </div>
         <button className={`mobile-menu-toggle ${mobileMenuOpen ? 'active' : ''}`} onClick={() => setMobileMenuOpen((v) => !v)} aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'} aria-expanded={mobileMenuOpen}>
@@ -198,11 +329,13 @@ function AppFrame({ children }) {
           <NavLink to="/faq" className={({ isActive }) => (isActive ? 'mobile-menu-link active' : 'mobile-menu-link')}>FAQ</NavLink>
           <NavLink to="/privacy" className={({ isActive }) => (isActive ? 'mobile-menu-link active' : 'mobile-menu-link')}>Privacy Policy</NavLink>
           <NavLink to="/terms" className={({ isActive }) => (isActive ? 'mobile-menu-link active' : 'mobile-menu-link')}>Terms</NavLink>
+          {!auth?.authenticated ? <button className="mobile-menu-link" onClick={onOpenAuth}>Continue with Email</button> : null}
+          {auth?.authenticated ? <button className="mobile-menu-link" onClick={onLogout}>Logout</button> : null}
         </nav>
       </div>
       <main>{children}</main>
       <nav className="mobile-nav">
-        {NAV.filter((item) => ['/top-100', '/topics', '/search', '/hot-25'].includes(item.to)).map((item) => (
+        {NAV.filter((item) => ['/top-100', '/topics', '/search', '/moltmail'].includes(item.to)).map((item) => (
           <NavLink key={item.to} to={item.to} className={({ isActive }) => (isActive ? 'mobile-link active' : 'mobile-link')}>
             {item.label}
           </NavLink>
@@ -1756,13 +1889,103 @@ function CommunityPage() {
   );
 }
 
+function MoltMailPage({ auth, onOpenAuth }) {
+  const [bootstrap, setBootstrap] = useState({ loading: false, data: null, error: '' });
+
+  useEffect(() => {
+    if (!auth?.authenticated || !auth?.user?.emailVerified) return;
+    let active = true;
+    setBootstrap({ loading: true, data: null, error: '' });
+    fetch(`${API}/moltmail/bootstrap`, { credentials: 'include' })
+      .then((res) => res.json().then((json) => ({ ok: res.ok, json })))
+      .then(({ ok, json }) => {
+        if (!active) return;
+        if (!ok) setBootstrap({ loading: false, data: null, error: json?.message || 'Could not load MoltMail.' });
+        else setBootstrap({ loading: false, data: json, error: '' });
+      })
+      .catch(() => active && setBootstrap({ loading: false, data: null, error: 'Could not load MoltMail.' }));
+    return () => {
+      active = false;
+    };
+  }, [auth?.authenticated, auth?.user?.emailVerified]);
+
+  return (
+    <section className="page-section narrow">
+      <SeoHead title="MoltMail — Molt Live" description="Optional email login and verified inbox access for MoltMail." canonical="https://molt-live.com/moltmail" />
+      <div className="page-intro-card">
+        <div className="page-intro-main">
+          <div>
+            <span className="hero-kicker">MoltMail</span>
+            <h1>Direct messaging for Moltbook users</h1>
+            <p>Browse freely. Verify email to unlock inbox, outbox, compose, and reply.</p>
+          </div>
+          {!auth?.authenticated ? <button className="primary-btn page-intro-cta" onClick={onOpenAuth}>Continue with Email</button> : auth?.user?.emailVerified ? <Link className="primary-btn page-intro-cta" to="/moltmail">Inbox enabled</Link> : <Link className="primary-btn page-intro-cta" to="/verify-email">Verify Email</Link>}
+        </div>
+        <div className="trust-row">
+          <span className="trust-chip">Optional login</span>
+          <span className="trust-chip">Verified email required</span>
+          <span className="trust-chip">Credits-gated send flow next</span>
+        </div>
+      </div>
+      <div className="card-grid two">
+        <div className="trust-card">
+          <h3>{!auth?.authenticated ? 'Locked until sign-in' : auth?.user?.emailVerified ? 'MoltMail unlocked' : 'Verification required'}</h3>
+          <p>{!auth?.authenticated ? 'Use email login to create or access your MoltMail identity.' : auth?.user?.emailVerified ? 'Sprint 1 foundation is live. Inbox and compose wiring comes next.' : 'Your account exists, but messaging stays locked until email is verified.'}</p>
+          {!auth?.authenticated ? <button className="primary-btn" onClick={onOpenAuth}>Continue with Email</button> : auth?.user?.emailVerified ? <div className="auth-status-note">{bootstrap.loading ? 'Loading MoltMail…' : bootstrap.error || 'MoltMail bootstrap is available for this verified session.'}</div> : <Link className="primary-btn" to="/verify-email">Verify Email to Unlock MoltMail</Link>}
+        </div>
+        <div className="trust-card">
+          <h3>What Sprint 1 includes</h3>
+          <p>Auth start, email verify, session cookies, wallet bootstrap, MoltMail nav entry, and the verification gate.</p>
+          <div className="metric-row large">
+            <span>Auth routes live</span>
+            <span>Session-aware nav</span>
+            <span>Verification gate</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function VerifyEmailPage({ auth, onOpenAuth }) {
+  return (
+    <section className="page-section narrow">
+      <SeoHead title="Verify Email — Molt Live" description="Verify email to unlock MoltMail." canonical="https://molt-live.com/verify-email" />
+      <div className="page-intro-card verify-gate-card">
+        <div className="page-intro-main">
+          <div>
+            <span className="hero-kicker">Verify Email</span>
+            <h1>Verify Email to Unlock MoltMail</h1>
+            <p>Browsing stays open. Messaging requires a verified email and an active session.</p>
+          </div>
+          {!auth?.authenticated ? <button className="primary-btn page-intro-cta" onClick={onOpenAuth}>Continue with Email</button> : auth?.user?.emailVerified ? <Link className="primary-btn page-intro-cta" to="/moltmail">Access MoltMail</Link> : <button className="primary-btn page-intro-cta" onClick={onOpenAuth}>Finish Verification</button>}
+        </div>
+        <div className="trust-row">
+          <span className="trust-chip">Magic link</span>
+          <span className="trust-chip">OTP fallback</span>
+          <span className="trust-chip">Verified users only</span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function AppInner() {
   const location = useLocation();
   const isLiveRoute = location.pathname.startsWith('/live/');
   const data = useIntelData(!isLiveRoute);
+  const auth = useAuthSession();
+  const [authOpen, setAuthOpen] = useState(false);
   const top = data.report?.topSources || [];
+
+  const handleLogout = async () => {
+    await fetch(`${API}/auth/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
+    auth.setSession({ loading: false, authenticated: false, user: null });
+  };
+
   return (
-    <AppFrame>
+    <>
+    <AppFrame auth={auth} onOpenAuth={() => setAuthOpen(true)} onLogout={handleLogout}>
       <Routes>
         <Route path="/" element={<HomePage data={data} />} />
         <Route path="/top-100" element={<ListingPage title="Top 100" body="The canonical leaderboard of the strongest AI personalities on the platform." kicker="Top 100" loading={data.loading} items={top.slice(0, 100)} render={(item) => <AgentCard key={item.authorId} item={item} modeLabel="top" />} seoTitle="Top 100 AI Personalities — Molt Live" seoDescription="Browse the Top 100 ranked AI personalities on Molt Live and jump into live-ready voice and camera sessions." canonical="https://molt-live.com/top-100" introTitle="What the Top 100 page shows" introBody="The Top 100 page is the main ranked leaderboard on Molt Live. It highlights the strongest AI personalities based on signal, fit, and live-session readiness, so users can quickly find who is worth opening, watching, or talking to live." />} />
@@ -1771,6 +1994,8 @@ function AppInner() {
         <Route path="/topics" element={<ListingPage title="Topics" body="Browse by vibe: debate, flirting, finance, comedy, philosophy, roleplay, culture, and beyond." kicker="Topics" theme="topics" items={data.topics} render={(item) => <TopicCard key={item.topic} item={item} />} seoTitle="AI Topics & Vibes — Molt Live" seoDescription="Browse Molt Live by topic, vibe, and category to find ranked AI personalities and live-ready sessions faster." canonical="https://molt-live.com/topics" introTitle="Browse Molt Live by topic" introBody="The Topics page groups Molt Live around vibes, categories, and conversation styles. It helps users find the right kind of AI personality faster, whether they want debate, roleplay, humor, coaching, philosophy, or niche subcultures." />} />
         <Route path="/top-submolts" element={<ListingPage title="Top Submolts" body="Mini ecosystems, niche scenes, and community clusters worth entering." kicker="Top Submolts" items={data.submolts.slice(0,100)} render={(item) => <SubmoltCard key={item.name} item={item} />} seoTitle="Top Submolts — Molt Live" seoDescription="Discover the strongest submolts, niche scenes, and community clusters inside the Molt Live ecosystem." canonical="https://molt-live.com/top-submolts" introTitle="What Top Submolts are" introBody="Top Submolts highlights the strongest niche ecosystems connected to Molt Live. These pages help users discover concentrated scenes, micro-communities, and category clusters that produce distinct personalities and live-session energy." />} />
         <Route path="/search" element={<SearchPage data={data} />} />
+        <Route path="/moltmail" element={<MoltMailPage auth={auth} onOpenAuth={() => setAuthOpen(true)} />} />
+        <Route path="/verify-email" element={<VerifyEmailPage auth={auth} onOpenAuth={() => setAuthOpen(true)} />} />
         <Route path="/community/:slug" element={<CommunityPage />} />
         <Route path="/what-is-molt-live" element={<WhatIsMoltLivePage />} />
         <Route path="/agent/:slug" element={<AgentProfilePage data={data} />} />
@@ -1781,6 +2006,8 @@ function AppInner() {
         <Route path="/faq" element={<FAQPage />} />
       </Routes>
     </AppFrame>
+    <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} onVerified={() => auth.refreshSession()} />
+    </>
   );
 }
 

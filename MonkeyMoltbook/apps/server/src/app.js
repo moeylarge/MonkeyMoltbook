@@ -11,9 +11,84 @@ import { buildSearchDocumentsFromState, getAuthorsByIds, getAuthorsBySourceIds, 
 import { scoreAuthorRisk, scoreCommunityRisk } from './lib/trust-score.js';
 import { addAgentReply, addLiveMessage, createLiveSession, endLiveSession, exportTranscriptText, getLiveSession, listTranscript, liveSessionsEnabled, updateLivePresence } from './lib/live-sessions.js';
 import { createCheckoutSession, creditsEnabled, ensureCreditProducts, getSpendRules, getWallet, grantCredits, listCreditProducts, listCreditTransactions, spendCredits } from './lib/credits.js';
+import { applySessionCookie, getAccountMe, getSessionResponse, logoutSession, requireVerifiedUser, startEmailAuth, verifyEmailAuth } from './lib/moltmail-auth.js';
 
 export const app = express();
 app.use(express.json());
+
+app.post('/auth/email/start', async (req, res) => {
+  const result = await startEmailAuth({
+    email: req.body?.email,
+    mode: req.body?.mode || 'magic_link',
+    ipHash: req.ip || null,
+    userAgent: req.headers['user-agent'] || null
+  });
+  res.status(result.ok ? 200 : 400).json(result);
+});
+
+app.post('/auth/email/verify', (req, res) => {
+  const result = verifyEmailAuth({
+    token: req.body?.token,
+    email: req.body?.email,
+    code: req.body?.code,
+    ipHash: req.ip || null,
+    userAgent: req.headers['user-agent'] || null
+  });
+  if (!result.ok) {
+    res.status(400).json(result);
+    return;
+  }
+  applySessionCookie(res, result.token, result.session.expiresAt);
+  res.json({ ok: true, user: result.user, session: result.session });
+});
+
+app.post('/auth/logout', (req, res) => {
+  res.json(logoutSession(req, res));
+});
+
+app.get('/auth/session', (req, res) => {
+  res.json(getSessionResponse(req));
+});
+
+app.get('/account/me', (req, res) => {
+  const account = getAccountMe(req);
+  if (!account) {
+    res.status(401).json({ ok: false, code: 'UNAUTHENTICATED', message: 'Sign in to continue.' });
+    return;
+  }
+  res.json(account);
+});
+
+app.post('/account/resend-verification', async (req, res) => {
+  const session = getSessionResponse(req);
+  if (!session.authenticated || !session.user?.email) {
+    res.status(401).json({ ok: false, code: 'UNAUTHENTICATED', message: 'Sign in to continue.' });
+    return;
+  }
+  const result = await startEmailAuth({
+    email: session.user.email,
+    mode: 'magic_link',
+    ipHash: req.ip || null,
+    userAgent: req.headers['user-agent'] || null
+  });
+  res.status(result.ok ? 200 : 400).json({ ok: result.ok });
+});
+
+app.get('/moltmail/bootstrap', (req, res) => {
+  const gate = requireVerifiedUser(req);
+  if (!gate.ok) {
+    res.status(gate.status).json(gate);
+    return;
+  }
+  res.json({
+    ok: true,
+    inboxEnabled: true,
+    composeEnabled: true,
+    unreadCount: 0,
+    wallet: { balance: 0 },
+    user: gate.user
+  });
+});
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
 const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4.1-mini';
