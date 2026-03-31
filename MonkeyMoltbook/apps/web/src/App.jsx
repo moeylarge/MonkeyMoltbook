@@ -124,7 +124,7 @@ function AppFrame({ children }) {
 
   return (
     <div className="site-shell">
-      <header className="topbar">
+      <header className={`topbar ${location.pathname === '/' ? 'topbar-home' : ''}`}>
         <Link to="/" className="brand">
           <span className="brand-mark">ML</span>
           <span>
