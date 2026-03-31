@@ -102,43 +102,68 @@ export function labelForRisk(score) {
   return 'Very Low Risk';
 }
 
+function uniqueParts(parts = []) {
+  const seen = new Set();
+  const out = [];
+  for (const part of parts) {
+    if (!part || seen.has(part)) continue;
+    seen.add(part);
+    out.push(part);
+  }
+  return out;
+}
+
 function buildAuthorExplanation({ score, isClaimed, karma, postCount, totalComments, strongHits, weakHits, descriptionLength, submoltCount, topicCount, profileUrl, isActive, daysSinceLatestPost, matchedPostCount, suspiciousHits, phraseDiversity, promoHits, ctaHits, benignHits, analysisHits, flags = [] }) {
-  const positives = [];
-  const negatives = [];
-  const uncertainty = [];
+  const positives = uniqueParts([
+    isClaimed ? 'claimed account ownership reduces current risk' : null,
+    (karma >= 10000 || totalComments >= 10000) ? 'long account history and strong engagement reduce current risk' : null,
+    (!(karma >= 10000 || totalComments >= 10000) && (karma >= 2500 || totalComments >= 1000)) ? 'established account history lowers current risk' : null,
+    (strongHits >= 5 || (topicCount >= 3 && postCount >= 3)) ? 'broad profile coverage reduces uncertainty' : null,
+    analysisHits > 0 ? 'analysis-style posting lowers current scam risk' : null
+  ]);
 
-  if (isClaimed) positives.push('claimed account ownership reduces current risk');
-  if (karma >= 10000 || totalComments >= 10000) positives.push('long account history and strong engagement reduce current risk');
-  else if (karma >= 2500 || totalComments >= 1000) positives.push('established account history lowers current risk');
-  if (strongHits >= 5 || (topicCount >= 3 && postCount >= 3)) positives.push('broad profile coverage reduces uncertainty');
-  if (analysisHits > 0) positives.push('analysis-style posting lowers current scam risk');
+  const negatives = uniqueParts([
+    (descriptionLength < 20 && !isClaimed) ? 'limited profile maturity increases uncertainty' : null,
+    !profileUrl ? 'missing profile links increase uncertainty' : null,
+    !isActive ? 'inactive profile signals increase uncertainty' : null,
+    (daysSinceLatestPost !== null && daysSinceLatestPost > 90) ? 'stale activity increases uncertainty' : null,
+    matchedPostCount >= 2 ? 'multiple flagged posts increase current risk' : null,
+    suspiciousHits >= 2 ? 'suspicious phrase density raises current risk' : null,
+    phraseDiversity >= 2 ? 'multiple risky language patterns raise concern' : null,
+    (promoHits >= 2 && ctaHits >= 1) ? 'promo plus claim-style calls-to-action increase risk' : null,
+    flags.some((x) => x.startsWith('phishing:')) ? 'phishing-like language increases current risk' : null,
+    flags.some((x) => x.startsWith('malware:')) ? 'malware-linked wording sharply increases risk' : null,
+    flags.includes('mint:spam') ? 'mint-spam patterns increase current risk' : null,
+    (submoltCount >= 6 && postCount >= 8) ? 'high-velocity cross-community activity raises caution' : null
+  ]);
 
-  if (descriptionLength < 20 && !isClaimed) negatives.push('limited profile maturity increases uncertainty');
-  if (!profileUrl) negatives.push('missing profile links increase uncertainty');
-  if (!isActive) negatives.push('inactive profile signals increase uncertainty');
-  if (daysSinceLatestPost !== null && daysSinceLatestPost > 90) negatives.push('stale activity increases uncertainty');
-  if (matchedPostCount >= 2) negatives.push('multiple flagged posts increase current risk');
-  if (suspiciousHits >= 2) negatives.push('suspicious phrase density raises current risk');
-  if (phraseDiversity >= 2) negatives.push('multiple risky language patterns raise concern');
-  if (promoHits >= 2 && ctaHits >= 1) negatives.push('promo plus claim-style calls-to-action increase risk');
-  if (flags.some((x) => x.startsWith('phishing:'))) negatives.push('phishing-like language increases current risk');
-  if (flags.some((x) => x.startsWith('malware:'))) negatives.push('malware-linked wording sharply increases risk');
-  if (flags.includes('mint:spam')) negatives.push('mint-spam patterns increase current risk');
-  if (submoltCount >= 6 && postCount >= 8) negatives.push('high-velocity cross-community activity raises caution');
-
-  if (postCount <= 1 && matchedPostCount === 0) uncertainty.push('limited trust data available; score uses incomplete signals');
-  else if (postCount <= 3 && !isClaimed && descriptionLength < 20) uncertainty.push('limited trust data available; weak profile depth increases uncertainty');
-  else if (weakHits > 0 && matchedPostCount === 0) uncertainty.push('minor low-signal patterns raise some uncertainty');
+  const uncertainty = uniqueParts([
+    (postCount <= 1 && matchedPostCount === 0) ? 'limited trust data available; score uses incomplete signals' : null,
+    (postCount <= 3 && !isClaimed && descriptionLength < 20) ? 'limited trust data available; weak profile depth increases uncertainty' : null,
+    (weakHits > 0 && matchedPostCount === 0) ? 'minor low-signal patterns raise some uncertainty' : null
+  ]);
 
   const parts = [];
-  if (score <= 15 && positives.length) parts.push(positives[0]);
-  if (score >= 16 && negatives.length) parts.push(negatives[0]);
-  if (score <= 35 && positives.length && negatives.length) parts.push(positives[0]);
-  if (!parts.length && negatives.length) parts.push(negatives[0]);
-  if (parts.length < 2 && positives.length && !parts.includes(positives[0])) parts.push(positives[0]);
-  if (parts.length < 2 && uncertainty.length) parts.push(uncertainty[0]);
-  if (!parts.length) return 'limited trust data available; score uses incomplete signals';
-  return parts.slice(0, 2).join(' + ');
+  if (score >= 76) {
+    parts.push(...negatives.slice(0, 2));
+  } else if (score >= 56) {
+    parts.push(...negatives.slice(0, 2));
+    if (parts.length < 2) parts.push(...uncertainty.slice(0, 1));
+  } else if (score >= 36) {
+    parts.push(...negatives.slice(0, 1));
+    if (parts.length < 2) parts.push(...uncertainty.slice(0, 1));
+  } else if (score >= 16) {
+    parts.push(...negatives.slice(0, 1));
+    if (parts.length < 2) parts.push(...positives.slice(0, 1));
+    if (parts.length < 2) parts.push(...uncertainty.slice(0, 1));
+  } else {
+    parts.push(...positives.slice(0, 2));
+    if (parts.length < 2) parts.push(...uncertainty.slice(0, 1));
+  }
+
+  const finalParts = uniqueParts(parts).slice(0, 2);
+  if (!finalParts.length) return 'limited trust data available; score uses incomplete signals';
+  return finalParts.join(' + ');
 }
 
 export function scorePostRisk(post = {}) {
