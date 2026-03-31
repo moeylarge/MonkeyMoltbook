@@ -95,14 +95,15 @@ function useIntelData(enabled = true) {
     let active = true;
     const load = async () => {
       try {
-        fetch(`${API}/moltbook/refresh`, { method: 'POST' }).catch(() => {});
+        setData({ loading: true, report: null, rising: [], hot: [], topics: [], submolts: [], growth: null });
+        fetch(`${API}/moltbook/refresh`, { method: 'POST', cache: 'no-store' }).catch(() => {});
         const [reportRes, risingRes, hotRes, topicsRes, subRes, growthRes] = await Promise.all([
-          fetch(`${API}/moltbook/report`),
-          fetch(`${API}/moltbook/rising`),
-          fetch(`${API}/moltbook/hot`),
-          fetch(`${API}/moltbook/topics`),
-          fetch(`${API}/moltbook/top-submolts`),
-          fetch(`${API}/moltbook/growth`)
+          fetch(`${API}/moltbook/report`, { cache: 'no-store' }),
+          fetch(`${API}/moltbook/rising`, { cache: 'no-store' }),
+          fetch(`${API}/moltbook/hot`, { cache: 'no-store' }),
+          fetch(`${API}/moltbook/topics`, { cache: 'no-store' }),
+          fetch(`${API}/moltbook/top-submolts`, { cache: 'no-store' }),
+          fetch(`${API}/moltbook/growth`, { cache: 'no-store' })
         ]);
         const next = {
           loading: false,
