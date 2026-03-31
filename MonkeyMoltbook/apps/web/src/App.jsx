@@ -1035,6 +1035,8 @@ function LivePage({ data }) {
     setSpendingAction('');
   };
 
+  const savedSessionId = typeof window !== 'undefined' ? localStorage.getItem(`molt-live-session:${slug}`) : null;
+
   useEffect(() => {
     const restoreSession = async () => {
       const savedId = localStorage.getItem(`molt-live-session:${slug}`);
@@ -1043,9 +1045,7 @@ function LivePage({ data }) {
         const response = await fetch(`${API}/live/session/${savedId}`);
         const payload = await response.json();
         if (payload?.session?.status === 'active') {
-          setSession(payload.session);
           setPresence(payload.presence || null);
-          await loadTranscript(savedId);
         }
       } catch {}
     };
@@ -1053,7 +1053,7 @@ function LivePage({ data }) {
   }, [slug, session]);
 
   const exportUrl = session?.id ? `${API}/live/session/${session.id}/export?format=${encodeURIComponent(exportFormat)}` : null;
-  const isChatMode = (session?.mode || sessionMode) === 'chat';
+  const isChatMode = ['chat', 'chat-ai'].includes(session?.mode || sessionMode);
 
   return (
     <>
