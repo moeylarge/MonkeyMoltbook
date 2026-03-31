@@ -56,10 +56,11 @@ a[href],button,[role="button"],.nav-link,.ghost-btn,.primary-btn,.mobile-link,.t
   .mobile-menu-drawer{width:min(88vw,360px);padding:18px 14px calc(24px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,#fffdfb 0%,#fff6ef 100%)}
   .mobile-menu-link{min-height:52px;padding:13px 15px;border-radius:18px;background:linear-gradient(180deg,#fffdfb 0%,#fff7f1 100%);border:1px solid rgba(255,255,255,.94);box-shadow:0 0 0 1px rgba(255,255,255,.90),0 12px 22px rgba(120,72,32,.08);font-size:15px}
   .mobile-menu-link.active{background:linear-gradient(180deg,#fff7f1 0%,#fff1e8 100%);border-color:#efc4a7;box-shadow:0 0 0 1px rgba(255,255,255,.94),0 14px 24px rgba(160,88,40,.12)}
-  .mobile-nav{left:10px;right:10px;bottom:10px;padding:8px;border-radius:22px;background:rgba(255,251,247,.96);border:1px solid rgba(255,255,255,.94);box-shadow:0 0 0 1px rgba(255,255,255,.88),0 16px 30px rgba(120,72,32,.14)}
-  .mobile-link{min-height:54px;padding:12px 10px;border-radius:16px;font-size:13px;line-height:1.1;background:linear-gradient(180deg,#fffdfb 0%,#fff7f1 100%)!important;border:1px solid rgba(255,255,255,.92)!important;box-shadow:0 0 0 1px rgba(255,255,255,.84),0 10px 18px rgba(120,72,32,.07)!important}
+  .mobile-nav{left:10px;right:10px;bottom:10px;padding:7px;border-radius:22px;background:rgba(255,251,247,.96);border:1px solid rgba(255,255,255,.94);box-shadow:0 0 0 1px rgba(255,255,255,.88),0 16px 30px rgba(120,72,32,.14)}
+  .mobile-link{min-height:50px;padding:10px 9px;border-radius:16px;font-size:13px;line-height:1.1;background:linear-gradient(180deg,#fffdfb 0%,#fff7f1 100%)!important;border:1px solid rgba(255,255,255,.92)!important;box-shadow:0 0 0 1px rgba(255,255,255,.84),0 10px 18px rgba(120,72,32,.07)!important}
   .mobile-link.active{background:linear-gradient(180deg,#fff6ee 0%,#ffeede 100%)!important;color:#9a3412!important;border-color:#efc4a7!important;box-shadow:0 0 0 1px rgba(255,255,255,.92),0 14px 24px rgba(160,88,40,.14)!important;transform:translateY(-2px)}
 
+  main{padding-bottom:136px}
   .hero-section,.content-section,.page-section,.final-cta{margin-bottom:14px}
   .hero-section{padding:18px 2px 8px;gap:18px}
   .hero-copy h1{font-size:clamp(34px,10vw,44px);line-height:1.01;max-width:12ch;margin:14px 0 12px}
@@ -110,8 +111,8 @@ a[href],button,[role="button"],.nav-link,.ghost-btn,.primary-btn,.mobile-link,.t
   .live-page-simplified .page-intro-card{margin-bottom:12px}
   .live-back-row{margin-bottom:10px}
   .live-back-btn{min-height:46px;border-radius:16px}
-  .mobile-sticky-cta-bar{left:14px;right:14px;bottom:86px;justify-content:center;pointer-events:none}
-  .mobile-sticky-cta{max-width:360px;min-height:54px;border-radius:18px;padding:0 18px;box-shadow:0 18px 30px rgba(255,90,54,.22),0 8px 18px rgba(120,72,32,.10);pointer-events:auto}
+  .mobile-sticky-cta-bar{left:14px;right:14px;bottom:112px;justify-content:center;pointer-events:none}
+  .mobile-sticky-cta{max-width:340px;min-height:52px;border-radius:18px;padding:0 16px;box-shadow:0 16px 28px rgba(255,90,54,.20),0 8px 18px rgba(120,72,32,.09);pointer-events:auto}
   .live-stage-headline strong,.live-window-overlay strong,.live-proof-headline h3{font-size:26px;line-height:1.04}
   .live-stage-headline span,.live-window-overlay small,.live-proof-headline p{font-size:14px;line-height:1.58;max-width:none}
   .mode-section-copy h3{font-size:22px}
@@ -131,7 +132,7 @@ a[href],button,[role="button"],.nav-link,.ghost-btn,.primary-btn,.mobile-link,.t
   .chat-action-row .ghost-btn,.chat-action-row .primary-btn{min-height:48px;padding:12px 10px;font-size:14px}
   .attachment-action-btn{justify-content:center}
 
-  .footer-legal{align-items:stretch;text-align:left;padding-bottom:26px;margin-bottom:118px}
+  .footer-legal{align-items:stretch;text-align:left;padding-bottom:32px;margin-bottom:132px}
   .footer-legal-links{display:grid;grid-template-columns:1fr 1fr;width:100%;gap:10px}
   .footer-legal-links a{display:flex;align-items:center;justify-content:center;min-height:48px;border-radius:16px}
 }
@@ -144,6 +145,6 @@ a[href],button,[role="button"],.nav-link,.ghost-btn,.primary-btn,.mobile-link,.t
   .fallback-mode-row,.footer-legal-links,.chat-action-row{grid-template-columns:1fr}
   .mobile-nav{grid-template-columns:repeat(4,minmax(0,1fr))}
   .mobile-link{font-size:12px;padding:10px 8px}
-  .mobile-sticky-cta-bar{bottom:82px}
+  .mobile-sticky-cta-bar{bottom:114px}
   .mobile-sticky-cta{max-width:none;width:100%}
 }
