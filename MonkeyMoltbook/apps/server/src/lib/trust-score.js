@@ -308,6 +308,19 @@ export function scoreAuthorRisk(author = {}) {
   if (flags.includes('mint:spam') && (mintSpamHits >= 2 || matchedPostCount >= 2 || suspiciousHits >= 2)) score = Math.max(score, 28);
   if (promoHits >= 2 && ctaHits >= 1 && matchedPostCount >= 2) score = Math.max(score, 28);
   if ((phraseDiversity >= 2 && suspiciousHits >= 2) || (matchedPostCount >= 3 && suspiciousHits >= 2 && ctaHits >= 1)) score = Math.max(score, 25);
+
+  if (matchedPostCount === 0 && suspiciousHits === 0 && !flags.includes('mint:spam')) {
+    let lowSignalFloor = 0;
+    if (postCount <= 1) lowSignalFloor += 6;
+    if (topicCount <= 1) lowSignalFloor += 4;
+    if (weakHits >= 1) lowSignalFloor += weakHits * 5;
+    if (daysSinceLatestPost !== null && daysSinceLatestPost > 45) lowSignalFloor += 3;
+    if (strongHits >= 3) lowSignalFloor -= 2;
+    if (karma >= 10000) lowSignalFloor -= 3;
+    if (totalComments >= 10000) lowSignalFloor -= 2;
+    score = Math.max(score, clamp(lowSignalFloor, 0, 20));
+  }
+
   score = clamp(score);
   const reasons = buildReason(flags);
   const explanation = buildAuthorExplanation({
