@@ -372,6 +372,37 @@
 .legal-page-premium .trust-card h3{font-size:24px}.legal-stack{gap:18px}
 @media (max-width:720px){.footer-legal{flex-direction:column}}
 
+/* strongest mobile optimization pass */
+@media (max-width:820px){
+  .site-shell{padding:10px 10px 122px}
+  .topbar{top:8px;padding:10px 12px;border-radius:16px;gap:10px}
+  .brand-mark{width:40px;height:40px}
+  .brand strong{font-size:15px}
+  .brand small{font-size:12px}
+  .page-section,.content-section,.faq-section,.final-cta,.preview-strip,.hero-section{margin-bottom:16px}
+  .page-section{padding:18px 2px}
+  .hero-copy h1,.content-page-hero-main .section-header h2{font-size:clamp(32px,9vw,42px);line-height:1.02}
+  .hero-copy p,.section-header p,.page-section>p,.what-is-page-premium .trust-card p,.faq-page-premium .trust-card p,.legal-page-premium .trust-card p,.faq-item-accordion p{font-size:16px;line-height:1.72;max-width:32ch}
+  .content-page-hero,.what-is-page-premium .trust-card,.faq-page-premium .trust-card,.legal-page-premium .trust-card,.agent-card,.submolt-card,.topic-card,.profile-card,.transcript-shell,.live-stage,.wallet-balance-card{padding:18px 16px;border-radius:22px}
+  .hero-actions,.content-link-row,.card-actions,.live-cta-row,.chat-action-row,.wallet-actions-grid,.wallet-actions-grid-compact{display:grid;grid-template-columns:1fr;gap:10px}
+  .hero-actions .primary-btn,.hero-actions .ghost-btn,.content-link-row .primary-btn,.content-link-row .ghost-btn,.card-actions .primary-btn,.card-actions .ghost-btn,.live-cta-row .primary-btn,.live-cta-row .ghost-btn,.wallet-actions-grid .primary-btn,.wallet-actions-grid .ghost-btn,.wallet-actions-grid-compact .primary-btn,.wallet-actions-grid-compact .ghost-btn,.page-intro-cta,.live-primary-cta,.agent-live-cta,.primary-webcam-cta,.chat-input-row-sticky .primary-btn,.chat-input-row-sticky .ghost-btn{width:100%;min-height:52px;justify-content:center}
+  .ghost-btn,.primary-btn,.mobile-link,.tab,.fallback-mode-btn,.attachment-action-btn,.live-back-btn,.footer-legal-links a{min-height:48px;padding:12px 14px}
+  .mobile-nav{left:8px;right:8px;bottom:8px;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:8px;border-radius:18px}
+  .mobile-link{min-height:48px;font-size:13px}
+  .listing-hero-strip,.trust-row,.content-proof-chips,.plan-chip-row,.live-side-summary,.metric-row,.tag-row{display:flex;flex-wrap:wrap;gap:8px}
+  .listing-strip-card,.trust-chip,.tag,.presence-pill{min-height:44px;display:inline-flex;align-items:center}
+  .card-grid.three,.card-grid.two,.credit-pack-grid,.ai-choice-grid,.ai-plan-row-strong,.live-room-meta-row,.mode-selector-row,.control-row,.signal-row,.hero-stat-row,.camera-card-actions,.proof-stat-grid,.preview-strip{grid-template-columns:1fr !important}
+  .search-columns,.profile-hero,.trust-grid,.lead-capture-grid,.monetization-grid,.trust-conversion-band,.live-proof-shell,.live-proof-grid,.live-page .live-layout,.live-layout-chat,.chat-input-row{grid-template-columns:1fr !important}
+  .mega-search,.chat-input,.export-select{font-size:16px;min-height:52px}
+  .chat-input-live{min-height:96px}
+  .transcript-feed-chat-dominant{min-height:360px;padding:12px}
+  .transcript-bubble{max-width:100%;padding:13px 14px}
+  .faq-item-accordion summary{padding:16px 16px;font-size:16px;min-height:56px}
+  .faq-item-accordion p{padding:0 16px 16px}
+  .live-window,.camera-screen,.live-proof-window,.cam-panel,.agent-panel{min-height:160px}
+  .topbar-actions,.topbar-utility-links{display:none}
+}
+
 /* non-homepage click system enforcement */
 .listing-page .page-intro-cta,
 .search-page-redesign .page-intro-cta,
