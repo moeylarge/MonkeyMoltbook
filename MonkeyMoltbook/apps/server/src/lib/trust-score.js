@@ -119,6 +119,13 @@ function uniqueParts(parts = []) {
   return out;
 }
 
+function rankedParts(items = []) {
+  return items
+    .filter(Boolean)
+    .sort((a, b) => (b.weight || 0) - (a.weight || 0))
+    .map((item) => item.text);
+}
+
 function buildAuthorExplanation({ score, confidenceScore, isClaimed, karma, postCount, totalComments, strongHits, weakHits, descriptionLength, submoltCount, topicCount, profileUrl, isActive, daysSinceLatestPost, matchedPostCount, suspiciousHits, phraseDiversity, promoHits, ctaHits, benignHits, analysisHits, flags = [] }) {
   const maturitySignals = uniqueParts([
     (karma >= 10000 || totalComments >= 10000 || postCount >= 20) ? 'strong activity depth and durable account history' : null,
@@ -128,19 +135,19 @@ function buildAuthorExplanation({ score, confidenceScore, isClaimed, karma, post
     analysisHits > 0 ? 'analysis-style posting lowers scam concern' : null
   ]);
 
-  const uncertaintySignals = uniqueParts([
-    (postCount <= 1) ? 'thin activity history limits confidence' : null,
-    (postCount > 1 && postCount <= 3) ? 'limited posting history reduces confidence' : null,
-    (topicCount === 0) ? 'limited profile coverage reduces confidence' : null,
-    (topicCount === 1) ? 'narrow topic coverage reduces confidence' : null,
-    (!profileUrl) ? 'missing profile link reduces confidence' : null,
-    (!isActive) ? 'inactive profile lowers confidence' : null,
-    (daysSinceLatestPost !== null && daysSinceLatestPost > 90) ? 'stale activity lowers confidence' : null,
-    (daysSinceLatestPost !== null && daysSinceLatestPost > 45 && daysSinceLatestPost <= 90) ? 'inconsistent recent activity slightly reduces confidence' : null,
-    (descriptionLength < 20 && !isClaimed) ? 'limited profile maturity increases uncertainty' : null,
-    (weakHits >= 2 && matchedPostCount === 0) ? 'weak signal density increases uncertainty' : null,
-    (weakHits === 1 && matchedPostCount === 0) ? 'minor weak-signal patterns reduce confidence' : null
-  ]);
+  const uncertaintySignals = uniqueParts(rankedParts([
+    (postCount <= 1) ? { text: 'thin activity history limits confidence', weight: 10 } : null,
+    (postCount > 1 && postCount <= 3) ? { text: 'limited posting history reduces confidence', weight: 7 } : null,
+    (topicCount === 0) ? { text: 'limited profile coverage reduces confidence', weight: 9 } : null,
+    (topicCount === 1) ? { text: 'narrow topic coverage reduces confidence', weight: 6 } : null,
+    (!profileUrl) ? { text: 'missing profile link reduces confidence', weight: 8 } : null,
+    (!isActive) ? { text: 'inactive profile lowers confidence', weight: 8 } : null,
+    (daysSinceLatestPost !== null && daysSinceLatestPost > 90) ? { text: 'stale activity lowers confidence', weight: 7 } : null,
+    (daysSinceLatestPost !== null && daysSinceLatestPost > 45 && daysSinceLatestPost <= 90) ? { text: 'inconsistent recent activity slightly reduces confidence', weight: 5 } : null,
+    (descriptionLength < 20 && !isClaimed) ? { text: 'limited profile maturity increases uncertainty', weight: 6 } : null,
+    (weakHits >= 2 && matchedPostCount === 0) ? { text: 'weak signal density increases uncertainty', weight: 8 } : null,
+    (weakHits === 1 && matchedPostCount === 0) ? { text: 'minor weak-signal patterns reduce confidence', weight: 5 } : null
+  ]));
 
   const riskSignals = uniqueParts([
     matchedPostCount >= 2 ? 'multiple flagged posts increase current risk' : null,
@@ -167,7 +174,16 @@ function buildAuthorExplanation({ score, confidenceScore, isClaimed, karma, post
     if (finalParts.length < 2) finalParts.push(...uncertaintySignals.slice(0, 1));
   } else if (score >= 16) {
     if (confidenceScore < 46) {
-      finalParts.push(...uncertaintySignals.slice(0, 2));
+      const primaryUncertainty = uncertaintySignals[0];
+      const secondaryUncertainty = uncertaintySignals.find((x) => {
+        if (!primaryUncertainty) return true;
+        if (primaryUncertainty.includes('posting') || primaryUncertainty.includes('activity history')) return !x.includes('posting') && !x.includes('activity history');
+        if (primaryUncertainty.includes('coverage')) return !x.includes('coverage');
+        if (primaryUncertainty.includes('profile')) return !x.includes('profile');
+        return x !== primaryUncertainty;
+      });
+      if (primaryUncertainty) finalParts.push(primaryUncertainty);
+      if (secondaryUncertainty) finalParts.push(secondaryUncertainty);
       if (finalParts.length < 2) finalParts.push(...mildStabilizers.slice(0, 1));
     } else {
       finalParts.push(...maturitySignals.slice(0, 1));
@@ -176,8 +192,10 @@ function buildAuthorExplanation({ score, confidenceScore, isClaimed, karma, post
     }
   } else {
     if (confidenceScore < 46) {
-      finalParts.push(...maturitySignals.slice(0, 1));
-      if (finalParts.length < 2) finalParts.push(...uncertaintySignals.slice(0, 1));
+      const primaryMaturity = maturitySignals[0];
+      const primaryUncertainty = uncertaintySignals[0];
+      if (primaryMaturity) finalParts.push(primaryMaturity);
+      if (primaryUncertainty) finalParts.push(primaryUncertainty);
     } else {
       finalParts.push(...maturitySignals.slice(0, 2));
     }
