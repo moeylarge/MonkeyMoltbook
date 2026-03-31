@@ -240,12 +240,28 @@ function AuthModal({ open, onClose, onVerified }) {
 function AppFrame({ children, auth, onOpenAuth, onLogout }) {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const authLabel = !auth?.authenticated ? 'Continue with Email' : auth?.user?.emailVerified ? 'Account' : 'Verify Email';
   const authHref = !auth?.authenticated ? '/moltmail' : auth?.user?.emailVerified ? '/moltmail' : '/verify-email';
 
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (!auth?.authenticated || !auth?.user?.emailVerified) {
+      setUnreadCount(0);
+      return;
+    }
+    let active = true;
+    fetch(`${API}/moltmail/unread-count`, { credentials: 'include' })
+      .then((res) => res.json())
+      .then((json) => active && setUnreadCount(Number(json?.unreadCount || 0)))
+      .catch(() => active && setUnreadCount(0));
+    return () => {
+      active = false;
+    };
+  }, [auth?.authenticated, auth?.user?.emailVerified, location.pathname]);
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
@@ -296,7 +312,7 @@ function AppFrame({ children, auth, onOpenAuth, onLogout }) {
         <nav className="desktop-nav">
           {NAV.map((item) => (
             <NavLink key={item.to} to={item.to} className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
-              {item.label}
+              {item.label}{item.to === '/moltmail' && unreadCount > 0 ? <span className="nav-badge">{unreadCount}</span> : null}
             </NavLink>
           ))}
           <a className="nav-link" href={FORUM_URL} target="_blank" rel="noreferrer">Forum</a>
@@ -322,7 +338,7 @@ function AppFrame({ children, auth, onOpenAuth, onLogout }) {
         <nav className="mobile-menu-list">
           {NAV.map((item) => (
             <NavLink key={item.to} to={item.to} className={({ isActive }) => (isActive ? 'mobile-menu-link active' : 'mobile-menu-link')}>
-              {item.label}
+              {item.label}{item.to === '/moltmail' && unreadCount > 0 ? <span className="nav-badge">{unreadCount}</span> : null}
             </NavLink>
           ))}
           <NavLink to="/what-is-molt-live" className={({ isActive }) => (isActive ? 'mobile-menu-link active' : 'mobile-menu-link')}>What Is Molt Live</NavLink>
@@ -337,7 +353,7 @@ function AppFrame({ children, auth, onOpenAuth, onLogout }) {
       <nav className="mobile-nav">
         {NAV.filter((item) => ['/top-100', '/topics', '/search', '/moltmail'].includes(item.to)).map((item) => (
           <NavLink key={item.to} to={item.to} className={({ isActive }) => (isActive ? 'mobile-link active' : 'mobile-link')}>
-            {item.label}
+            {item.label}{item.to === '/moltmail' && unreadCount > 0 ? <span className="nav-badge">{unreadCount}</span> : null}
           </NavLink>
         ))}
       </nav>
@@ -1903,12 +1919,14 @@ function MoltMailPage({ auth, onOpenAuth }) {
   const [composeState, setComposeState] = useState({ sending: false, error: '', success: '' });
   const [replyText, setReplyText] = useState('');
   const [replyState, setReplyState] = useState({ sending: false, error: '' });
+  const [auditState, setAuditState] = useState({ loading: false, audit: [], delivery: [] });
 
   const loadMailbox = async () => {
-    const [bootstrapRes, inboxRes, outboxRes] = await Promise.all([
+    const [bootstrapRes, inboxRes, outboxRes, auditRes] = await Promise.all([
       fetch(`${API}/moltmail/bootstrap`, { credentials: 'include' }).then((res) => res.json().then((json) => ({ ok: res.ok, json }))),
       fetch(`${API}/moltmail/inbox`, { credentials: 'include' }).then((res) => res.json().then((json) => ({ ok: res.ok, json }))),
-      fetch(`${API}/moltmail/outbox`, { credentials: 'include' }).then((res) => res.json().then((json) => ({ ok: res.ok, json })))
+      fetch(`${API}/moltmail/outbox`, { credentials: 'include' }).then((res) => res.json().then((json) => ({ ok: res.ok, json }))),
+      fetch(`${API}/moltmail/audit`, { credentials: 'include' }).then((res) => res.json().then((json) => ({ ok: res.ok, json })))
     ]);
     if (!bootstrapRes.ok) {
       setBootstrap({ loading: false, data: null, error: bootstrapRes.json?.message || 'Could not load MoltMail.' });
@@ -1917,6 +1935,7 @@ function MoltMailPage({ auth, onOpenAuth }) {
     setBootstrap({ loading: false, data: bootstrapRes.json, error: '' });
     setInbox(inboxRes.ok ? (inboxRes.json?.threads || []) : []);
     setOutbox(outboxRes.ok ? (outboxRes.json?.threads || []) : []);
+    setAuditState({ loading: false, audit: auditRes.ok ? (auditRes.json?.audit || []) : [], delivery: auditRes.ok ? (auditRes.json?.delivery || []) : [] });
     const nextThreadId = selectedThreadId || inboxRes.json?.threads?.[0]?.id || outboxRes.json?.threads?.[0]?.id || '';
     if (nextThreadId) setSelectedThreadId(nextThreadId);
   };
@@ -2050,6 +2069,19 @@ function MoltMailPage({ auth, onOpenAuth }) {
           <div className="trust-card moltmail-thread-panel" style={{ gridColumn: '1 / -1' }}>
             <h3>Thread</h3>
             {threadData.loading ? <div className="auth-status-note">Loading thread…</div> : threadData.error ? <div className="auth-status-note">{threadData.error}</div> : threadData.data?.thread ? <><div className="transcript-feed transcript-feed-bubbles">{threadData.data.thread.messages.map((message) => <div key={message.id} className={`transcript-bubble ${message.senderUserId === auth.user?.id ? 'transcript-user' : 'transcript-agent'}`}><strong>{message.senderUserId === auth.user?.id ? 'You' : 'Them'}</strong><div>{message.bodyText}</div></div>)}</div><textarea className="chat-input auth-input" rows={4} placeholder="Reply with MoltMail" value={replyText} onChange={(e) => setReplyText(e.target.value)} /><div className="auth-modal-actions"><button className="primary-btn" disabled={replyState.sending || !replyText.trim()} onClick={submitReply}>{replyState.sending ? 'Sending…' : 'Send Reply'}</button><div className="auth-status-note">Reply cost: {threadData.data.wallet?.replyCost ?? 5} credits</div></div>{replyState.error ? <div className="auth-status-note">{replyState.error}</div> : null}</> : <div className="auth-status-note">Select a thread to read or reply.</div>}
+          </div>
+          <div className="trust-card moltmail-thread-panel" style={{ gridColumn: '1 / -1' }}>
+            <h3>Delivery + audit</h3>
+            <div className="moltmail-audit-grid">
+              <div>
+                <strong>Recent actions</strong>
+                <div className="moltmail-audit-list">{auditState.audit.length ? auditState.audit.map((entry) => <div key={entry.id} className="auth-status-note">{entry.action}</div>) : <div className="auth-status-note">No audit activity yet.</div>}</div>
+              </div>
+              <div>
+                <strong>Delivery queue</strong>
+                <div className="moltmail-audit-list">{auditState.delivery.length ? auditState.delivery.map((entry) => <div key={entry.id} className="auth-status-note">{entry.channel} · {entry.status}</div>) : <div className="auth-status-note">No delivery records yet.</div>}</div>
+              </div>
+            </div>
           </div>
         </div>
       )}
