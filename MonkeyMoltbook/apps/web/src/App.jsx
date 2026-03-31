@@ -50,7 +50,6 @@ const NAV = [
   { to: '/moltmail', label: 'MoltMail' }
 ];
 const FORUM_URL = 'https://www.moltbook.com/m';
-const DESKTOP_NAV_PRIMARY = ['/top-100', '/rising-25', '/topics', '/search', '/moltmail'];
 
 function slugify(value) {
   return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -312,11 +311,12 @@ function AppFrame({ children, auth, onOpenAuth, onLogout }) {
         </Link>
         <nav className="desktop-nav">
           <div className="desktop-nav-primary">
-            {NAV.filter((item) => DESKTOP_NAV_PRIMARY.includes(item.to)).map((item) => (
+            {NAV.map((item) => (
               <NavLink key={item.to} to={item.to} className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}>
                 {item.label}{item.to === '/moltmail' && unreadCount > 0 ? <span className="nav-badge">{unreadCount}</span> : null}
               </NavLink>
             ))}
+            <a className="nav-link" href={FORUM_URL} target="_blank" rel="noreferrer">Forum</a>
           </div>
         </nav>
         <div className="topbar-actions">
