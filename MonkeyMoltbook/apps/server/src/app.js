@@ -371,6 +371,17 @@ function appendJsonl(filePath, payload) {
   fs.appendFileSync(filePath, `${JSON.stringify(payload)}\n`);
 }
 
+function readJsonl(filePath) {
+  if (!fs.existsSync(filePath)) return [];
+  return fs.readFileSync(filePath, 'utf8').split('\n').filter(Boolean).map((line) => {
+    try {
+      return JSON.parse(line);
+    } catch {
+      return null;
+    }
+  }).filter(Boolean);
+}
+
 async function runMoltbookRefreshJob(meta = {}) {
   const mode = meta.mode || 'default';
   const triggerSource = meta.source || 'manual';
@@ -1258,6 +1269,23 @@ app.post('/moltbook/refresh', async (req, res) => {
 app.post('/waitlist', (req, res) => { const { email = '', name = '', useCase = '', source = 'site' } = req.body || {}; if (!String(email).includes('@')) return res.status(400).json({ ok: false, error: 'valid_email_required' }); appendJsonl(WAITLIST_FILE, { createdAt: new Date().toISOString(), email: String(email).trim(), name: String(name).trim(), useCase: String(useCase).trim(), source }); res.json({ ok: true }); });
 app.post('/topic-interest', (req, res) => { const { email = '', topics = [], note = '', source = 'site' } = req.body || {}; appendJsonl(INTEREST_FILE, { createdAt: new Date().toISOString(), email: String(email).trim(), topics: Array.isArray(topics) ? topics.map((x) => String(x)) : [], note: String(note).trim(), source }); res.json({ ok: true }); });
 app.post('/analytics/event', (req, res) => { const { event = 'unknown', meta = {} } = req.body || {}; appendJsonl(ANALYTICS_FILE, { createdAt: new Date().toISOString(), event: String(event), meta }); res.json({ ok: true }); });
+app.get('/analytics/summary', (req, res) => {
+  const rows = readJsonl(ANALYTICS_FILE);
+  const routes = {};
+  for (const row of rows) {
+    const routePath = row?.meta?.routePath || 'unknown';
+    if (!routes[routePath]) routes[routePath] = { views: 0, primaryClicks: 0, secondaryClicks: 0, dropoffs: 0, labels: {} };
+    if (row.event === 'route_view') routes[routePath].views += 1;
+    if (row.event === 'route_action_click') {
+      if (row?.meta?.actionType === 'primary') routes[routePath].primaryClicks += 1;
+      else routes[routePath].secondaryClicks += 1;
+      const label = row?.meta?.label || 'unknown';
+      routes[routePath].labels[label] = (routes[routePath].labels[label] || 0) + 1;
+    }
+    if (row.event === 'route_dropoff_no_click') routes[routePath].dropoffs += 1;
+  }
+  res.json({ ok: true, totalEvents: rows.length, routes });
+});
 app.get('/hook', async (_req, res) => res.json(await getNextAgentHook()));
 app.get('/preload', async (req, res) => { const requested = Number.parseInt(req.query.count, 10); const count = Number.isFinite(requested) && requested > 0 ? Math.min(requested, DEFAULT_PRELOAD_COUNT) : DEFAULT_PRELOAD_COUNT; res.json({ phase: PHASE, count, hooks: await getNextAgentHooks(count) }); });
 app.get('/response', (req, res) => { const agentId = String(req.query.agentId || 'ego-destroyer'); const userText = String(req.query.userText || ''); const response = getResponse(agentId, userText); res.json({ phase: PHASE, agentId, userText, response: { type: 'response', agentId, text: response.text, validation: response.validation } }); });
