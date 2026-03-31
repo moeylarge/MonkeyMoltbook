@@ -22,6 +22,10 @@ function openAiEnabled() {
   return Boolean(OPENAI_API_KEY);
 }
 
+function premiumAiAvailable() {
+  return openAiEnabled();
+}
+
 function buildFredMessages({ agentName, userText, transcript = [] }) {
   const recent = (transcript || []).slice(-10).map((m) => ({
     role: m.role === 'agent' ? 'assistant' : m.role === 'user' ? 'user' : 'system',
