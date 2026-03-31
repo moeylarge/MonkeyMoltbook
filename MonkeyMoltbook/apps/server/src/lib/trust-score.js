@@ -182,9 +182,15 @@ function buildAuthorExplanation({ score, confidenceScore, isClaimed, karma, post
         if (primaryUncertainty.includes('profile')) return !x.includes('profile');
         return x !== primaryUncertainty;
       });
+      const secondaryMaturity = maturitySignals.find((x) => !x.includes('claimed')) || mildStabilizers[0];
       if (primaryUncertainty) finalParts.push(primaryUncertainty);
-      if (secondaryUncertainty) finalParts.push(secondaryUncertainty);
-      if (finalParts.length < 2) finalParts.push(...mildStabilizers.slice(0, 1));
+      if (confidenceScore <= 32 && secondaryMaturity) {
+        finalParts.push(secondaryMaturity);
+      } else if (secondaryUncertainty) {
+        finalParts.push(secondaryUncertainty);
+      } else if (secondaryMaturity) {
+        finalParts.push(secondaryMaturity);
+      }
     } else {
       finalParts.push(...maturitySignals.slice(0, 1));
       if (finalParts.length < 2) finalParts.push(...uncertaintySignals.slice(0, 1));
