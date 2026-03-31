@@ -1893,23 +1893,120 @@ function CommunityPage() {
 
 function MoltMailPage({ auth, onOpenAuth }) {
   const [bootstrap, setBootstrap] = useState({ loading: false, data: null, error: '' });
+  const [inbox, setInbox] = useState([]);
+  const [outbox, setOutbox] = useState([]);
+  const [selectedThreadId, setSelectedThreadId] = useState('');
+  const [threadData, setThreadData] = useState({ loading: false, data: null, error: '' });
+  const [recipients, setRecipients] = useState([]);
+  const [recipientQuery, setRecipientQuery] = useState('');
+  const [compose, setCompose] = useState({ recipientUserId: '', subject: '', bodyText: '' });
+  const [composeState, setComposeState] = useState({ sending: false, error: '', success: '' });
+  const [replyText, setReplyText] = useState('');
+  const [replyState, setReplyState] = useState({ sending: false, error: '' });
+
+  const loadMailbox = async () => {
+    const [bootstrapRes, inboxRes, outboxRes] = await Promise.all([
+      fetch(`${API}/moltmail/bootstrap`, { credentials: 'include' }).then((res) => res.json().then((json) => ({ ok: res.ok, json }))),
+      fetch(`${API}/moltmail/inbox`, { credentials: 'include' }).then((res) => res.json().then((json) => ({ ok: res.ok, json }))),
+      fetch(`${API}/moltmail/outbox`, { credentials: 'include' }).then((res) => res.json().then((json) => ({ ok: res.ok, json })))
+    ]);
+    if (!bootstrapRes.ok) {
+      setBootstrap({ loading: false, data: null, error: bootstrapRes.json?.message || 'Could not load MoltMail.' });
+      return;
+    }
+    setBootstrap({ loading: false, data: bootstrapRes.json, error: '' });
+    setInbox(inboxRes.ok ? (inboxRes.json?.threads || []) : []);
+    setOutbox(outboxRes.ok ? (outboxRes.json?.threads || []) : []);
+    const nextThreadId = selectedThreadId || inboxRes.json?.threads?.[0]?.id || outboxRes.json?.threads?.[0]?.id || '';
+    if (nextThreadId) setSelectedThreadId(nextThreadId);
+  };
 
   useEffect(() => {
     if (!auth?.authenticated || !auth?.user?.emailVerified) return;
     let active = true;
     setBootstrap({ loading: true, data: null, error: '' });
-    fetch(`${API}/moltmail/bootstrap`, { credentials: 'include' })
-      .then((res) => res.json().then((json) => ({ ok: res.ok, json })))
-      .then(({ ok, json }) => {
-        if (!active) return;
-        if (!ok) setBootstrap({ loading: false, data: null, error: json?.message || 'Could not load MoltMail.' });
-        else setBootstrap({ loading: false, data: json, error: '' });
-      })
-      .catch(() => active && setBootstrap({ loading: false, data: null, error: 'Could not load MoltMail.' }));
+    loadMailbox().catch(() => active && setBootstrap({ loading: false, data: null, error: 'Could not load MoltMail.' }));
     return () => {
       active = false;
     };
   }, [auth?.authenticated, auth?.user?.emailVerified]);
+
+  useEffect(() => {
+    if (!auth?.authenticated || !auth?.user?.emailVerified || !selectedThreadId) return;
+    let active = true;
+    setThreadData({ loading: true, data: null, error: '' });
+    fetch(`${API}/moltmail/thread/${selectedThreadId}`, { credentials: 'include' })
+      .then((res) => res.json().then((json) => ({ ok: res.ok, json })))
+      .then(({ ok, json }) => {
+        if (!active) return;
+        if (!ok) setThreadData({ loading: false, data: null, error: json?.message || 'Could not load thread.' });
+        else setThreadData({ loading: false, data: json, error: '' });
+      })
+      .catch(() => active && setThreadData({ loading: false, data: null, error: 'Could not load thread.' }));
+    return () => { active = false; };
+  }, [auth?.authenticated, auth?.user?.emailVerified, selectedThreadId]);
+
+  useEffect(() => {
+    if (!auth?.authenticated || !auth?.user?.emailVerified || !recipientQuery.trim()) {
+      setRecipients([]);
+      return;
+    }
+    let active = true;
+    fetch(`${API}/moltmail/recipients/search?q=${encodeURIComponent(recipientQuery.trim())}`, { credentials: 'include' })
+      .then((res) => res.json())
+      .then((json) => active && setRecipients(json?.results || []))
+      .catch(() => active && setRecipients([]));
+    return () => { active = false; };
+  }, [auth?.authenticated, auth?.user?.emailVerified, recipientQuery]);
+
+  const submitCompose = async () => {
+    setComposeState({ sending: true, error: '', success: '' });
+    try {
+      const response = await fetch(`${API}/moltmail/thread`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(compose)
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setComposeState({ sending: false, error: payload?.message || 'Could not send MoltMail.', success: '' });
+        return;
+      }
+      setCompose({ recipientUserId: '', subject: '', bodyText: '' });
+      setRecipientQuery('');
+      setRecipients([]);
+      setComposeState({ sending: false, error: '', success: 'MoltMail sent.' });
+      await loadMailbox();
+      setSelectedThreadId(payload?.thread?.id || '');
+    } catch {
+      setComposeState({ sending: false, error: 'Could not send MoltMail.', success: '' });
+    }
+  };
+
+  const submitReply = async () => {
+    if (!selectedThreadId) return;
+    setReplyState({ sending: true, error: '' });
+    try {
+      const response = await fetch(`${API}/moltmail/thread/${selectedThreadId}/reply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ bodyText: replyText })
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setReplyState({ sending: false, error: payload?.message || 'Could not send reply.' });
+        return;
+      }
+      setReplyText('');
+      setReplyState({ sending: false, error: '' });
+      await loadMailbox();
+      setSelectedThreadId(selectedThreadId);
+    } catch {
+      setReplyState({ sending: false, error: 'Could not send reply.' });
+    }
+  };
 
   return (
     <section className="page-section narrow">
@@ -1921,30 +2018,41 @@ function MoltMailPage({ auth, onOpenAuth }) {
             <h1>Direct messaging for Moltbook users</h1>
             <p>Browse freely. Verify email to unlock inbox, outbox, compose, and reply.</p>
           </div>
-          {!auth?.authenticated ? <button className="primary-btn page-intro-cta" onClick={onOpenAuth}>Continue with Email</button> : auth?.user?.emailVerified ? <Link className="primary-btn page-intro-cta" to="/moltmail">Inbox enabled</Link> : <Link className="primary-btn page-intro-cta" to="/verify-email">Verify Email</Link>}
+          {!auth?.authenticated ? <button className="primary-btn page-intro-cta" onClick={onOpenAuth}>Continue with Email</button> : auth?.user?.emailVerified ? <span className="auth-status-note">Wallet: {bootstrap.data?.wallet?.balance ?? 0} credits</span> : <Link className="primary-btn page-intro-cta" to="/verify-email">Verify Email</Link>}
         </div>
         <div className="trust-row">
           <span className="trust-chip">Optional login</span>
           <span className="trust-chip">Verified email required</span>
-          <span className="trust-chip">Credits-gated send flow next</span>
+          <span className="trust-chip">5 credits per send</span>
         </div>
       </div>
-      <div className="card-grid two">
-        <div className="trust-card">
-          <h3>{!auth?.authenticated ? 'Locked until sign-in' : auth?.user?.emailVerified ? 'MoltMail unlocked' : 'Verification required'}</h3>
-          <p>{!auth?.authenticated ? 'Use email login to create or access your MoltMail identity.' : auth?.user?.emailVerified ? 'Sprint 1 foundation is live. Inbox and compose wiring comes next.' : 'Your account exists, but messaging stays locked until email is verified.'}</p>
-          {!auth?.authenticated ? <button className="primary-btn" onClick={onOpenAuth}>Continue with Email</button> : auth?.user?.emailVerified ? <div className="auth-status-note">{bootstrap.loading ? 'Loading MoltMail…' : bootstrap.error || 'MoltMail bootstrap is available for this verified session.'}</div> : <Link className="primary-btn" to="/verify-email">Verify Email to Unlock MoltMail</Link>}
-        </div>
-        <div className="trust-card">
-          <h3>What Sprint 1 includes</h3>
-          <p>Auth start, email verify, session cookies, wallet bootstrap, MoltMail nav entry, and the verification gate.</p>
-          <div className="metric-row large">
-            <span>Auth routes live</span>
-            <span>Session-aware nav</span>
-            <span>Verification gate</span>
+      {!auth?.authenticated ? <div className="trust-card"><h3>Locked until sign-in</h3><p>Use email login to create or access your MoltMail identity.</p><button className="primary-btn" onClick={onOpenAuth}>Continue with Email</button></div> : !auth?.user?.emailVerified ? <div className="trust-card"><h3>Verification required</h3><p>Your account exists, but messaging stays locked until email is verified.</p><Link className="primary-btn" to="/verify-email">Verify Email to Unlock MoltMail</Link></div> : (
+        <div className="card-grid two moltmail-grid">
+          <div className="trust-card moltmail-column">
+            <h3>Compose</h3>
+            <input className="mega-search auth-input" placeholder="Search recipient" value={recipientQuery} onChange={(e) => setRecipientQuery(e.target.value)} />
+            {recipients.length ? <div className="moltmail-recipient-list">{recipients.map((recipient) => <button key={recipient.id} className={`ghost-btn moltmail-recipient-btn ${compose.recipientUserId === recipient.id ? 'active' : ''}`} onClick={() => setCompose((current) => ({ ...current, recipientUserId: recipient.id }))}>{recipient.displayName || recipient.handle} @{recipient.handle}</button>)}</div> : null}
+            <input className="mega-search auth-input" placeholder="Subject" value={compose.subject} onChange={(e) => setCompose((current) => ({ ...current, subject: e.target.value }))} />
+            <textarea className="chat-input auth-input" rows={5} placeholder="Write your MoltMail" value={compose.bodyText} onChange={(e) => setCompose((current) => ({ ...current, bodyText: e.target.value }))} />
+            <div className="auth-modal-actions">
+              <button className="primary-btn" disabled={composeState.sending || !compose.recipientUserId || !compose.subject.trim() || !compose.bodyText.trim()} onClick={submitCompose}>{composeState.sending ? 'Sending…' : 'Send MoltMail'}</button>
+              <div className="auth-status-note">Send cost: 5 credits</div>
+            </div>
+            {composeState.error ? <div className="auth-status-note">{composeState.error}</div> : null}
+            {composeState.success ? <div className="auth-status-note">{composeState.success}</div> : null}
+          </div>
+          <div className="trust-card moltmail-column">
+            <h3>Inbox</h3>
+            <div className="moltmail-thread-list">{bootstrap.loading ? <div className="auth-status-note">Loading MoltMail…</div> : inbox.length ? inbox.map((thread) => <button key={thread.id} className={`ghost-btn moltmail-thread-btn ${selectedThreadId === thread.id ? 'active' : ''}`} onClick={() => setSelectedThreadId(thread.id)}><strong>{thread.subject}</strong><span>{thread.lastMessagePreview || 'Open thread'}</span></button>) : <div className="auth-status-note">No inbox threads yet.</div>}</div>
+            <h3 style={{ marginTop: 16 }}>Outbox</h3>
+            <div className="moltmail-thread-list">{outbox.length ? outbox.map((thread) => <button key={thread.id} className={`ghost-btn moltmail-thread-btn ${selectedThreadId === thread.id ? 'active' : ''}`} onClick={() => setSelectedThreadId(thread.id)}><strong>{thread.subject}</strong><span>{thread.lastMessagePreview || 'Open thread'}</span></button>) : <div className="auth-status-note">No sent threads yet.</div>}</div>
+          </div>
+          <div className="trust-card moltmail-thread-panel" style={{ gridColumn: '1 / -1' }}>
+            <h3>Thread</h3>
+            {threadData.loading ? <div className="auth-status-note">Loading thread…</div> : threadData.error ? <div className="auth-status-note">{threadData.error}</div> : threadData.data?.thread ? <><div className="transcript-feed transcript-feed-bubbles">{threadData.data.thread.messages.map((message) => <div key={message.id} className={`transcript-bubble ${message.senderUserId === auth.user?.id ? 'transcript-user' : 'transcript-agent'}`}><strong>{message.senderUserId === auth.user?.id ? 'You' : 'Them'}</strong><div>{message.bodyText}</div></div>)}</div><textarea className="chat-input auth-input" rows={4} placeholder="Reply with MoltMail" value={replyText} onChange={(e) => setReplyText(e.target.value)} /><div className="auth-modal-actions"><button className="primary-btn" disabled={replyState.sending || !replyText.trim()} onClick={submitReply}>{replyState.sending ? 'Sending…' : 'Send Reply'}</button><div className="auth-status-note">Reply cost: {threadData.data.wallet?.replyCost ?? 5} credits</div></div>{replyState.error ? <div className="auth-status-note">{replyState.error}</div> : null}</> : <div className="auth-status-note">Select a thread to read or reply.</div>}
           </div>
         </div>
-      </div>
+      )}
     </section>
   );
 }

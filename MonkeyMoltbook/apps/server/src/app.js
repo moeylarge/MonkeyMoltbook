@@ -11,7 +11,8 @@ import { buildSearchDocumentsFromState, getAuthorsByIds, getAuthorsBySourceIds, 
 import { scoreAuthorRisk, scoreCommunityRisk } from './lib/trust-score.js';
 import { addAgentReply, addLiveMessage, createLiveSession, endLiveSession, exportTranscriptText, getLiveSession, listTranscript, liveSessionsEnabled, updateLivePresence } from './lib/live-sessions.js';
 import { createCheckoutSession, creditsEnabled, ensureCreditProducts, getSpendRules, getWallet, grantCredits, listCreditProducts, listCreditTransactions, spendCredits } from './lib/credits.js';
-import { applySessionCookie, getAccountMe, getSessionResponse, logoutSession, requireVerifiedUser, startEmailAuth, verifyEmailAuth } from './lib/moltmail-auth.js';
+import { applySessionCookie, getAccountMe, getSessionResponse, logoutSession, startEmailAuth, verifyEmailAuth } from './lib/moltmail-auth.js';
+import { archiveThread, createThread, getBootstrap, getInbox, getOutbox, getThread, getUnreadCount, markThreadRead, replyThread, searchRecipients } from './lib/moltmail-data.js';
 
 export const app = express();
 app.use(express.json());
@@ -75,19 +76,53 @@ app.post('/account/resend-verification', async (req, res) => {
 });
 
 app.get('/moltmail/bootstrap', (req, res) => {
-  const gate = requireVerifiedUser(req);
-  if (!gate.ok) {
-    res.status(gate.status).json(gate);
-    return;
-  }
-  res.json({
-    ok: true,
-    inboxEnabled: true,
-    composeEnabled: true,
-    unreadCount: 0,
-    wallet: { balance: 0 },
-    user: gate.user
-  });
+  const result = getBootstrap(req);
+  res.status(result.ok ? 200 : result.status || 400).json(result);
+});
+
+app.get('/moltmail/recipients/search', (req, res) => {
+  const result = searchRecipients(req, req.query?.q);
+  res.status(result.ok ? 200 : result.status || 400).json(result);
+});
+
+app.get('/moltmail/inbox', (req, res) => {
+  const result = getInbox(req);
+  res.status(result.ok ? 200 : result.status || 400).json(result);
+});
+
+app.get('/moltmail/outbox', (req, res) => {
+  const result = getOutbox(req);
+  res.status(result.ok ? 200 : result.status || 400).json(result);
+});
+
+app.get('/moltmail/thread/:threadId', (req, res) => {
+  const result = getThread(req, req.params.threadId);
+  res.status(result.ok ? 200 : result.status || 400).json(result);
+});
+
+app.post('/moltmail/thread', (req, res) => {
+  const result = createThread(req, req.body || {});
+  res.status(result.ok ? 200 : result.status || 400).json(result);
+});
+
+app.post('/moltmail/thread/:threadId/reply', (req, res) => {
+  const result = replyThread(req, req.params.threadId, req.body || {});
+  res.status(result.ok ? 200 : result.status || 400).json(result);
+});
+
+app.post('/moltmail/thread/:threadId/read', (req, res) => {
+  const result = markThreadRead(req, req.params.threadId);
+  res.status(result.ok ? 200 : result.status || 400).json(result);
+});
+
+app.post('/moltmail/thread/:threadId/archive', (req, res) => {
+  const result = archiveThread(req, req.params.threadId);
+  res.status(result.ok ? 200 : result.status || 400).json(result);
+});
+
+app.get('/moltmail/unread-count', (req, res) => {
+  const result = getUnreadCount(req);
+  res.status(result.ok ? 200 : result.status || 400).json(result);
 });
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
