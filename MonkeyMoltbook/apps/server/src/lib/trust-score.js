@@ -95,10 +95,45 @@ function buildReason(flags = []) {
 }
 
 export function labelForRisk(score) {
-  if (score >= 75) return 'Severe Risk';
-  if (score >= 50) return 'High Risk';
-  if (score >= 25) return 'Caution';
-  return 'Low Risk';
+  if (score >= 76) return 'High Risk';
+  if (score >= 56) return 'Elevated Risk';
+  if (score >= 36) return 'Moderate Risk';
+  if (score >= 16) return 'Low Risk';
+  return 'Very Low Risk';
+}
+
+function buildAuthorExplanation({ score, isClaimed, karma, postCount, descriptionLength, submoltCount, matchedPostCount, suspiciousHits, phraseDiversity, promoHits, ctaHits, benignHits, analysisHits, flags = [] }) {
+  const positives = [];
+  const negatives = [];
+  const uncertainty = [];
+
+  if (isClaimed) positives.push('claimed account ownership reduces current risk');
+  if (karma >= 500) positives.push('strong account history lowers current risk');
+  if (postCount >= 8 && benignHits > 0) positives.push('broader normal activity offsets some risk');
+  if (analysisHits > 0) positives.push('analysis-style posting lowers current scam risk');
+
+  if (descriptionLength < 20 && !isClaimed) negatives.push('limited profile maturity increases uncertainty');
+  if (matchedPostCount >= 2) negatives.push('multiple flagged posts increase current risk');
+  if (suspiciousHits >= 2) negatives.push('suspicious phrase density raises current risk');
+  if (phraseDiversity >= 2) negatives.push('multiple risky language patterns raise concern');
+  if (promoHits >= 2 && ctaHits >= 1) negatives.push('promo plus claim-style calls-to-action increase risk');
+  if (flags.some((x) => x.startsWith('phishing:'))) negatives.push('phishing-like language increases current risk');
+  if (flags.some((x) => x.startsWith('malware:'))) negatives.push('malware-linked wording sharply increases risk');
+  if (flags.includes('mint:spam')) negatives.push('mint-spam patterns increase current risk');
+  if (submoltCount >= 6 && postCount >= 8) negatives.push('high-velocity cross-community activity raises caution');
+
+  if (postCount <= 1 && matchedPostCount === 0) uncertainty.push('limited trust data available; score uses incomplete signals');
+  else if (postCount <= 3 && !isClaimed && descriptionLength < 20) uncertainty.push('limited trust data available; weak profile depth increases uncertainty');
+
+  const parts = [];
+  if (score <= 15 && positives.length) parts.push(positives[0]);
+  if (score >= 16 && negatives.length) parts.push(negatives[0]);
+  if (score <= 35 && positives.length && negatives.length) parts.push(positives[0]);
+  if (!parts.length && negatives.length) parts.push(negatives[0]);
+  if (parts.length < 2 && positives.length && !parts.includes(positives[0])) parts.push(positives[0]);
+  if (parts.length < 2 && uncertainty.length) parts.push(uncertainty[0]);
+  if (!parts.length) return 'limited trust data available; score uses incomplete signals';
+  return parts.slice(0, 2).join(' + ');
 }
 
 export function scorePostRisk(post = {}) {
@@ -242,11 +277,27 @@ export function scoreAuthorRisk(author = {}) {
   if ((phraseDiversity >= 2 && suspiciousHits >= 2) || (matchedPostCount >= 3 && suspiciousHits >= 2 && ctaHits >= 1)) score = Math.max(score, 25);
   score = clamp(score);
   const reasons = buildReason(flags);
+  const explanation = buildAuthorExplanation({
+    score,
+    isClaimed,
+    karma,
+    postCount,
+    descriptionLength,
+    submoltCount,
+    matchedPostCount,
+    suspiciousHits,
+    phraseDiversity,
+    promoHits,
+    ctaHits,
+    benignHits,
+    analysisHits,
+    flags
+  });
 
   return {
     riskScore: score,
     riskLabel: labelForRisk(score),
-    reasonShort: reasons.join(' + ') || 'limited risk evidence so far',
+    reasonShort: explanation,
     topSignals: reasons,
     signalBreakdown: {
       accountThinnessRisk,
