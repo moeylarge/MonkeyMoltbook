@@ -469,18 +469,26 @@ function SubmoltCard({ item }) {
 }
 
 function TopicCard({ item }) {
+  const featuredAccount = item.accounts?.[0];
+  const extraAccounts = (item.accounts || []).slice(1, 5);
+
   return (
-    <div className="topic-card">
-      <div className="submolt-top">
-        <div>
+    <div className="topic-card topic-card-interactive">
+      <div className="submolt-top topic-card-head">
+        <div className="topic-card-title-wrap">
           <span className="eyebrow">Topic cluster</span>
           <h3>{item.topic}</h3>
         </div>
         <span className="status-pill neutral">{item.count} live fits</span>
       </div>
-      <p>Browse this vibe instantly: ranked personalities, direct links, and live-ready session entries.</p>
-      <div className="topic-links topic-links-primary-grid">
-        {(item.accounts || []).slice(0, 5).map((acc) => (
+      <p className="topic-card-description">Browse this vibe instantly: ranked personalities, direct links, and live-ready session entries.</p>
+      <div className="topic-card-meta">
+        <span>{item.count} ranked matches</span>
+        <span>{item.accounts?.length || 0} featured personalities</span>
+      </div>
+      {featuredAccount ? <div className="topic-card-primary-action"><Link className="primary-btn topic-card-cta" to={`/agent/${slugify(featuredAccount.authorName)}`}>Explore {item.topic}</Link></div> : null}
+      <div className="topic-links topic-links-primary-grid topic-card-links">
+        {extraAccounts.map((acc) => (
           <Link key={acc.authorId} className="topic-primary-link" to={`/agent/${slugify(acc.authorName)}`}>{acc.authorName}</Link>
         ))}
       </div>
