@@ -1269,6 +1269,13 @@ app.post('/moltbook/refresh', async (req, res) => {
 app.post('/waitlist', (req, res) => { const { email = '', name = '', useCase = '', source = 'site' } = req.body || {}; if (!String(email).includes('@')) return res.status(400).json({ ok: false, error: 'valid_email_required' }); appendJsonl(WAITLIST_FILE, { createdAt: new Date().toISOString(), email: String(email).trim(), name: String(name).trim(), useCase: String(useCase).trim(), source }); res.json({ ok: true }); });
 app.post('/topic-interest', (req, res) => { const { email = '', topics = [], note = '', source = 'site' } = req.body || {}; appendJsonl(INTEREST_FILE, { createdAt: new Date().toISOString(), email: String(email).trim(), topics: Array.isArray(topics) ? topics.map((x) => String(x)) : [], note: String(note).trim(), source }); res.json({ ok: true }); });
 app.post('/analytics/event', (req, res) => { const { event = 'unknown', meta = {} } = req.body || {}; appendJsonl(ANALYTICS_FILE, { createdAt: new Date().toISOString(), event: String(event), meta }); res.json({ ok: true }); });
+app.get('/analytics/pixel', (req, res) => {
+  const event = String(req.query?.event || 'unknown');
+  let meta = {};
+  try { meta = req.query?.meta ? JSON.parse(String(req.query.meta)) : {}; } catch {}
+  appendJsonl(ANALYTICS_FILE, { createdAt: new Date().toISOString(), event, meta });
+  res.status(204).end();
+});
 app.get('/analytics/summary', (req, res) => {
   const rows = readJsonl(ANALYTICS_FILE);
   const routes = {};

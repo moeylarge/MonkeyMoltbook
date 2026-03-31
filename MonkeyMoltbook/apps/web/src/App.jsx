@@ -66,19 +66,19 @@ function getAnalyticsSessionId() {
   return sessionId;
 }
 
-async function trackEvent(event, meta = {}, options = {}) {
+async function trackEvent(event, meta = {}, _options = {}) {
   try {
-    const payload = JSON.stringify({ event, meta: { sessionId: getAnalyticsSessionId(), ...meta } });
-    if (options.beacon && typeof navigator !== 'undefined' && navigator.sendBeacon) {
-      navigator.sendBeacon(`${API}/analytics/event`, new Blob([payload], { type: 'application/json' }));
+    const params = new URLSearchParams({
+      event,
+      meta: JSON.stringify({ sessionId: getAnalyticsSessionId(), ...meta })
+    });
+    const beaconUrl = `${API}/analytics/pixel?${params.toString()}`;
+    if (typeof Image !== 'undefined') {
+      const img = new Image();
+      img.src = beaconUrl;
       return;
     }
-    await fetch(`${API}/analytics/event`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: payload,
-      keepalive: options.keepalive === true
-    });
+    await fetch(beaconUrl, { method: 'GET', keepalive: true });
   } catch {
     // ignore analytics failures in shell
   }
