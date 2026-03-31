@@ -978,12 +978,14 @@ function LivePage({ data }) {
     setPresence(payload.presence);
   };
 
-  const resetToDefaultLiveEntry = () => {
+  const resetToDefaultLiveEntry = ({ clearSavedSession = true } = {}) => {
     setSession(null);
     setPresence(null);
     setMessages([]);
     setDraft('');
     setSessionMode('webcam');
+    setChatKind('human');
+    setChatChoiceMade(false);
     setMediaError('');
     setMediaDebug(null);
     setMediaState('idle');
@@ -998,7 +1000,11 @@ function LivePage({ data }) {
       localStreamRef.current = null;
     }
     if (localVideoRef.current) localVideoRef.current.srcObject = null;
-    localStorage.removeItem(`molt-live-session:${slug}`);
+    if (clearSavedSession) localStorage.removeItem(`molt-live-session:${slug}`);
+  };
+
+  const backToDefaultLiveScreen = () => {
+    resetToDefaultLiveEntry({ clearSavedSession: false });
   };
 
   const endSession = async () => {
@@ -1064,8 +1070,35 @@ function LivePage({ data }) {
         trustItems={[]}
       />
       <div className="live-back-row">
-        <button className="ghost-btn live-back-btn" onClick={() => navigate(-1)}>← Back</button>
+        <button className="ghost-btn live-back-btn" onClick={backToDefaultLiveScreen}>← Back</button>
       </div>
+      {savedSessionId && !session ? (
+        <div className="wallet-balance-card wallet-balance-card-muted wallet-balance-card-full ai-choice-stage-card">
+          <span className="eyebrow">Saved session</span>
+          <strong>You have an active session saved</strong>
+          <p>Resume it or return to this user’s default start screen.</p>
+          <div className="chat-action-row">
+            <button className="ghost-btn" onClick={async () => {
+              const response = await fetch(`${API}/live/session/${savedSessionId}`);
+              const payload = await response.json();
+              if (payload?.session?.status === 'active') {
+                setSession(payload.session);
+                setPresence(payload.presence || null);
+                if (payload.session.mode === 'chat' || payload.session.mode === 'chat-ai') {
+                  setSessionMode('chat');
+                  setChatChoiceMade(true);
+                  setChatKind(payload.session.mode === 'chat-ai' ? 'ai' : 'human');
+                  if (payload.session.mode === 'chat-ai') setAiUnlocked(true);
+                } else {
+                  setSessionMode(payload.session.mode || 'webcam');
+                }
+                await loadTranscript(savedSessionId);
+              }
+            }}>Resume saved session</button>
+            <button className="primary-btn" onClick={() => { localStorage.removeItem(`molt-live-session:${slug}`); resetToDefaultLiveEntry(); }}>Start fresh</button>
+          </div>
+        </div>
+      ) : null}
       <div className={`live-layout live-layout-monkeyish live-layout-redesign ${isChatMode ? 'live-layout-chat' : ''}`}>
         <div className={`live-stage live-stage-upgraded live-stage-redesign ${isChatMode ? 'live-stage-chat' : ''}`}>
           {session ? (
@@ -1073,7 +1106,7 @@ function LivePage({ data }) {
               <div className="battle-banner live-banner-clean">
                 <span className="eyebrow">Live room</span>
                 <strong>Session is active</strong>
-                <span>{`Session ${session.id.slice(0, 8)} · transcript saved · free during launch`}</span>
+                <span>{`Session ${session.id.slice(0, 8)} · transcript saved`}</span>
               </div>
               <div className="live-stage-headline">
                 <strong>{`${agent?.authorName || 'Agent'} is live with you now`}</strong>

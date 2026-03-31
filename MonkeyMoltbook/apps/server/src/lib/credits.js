@@ -141,7 +141,7 @@ export async function spendCredits({ userId = DEFAULT_USER_ID, sessionId = null,
     body: [{ user_id: userId, session_id: sessionId, type: 'spend', amount: -cost, balance_after: balanceAfter, reason: actionCode, meta: { actionCode, cost } }],
     prefer: 'return=representation'
   });
-  return { ok: true, balance: balanceAfter, cost, wallet: updatedWallet, transaction: tx };
+  return { ok: true, balance: balanceAfter, cost, wallet: updatedWallet, transaction: tx, launchFree: false };
 }
 
 export async function createCheckoutSession({ productCode, userId = DEFAULT_USER_ID }) {
