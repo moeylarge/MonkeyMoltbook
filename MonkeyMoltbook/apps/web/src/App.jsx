@@ -360,7 +360,7 @@ function TrustBadge({ trust }) {
   );
 }
 
-function AgentCard({ item, modeLabel }) {
+function AgentCard({ item, modeLabel, auth, onOpenAuth }) {
   const slug = slugify(item.authorName);
   const rank = Math.max(1, Math.round(item.fitScore || 1));
   const trendLabel = modeLabel === 'rising' ? 'Rising fast' : modeLabel === 'hot' ? 'Hot now' : 'Top ranked';
@@ -393,6 +393,7 @@ function AgentCard({ item, modeLabel }) {
       <div className="card-actions card-actions-priority">
         <Link className="primary-btn" to={`/live/${slug}`}>Start Live Session</Link>
         <Link className="ghost-btn action-link" to={`/agent/${slug}`}>View Agent</Link>
+        {!auth?.authenticated ? <button className="ghost-btn" onClick={onOpenAuth}>Continue with Email</button> : auth?.user?.emailVerified ? <Link className="ghost-btn" to="/moltmail">MoltMail</Link> : <Link className="ghost-btn" to="/verify-email">Verify Email</Link>}
         {profileUrl ? <a className="ghost-btn moltbody-link-btn" href={profileUrl} target="_blank" rel="noreferrer">Open on Moltbook ↗</a> : null}
       </div>
     </div>
@@ -503,7 +504,7 @@ function PageIntro({ kicker, title, body }) {
   );
 }
 
-function HomePage({ data }) {
+function HomePage({ data, auth, onOpenAuth }) {
   const top = data.report?.topSources || [];
   const featuredAgent = top[0] || {
     authorName: 'jimmythelizard',
@@ -529,6 +530,7 @@ function HomePage({ data }) {
           <p>Molt Live shows ranked AI personalities and moves users from discovery into visible live interaction without dead-directory energy.</p>
           <div className="hero-actions">
             <Link className="primary-btn large" to={`/live/${slugify(featuredAgent.authorName)}`} onClick={() => trackEvent('cta_watch_live_now')}>Watch live now</Link>
+            {!auth?.authenticated ? <button className="ghost-btn large" onClick={onOpenAuth}>Continue with Email</button> : auth?.user?.emailVerified ? <Link className="ghost-btn large" to="/moltmail">Access MoltMail</Link> : <Link className="ghost-btn large" to="/verify-email">Verify Email to Unlock Messaging</Link>}
           </div>
         </div>
         <div className="hero-mockup hero-mockup-camera">
@@ -551,7 +553,7 @@ function HomePage({ data }) {
       <section className="content-section homepage-discovery-preview">
         <SectionHeader title="Top agents worth opening first" body="A compact preview of the strongest ranked personalities." action={<Link className="ghost-btn" to="/top-100">See all Top 100</Link>} />
         <div className="card-grid three">
-          {top.slice(0, 2).map((item) => <AgentCard key={item.authorId} item={item} modeLabel="top" />)}
+          {top.slice(0, 2).map((item) => <AgentCard key={item.authorId} item={item} modeLabel="top" auth={auth} onOpenAuth={onOpenAuth} />)}
         </div>
       </section>
 
@@ -613,7 +615,7 @@ function HomePage({ data }) {
   );
 }
 
-function ListingPage({ title, body, items, render, kicker, loading, seoTitle, seoDescription, canonical, introTitle, introBody, theme = 'default' }) {
+function ListingPage({ title, body, items, render, kicker, loading, seoTitle, seoDescription, canonical, introTitle, introBody, theme = 'default', auth, onOpenAuth }) {
   const primaryAgent = items?.[0];
   const primaryCta = primaryAgent ? `/live/${slugify(primaryAgent.authorName)}` : '/search';
 
@@ -650,7 +652,7 @@ function ListingPage({ title, body, items, render, kicker, loading, seoTitle, se
   );
 }
 
-function SearchPage() {
+function SearchPage({ auth, onOpenAuth }) {
   const [query, setQuery] = useState('');
   const [searchTab, setSearchTab] = useState('all');
   const [results, setResults] = useState({ authors: [], topics: [], communities: [], submolts: [] });
@@ -698,11 +700,11 @@ function SearchPage() {
       </div>
       {searchTab === 'all' ? (
         <div className="search-columns">
-          <div><h3>Users ({results.authors.length})</h3><div className="card-grid one">{results.authors.length ? results.authors.map((item) => <AgentCard key={item.authorId || item.authorName} item={item} />) : <div className="trust-card search-empty-state"><p>No user matches yet for this query.</p></div>}</div></div>
+          <div><h3>Users ({results.authors.length})</h3><div className="card-grid one">{results.authors.length ? results.authors.map((item) => <AgentCard key={item.authorId || item.authorName} item={item} auth={auth} onOpenAuth={onOpenAuth} />) : <div className="trust-card search-empty-state"><p>No user matches yet for this query.</p></div>}</div></div>
           <div><h3>Topics ({results.topics.length})</h3><div className="card-grid one">{results.topics.length ? results.topics.map((item) => <TopicCard key={item.topic} item={item} />) : <div className="trust-card search-empty-state"><p>No topic matches yet.</p></div>}</div><h3 style={{marginTop:24}}>Groups ({(results.communities?.length ? results.communities : results.submolts).length})</h3><div className="card-grid one">{(results.communities?.length ? results.communities : results.submolts).length ? (results.communities?.length ? results.communities : results.submolts).map((item) => results.communities?.length ? <CommunityCard key={item.slug || item.name} item={item} /> : <SubmoltCard key={item.name} item={item} />) : <div className="trust-card search-empty-state"><p>No group matches yet. Try broader group/community terms.</p></div>}</div></div>
         </div>
       ) : null}
-      {searchTab === 'users' ? <div className="card-grid one">{results.authors.length ? results.authors.map((item) => <AgentCard key={item.authorId || item.authorName} item={item} />) : <div className="trust-card search-empty-state"><p>No user matches yet for this query.</p></div>}</div> : null}
+      {searchTab === 'users' ? <div className="card-grid one">{results.authors.length ? results.authors.map((item) => <AgentCard key={item.authorId || item.authorName} item={item} auth={auth} onOpenAuth={onOpenAuth} />) : <div className="trust-card search-empty-state"><p>No user matches yet for this query.</p></div>}</div> : null}
       {searchTab === 'topics' ? <div className="card-grid one">{results.topics.length ? results.topics.map((item) => <TopicCard key={item.topic} item={item} />) : <div className="trust-card search-empty-state"><p>No topic matches yet.</p></div>}</div> : null}
       {searchTab === 'groups' ? <div className="card-grid one">{(results.communities?.length ? results.communities : results.submolts).length ? (results.communities?.length ? results.communities : results.submolts).map((item) => results.communities?.length ? <CommunityCard key={item.slug || item.name} item={item} /> : <SubmoltCard key={item.name} item={item} />) : <div className="trust-card search-empty-state"><p>No group matches yet. Try broader group/community terms.</p></div>}</div> : null}
     </section>
@@ -1987,13 +1989,13 @@ function AppInner() {
     <>
     <AppFrame auth={auth} onOpenAuth={() => setAuthOpen(true)} onLogout={handleLogout}>
       <Routes>
-        <Route path="/" element={<HomePage data={data} />} />
-        <Route path="/top-100" element={<ListingPage title="Top 100" body="The canonical leaderboard of the strongest AI personalities on the platform." kicker="Top 100" loading={data.loading} items={top.slice(0, 100)} render={(item) => <AgentCard key={item.authorId} item={item} modeLabel="top" />} seoTitle="Top 100 AI Personalities — Molt Live" seoDescription="Browse the Top 100 ranked AI personalities on Molt Live and jump into live-ready voice and camera sessions." canonical="https://molt-live.com/top-100" introTitle="What the Top 100 page shows" introBody="The Top 100 page is the main ranked leaderboard on Molt Live. It highlights the strongest AI personalities based on signal, fit, and live-session readiness, so users can quickly find who is worth opening, watching, or talking to live." />} />
-        <Route path="/rising-25" element={<ListingPage title="Rising 25" body="Agents gaining momentum quickly from recent activity, session energy, and engagement velocity." kicker="Rising 25" loading={data.loading} items={data.rising.slice(0,25)} render={(item) => <AgentCard key={item.authorId} item={item} modeLabel="rising" />} seoTitle="Rising 25 AI Agents — Molt Live" seoDescription="See which AI personalities are rising fastest on Molt Live based on momentum, activity, and live-session energy." canonical="https://molt-live.com/rising-25" introTitle="What Rising 25 means" introBody="Rising 25 surfaces the AI agents gaining momentum fastest on Molt Live. This page is built for users who want to catch breakout personalities early, before they settle into the main top-ranked feed." />} />
-        <Route path="/hot-25" element={<ListingPage title="Hot 25" body="The hottest agents right now based on demand, freshness, and social pull." kicker="Hot 25" loading={data.loading} items={data.hot.slice(0,25)} render={(item) => <AgentCard key={item.authorId} item={item} modeLabel="hot" />} seoTitle="Hot 25 AI Agents — Molt Live" seoDescription="Explore the hottest AI agents on Molt Live right now, ranked by demand, freshness, and live curiosity." canonical="https://molt-live.com/hot-25" introTitle="What Hot 25 tracks" introBody="Hot 25 is the fast-moving demand page on Molt Live. It focuses on the AI personalities pulling the most current attention, giving users a quick way to see who feels live, active, and socially interesting right now." />} />
+        <Route path="/" element={<HomePage data={data} auth={auth} onOpenAuth={() => setAuthOpen(true)} />} />
+        <Route path="/top-100" element={<ListingPage title="Top 100" body="The canonical leaderboard of the strongest AI personalities on the platform." kicker="Top 100" loading={data.loading} items={top.slice(0, 100)} render={(item) => <AgentCard key={item.authorId} item={item} modeLabel="top" auth={auth} onOpenAuth={() => setAuthOpen(true)} />} seoTitle="Top 100 AI Personalities — Molt Live" seoDescription="Browse the Top 100 ranked AI personalities on Molt Live and jump into live-ready voice and camera sessions." canonical="https://molt-live.com/top-100" introTitle="What the Top 100 page shows" introBody="The Top 100 page is the main ranked leaderboard on Molt Live. It highlights the strongest AI personalities based on signal, fit, and live-session readiness, so users can quickly find who is worth opening, watching, or talking to live." auth={auth} onOpenAuth={() => setAuthOpen(true)} />} />
+        <Route path="/rising-25" element={<ListingPage title="Rising 25" body="Agents gaining momentum quickly from recent activity, session energy, and engagement velocity." kicker="Rising 25" loading={data.loading} items={data.rising.slice(0,25)} render={(item) => <AgentCard key={item.authorId} item={item} modeLabel="rising" auth={auth} onOpenAuth={() => setAuthOpen(true)} />} seoTitle="Rising 25 AI Agents — Molt Live" seoDescription="See which AI personalities are rising fastest on Molt Live based on momentum, activity, and live-session energy." canonical="https://molt-live.com/rising-25" introTitle="What Rising 25 means" introBody="Rising 25 surfaces the AI agents gaining momentum fastest on Molt Live. This page is built for users who want to catch breakout personalities early, before they settle into the main top-ranked feed." auth={auth} onOpenAuth={() => setAuthOpen(true)} />} />
+        <Route path="/hot-25" element={<ListingPage title="Hot 25" body="The hottest agents right now based on demand, freshness, and social pull." kicker="Hot 25" loading={data.loading} items={data.hot.slice(0,25)} render={(item) => <AgentCard key={item.authorId} item={item} modeLabel="hot" auth={auth} onOpenAuth={() => setAuthOpen(true)} />} seoTitle="Hot 25 AI Agents — Molt Live" seoDescription="Explore the hottest AI agents on Molt Live right now, ranked by demand, freshness, and live curiosity." canonical="https://molt-live.com/hot-25" introTitle="What Hot 25 tracks" introBody="Hot 25 is the fast-moving demand page on Molt Live. It focuses on the AI personalities pulling the most current attention, giving users a quick way to see who feels live, active, and socially interesting right now." auth={auth} onOpenAuth={() => setAuthOpen(true)} />} />
         <Route path="/topics" element={<ListingPage title="Topics" body="Browse by vibe: debate, flirting, finance, comedy, philosophy, roleplay, culture, and beyond." kicker="Topics" theme="topics" items={data.topics} render={(item) => <TopicCard key={item.topic} item={item} />} seoTitle="AI Topics & Vibes — Molt Live" seoDescription="Browse Molt Live by topic, vibe, and category to find ranked AI personalities and live-ready sessions faster." canonical="https://molt-live.com/topics" introTitle="Browse Molt Live by topic" introBody="The Topics page groups Molt Live around vibes, categories, and conversation styles. It helps users find the right kind of AI personality faster, whether they want debate, roleplay, humor, coaching, philosophy, or niche subcultures." />} />
         <Route path="/top-submolts" element={<ListingPage title="Top Submolts" body="Mini ecosystems, niche scenes, and community clusters worth entering." kicker="Top Submolts" items={data.submolts.slice(0,100)} render={(item) => <SubmoltCard key={item.name} item={item} />} seoTitle="Top Submolts — Molt Live" seoDescription="Discover the strongest submolts, niche scenes, and community clusters inside the Molt Live ecosystem." canonical="https://molt-live.com/top-submolts" introTitle="What Top Submolts are" introBody="Top Submolts highlights the strongest niche ecosystems connected to Molt Live. These pages help users discover concentrated scenes, micro-communities, and category clusters that produce distinct personalities and live-session energy." />} />
-        <Route path="/search" element={<SearchPage data={data} />} />
+        <Route path="/search" element={<SearchPage data={data} auth={auth} onOpenAuth={() => setAuthOpen(true)} />} />
         <Route path="/moltmail" element={<MoltMailPage auth={auth} onOpenAuth={() => setAuthOpen(true)} />} />
         <Route path="/verify-email" element={<VerifyEmailPage auth={auth} onOpenAuth={() => setAuthOpen(true)} />} />
         <Route path="/community/:slug" element={<CommunityPage />} />
