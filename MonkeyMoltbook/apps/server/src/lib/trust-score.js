@@ -120,21 +120,27 @@ function uniqueParts(parts = []) {
 }
 
 function buildAuthorExplanation({ score, confidenceScore, isClaimed, karma, postCount, totalComments, strongHits, weakHits, descriptionLength, submoltCount, topicCount, profileUrl, isActive, daysSinceLatestPost, matchedPostCount, suspiciousHits, phraseDiversity, promoHits, ctaHits, benignHits, analysisHits, flags = [] }) {
-  const positives = uniqueParts([
-    (karma >= 10000 || totalComments >= 10000) ? 'strong profile depth and stable activity reduce current risk' : null,
-    (!(karma >= 10000 || totalComments >= 10000) && (karma >= 2500 || totalComments >= 1000)) ? 'established account history lowers current risk' : null,
-    (strongHits >= 5 || (topicCount >= 3 && postCount >= 3)) ? 'broad profile coverage reduces uncertainty' : null,
-    analysisHits > 0 ? 'analysis-style posting lowers current scam risk' : null,
-    isClaimed ? 'claimed account ownership slightly reduces current risk' : null
+  const maturitySignals = uniqueParts([
+    (karma >= 10000 || totalComments >= 10000 || postCount >= 20) ? 'strong activity depth and durable account history' : null,
+    (karma >= 2500 || totalComments >= 1000) ? 'established account history' : null,
+    (topicCount >= 4 || strongHits >= 5) ? 'broad profile coverage' : null,
+    (isActive && daysSinceLatestPost !== null && daysSinceLatestPost <= 30) ? 'recent activity stays consistent' : null,
+    analysisHits > 0 ? 'analysis-style posting lowers scam concern' : null
   ]);
 
-  const negatives = uniqueParts([
+  const uncertaintySignals = uniqueParts([
+    (postCount <= 1) ? 'thin activity depth reduces confidence' : null,
+    (topicCount <= 1) ? 'limited profile coverage reduces confidence' : null,
+    (!profileUrl) ? 'missing profile links reduce confidence' : null,
+    (!isActive) ? 'inactive profile lowers confidence' : null,
+    (daysSinceLatestPost !== null && daysSinceLatestPost > 90) ? 'stale activity lowers confidence' : null,
     (descriptionLength < 20 && !isClaimed) ? 'limited profile maturity increases uncertainty' : null,
-    !profileUrl ? 'missing profile links increase uncertainty' : null,
-    !isActive ? 'inactive profile signals increase uncertainty' : null,
-    (daysSinceLatestPost !== null && daysSinceLatestPost > 90) ? 'stale activity increases uncertainty' : null,
+    (weakHits > 0 && matchedPostCount === 0) ? 'weak signals increase uncertainty' : null
+  ]);
+
+  const riskSignals = uniqueParts([
     matchedPostCount >= 2 ? 'multiple flagged posts increase current risk' : null,
-    suspiciousHits >= 2 ? 'suspicious phrase density raises current risk' : null,
+    suspiciousHits >= 2 ? 'suspicious phrase density raises concern' : null,
     phraseDiversity >= 2 ? 'multiple risky language patterns raise concern' : null,
     (promoHits >= 2 && ctaHits >= 1) ? 'promo plus claim-style calls-to-action increase risk' : null,
     flags.some((x) => x.startsWith('phishing:')) ? 'phishing-like language increases current risk' : null,
@@ -143,45 +149,40 @@ function buildAuthorExplanation({ score, confidenceScore, isClaimed, karma, post
     (submoltCount >= 6 && postCount >= 8) ? 'high-velocity cross-community activity raises caution' : null
   ]);
 
-  const uncertainty = uniqueParts([
-    (postCount <= 1 && matchedPostCount === 0) ? 'limited trust data available; score uses incomplete signals' : null,
-    (postCount <= 3 && !isClaimed && descriptionLength < 20) ? 'limited trust data available; weak profile depth increases uncertainty' : null,
-    (weakHits > 0 && matchedPostCount === 0) ? 'minor low-signal patterns raise some uncertainty' : null
+  const mildStabilizers = uniqueParts([
+    isClaimed ? 'claimed account slightly supports trust' : null,
+    benignHits > 0 ? 'benign content patterns reduce concern' : null
   ]);
 
-  const parts = [];
-  if (score >= 76) {
-    parts.push(...negatives.slice(0, 2));
-  } else if (score >= 56) {
-    parts.push(...negatives.slice(0, 2));
-    if (parts.length < 2) parts.push(...uncertainty.slice(0, 1));
+  const finalParts = [];
+  if (score >= 56) {
+    finalParts.push(...riskSignals.slice(0, 2));
+    if (finalParts.length < 2) finalParts.push(...uncertaintySignals.slice(0, 1));
   } else if (score >= 36) {
-    parts.push(...negatives.slice(0, 1));
-    if (parts.length < 2) parts.push(...uncertainty.slice(0, 1));
-  } else if (score >= 26) {
-    parts.push(...uncertainty.slice(0, 1));
-    if (parts.length < 2) parts.push(...positives.slice(0, 1));
-    if (parts.length < 2) parts.push(...negatives.slice(0, 1));
-  } else if (score >= 11) {
-    parts.push(...positives.slice(0, 1));
-    if (parts.length < 2) parts.push(...uncertainty.slice(0, 1));
+    finalParts.push(...riskSignals.slice(0, 1));
+    if (finalParts.length < 2) finalParts.push(...uncertaintySignals.slice(0, 1));
+  } else if (score >= 16) {
+    if (confidenceScore < 46) {
+      finalParts.push(...uncertaintySignals.slice(0, 1));
+      if (finalParts.length < 2) finalParts.push(...mildStabilizers.slice(0, 1));
+    } else {
+      finalParts.push(...maturitySignals.slice(0, 1));
+      if (finalParts.length < 2) finalParts.push(...uncertaintySignals.slice(0, 1));
+      if (finalParts.length < 2) finalParts.push(...mildStabilizers.slice(0, 1));
+    }
   } else {
-    parts.push(...positives.slice(0, 2));
-    if (parts.length < 2) parts.push(...uncertainty.slice(0, 1));
+    finalParts.push(...maturitySignals.slice(0, 2));
+    if (finalParts.length < 2 && confidenceScore < 46) finalParts.push(...uncertaintySignals.slice(0, 1));
+    if (finalParts.length < 2) finalParts.push(...mildStabilizers.slice(0, 1));
   }
 
-  const finalParts = uniqueParts(parts).slice(0, 2);
-  if (!finalParts.length) {
+  const resolved = uniqueParts(finalParts).slice(0, 2);
+  if (!resolved.length) {
     return confidenceScore >= 76
-      ? 'low risk with strong profile depth and consistent activity'
-      : 'low risk based on current signals, but limited profile coverage increases uncertainty';
+      ? 'low current risk with strong profile depth and consistent activity'
+      : 'low current risk, but limited profile coverage reduces confidence';
   }
-
-  if (score <= 15 && confidenceScore < 46 && !finalParts.some((x) => x.includes('uncertainty') || x.includes('limited trust'))) {
-    finalParts[1] = 'limited profile coverage increases uncertainty';
-  }
-
-  return uniqueParts(finalParts).slice(0, 2).join(' + ');
+  return resolved.join(' + ');
 }
 
 function computeConfidenceScore({ karma, totalComments, postCount, topicCount, strongHits, profileUrl, isActive, daysSinceLatestPost, weakHits, descriptionLength, isClaimed }) {
