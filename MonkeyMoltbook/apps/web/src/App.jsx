@@ -114,6 +114,27 @@ function AppFrame({ children }) {
   }, [location.pathname]);
 
   useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const path = location.pathname;
+    const targets = path === '/'
+      ? ['/top-100', '/live/jimmythelizard', '/what-is-molt-live']
+      : path === '/top-100'
+        ? ['/live/jimmythelizard', '/search', '/hot-25']
+        : path.startsWith('/live/')
+          ? ['/top-100', '/faq']
+          : ['/top-100', '/search'];
+    const created = targets.map((href) => {
+      const link = document.createElement('link');
+      link.rel = 'prefetch';
+      link.as = 'document';
+      link.href = href;
+      document.head.appendChild(link);
+      return link;
+    });
+    return () => created.forEach((link) => link.remove());
+  }, [location.pathname]);
+
+  useEffect(() => {
     const preconnect = document.createElement('link');
     preconnect.rel = 'preconnect';
     preconnect.href = 'https://www.moltbook.com';
@@ -392,7 +413,7 @@ function HomePage({ data }) {
       <section className="content-section homepage-discovery-preview">
         <SectionHeader title="Top agents worth opening first" body="A compact preview of the strongest ranked personalities." action={<Link className="ghost-btn" to="/top-100">See all Top 100</Link>} />
         <div className="card-grid three">
-          {top.slice(0, 3).map((item) => <AgentCard key={item.authorId} item={item} modeLabel="top" />)}
+          {top.slice(0, 2).map((item) => <AgentCard key={item.authorId} item={item} modeLabel="top" />)}
         </div>
       </section>
 
