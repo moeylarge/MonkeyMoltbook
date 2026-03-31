@@ -129,13 +129,17 @@ function buildAuthorExplanation({ score, confidenceScore, isClaimed, karma, post
   ]);
 
   const uncertaintySignals = uniqueParts([
-    (postCount <= 1) ? 'thin activity depth reduces confidence' : null,
-    (topicCount <= 1) ? 'limited profile coverage reduces confidence' : null,
-    (!profileUrl) ? 'missing profile links reduce confidence' : null,
+    (postCount <= 1) ? 'thin activity history limits confidence' : null,
+    (postCount > 1 && postCount <= 3) ? 'limited posting history reduces confidence' : null,
+    (topicCount === 0) ? 'limited profile coverage reduces confidence' : null,
+    (topicCount === 1) ? 'narrow topic coverage reduces confidence' : null,
+    (!profileUrl) ? 'missing profile link reduces confidence' : null,
     (!isActive) ? 'inactive profile lowers confidence' : null,
     (daysSinceLatestPost !== null && daysSinceLatestPost > 90) ? 'stale activity lowers confidence' : null,
+    (daysSinceLatestPost !== null && daysSinceLatestPost > 45 && daysSinceLatestPost <= 90) ? 'inconsistent recent activity slightly reduces confidence' : null,
     (descriptionLength < 20 && !isClaimed) ? 'limited profile maturity increases uncertainty' : null,
-    (weakHits > 0 && matchedPostCount === 0) ? 'weak signals increase uncertainty' : null
+    (weakHits >= 2 && matchedPostCount === 0) ? 'weak signal density increases uncertainty' : null,
+    (weakHits === 1 && matchedPostCount === 0) ? 'minor weak-signal patterns reduce confidence' : null
   ]);
 
   const riskSignals = uniqueParts([
@@ -150,8 +154,8 @@ function buildAuthorExplanation({ score, confidenceScore, isClaimed, karma, post
   ]);
 
   const mildStabilizers = uniqueParts([
-    isClaimed ? 'claimed account slightly supports trust' : null,
-    benignHits > 0 ? 'benign content patterns reduce concern' : null
+    benignHits > 0 ? 'benign content patterns reduce concern' : null,
+    (isClaimed && strongHits >= 3 && (karma >= 2500 || totalComments >= 1000)) ? 'claimed account slightly supports trust' : null
   ]);
 
   const finalParts = [];
@@ -163,7 +167,7 @@ function buildAuthorExplanation({ score, confidenceScore, isClaimed, karma, post
     if (finalParts.length < 2) finalParts.push(...uncertaintySignals.slice(0, 1));
   } else if (score >= 16) {
     if (confidenceScore < 46) {
-      finalParts.push(...uncertaintySignals.slice(0, 1));
+      finalParts.push(...uncertaintySignals.slice(0, 2));
       if (finalParts.length < 2) finalParts.push(...mildStabilizers.slice(0, 1));
     } else {
       finalParts.push(...maturitySignals.slice(0, 1));
@@ -171,8 +175,12 @@ function buildAuthorExplanation({ score, confidenceScore, isClaimed, karma, post
       if (finalParts.length < 2) finalParts.push(...mildStabilizers.slice(0, 1));
     }
   } else {
-    finalParts.push(...maturitySignals.slice(0, 2));
-    if (finalParts.length < 2 && confidenceScore < 46) finalParts.push(...uncertaintySignals.slice(0, 1));
+    if (confidenceScore < 46) {
+      finalParts.push(...maturitySignals.slice(0, 1));
+      if (finalParts.length < 2) finalParts.push(...uncertaintySignals.slice(0, 1));
+    } else {
+      finalParts.push(...maturitySignals.slice(0, 2));
+    }
     if (finalParts.length < 2) finalParts.push(...mildStabilizers.slice(0, 1));
   }
 
