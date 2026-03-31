@@ -51,7 +51,6 @@ const NAV = [
 ];
 const FORUM_URL = 'https://www.moltbook.com/m';
 const DESKTOP_NAV_PRIMARY = ['/top-100', '/rising-25', '/topics', '/search', '/moltmail'];
-const DESKTOP_NAV_SECONDARY = ['/hot-25', '/top-submolts'];
 
 function slugify(value) {
   return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -318,14 +317,6 @@ function AppFrame({ children, auth, onOpenAuth, onLogout }) {
                 {item.label}{item.to === '/moltmail' && unreadCount > 0 ? <span className="nav-badge">{unreadCount}</span> : null}
               </NavLink>
             ))}
-          </div>
-          <div className="desktop-nav-secondary">
-            {NAV.filter((item) => DESKTOP_NAV_SECONDARY.includes(item.to)).map((item) => (
-              <NavLink key={item.to} to={item.to} className={({ isActive }) => (isActive ? 'topbar-secondary-link active' : 'topbar-secondary-link')}>
-                {item.label}
-              </NavLink>
-            ))}
-            <a className="topbar-secondary-link" href={FORUM_URL} target="_blank" rel="noreferrer">Forum</a>
           </div>
         </nav>
         <div className="topbar-actions">
