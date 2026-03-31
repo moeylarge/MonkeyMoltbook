@@ -66,14 +66,19 @@ async function trackEvent(event, meta = {}) {
   }
 }
 
-function useIntelData() {
-  const [data, setData] = useState({ loading: true, report: null, rising: [], hot: [], topics: [], submolts: [], growth: null });
+function useIntelData(enabled = true) {
+  const [data, setData] = useState({ loading: enabled, report: null, rising: [], hot: [], topics: [], submolts: [], growth: null });
 
   useEffect(() => {
+    if (!enabled) {
+      setData({ loading: false, report: null, rising: [], hot: [], topics: [], submolts: [], growth: null });
+      return;
+    }
+
     let active = true;
     const load = async () => {
       try {
-        await fetch(`${API}/moltbook/refresh`, { method: 'POST' });
+        fetch(`${API}/moltbook/refresh`, { method: 'POST' }).catch(() => {});
         const [reportRes, risingRes, hotRes, topicsRes, subRes, growthRes] = await Promise.all([
           fetch(`${API}/moltbook/report`),
           fetch(`${API}/moltbook/rising`),
@@ -100,7 +105,7 @@ function useIntelData() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [enabled]);
 
   return data;
 }
@@ -637,8 +642,9 @@ function LivePage({ data }) {
   const { slug } = useParams();
   const navigate = useNavigate();
   const top = data.report?.topSources || [];
+  const fallbackLiveName = String(slug || 'agent').replace(/-/g, ' ').trim() || 'Agent';
   const agent = top.find((x) => slugify(x.authorName) === slug) || top[0];
-  const liveName = agent?.authorName || 'Agent';
+  const liveName = agent?.authorName || fallbackLiveName;
   const [session, setSession] = useState(null);
   const [presence, setPresence] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -648,7 +654,9 @@ function LivePage({ data }) {
   const [ending, setEnding] = useState(false);
   const [wallet, setWallet] = useState(null);
   const [products, setProducts] = useState([]);
+  const [productsLoaded, setProductsLoaded] = useState(false);
   const [spendingAction, setSpendingAction] = useState('');
+  const [showAiPlans, setShowAiPlans] = useState(false);
   const [lastSentText, setLastSentText] = useState('');
   const [exportFormat, setExportFormat] = useState('txt');
   const [chatKind, setChatKind] = useState('human');
@@ -666,15 +674,29 @@ function LivePage({ data }) {
   const streamAbortRef = useRef(null);
   const attachmentInputRef = useRef(null);
 
-  const loadWallet = async () => {
-    const response = await fetch(`${API}/wallet?userId=demo-user`);
-    const payload = await response.json();
-    setWallet(payload.wallet);
-  };
-
   const selectHumanChat = () => {
     setChatKind('human');
     setChatChoiceMade(true);
+    setShowAiPlans(false);
+  };
+
+  const loadProducts = async () => {
+    if (productsLoaded) return;
+    const response = await fetch(`${API}/credits/products`);
+    const payload = await response.json();
+    setProducts((payload.products || []).filter((p) => p.billing_interval === 'month'));
+    setProductsLoaded(true);
+  };
+
+  const chooseAiChat = async () => {
+    setChatKind('ai');
+    setShowAiPlans(true);
+    await loadProducts();
+    if (aiUnlocked) {
+      setChatChoiceMade(true);
+      return;
+    }
+    await unlockAiChat();
   };
 
   const unlockAiChat = async () => {
@@ -688,6 +710,7 @@ function LivePage({ data }) {
       setAiUnlocked(true);
       setChatKind('ai');
       setChatChoiceMade(true);
+      setShowAiPlans(false);
       setWallet(payload.wallet);
       return;
     }
@@ -698,17 +721,6 @@ function LivePage({ data }) {
       created_at: new Date().toISOString(),
     }]);
   };
-
-  const loadProducts = async () => {
-    const response = await fetch(`${API}/credits/products`);
-    const payload = await response.json();
-    setProducts((payload.products || []).filter((p) => p.billing_interval === 'month'));
-  };
-
-  useEffect(() => {
-    loadWallet();
-    loadProducts();
-  }, []);
 
   const stopStream = () => {
     if (localStreamRef.current) {
@@ -1128,7 +1140,7 @@ function LivePage({ data }) {
       <div className="live-back-row">
         <button className="ghost-btn live-back-btn" onClick={backToDefaultLiveScreen}>← Back</button>
       </div>
-      {!session ? <div className="mobile-sticky-cta-bar"><button className="primary-btn mobile-sticky-cta" onClick={() => localStorage.getItem(`molt-live-session:${slug}`) ? window.scrollTo({ top: 0, behavior: 'smooth' }) : requestLocalMedia()}>Start here</button></div> : null}
+      {!session ? <div className="mobile-sticky-cta-bar"><button className="primary-btn mobile-sticky-cta" onClick={() => localStorage.getItem(`molt-live-session:${slug}`) ? window.scrollTo({ top: 0, behavior: 'smooth' }) : requestMediaAccess()}>Start here</button></div> : null}
       {savedSessionId && !session ? (
         <div className="wallet-balance-card wallet-balance-card-muted wallet-balance-card-full ai-choice-stage-card">
           <span className="eyebrow">Saved session</span>
@@ -1219,12 +1231,12 @@ function LivePage({ data }) {
                       <span className="ai-choice-label">Human chat</span>
                       <small>Free · default · person-to-person</small>
                     </button>
-                    <button className={`primary-btn ai-choice-card ai-choice-card-hero ${chatKind === 'ai' ? 'active' : ''}`} onClick={() => (aiUnlocked ? setChatKind('ai') : unlockAiChat())}>
+                    <button className={`primary-btn ai-choice-card ai-choice-card-hero ${chatKind === 'ai' ? 'active' : ''}`} onClick={chooseAiChat}>
                       <span className="ai-choice-label">AI chat</span>
                       <small>{aiUnlocked ? 'Premium unlocked' : 'Premium · 2 credits to unlock'}</small>
                     </button>
                   </div>
-                  {!aiUnlocked ? (
+                  {!aiUnlocked && showAiPlans ? (
                     <div className="ai-plan-row ai-plan-row-strong ai-plan-row-hero">
                       {(products || []).slice(0, 3).map((product) => (
                         <button key={product.code} className="ghost-btn ai-plan-btn" onClick={async () => {
@@ -1746,7 +1758,9 @@ function CommunityPage() {
 }
 
 function AppInner() {
-  const data = useIntelData();
+  const location = useLocation();
+  const isLiveRoute = location.pathname.startsWith('/live/');
+  const data = useIntelData(!isLiveRoute);
   const top = data.report?.topSources || [];
   return (
     <AppFrame>
