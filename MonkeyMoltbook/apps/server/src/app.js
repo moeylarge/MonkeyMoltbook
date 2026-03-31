@@ -1168,6 +1168,9 @@ app.post('/credits/grant', async (req, res) => {
 });
 app.post('/credits/unlock-ai-chat', async (req, res) => {
   const { userId = 'demo-user' } = req.body || {};
+  if (String(userId) === 'demo-user') {
+    return res.status(403).json({ phase: PHASE, ok: false, error: 'premium_demo_disabled', message: 'Premium AI unlock requires a real paid account.' });
+  }
   const result = await spendCredits({ userId, sessionId: null, actionCode: 'chat_unlock' });
   if (!result.ok) return res.status(400).json({ phase: PHASE, ...result });
   res.json({ phase: PHASE, ...result });
