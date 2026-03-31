@@ -1117,7 +1117,7 @@ function LivePage({ data }) {
             <>
               <div className="live-stage-headline pre-session-headline chat-pre-session-headline chat-stage-headline">
                 <strong>{session ? `Chat session is active` : `Choose your chat mode`}</strong>
-                <span>{session ? 'Your chat session is active. Messages and export are ready.' : 'Pick free human chat or premium AI chat before the composer appears.'}</span>
+                <span>{session ? (session.mode === 'chat-ai' ? 'Your premium AI chat is active. Messages and export are ready.' : 'Your chat session is active. Messages and export are ready.') : 'Pick free human chat or premium AI chat before the composer appears.'}</span>
               </div>
               {!session ? (
                 <div className="wallet-balance-card wallet-balance-card-muted wallet-balance-card-full ai-upgrade-card ai-choice-block ai-choice-hero ai-choice-stage-card">
