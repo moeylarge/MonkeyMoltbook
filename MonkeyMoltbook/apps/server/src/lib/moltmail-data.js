@@ -16,7 +16,7 @@ function randomId(prefix) {
 }
 
 function defaultStore() {
-  return { users: [], threads: [], messages: [], audit: [] };
+  return { users: [], threads: [], messages: [], audit: [], delivery: [], rateLimits: [] };
 }
 
 function readStore() {
@@ -66,12 +66,36 @@ export function syncVerifiedUser(user) {
 }
 
 function publicUser(user) {
+  if (!user) return null;
   return {
     id: user.id,
     displayName: user.displayName,
     handle: user.handle,
     avatarUrl: user.avatarUrl || null
   };
+}
+
+function logAudit(store, action, metadata = {}) {
+  store.audit.push({ id: randomId('aud'), action, createdAt: nowIso(), ...metadata });
+}
+
+function getRateLimitKey(req, userId, action) {
+  return `${action}:${userId}:${req.ip || 'unknown'}`;
+}
+
+function checkRateLimit(store, req, userId, action, maxCount = 5, windowMs = 60000) {
+  const key = getRateLimitKey(req, userId, action);
+  const now = Date.now();
+  store.rateLimits = (store.rateLimits || []).filter((entry) => now - entry.timestamp < windowMs);
+  const recent = store.rateLimits.filter((entry) => entry.key === key);
+  if (recent.length >= maxCount) return false;
+  store.rateLimits.push({ key, timestamp: now });
+  return true;
+}
+
+function hasRecentDuplicate(store, threadId, senderUserId, bodyText, windowMs = 30000) {
+  const now = Date.now();
+  return store.messages.some((message) => message.threadId === threadId && message.senderUserId === senderUserId && message.bodyText === bodyText && now - new Date(message.createdAt).getTime() < windowMs);
 }
 
 function getUserById(store, id) {
@@ -119,11 +143,17 @@ export function searchRecipients(req, query) {
   syncVerifiedUser(gate.user);
   const q = String(query || '').trim().toLowerCase();
   const store = readStore();
+  if (!checkRateLimit(store, req, gate.user.id, 'recipient_search', 20, 60000)) {
+    logAudit(store, 'RATE_LIMIT_HIT', { actorUserId: gate.user.id, entityType: 'recipient_search', entityId: gate.user.id });
+    writeStore(store);
+    return { ok: false, status: 429, code: 'RATE_LIMITED', message: 'Please wait before searching again.' };
+  }
   const results = store.users
     .filter((user) => user.id !== gate.user.id)
     .filter((user) => !q || String(user.displayName || '').toLowerCase().includes(q) || String(user.handle || '').toLowerCase().includes(q))
     .slice(0, 12)
     .map(publicUser);
+  writeStore(store);
   return { ok: true, results };
 }
 
@@ -220,6 +250,16 @@ export function createThread(req, body) {
   const sender = getUserById(store, gate.user.id);
   const recipient = getUserById(store, recipientUserId);
   if (!recipient) return { ok: false, status: 404, code: 'RECIPIENT_NOT_FOUND', message: 'Recipient not found.' };
+  if (sender?.status !== 'ACTIVE' || recipient?.status === 'BANNED') return { ok: false, status: 403, code: 'USER_RESTRICTED', message: 'This message cannot be sent right now.' };
+  if (!checkRateLimit(store, req, gate.user.id, 'thread_create', 4, 60000)) {
+    logAudit(store, 'RATE_LIMIT_HIT', { actorUserId: gate.user.id, entityType: 'thread_create', entityId: recipientUserId });
+    writeStore(store);
+    return { ok: false, status: 429, code: 'RATE_LIMITED', message: 'Please wait before sending another message.' };
+  }
+  const duplicateThread = store.threads.find((thread) => thread.participantIds?.length === 2 && thread.participantIds.includes(sender.id) && thread.participantIds.includes(recipient.id));
+  if (duplicateThread && hasRecentDuplicate(store, duplicateThread.id, sender.id, bodyText)) {
+    return { ok: false, status: 409, code: 'DUPLICATE_MESSAGE', message: 'That message was already sent recently.' };
+  }
   if (!debitWallet(sender, SEND_COST)) return { ok: false, status: 400, code: 'INSUFFICIENT_CREDITS', message: 'You need more credits to send MoltMail.' };
   const thread = {
     id: randomId('thr'),
@@ -234,9 +274,13 @@ export function createThread(req, body) {
     updatedAt: nowIso()
   };
   const message = { id: randomId('msg'), threadId: thread.id, senderUserId: sender.id, bodyText, createdAt: nowIso() };
+  const delivery = { id: randomId('del'), messageId: message.id, recipientUserId: recipient.id, channel: 'EMAIL', status: 'QUEUED', attemptCount: 0, createdAt: nowIso(), updatedAt: nowIso() };
   store.threads.unshift(thread);
   store.messages.push(message);
-  store.audit.push({ id: randomId('aud'), action: 'MESSAGE_SENT', actorUserId: sender.id, threadId: thread.id, messageId: message.id, createdAt: nowIso() });
+  store.delivery.push(delivery);
+  logAudit(store, 'MESSAGE_SENT', { actorUserId: sender.id, entityType: 'thread', entityId: thread.id, threadId: thread.id, messageId: message.id });
+  logAudit(store, 'CREDIT_DEBITED', { actorUserId: sender.id, entityType: 'message', entityId: message.id, metadataJson: { debited: SEND_COST } });
+  logAudit(store, 'MESSAGE_DELIVERY_QUEUED', { actorUserId: sender.id, entityType: 'delivery', entityId: delivery.id, threadId: thread.id, messageId: message.id });
   writeStore(store);
   return { ok: true, thread: { id: thread.id }, message: { id: message.id }, wallet: { balance: sender.walletBalance, debited: SEND_COST } };
 }
@@ -251,14 +295,29 @@ export function replyThread(req, threadId, body) {
   const thread = store.threads.find((item) => item.id === threadId);
   if (!thread || !thread.participantIds?.includes(gate.user.id)) return { ok: false, status: 404, code: 'THREAD_NOT_FOUND', message: 'Thread not found.' };
   const sender = getUserById(store, gate.user.id);
+  const recipientId = (thread.participantIds || []).find((id) => id !== sender.id);
+  const recipient = getUserById(store, recipientId);
+  if (sender?.status !== 'ACTIVE' || recipient?.status === 'BANNED' || thread.status !== 'OPEN') return { ok: false, status: 403, code: 'USER_RESTRICTED', message: 'This reply cannot be sent right now.' };
+  if (!checkRateLimit(store, req, gate.user.id, 'thread_reply', 8, 60000)) {
+    logAudit(store, 'RATE_LIMIT_HIT', { actorUserId: gate.user.id, entityType: 'thread_reply', entityId: threadId });
+    writeStore(store);
+    return { ok: false, status: 429, code: 'RATE_LIMITED', message: 'Please wait before sending another reply.' };
+  }
+  if (hasRecentDuplicate(store, thread.id, sender.id, bodyText)) {
+    return { ok: false, status: 409, code: 'DUPLICATE_MESSAGE', message: 'That reply was already sent recently.' };
+  }
   if (!debitWallet(sender, SEND_COST)) return { ok: false, status: 400, code: 'INSUFFICIENT_CREDITS', message: 'You need more credits to send MoltMail.' };
   const message = { id: randomId('msg'), threadId: thread.id, senderUserId: sender.id, bodyText, createdAt: nowIso() };
+  const delivery = { id: randomId('del'), messageId: message.id, recipientUserId: recipient.id, channel: 'EMAIL', status: 'QUEUED', attemptCount: 0, createdAt: nowIso(), updatedAt: nowIso() };
   thread.lastMessageAt = message.createdAt;
   thread.updatedAt = message.createdAt;
   thread.lastReadAtByUserId = thread.lastReadAtByUserId || {};
   thread.lastReadAtByUserId[sender.id] = message.createdAt;
   store.messages.push(message);
-  store.audit.push({ id: randomId('aud'), action: 'MESSAGE_REPLY_SENT', actorUserId: sender.id, threadId: thread.id, messageId: message.id, createdAt: nowIso() });
+  store.delivery.push(delivery);
+  logAudit(store, 'MESSAGE_REPLY_SENT', { actorUserId: sender.id, entityType: 'thread', entityId: thread.id, threadId: thread.id, messageId: message.id });
+  logAudit(store, 'CREDIT_DEBITED', { actorUserId: sender.id, entityType: 'message', entityId: message.id, metadataJson: { debited: SEND_COST } });
+  logAudit(store, 'MESSAGE_DELIVERY_QUEUED', { actorUserId: sender.id, entityType: 'delivery', entityId: delivery.id, threadId: thread.id, messageId: message.id });
   writeStore(store);
   return { ok: true, message: { id: message.id }, wallet: { balance: sender.walletBalance, debited: SEND_COST } };
 }
@@ -269,4 +328,18 @@ export function getUnreadCount(req) {
   const inbox = getInbox(req);
   if (!inbox.ok) return inbox;
   return { ok: true, unreadCount: inbox.threads.filter((item) => item.unread).length };
+}
+
+export function getAuditSummary(req) {
+  const gate = requireVerifiedUser(req);
+  if (!gate.ok) return gate;
+  const store = readStore();
+  return {
+    ok: true,
+    audit: store.audit.filter((entry) => entry.actorUserId === gate.user.id).slice(-20).reverse(),
+    delivery: store.delivery.filter((entry) => {
+      const threadMessage = store.messages.find((message) => message.id === entry.messageId);
+      return threadMessage?.senderUserId === gate.user.id || entry.recipientUserId === gate.user.id;
+    }).slice(-20).reverse()
+  };
 }
