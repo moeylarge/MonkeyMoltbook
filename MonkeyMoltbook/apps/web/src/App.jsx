@@ -328,7 +328,7 @@ function TrustRow({ items }) {
   );
 }
 
-function PageIntro({ kicker, title, body, ctaLabel, ctaTo, trustItems = [] }) {
+function PageIntro({ kicker, title, body }) {
   return (
     <div className="page-intro-card">
       <span className="hero-kicker">{kicker}</span>
@@ -337,9 +337,7 @@ function PageIntro({ kicker, title, body, ctaLabel, ctaTo, trustItems = [] }) {
           <h1>{title}</h1>
           <p>{body}</p>
         </div>
-        {ctaLabel && ctaTo ? <Link className="primary-btn large page-intro-cta" to={ctaTo}>{ctaLabel}</Link> : null}
       </div>
-      {trustItems.length ? <TrustRow items={trustItems} /> : null}
     </div>
   );
 }
