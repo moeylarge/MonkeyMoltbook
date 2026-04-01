@@ -1156,6 +1156,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
                 <div className="member-profile-identity-copy">
                   <h1>{normalizeSingleLineText(previewProfile?.display_name || profileName, 80)}</h1>
                   <span className="member-profile-handle">@{normalizeSingleLineText(previewProfile?.username || profileSlug, 32)}</span>
+                  {previewProfile?.category ? <div className="member-profile-category-line">{normalizeSingleLineText(previewProfile.category, 60)}</div> : null}
                   {profileBio ? <div className="member-profile-bio-wrap"><p className={`member-profile-bio-text ${bioExpanded ? 'expanded' : 'clamped'}`}>{profileBio}</p>{profileBio.length > 140 ? <button className="member-profile-bio-toggle" onClick={() => setBioExpanded((v) => !v)}>{bioExpanded ? 'Show less' : 'Show more'}</button> : null}</div> : null}
                   {profile?.location_text || profile?.website_url || profile?.pronouns ? <div className="member-profile-inline-meta">
                     {previewProfile?.location_text ? <span>{normalizeSingleLineText(previewProfile.location_text, 80)}</span> : null}
@@ -1187,25 +1188,43 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
             {showOwnerEditAffordances && editOpen ? <div className="member-profile-editor-panel">
               <h3>Edit Profile</h3>
               <div className="member-profile-editor-grid">
-                <label><span>Display name</span><input className="mega-search auth-input" value={profileForm.display_name} onChange={(e) => setProfileForm((s) => ({ ...s, display_name: e.target.value }))} /></label>
-                <label><span>Username</span><input className="mega-search auth-input" value={profileForm.username} onChange={(e) => setProfileForm((s) => ({ ...s, username: e.target.value.toLowerCase() }))} /></label>
-                <label><span>Category</span><input className="mega-search auth-input" value={profileForm.category} onChange={(e) => setProfileForm((s) => ({ ...s, category: e.target.value }))} /></label>
-                <label><span>Website</span><input className="mega-search auth-input" value={profileForm.website_url} onChange={(e) => setProfileForm((s) => ({ ...s, website_url: e.target.value }))} /></label>
-                <label><span>Location</span><input className="mega-search auth-input" value={profileForm.location_text} onChange={(e) => setProfileForm((s) => ({ ...s, location_text: e.target.value }))} /></label>
-                <label><span>Media</span><input className="mega-search auth-input" value={profileForm.media} onChange={(e) => setProfileForm((s) => ({ ...s, media: e.target.value }))} /></label>
-                <label><span>Pronouns</span><input className="mega-search auth-input" value={profileForm.pronouns} onChange={(e) => setProfileForm((s) => ({ ...s, pronouns: e.target.value }))} /></label>
-                <label className="member-profile-editor-wide"><span>Bio</span><textarea className="mega-search auth-input member-profile-bio-input" value={profileForm.bio} onChange={(e) => setProfileForm((s) => ({ ...s, bio: e.target.value }))} /></label>
-                <label className="member-profile-editor-wide"><span>About</span><textarea className="mega-search auth-input member-profile-bio-input" value={profileForm.about} onChange={(e) => setProfileForm((s) => ({ ...s, about: e.target.value }))} /></label>
-                <div className="member-profile-editor-wide member-profile-topics-editor">
-                  <span>Topics</span>
+                <div className="member-profile-edit-group-block member-profile-editor-wide">
+                  <h4>Identity</h4>
+                  <p>Shape how people recognize you at a glance.</p>
+                  <div className="member-profile-edit-subgrid">
+                    <label><span>Display name</span><input className="mega-search auth-input" value={profileForm.display_name} onChange={(e) => setProfileForm((s) => ({ ...s, display_name: e.target.value }))} /></label>
+                    <label><span>Username</span><input className="mega-search auth-input" value={profileForm.username} onChange={(e) => setProfileForm((s) => ({ ...s, username: e.target.value.toLowerCase() }))} /></label>
+                    <label><span>Category</span><small>Short descriptor or role</small><input className="mega-search auth-input" value={profileForm.category} onChange={(e) => setProfileForm((s) => ({ ...s, category: e.target.value }))} /></label>
+                    <label><span>Pronouns</span><input className="mega-search auth-input" value={profileForm.pronouns} onChange={(e) => setProfileForm((s) => ({ ...s, pronouns: e.target.value }))} /></label>
+                  </div>
+                </div>
+                <div className="member-profile-edit-group-block member-profile-editor-wide">
+                  <h4>Presence</h4>
+                  <p>Keep it concise and readable.</p>
+                  <label><span>Bio</span><small>Keep it concise and readable</small><textarea className="mega-search auth-input member-profile-bio-input" value={profileForm.bio} onChange={(e) => setProfileForm((s) => ({ ...s, bio: e.target.value }))} /></label>
+                  <label><span>About</span><textarea className="mega-search auth-input member-profile-bio-input" value={profileForm.about} onChange={(e) => setProfileForm((s) => ({ ...s, about: e.target.value }))} /></label>
+                </div>
+                <div className="member-profile-edit-group-block member-profile-editor-wide">
+                  <h4>Links & details</h4>
+                  <p>Add only what improves your profile.</p>
+                  <div className="member-profile-edit-subgrid">
+                    <label><span>Website</span><small>Add a valid link</small><input className="mega-search auth-input" value={profileForm.website_url} onChange={(e) => setProfileForm((s) => ({ ...s, website_url: e.target.value }))} /></label>
+                    <label><span>Location</span><input className="mega-search auth-input" value={profileForm.location_text} onChange={(e) => setProfileForm((s) => ({ ...s, location_text: e.target.value }))} /></label>
+                    <label><span>Media</span><small>Short media descriptor</small><input className="mega-search auth-input" value={profileForm.media} onChange={(e) => setProfileForm((s) => ({ ...s, media: e.target.value }))} /></label>
+                  </div>
+                </div>
+                <div className="member-profile-editor-wide member-profile-topics-editor member-profile-edit-group-block">
+                  <h4>Topics</h4>
+                  <p>Choose a few that best represent you.</p>
                   <div className="member-profile-topic-input-row">
                     <input className="mega-search auth-input" value={profileForm.topicDraft} onChange={(e) => setProfileForm((s) => ({ ...s, topicDraft: e.target.value }))} onBlur={addTopic} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTopic(); } }} placeholder="Add topic" />
                     <button className="ghost-btn" type="button" onClick={addTopic}>Add</button>
                   </div>
                   <div className="tag-row">{profileForm.topics.map((topic) => <button key={topic} type="button" className="tag member-profile-edit-tag" onClick={() => removeTopic(topic)}>{topic} ×</button>)}</div>
                 </div>
-                <div className="member-profile-editor-wide member-profile-topics-editor">
-                  <span>Highlights</span>
+                <div className="member-profile-editor-wide member-profile-topics-editor member-profile-edit-group-block">
+                  <h4>Highlights</h4>
+                  <p>Keep these short and memorable.</p>
                   <div className="member-profile-topic-input-row">
                     <input className="mega-search auth-input" value={profileForm.highlightDraft} onChange={(e) => setProfileForm((s) => ({ ...s, highlightDraft: e.target.value }))} onBlur={addHighlight} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addHighlight(); } }} placeholder="Add highlight" />
                     <button className="ghost-btn" type="button" onClick={addHighlight}>Add</button>
@@ -1229,7 +1248,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
 
             {profileAbout ? <div className="member-profile-content-block member-profile-inline-section-card">
               <div className="member-profile-inline-section-head"><h3>About</h3>{showOwnerEditAffordances ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>📌</button><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>🎬</button></div> : null}</div>
-              <p>{profileAbout}</p>
+              <p className="member-profile-about-copy">{profileAbout}</p>
             </div> : null}
 
           </div>
