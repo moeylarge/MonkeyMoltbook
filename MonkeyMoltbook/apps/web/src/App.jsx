@@ -1228,8 +1228,8 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
             <div className="member-profile-topbar">
               <div className="member-profile-identity-row">
                 <div className={`member-profile-avatar ${showOwnerEditAffordances ? 'editable' : ''}`}>
-                  {profile?.avatar_url ? <img src={profile.avatar_url} alt={profileName} className="member-profile-avatar-img" /> : String(profileName || 'M').slice(0, 1).toUpperCase()}
-                  {showOwnerEditAffordances ? <label className="member-profile-avatar-edit"><input type="file" accept="image/png,image/jpeg,image/webp" onChange={onAvatarFileChange} /><span>{avatarState.busy ? 'Uploading…' : 'Change photo'}</span></label> : null}
+                  {profile?.avatar_url ? <img src={profile.avatar_url} alt={profileName} className="member-profile-avatar-img" /> : <div className="member-profile-avatar-fallback">{String(profileName || 'M').slice(0, 1).toUpperCase()}</div>}
+                  {showOwnerEditAffordances ? <label className="member-profile-avatar-edit"><input type="file" accept="image/png,image/jpeg,image/webp" onChange={onAvatarFileChange} /><span className="member-profile-avatar-edit-icon">📷</span><span className="member-profile-avatar-edit-text">{avatarState.busy ? 'Uploading…' : 'Change photo'}</span></label> : null}
                 </div>
                 <div className="member-profile-identity-copy">
                   <h1>{normalizeSingleLineText(previewProfile?.display_name || profileName, 80)}</h1>
@@ -1263,8 +1263,8 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
             </div>
 
             <div className="member-profile-hero-banner">
-              {previewProfile?.banner_url ? <img src={previewProfile.banner_url} alt={`${profileName} banner`} className="member-profile-banner-img" /> : <div className="member-profile-banner-fallback"><strong>{normalizeSingleLineText(previewProfile?.category || 'Creator profile', 60)}</strong><span>{profileBio || 'Build your profile with a clear identity and clean social proof.'}</span></div>}
-              {showOwnerEditAffordances ? <div className="member-profile-banner-actions"><label className="ghost-btn member-profile-banner-btn"><input type="file" accept="image/png,image/jpeg,image/webp" onChange={onBannerFileChange} />{bannerState.busy ? 'Uploading…' : (previewProfile?.banner_url ? 'Change banner' : 'Add banner')}</label>{previewProfile?.banner_url ? <button className="ghost-btn member-profile-banner-btn" onClick={async () => { const response = await fetch(`${API}/profile/me/banner`, { method: 'DELETE', credentials: 'include' }); const payload = await response.json(); if (response.ok) setProfileState((current) => ({ ...current, profile: payload.profile || current.profile, ownerView: true })); }}>Remove banner</button> : null}</div> : null}
+              {previewProfile?.banner_url ? <img src={previewProfile.banner_url} alt={`${profileName} banner`} className="member-profile-banner-img" /> : <div className="member-profile-banner-fallback"><div className="member-profile-banner-empty-copy"><strong>{normalizeSingleLineText(previewProfile?.category || 'Creator profile', 60)}</strong><span>{profileBio || 'Add a cover image to make your profile feel more alive.'}</span></div></div>}
+              {showOwnerEditAffordances ? <div className="member-profile-banner-actions"><label className="member-profile-banner-btn member-profile-banner-btn-primary"><input type="file" accept="image/png,image/jpeg,image/webp" onChange={onBannerFileChange} /><span className="member-profile-banner-btn-icon">🖼️</span><span>{bannerState.busy ? 'Uploading…' : (previewProfile?.banner_url ? 'Change banner' : 'Add banner')}</span></label>{previewProfile?.banner_url ? <button className="member-profile-banner-btn member-profile-banner-btn-secondary" onClick={async () => { const response = await fetch(`${API}/profile/me/banner`, { method: 'DELETE', credentials: 'include' }); const payload = await response.json(); if (response.ok) setProfileState((current) => ({ ...current, profile: payload.profile || current.profile, ownerView: true })); }}>Remove</button> : null}</div> : null}
               {bannerState.error ? <div className="feed-note">{bannerState.error}</div> : null}
             </div>
 
