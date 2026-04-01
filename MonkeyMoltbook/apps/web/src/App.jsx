@@ -1974,6 +1974,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   const [queuedSticker, setQueuedSticker] = useState(null);
   const [activeComposeRecipient, setActiveComposeRecipient] = useState(null);
   const [attachmentState, setAttachmentState] = useState({ uploading: false, file: null, error: '' });
+  const suppressMailboxAutoSelectRef = useRef(false);
   const threadFeedRef = useRef(null);
   const composerInputRef = useRef(null);
   const attachmentInputRef = useRef(null);
@@ -2032,7 +2033,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     setOutbox((current) => applyRead(current));
   };
 
-  const loadMailbox = async (preferredThreadId = '') => {
+  const loadMailbox = async (preferredThreadId = '', options = {}) => {
     const [bootstrapRes, inboxRes, outboxRes] = await Promise.all([
       fetch(`${API}/moltmail/bootstrap`, { credentials: 'include' }).then((res) => res.json().then((json) => ({ ok: res.ok, json }))),
       fetch(`${API}/moltmail/inbox`, { credentials: 'include' }).then((res) => res.json().then((json) => ({ ok: res.ok, json }))),
@@ -2047,7 +2048,9 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     setBootstrap({ loading: false, data: bootstrapRes.json, error: '' });
     setInbox(nextInbox);
     setOutbox(nextOutbox);
-    setSelectedThreadId((currentThreadId) => preferredThreadId || currentThreadId || nextInbox[0]?.id || nextOutbox[0]?.id || '');
+    if (!options?.suppressAutoSelect && !suppressMailboxAutoSelectRef.current) {
+      setSelectedThreadId((currentThreadId) => preferredThreadId || currentThreadId || nextInbox[0]?.id || nextOutbox[0]?.id || '');
+    }
   };
 
   useEffect(() => {
@@ -2216,12 +2219,16 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     setRecipients([]);
     setMobileView('chat');
     try {
+      suppressMailboxAutoSelectRef.current = true;
       await hydrateConfirmedThread(confirmedThreadId);
       setSelectedThreadId(confirmedThreadId);
-      await loadMailbox(confirmedThreadId);
+      await loadMailbox(confirmedThreadId, { suppressAutoSelect: true });
       removeOptimisticMessage(clientMessageId);
       removeOptimisticThread(optimisticThreadId);
     } catch {}
+    finally {
+      suppressMailboxAutoSelectRef.current = false;
+    }
     return { payload, confirmedThreadId, confirmedMessageId };
   };
 
