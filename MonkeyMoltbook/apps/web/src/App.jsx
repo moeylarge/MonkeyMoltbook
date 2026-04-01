@@ -735,7 +735,7 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
                   </div>
                   <div className="home-feed-post-actions home-feed-post-actions-primary home-feed-post-actions-utility">
                     <Link className="primary-btn home-feed-primary-cta" to={item.ctaTo}>{item.ctaLabel}</Link>
-                    {!auth?.authenticated ? <button className="ghost-btn home-feed-secondary-cta direct-message-cta" onClick={onOpenAuth}>{item.secondaryLabel}</button> : <Link className="ghost-btn home-feed-secondary-cta" to={item.secondaryTo}>{item.secondaryLabel}</Link>}
+                    {!auth?.authenticated ? <button className="primary-btn home-feed-primary-cta direct-message-cta" onClick={onOpenAuth}>{item.secondaryLabel}</button> : <Link className="primary-btn home-feed-primary-cta" to={item.secondaryTo}>{item.secondaryLabel}</Link>}
                   </div>
                 </article>
               ))}
