@@ -1117,7 +1117,6 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
       <section className="page-section agent-profile member-profile-page member-profile-page-shell">
         <div className="member-profile-grid">
           <div className="profile-card main profile-card-main-upgraded member-profile-main member-profile-left-column">
-            <span className="hero-kicker">{showOwnerEditAffordances ? 'My Profile' : 'Member profile'}</span>
             <div className="member-profile-topbar">
               <div className="member-profile-identity-row">
                 <div className="member-profile-avatar">
@@ -1205,8 +1204,8 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
           </div>
 
           {(profile?.category || profile?.website_url || profile?.location_text || profile?.pronouns || profile?.tagline || profileTopics.length || overflowTopics.length || profileHighlights.length) ? <div className="member-profile-right-column">
-            <div className="member-profile-content-block member-profile-inline-section-card member-profile-metadata-card">
-              <div className="member-profile-inline-section-head"><h3>Details</h3>{showOwnerEditAffordances ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>✏️</button></div> : null}</div>
+            <div className="member-profile-content-block member-profile-inline-section-card member-profile-metadata-card member-profile-clickable-section" onClick={() => showOwnerEditAffordances && setEditOpen(true)}>
+              <div className="member-profile-inline-section-head"><h3>Details</h3>{showOwnerEditAffordances ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={(e) => { e.stopPropagation(); setEditOpen(true); }}>✏️</button></div> : null}</div>
               <div className="member-profile-detail-pills">
                 <span className="tag">@{profileSlug}</span>
                 {profile?.category ? <span className="tag">{profile.category}</span> : null}
@@ -1216,14 +1215,14 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
               </div>
             </div>
 
-            {profileTopics.length ? <div className="member-profile-content-block member-profile-inline-section-card member-profile-metadata-card">
-              <div className="member-profile-inline-section-head"><h3>Topics</h3>{showOwnerEditAffordances ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>✏️</button></div> : null}</div>
+            {profileTopics.length ? <div className="member-profile-content-block member-profile-inline-section-card member-profile-metadata-card member-profile-clickable-section" onClick={() => showOwnerEditAffordances && setEditOpen(true)}>
+              <div className="member-profile-inline-section-head"><h3>Topics</h3>{showOwnerEditAffordances ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={(e) => { e.stopPropagation(); setEditOpen(true); }}>✏️</button></div> : null}</div>
               <div className="tag-row">{profileTopics.map((tag) => <span key={tag} className="tag">{normalizeRenderText(tag, 24)}</span>)}</div>
               {overflowTopics.length ? <div className="tag-row">{overflowTopics.map((tag) => <span key={tag} className="tag">{normalizeRenderText(tag, 24)}</span>)}</div> : null}
             </div> : null}
 
-            {profileHighlights.length ? <div className="member-profile-content-block member-profile-inline-section-card member-profile-metadata-card">
-              <div className="member-profile-inline-section-head"><h3>Highlights</h3>{showOwnerEditAffordances ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>✏️</button></div> : null}</div>
+            {profileHighlights.length ? <div className="member-profile-content-block member-profile-inline-section-card member-profile-metadata-card member-profile-clickable-section" onClick={() => showOwnerEditAffordances && setEditOpen(true)}>
+              <div className="member-profile-inline-section-head"><h3>Highlights</h3>{showOwnerEditAffordances ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={(e) => { e.stopPropagation(); setEditOpen(true); }}>✏️</button></div> : null}</div>
               <div className="tag-row">{profileHighlights.map((item) => <span key={item} className="tag">{item}</span>)}</div>
             </div> : null}
           </div> : null}
