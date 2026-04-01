@@ -50,3 +50,9 @@
   cursor: default;
   text-decoration: none;
 }
+
+.open-moltmail-cta {
+  min-width: 160px;
+  justify-content: center;
+  text-align: center;
+}
