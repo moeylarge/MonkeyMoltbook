@@ -1000,22 +1000,33 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
     <section className="page-section agent-profile member-profile-page">
       <div className="profile-hero member-profile-hero">
         <div className="profile-card main profile-card-main-upgraded member-profile-main">
-          <span className="hero-kicker">{profileState.ownerView ? 'My profile' : 'Member profile'}</span>
-          <div className="member-profile-identity-row">
-            <div className="member-profile-avatar">
-              {profile?.avatar_url ? <img src={profile.avatar_url} alt={profileName} className="member-profile-avatar-img" /> : String(profileName || 'M').slice(0, 1).toUpperCase()}
+          <span className="hero-kicker">{profileState.ownerView ? 'My Profile' : 'Member profile'}</span>
+          <div className="member-profile-topbar">
+            <div className="member-profile-identity-row">
+              <div className="member-profile-avatar">
+                {profile?.avatar_url ? <img src={profile.avatar_url} alt={profileName} className="member-profile-avatar-img" /> : String(profileName || 'M').slice(0, 1).toUpperCase()}
+              </div>
+              <div className="member-profile-identity-copy">
+                <h1>{profileName}</h1>
+                <span className="member-profile-handle">@{profileSlug}</span>
+                <p>{profileBio}</p>
+                {profile?.location_text || profile?.website_url ? <div className="member-profile-inline-meta">
+                  {profile?.location_text ? <span>{profile.location_text}</span> : null}
+                  {profile?.website_url ? <a href={profile.website_url} target="_blank" rel="noreferrer">{profile.website_url}</a> : null}
+                </div> : null}
+              </div>
             </div>
-            <div className="member-profile-identity-copy">
-              <h1>{profileName}</h1>
-              <span className="member-profile-handle">@{profileSlug}</span>
-              <p>{profileBio}</p>
-              {profile?.location_text || profile?.website_url ? <div className="member-profile-inline-meta">
-                {profile?.location_text ? <span>{profile.location_text}</span> : null}
-                {profile?.website_url ? <a href={profile.website_url} target="_blank" rel="noreferrer">{profile.website_url}</a> : null}
-              </div> : null}
+            <div className="member-profile-owner-cta-stack">
+              {profileState.ownerView ? <>
+                <button className="primary-btn member-profile-owner-primary" onClick={() => { setEditOpen((v) => !v); setSettingsOpen(false); }}>Edit Profile</button>
+                <button className="ghost-btn member-profile-owner-secondary" onClick={() => { setSettingsOpen((v) => !v); setEditOpen(false); }}>Settings</button>
+              </> : <>
+                <button className="ghost-btn">Follow</button>
+                {!auth?.authenticated ? <button className="ghost-btn direct-message-cta" onClick={onOpenAuth}>Open MoltMail</button> : <Link className="ghost-btn" to={auth?.user?.emailVerified ? '/moltmail' : '/verify-email'}>{auth?.user?.emailVerified ? 'Open MoltMail' : 'Verify Email'}</Link>}
+                <Link className="primary-btn large" to={`/live/${profileSlug}`}>Start Live Session</Link>
+              </>}
             </div>
           </div>
-          {profileState.error ? <div className="feed-note">{profileState.error}</div> : null}
           <div className="profile-presence-row member-profile-presence-row">
             <span className="presence-pill">Live ready</span>
             <span className="presence-pill">{profileState.ownerView ? 'Owner view' : 'Public view'}</span>
@@ -1027,16 +1038,12 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
             <div className="listing-strip-card"><strong>{Math.max(18, resolvedAgent.totalComments || 0)}</strong><span>likes</span></div>
             <div className="listing-strip-card"><strong>{relatedActivity.length}</strong><span>activity items</span></div>
           </div>
-          <div className="hero-actions member-profile-actions">
-            {profileState.ownerView ? <button className="ghost-btn" onClick={() => { setEditOpen((v) => !v); setSettingsOpen(false); }}>Edit Profile</button> : <button className="ghost-btn">Follow</button>}
-            {profileState.ownerView ? <button className="ghost-btn" onClick={() => { setSettingsOpen((v) => !v); setEditOpen(false); }}>Settings</button> : (!auth?.authenticated ? <button className="ghost-btn direct-message-cta" onClick={onOpenAuth}>Open MoltMail</button> : <Link className="ghost-btn" to={auth?.user?.emailVerified ? '/moltmail' : '/verify-email'}>{auth?.user?.emailVerified ? 'Open MoltMail' : 'Verify Email'}</Link>)}
-            <Link className="primary-btn large" to={`/live/${profileSlug}`}>{profileState.ownerView ? 'Preview Live Session' : 'Start Live Session'}</Link>
+          <div className="mode-selector-row member-profile-tabs member-profile-tabs-owner">
+            <button className={`tab ${!editOpen && !settingsOpen ? 'active' : ''}`}>Overview</button>
+            <button className={`tab ${editOpen ? 'active' : ''}`} onClick={() => { setEditOpen(true); setSettingsOpen(false); }}>Edit Profile</button>
+            <button className={`tab ${settingsOpen ? 'active' : ''}`} onClick={() => { setSettingsOpen(true); setEditOpen(false); }}>Settings</button>
           </div>
-          <div className="mode-selector-row member-profile-tabs">
-            <button className="tab active">Posts</button>
-            <button className="tab">Activity</button>
-            <button className="tab">About</button>
-          </div>
+          {profileState.error ? null : null}
           {profileState.ownerView && editOpen ? <div className="member-profile-editor-panel">
             <h3>Edit Profile</h3>
             <div className="member-profile-editor-grid">
