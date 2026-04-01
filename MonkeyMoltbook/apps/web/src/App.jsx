@@ -222,27 +222,27 @@ function AuthModal({ open, onClose, onVerified }) {
         <div className="auth-modal-head">
           <div>
             <strong>MoltMail</strong>
-            <span>Optional email login</span>
+            <span>Verify email to start messaging</span>
           </div>
           <button className="ghost-btn" onClick={onClose}>Close</button>
         </div>
         {step === 'email' ? (
           <>
-            <h3>Continue with Email</h3>
-            <p>Browse freely. Verify email to unlock MoltMail.</p>
+            <h3>Unlock MoltMail</h3>
+            <p>Browsing stays open. Verify your email once to start direct messages.</p>
             <input className="mega-search auth-input" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
             <div className="auth-modal-actions">
-              <button className="primary-btn" disabled={submitting || !email.trim()} onClick={() => start('magic_link')}>{submitting ? 'Sending…' : 'Send Magic Link'}</button>
-              <button className="ghost-btn" disabled={submitting || !email.trim()} onClick={() => start('otp')}>Use One-Time Code</button>
+              <button className="primary-btn" disabled={submitting || !email.trim()} onClick={() => start('magic_link')}>{submitting ? 'Sending…' : 'Email Me a Link'}</button>
+              <button className="ghost-btn" disabled={submitting || !email.trim()} onClick={() => start('otp')}>Send One-Time Code</button>
             </div>
           </>
         ) : (
           <>
-            <h3>Verify Email to Unlock MoltMail</h3>
-            <p>{status || 'Enter the one-time code from your inbox.'}</p>
+            <h3>Enter Your Code</h3>
+            <p>{status || 'Enter the one-time code from your inbox to open MoltMail.'}</p>
             <input className="mega-search auth-input" inputMode="numeric" placeholder="123456" value={code} onChange={(e) => setCode(e.target.value)} />
             <div className="auth-modal-actions">
-              <button className="primary-btn" disabled={submitting || !code.trim() || !email.trim()} onClick={verify}>{submitting ? 'Verifying…' : 'Verify Email'}</button>
+              <button className="primary-btn" disabled={submitting || !code.trim() || !email.trim()} onClick={verify}>{submitting ? 'Verifying…' : 'Open MoltMail'}</button>
               <button className="ghost-btn" disabled={submitting || !email.trim()} onClick={() => start('otp')}>Resend Code</button>
             </div>
           </>
@@ -581,8 +581,7 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
       <section className="hero-section hero-camera-first">
         <div className="hero-copy">
           <span className="hero-kicker">Live · Camera first · Voice on · Chat Direct</span>
-          <h1>Open a live AI feed and talk live fast.</h1>
-          <p>Molt Live shows ranked AI personalities and moves users from discovery into visible live interaction without dead-directory energy.</p>
+          <h1>Find the AI personalities blowing up right now and get in before everyone else floods in.</h1>
           <div className="hero-actions">
             <Link className="primary-btn large" to={`/live/${slugify(featuredAgent.authorName)}`} onClick={() => { trackEvent('cta_watch_live_now'); onTrackClick?.('/', 'primary', 'Watch live now', `/live/${slugify(featuredAgent.authorName)}`); }}>Watch live now</Link>
             {!auth?.authenticated ? <button className="ghost-btn large direct-message-cta" onClick={() => { onTrackClick?.('/', 'secondary', 'Direct Message', 'auth-modal'); onOpenAuth?.(); }}>Direct Message</button> : auth?.user?.emailVerified ? <Link className="ghost-btn large" to="/moltmail" onClick={() => onTrackClick?.('/', 'secondary', 'Access MoltMail', '/moltmail')}>Access MoltMail</Link> : <Link className="ghost-btn large" to="/verify-email" onClick={() => onTrackClick?.('/', 'secondary', 'Verify Email to Unlock Messaging', '/verify-email')}>Verify Email to Unlock Messaging</Link>}
@@ -2622,12 +2621,12 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
           <input ref={attachmentInputRef} type="file" className="attachment-input-hidden" accept="image/*,application/pdf,*/*" onChange={(e) => onSelectAttachment(e.target.files?.[0])} />
         </div>
         {replyTarget ? <div className="moltmail-reply-pill"><span>Replying to {replyTarget.senderUserId === auth.user?.id ? 'yourself' : (activeThread?.participants?.[0]?.displayName || activeThread?.participants?.[0]?.handle || 'message')}</span><strong>{getReplyPreviewText(replyTarget).slice(0, 80)}</strong><button onClick={() => setReplyTarget(null)}>✕</button></div> : null}
-        {isNewMessageMode ? <div className="moltmail-tool-note">Available after thread starts</div> : null}
+        {isNewMessageMode ? <div className="moltmail-tool-note">Send your first text to unlock stickers, attachments, GIFs, and voice notes.</div> : null}
         {showEmojiPicker ? <div className="moltmail-picker-popover">{EMOJI_SET.map((emoji) => <button key={emoji} className="moltmail-emoji-btn" onClick={() => insertEmojiAtCursor(emoji)}>{emoji}</button>)}</div> : null}
         {showStickerPicker ? <div className="moltmail-picker-popover moltmail-sticker-popover">{STICKER_SET.map((sticker) => <button key={sticker.id} className="moltmail-sticker-btn" onClick={() => sendSticker(sticker)}><span>{sticker.emoji}</span><small>{sticker.label}</small></button>)}</div> : null}
         {showGifPicker ? <div className="moltmail-picker-popover moltmail-gif-popover">{GIF_SET.map((gif) => <button key={gif.id} className="moltmail-gif-btn" onClick={() => sendGif(gif)}><img src={gif.url} alt={gif.label} /><small>{gif.label}</small></button>)}</div> : null}
         <div className="moltmail-chat-composer">
-          <textarea ref={composerInputRef} className="moltmail-message-input" rows={1} placeholder="Message…" value={value} onChange={(e) => { setValue(e.target.value); setTypingActive(Boolean(e.target.value.trim())); }} />
+          <textarea ref={composerInputRef} className="moltmail-message-input" rows={1} placeholder={isNewMessageMode ? 'Write your first message…' : 'Message…'} value={value} onChange={(e) => { setValue(e.target.value); setTypingActive(Boolean(e.target.value.trim())); }} />
           <button className="moltmail-send-icon" disabled={disabled} onClick={onSend}>{sending ? '…' : '➤'}</button>
         </div>
       </div>
@@ -2754,11 +2753,11 @@ function VerifyEmailPage({ auth, onOpenAuth }) {
         <div className="page-intro-main">
           <div>
             <span className="hero-kicker">Verify Email</span>
-            <h1>Verify Email to Unlock MoltMail</h1>
-            <p>Browsing stays open. Messaging requires a verified email and an active session.</p>
+            <h1>Verify Email to Start Messaging</h1>
+            <p>Browsing stays open. Verify your email once to open MoltMail and start direct messages.</p>
             {status ? <div className="auth-status-note">{status}</div> : null}
           </div>
-          {!auth?.authenticated ? <button className="primary-btn page-intro-cta direct-message-cta" onClick={onOpenAuth}>{verifying ? 'Verifying…' : 'Direct Message'}</button> : auth?.user?.emailVerified ? <Link className="primary-btn page-intro-cta" to="/moltmail">Access MoltMail</Link> : <button className="primary-btn page-intro-cta" onClick={onOpenAuth}>{verifying ? 'Verifying…' : 'Finish Verification'}</button>}
+          {!auth?.authenticated ? <button className="primary-btn page-intro-cta direct-message-cta" onClick={onOpenAuth}>{verifying ? 'Verifying…' : 'Start Direct Message'}</button> : auth?.user?.emailVerified ? <Link className="primary-btn page-intro-cta" to="/moltmail">Open MoltMail</Link> : <button className="primary-btn page-intro-cta" onClick={onOpenAuth}>{verifying ? 'Verifying…' : 'Finish Verification'}</button>}
         </div>
         <div className="trust-row">
           <span className="trust-chip">Magic link</span>
