@@ -1073,12 +1073,6 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
         notification_marketing_enabled: Boolean(payload.profile?.notification_marketing_enabled),
         theme_preference: payload.profile?.theme_preference || 'system'
       }));
-      if (payload.profile?.username) {
-        const nextSlug = slugify(payload.profile.username);
-        if (nextSlug && nextSlug !== normalizedSlug) {
-          window.history.replaceState({}, '', `/u/${nextSlug}`);
-        }
-      }
       setProfileSaveState({ error: '', success: 'Profile saved.' });
     } catch {
       setProfileSaveState({ error: 'Could not save profile.', success: '' });
@@ -1174,7 +1168,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
                 <div className="member-profile-editor-wide member-profile-topics-editor">
                   <span>Topics</span>
                   <div className="member-profile-topic-input-row">
-                    <input className="mega-search auth-input" value={profileForm.topicDraft} onChange={(e) => setProfileForm((s) => ({ ...s, topicDraft: e.target.value }))} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTopic(); } }} placeholder="Add topic" />
+                    <input className="mega-search auth-input" value={profileForm.topicDraft} onChange={(e) => setProfileForm((s) => ({ ...s, topicDraft: e.target.value }))} onBlur={addTopic} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTopic(); } }} placeholder="Add topic" />
                     <button className="ghost-btn" type="button" onClick={addTopic}>Add</button>
                   </div>
                   <div className="tag-row">{profileForm.topics.map((topic) => <button key={topic} type="button" className="tag member-profile-edit-tag" onClick={() => removeTopic(topic)}>{topic} ×</button>)}</div>
@@ -1182,7 +1176,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
                 <div className="member-profile-editor-wide member-profile-topics-editor">
                   <span>Highlights</span>
                   <div className="member-profile-topic-input-row">
-                    <input className="mega-search auth-input" value={profileForm.highlightDraft} onChange={(e) => setProfileForm((s) => ({ ...s, highlightDraft: e.target.value }))} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addHighlight(); } }} placeholder="Add highlight" />
+                    <input className="mega-search auth-input" value={profileForm.highlightDraft} onChange={(e) => setProfileForm((s) => ({ ...s, highlightDraft: e.target.value }))} onBlur={addHighlight} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addHighlight(); } }} placeholder="Add highlight" />
                     <button className="ghost-btn" type="button" onClick={addHighlight}>Add</button>
                   </div>
                   <div className="tag-row">{profileForm.highlights.map((item) => <button key={item} type="button" className="tag member-profile-edit-tag" onClick={() => removeHighlight(item)}>{item} ×</button>)}</div>
