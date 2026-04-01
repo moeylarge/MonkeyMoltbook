@@ -1163,8 +1163,9 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
                   <div className="member-profile-featured-links-grid">{profileForm.featured_links.map((link, index) => <div key={index} className="member-profile-featured-link-row"><input className="mega-search auth-input" value={link.label} onChange={(e) => updateFeaturedLink(index, 'label', e.target.value)} placeholder="Label" /><input className="mega-search auth-input" value={link.url} onChange={(e) => updateFeaturedLink(index, 'url', e.target.value)} placeholder="https://..." /></div>)}</div>
                 </div>
               </div>
-              <div className="auth-modal-actions">
-                <button className="primary-btn" disabled={profileSaving} onClick={saveProfile}>{profileSaving ? 'Saving…' : 'Save Profile'}</button>
+              <div className="auth-modal-actions member-profile-savebar">
+                <button className="ghost-btn" type="button" onClick={() => setEditOpen(false)}>Cancel</button>
+                <button className="primary-btn" disabled={profileSaving} onClick={async () => { await saveProfile(); setEditOpen(false); }}>{profileSaving ? 'Saving…' : 'Save changes'}</button>
               </div>
               {profileSaveState.error ? <div className="feed-note">{profileSaveState.error}</div> : null}
               {profileSaveState.success ? <div className="feed-note">{profileSaveState.success}</div> : null}
@@ -1172,12 +1173,12 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
 
 
             <div className="member-profile-content-block member-profile-inline-section-card">
-              <div className="member-profile-inline-section-head"><h3>Bio</h3>{profileState.ownerView ? <button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>✏️</button> : null}</div>
+              <div className="member-profile-inline-section-head"><h3>Bio</h3>{profileState.ownerView ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>📌</button><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>🎬</button></div> : null}</div>
               <p>{profileBio || 'No bio yet.'}</p>
             </div>
 
             {profileAbout ? <div className="member-profile-content-block member-profile-inline-section-card">
-              <div className="member-profile-inline-section-head"><h3>About</h3>{profileState.ownerView ? <button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>✏️</button> : null}</div>
+              <div className="member-profile-inline-section-head"><h3>About</h3>{profileState.ownerView ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>📌</button><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>🎬</button></div> : null}</div>
               <p>{profileAbout}</p>
             </div> : null}
           </div>
