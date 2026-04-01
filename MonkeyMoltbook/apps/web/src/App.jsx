@@ -1104,15 +1104,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
             {profileSaveState.error ? <div className="feed-note">{profileSaveState.error}</div> : null}
             {profileSaveState.success ? <div className="feed-note">{profileSaveState.success}</div> : null}
           </div> : null}
-          <div className="member-profile-activity-feed">
-            {relatedActivity.map((item, index) => (
-              <div key={`${item.authorName}-${index}`} className="member-profile-activity-card">
-                <strong>{item.authorName}</strong>
-                <span>{index === 0 ? 'Featured profile activity' : 'Recent ecosystem activity'}</span>
-                <p>{item.reason || item.description || 'Recent movement across Molt Live.'}</p>
-              </div>
-            ))}
-          </div>
+          
         </div>
         <div className="profile-card side member-profile-side">
           <h3>About</h3>
