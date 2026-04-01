@@ -1975,6 +1975,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   const [activeComposeRecipient, setActiveComposeRecipient] = useState(null);
   const [attachmentState, setAttachmentState] = useState({ uploading: false, file: null, error: '' });
   const [replyTarget, setReplyTarget] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const suppressMailboxAutoSelectRef = useRef(false);
   const threadFeedRef = useRef(null);
   const composerInputRef = useRef(null);
@@ -1995,15 +1996,49 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     reader.readAsDataURL(file);
   });
 
+  const formatPresence = (value) => {
+    if (!value) return 'last active unknown';
+    const diffMs = Date.now() - new Date(value).getTime();
+    const diffMin = Math.max(0, Math.floor(diffMs / 60000));
+    if (diffMin <= 5) return 'online';
+    if (diffMin <= 60) return 'active recently';
+    if (diffMin < 1440) return `last active ${diffMin}m ago`;
+    const diffDays = Math.floor(diffMin / 1440);
+    return `last active ${diffDays}d ago`;
+  };
+
+  const buildLinkPreview = (text = '') => {
+    const match = text.match(/https?:\/\/[^\s]+/i);
+    if (!match) return null;
+    try {
+      const url = new URL(match[0]);
+      const slug = url.pathname.replace(/^\/+/, '').split('/').filter(Boolean).slice(0, 2).join(' / ');
+      return {
+        url: url.toString(),
+        domain: url.hostname.replace(/^www\./, ''),
+        title: slug ? slug.replace(/[-_]/g, ' ') : url.hostname.replace(/^www\./, '')
+      };
+    } catch {
+      return null;
+    }
+  };
+
   const threads = useMemo(() => {
     const merged = [...optimisticThreads, ...inbox, ...outbox];
     const seen = new Set();
-    return merged.filter((thread) => {
+    const deduped = merged.filter((thread) => {
       if (seen.has(thread.id)) return false;
       seen.add(thread.id);
       return true;
     }).sort((a,b)=> new Date(b.lastMessageAt||0)-new Date(a.lastMessageAt||0));
-  }, [optimisticThreads, inbox, outbox]);
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return deduped;
+    return deduped.filter((thread) => {
+      const title = String(thread.displayTitle || thread.subject || '').toLowerCase();
+      const preview = String(thread.lastMessagePreview || '').toLowerCase();
+      return title.includes(query) || preview.includes(query);
+    });
+  }, [optimisticThreads, inbox, outbox, searchQuery]);
   const optimisticSelectedThread = optimisticThreads.find((thread) => thread.id === selectedThreadId) || null;
   const optimisticSelectedMessages = useMemo(() => optimisticMessages.filter((message) => message.threadId === selectedThreadId), [optimisticMessages, selectedThreadId]);
   const confirmedSelectedThread = threadData.data?.thread?.id === selectedThreadId ? threadData.data.thread : null;
@@ -2409,6 +2444,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
             {thread.lastMessageAt ? <span>{new Date(thread.lastMessageAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span> : null}
           </div>
           <div className="moltmail-thread-preview">{thread.lastMessagePreview || 'Start the conversation'}</div>
+          <div className="moltmail-thread-presence">{formatPresence(thread.lastMessageAt)}</div>
         </div>
         {thread.unread ? <span className="moltmail-unread-dot" /> : null}
       </button>
@@ -2515,6 +2551,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
               <h1>MoltMail</h1>
               <button className="moltmail-new-message" onClick={openNewMessage}>New message</button>
             </div>
+            <div className="moltmail-search-wrap"><input className="moltmail-search-input" placeholder="Search people or messages" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} /></div>
             <div className="moltmail-conversation-list">{renderThreadRows()}</div>
           </aside>
           <main className={`moltmail-chat ${mobileView === 'list' ? 'mobile-hidden-chat' : ''}`}>
@@ -2523,6 +2560,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
               <div className="moltmail-chat-identity">
                 <strong>{activeThread?.participants?.[0]?.displayName || activeThread?.participants?.[0]?.handle || selectedRecipient?.displayName || selectedRecipient?.handle || 'New message'}</strong>
                 {activeMessages.length ? <span>{`${activeMessages.length} messages`}</span> : null}
+                {selectedThreadId ? <span className="moltmail-presence-chip">{formatPresence(threads.find((thread) => thread.id === selectedThreadId)?.lastMessageAt || activeMessages[activeMessages.length - 1]?.createdAt)}</span> : null}
               </div>
             </div>
             <div className="moltmail-chat-feed" ref={threadFeedRef}>
@@ -2540,6 +2578,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
                         {message.replyPreview ? <button className="moltmail-reply-preview" onClick={() => document.getElementById(`message-${message.replyPreview.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>{getReplyPreviewText(message.replyPreview).slice(0, 80)}</button> : null}
                         {message.sticker ? <div className="moltmail-sticker-message"><span>{message.sticker.emoji}</span><small>{message.sticker.label}</small></div> : null}
                         {message.bodyText ? <div>{message.bodyText}</div> : null}
+                        {buildLinkPreview(message.bodyText) ? <a className="moltmail-link-preview" href={buildLinkPreview(message.bodyText).url} target="_blank" rel="noreferrer"><strong>{buildLinkPreview(message.bodyText).title}</strong><span>{buildLinkPreview(message.bodyText).domain}</span></a> : null}
                         {message.attachment ? <div className="moltmail-attachment-card">{message.attachment.type?.startsWith('image/') ? <img className="moltmail-attachment-preview" src={message.attachment.dataUrl} alt={message.attachment.name || 'attachment'} /> : <div className="moltmail-attachment-file">{message.attachment.type === 'application/pdf' ? '📄' : '📎'} {message.attachment.name}</div>}<div className="moltmail-attachment-actions"><a href={message.attachment.dataUrl} target="_blank" rel="noreferrer">Open</a><a href={message.attachment.dataUrl} download={message.attachment.name || 'attachment'}>Download</a></div></div> : null}
                         {message.reactions?.length ? <div className="moltmail-reactions">{message.reactions.map((reaction) => <button key={reaction.emoji} className={`moltmail-reaction-chip ${reaction.reacted ? 'active' : ''}`} onClick={() => toggleReactionOnMessage(message.id, reaction.emoji)}>{reaction.emoji} {reaction.count}</button>)}</div> : null}
                         <div className="moltmail-bubble-actions">
