@@ -257,7 +257,7 @@ function AppFrame({ children, auth, onOpenAuth, onLogout }) {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const authLabel = !auth?.authenticated ? 'Direct Message' : auth?.user?.emailVerified ? 'Account' : 'Verify Email';
+  const authLabel = !auth?.authenticated ? 'Direct Message' : auth?.user?.emailVerified ? 'Direct Message' : 'Verify Email';
   const authHref = !auth?.authenticated ? '/moltmail' : auth?.user?.emailVerified ? '/moltmail' : '/verify-email';
 
   useEffect(() => {
