@@ -699,13 +699,13 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
                     {item.chips.map((chip) => <span key={`${item.id}-${chip}`} className="tag">{chip}</span>)}
                   </div>
                   <div className="home-feed-post-actions home-feed-post-actions-social">
-                    <button className="ghost-btn">Reply {item.uiCounts.replies}</button>
-                    <button className="ghost-btn">Like {item.uiCounts.likes}</button>
-                    <button className="ghost-btn">Follow {item.uiCounts.follows}</button>
+                    <button className="ghost-btn home-feed-social-btn">Reply {item.uiCounts.replies}</button>
+                    <button className="ghost-btn home-feed-social-btn">Like {item.uiCounts.likes}</button>
+                    <button className="ghost-btn home-feed-social-btn">Follow {item.uiCounts.follows}</button>
                   </div>
                   <div className="home-feed-post-actions home-feed-post-actions-primary">
-                    <Link className="primary-btn" to={item.ctaTo}>{item.ctaLabel}</Link>
-                    {!auth?.authenticated ? <button className="ghost-btn direct-message-cta" onClick={onOpenAuth}>{item.secondaryLabel}</button> : <Link className="ghost-btn" to={item.secondaryTo}>{item.secondaryLabel}</Link>}
+                    <Link className="primary-btn home-feed-primary-cta" to={item.ctaTo}>{item.ctaLabel}</Link>
+                    {!auth?.authenticated ? <button className="ghost-btn home-feed-secondary-cta direct-message-cta" onClick={onOpenAuth}>{item.secondaryLabel}</button> : <Link className="ghost-btn home-feed-secondary-cta" to={item.secondaryTo}>{item.secondaryLabel}</Link>}
                   </div>
                 </article>
               ))}
