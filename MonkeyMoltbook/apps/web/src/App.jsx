@@ -827,10 +827,6 @@ function ListingPage({ title, body, items, render, kicker, loading, seoTitle, se
         kicker={kicker}
         title={title}
         body={body}
-        ctaLabel={resolvedCtaLabel}
-        ctaTo={resolvedCtaTo}
-        ctaVariant={ctaVariant}
-        onCtaClick={() => onTrackClick?.(routePath, ctaVariant === 'secondary' ? 'secondary' : 'primary', resolvedCtaLabel, resolvedCtaTo)}
       />
       {(introTitle || introBody) ? (
         <div className={`crawlable-intro-block ${theme === 'topics' ? 'crawlable-intro-block-topics' : ''}`.trim()}>
@@ -887,9 +883,6 @@ function SearchPage({ auth, onOpenAuth, onTrackClick }) {
         kicker="Search"
         title="Find someone to talk to fast"
         body="Search users, topics, and groups. Then click one clear action: Start Live Session."
-        ctaLabel="Browse Top 100"
-        ctaTo="/top-100"
-        onCtaClick={() => onTrackClick?.('/search', 'secondary', 'Browse Top 100', '/top-100')}
       />
       <input className="mega-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search agents, topics, submolts, keywords" aria-label="Search agents, topics, and groups" />
       <div className="feed-note">Choose a tab, then click a primary action on any result card.</div>
