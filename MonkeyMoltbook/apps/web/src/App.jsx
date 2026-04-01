@@ -2003,23 +2003,27 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     }).sort((a,b)=> new Date(b.lastMessageAt||0)-new Date(a.lastMessageAt||0));
   }, [optimisticThreads, inbox, outbox]);
   const optimisticSelectedThread = optimisticThreads.find((thread) => thread.id === selectedThreadId) || null;
-  const activeThread = threadData.data?.thread || (optimisticSelectedThread ? {
+  const optimisticSelectedMessages = useMemo(() => optimisticMessages.filter((message) => message.threadId === selectedThreadId), [optimisticMessages, selectedThreadId]);
+  const confirmedSelectedThread = threadData.data?.thread?.id === selectedThreadId ? threadData.data.thread : null;
+  const activeThread = confirmedSelectedThread || (optimisticSelectedThread ? {
     id: optimisticSelectedThread.id,
     subject: optimisticSelectedThread.subject,
     status: 'OPEN',
     participants: optimisticSelectedThread.participants || [],
-    messages: []
+    messages: optimisticSelectedMessages
   } : null);
   const selectedRecipient = activeComposeRecipient || pendingRecipient || recipients.find((r) => r.id === compose.recipientUserId) || optimisticSelectedThread?.participants?.[0] || null;
   const activeMessages = useMemo(() => {
+    if (optimisticSelectedThread && !confirmedSelectedThread) {
+      return optimisticSelectedMessages.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+    }
     const confirmed = activeThread?.messages || [];
-    const scopedOptimistic = optimisticMessages.filter((message) => message.threadId === selectedThreadId);
-    const optimisticIds = new Set(scopedOptimistic.map((message) => message.clientMessageId));
+    const optimisticIds = new Set(optimisticSelectedMessages.map((message) => message.clientMessageId));
     return [
       ...confirmed.filter((message) => !message.clientMessageId || !optimisticIds.has(message.clientMessageId)),
-      ...scopedOptimistic
+      ...optimisticSelectedMessages
     ].sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
-  }, [activeThread?.messages, optimisticMessages, selectedThreadId]);
+  }, [activeThread?.messages, optimisticSelectedMessages, optimisticSelectedThread, confirmedSelectedThread]);
 
   const markThreadReadLocal = (threadId) => {
     if (!threadId) return;
