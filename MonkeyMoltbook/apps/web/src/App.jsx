@@ -1065,11 +1065,6 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
             <div className="listing-strip-card"><strong>{Math.max(18, resolvedAgent.totalComments || 0)}</strong><span>likes</span></div>
             <div className="listing-strip-card"><strong>{relatedActivity.length}</strong><span>activity items</span></div>
           </div>
-          <div className="mode-selector-row member-profile-tabs member-profile-tabs-owner">
-            <button className={`tab ${!editOpen && !settingsOpen ? 'active' : ''}`}>Overview</button>
-            <button className={`tab ${editOpen ? 'active' : ''}`} onClick={() => { setEditOpen(true); setSettingsOpen(false); }}>Edit Profile</button>
-            <button className={`tab ${settingsOpen ? 'active' : ''}`} onClick={() => { setSettingsOpen(true); setEditOpen(false); }}>Settings</button>
-          </div>
           {profileState.error ? null : null}
           {profileState.ownerView && editOpen ? <div className="member-profile-editor-panel">
             <h3>Edit Profile</h3>
