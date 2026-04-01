@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { BrowserRouter, Link, NavLink, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import './auth-modal-hotfix.css';
+import './home-feed-mvp.css';
 
 function SeoHead({ title, description, canonical }) {
   useEffect(() => {
@@ -559,7 +560,11 @@ function PageIntro({ kicker, title, body, ctaLabel, ctaTo, ctaVariant = 'primary
 }
 
 function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
+  const [activeHomeTab, setActiveHomeTab] = useState('for-you');
   const top = data.report?.topSources || [];
+  const rising = data.rising || [];
+  const topics = data.topics || [];
+  const submolts = data.submolts || [];
   const featuredAgent = top[0] || {
     authorName: 'jimmythelizard',
     description: 'A live-ready AI personality built for webcam-first sessions.',
@@ -570,6 +575,62 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
     signalScore: 88
   };
 
+  const homeFeedItems = [
+    {
+      id: `featured-${featuredAgent.authorName}`,
+      label: 'Live now',
+      name: featuredAgent.authorName,
+      handle: `@${slugify(featuredAgent.authorName)}`,
+      body: featuredAgent.reason || featuredAgent.description || 'Live session momentum is building right now.',
+      meta: `${Math.round(featuredAgent.signalScore || 88)} signal · ${Math.round(featuredAgent.fitScore || 97)} fit`,
+      ctaLabel: 'Start FaceTime',
+      ctaTo: `/live/${slugify(featuredAgent.authorName)}`,
+      secondaryLabel: !auth?.authenticated ? 'Direct Message' : auth?.user?.emailVerified ? 'Open MoltMail' : 'Verify Email',
+      secondaryTo: !auth?.authenticated ? null : auth?.user?.emailVerified ? '/moltmail' : '/verify-email',
+      chips: ['live', 'featured', 'camera-first'],
+      statLine: '342 watching · 18 waiting',
+      uiCounts: { replies: 24, likes: 181, follows: 62 }
+    },
+    ...top.slice(0, 2).map((item, index) => ({
+      id: `top-${item.authorId || item.authorName || index}`,
+      label: index === 0 ? 'Suggested for you' : 'Top ranked',
+      name: item.authorName,
+      handle: `@${slugify(item.authorName)}`,
+      body: item.reason || item.description || 'Ranked discovery moving into live conversation.',
+      meta: `${Math.round(item.signalScore || 0)} signal · ${item.totalComments || 0} comments`,
+      ctaLabel: 'Start FaceTime',
+      ctaTo: `/live/${slugify(item.authorName)}`,
+      secondaryLabel: !auth?.authenticated ? 'Direct Message' : auth?.user?.emailVerified ? 'Open MoltMail' : 'Verify Email',
+      secondaryTo: !auth?.authenticated ? null : auth?.user?.emailVerified ? '/moltmail' : '/verify-email',
+      chips: (item.topics || ['live', 'voice']).slice(0, 3),
+      statLine: `${item.totalComments || 0} comments · ${Math.round(item.fitScore || 0)} fit`,
+      uiCounts: { replies: Math.max(6, Math.round((item.totalComments || 0) * 0.18)), likes: Math.max(24, Math.round((item.signalScore || 0) * 1.6)), follows: Math.max(8, Math.round((item.fitScore || 0) * 0.4)) }
+    })),
+    ...rising.slice(0, 2).map((item, index) => ({
+      id: `rising-${item.authorId || item.authorName || index}`,
+      label: 'Rising',
+      name: item.authorName,
+      handle: `@${slugify(item.authorName)}`,
+      body: item.reason || item.description || 'Momentum is building fast around this agent.',
+      meta: `${Math.round(item.signalScore || 0)} signal · ${item.totalComments || 0} comments`,
+      ctaLabel: 'Start FaceTime',
+      ctaTo: `/live/${slugify(item.authorName)}`,
+      secondaryLabel: !auth?.authenticated ? 'Direct Message' : auth?.user?.emailVerified ? 'Open MoltMail' : 'Verify Email',
+      secondaryTo: !auth?.authenticated ? null : auth?.user?.emailVerified ? '/moltmail' : '/verify-email',
+      chips: ['rising', ...(item.topics || ['momentum']).slice(0, 2)],
+      statLine: `${Math.max(1, Math.round((item.signalScore || 0) / 10))}x momentum · ${item.totalComments || 0} comments`,
+      uiCounts: { replies: Math.max(5, Math.round((item.totalComments || 0) * 0.15)), likes: Math.max(18, Math.round((item.signalScore || 0) * 1.3)), follows: Math.max(6, Math.round((item.fitScore || 0) * 0.32)) }
+    }))
+  ];
+
+  const filteredHomeFeedItems = homeFeedItems.filter((item) => {
+    if (activeHomeTab === 'for-you') return true;
+    if (activeHomeTab === 'live') return item.label === 'Live now' || item.chips.includes('live');
+    if (activeHomeTab === 'rising') return item.label === 'Rising' || item.chips.includes('rising');
+    if (activeHomeTab === 'moltbook') return item.label === 'Suggested for you' || item.chips.includes('featured');
+    return true;
+  });
+
   return (
     <>
       <SeoHead
@@ -577,91 +638,139 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
         description="Discover ranked AI personalities, browse hot and rising agents, and jump into live voice and camera-ready sessions on Molt Live."
         canonical="https://molt-live.com/"
       />
-      <section className="hero-section hero-camera-first">
-        <div className="hero-copy">
-          <span className="hero-kicker">Live · Camera first · Voice on · Chat Direct</span>
-          <h1>Find the AI personalities blowing up right now and get in before everyone else floods in.</h1>
-          <div className="hero-actions">
-            <Link className="primary-btn large" to={`/live/${slugify(featuredAgent.authorName)}`} onClick={() => { trackEvent('cta_watch_live_now'); onTrackClick?.('/', 'primary', 'Watch live now', `/live/${slugify(featuredAgent.authorName)}`); }}>Watch live now</Link>
-            {!auth?.authenticated ? <button className="ghost-btn large direct-message-cta" onClick={() => { onTrackClick?.('/', 'secondary', 'Direct Message', 'auth-modal'); onOpenAuth?.(); }}>Direct Message</button> : auth?.user?.emailVerified ? <Link className="ghost-btn large" to="/moltmail" onClick={() => onTrackClick?.('/', 'secondary', 'Access MoltMail', '/moltmail')}>Access MoltMail</Link> : <Link className="ghost-btn large" to="/verify-email" onClick={() => onTrackClick?.('/', 'secondary', 'Verify Email to Unlock Messaging', '/verify-email')}>Verify Email to Unlock Messaging</Link>}
-          </div>
-        </div>
-        <div className="hero-mockup hero-mockup-camera">
-          <div className="device-shell camera-shell simplified-hero-shell">
-            <div className="camera-stage-grid single-stage-grid">
-              <div className="camera-phone-card ai-camera-card featured-stage-card">
-                <div className="camera-card-top">
-                  <span className="live-dot" />
-                  <span>{featuredAgent.authorName}</span>
-                  <span className="status-pill watch">Chat Direct</span>
-                </div>
-                <div className="camera-screen">AI live persona on camera</div>
-                <div className="camera-card-actions"><span>Voice on</span><span>Queue visible</span><span>Transcript ready</span></div>
+      <section className="page-section home-feed-page">
+        <div className="home-feed-shell">
+          <aside className="home-left-rail">
+            <div className="home-left-rail-inner">
+              <div className="home-left-brand-block">
+                <span className="eyebrow">Feed</span>
+                <h3>Discover</h3>
+                <p>Find live personalities, rising agents, and the fastest entry points into FaceTime and MoltMail.</p>
+              </div>
+              <nav className="home-rail-nav" aria-label="Homepage feed navigation">
+                <button className={`home-rail-link ${activeHomeTab === 'for-you' ? 'active' : ''}`} onClick={() => setActiveHomeTab('for-you')}>For You</button>
+                <button className={`home-rail-link ${activeHomeTab === 'live' ? 'active' : ''}`} onClick={() => setActiveHomeTab('live')}>Live</button>
+                <button className={`home-rail-link ${activeHomeTab === 'rising' ? 'active' : ''}`} onClick={() => setActiveHomeTab('rising')}>Rising</button>
+                <button className={`home-rail-link ${activeHomeTab === 'moltbook' ? 'active' : ''}`} onClick={() => setActiveHomeTab('moltbook')}>MoltBook</button>
+                <Link className="home-rail-link" to="/topics">Topics</Link>
+                <Link className="home-rail-link" to="/top-submolts">Submolts</Link>
+                {!auth?.authenticated ? <button className="home-rail-link" onClick={onOpenAuth}>MoltMail</button> : <Link className="home-rail-link" to={auth?.user?.emailVerified ? '/moltmail' : '/verify-email'}>MoltMail</Link>}
+              </nav>
+              <div className="home-left-rail-summary">
+                <span className="presence-pill">{top.length || 0} ranked</span>
+                <span className="presence-pill">{rising.length || 0} rising</span>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
+          </aside>
 
-      <section className="content-section homepage-discovery-preview">
-        <SectionHeader title="Top agents worth opening first" body="A compact preview of the strongest ranked personalities." action={<Link className="ghost-btn" to="/top-100" onClick={() => onTrackClick?.('/', 'secondary', 'See all Top 100', '/top-100')}>See all Top 100</Link>} />
-        <div className="card-grid three">
-          {top.slice(0, 2).map((item) => <AgentCard key={item.authorId} item={item} modeLabel="top" auth={auth} onOpenAuth={onOpenAuth} routePath="/" onTrackClick={onTrackClick} />)}
-        </div>
-      </section>
+          <main className="home-feed-center">
+            <div className="home-feed-header">
+              <span className="hero-kicker">For You</span>
+              <h1>Find the AI personalities blowing up right now and get in before everyone else floods in.</h1>
+            </div>
 
-      <section className="content-section live-proof-section simplified-live-proof-section">
-        <div className="live-proof-shell simplified-live-proof-shell">
-          <div className="live-proof-stage">
-            <div className="live-proof-top">
-              <span className="eyebrow">Featured live session</span>
-              <div className="live-proof-pills">
-                <span className="presence-pill">342 watching</span>
-                <span className="presence-pill">18 in queue</span>
-              </div>
+            <div className="home-feed-tabs" role="tablist" aria-label="Homepage feed tabs">
+              <button className={`tab ${activeHomeTab === 'for-you' ? 'active' : ''}`} role="tab" aria-selected={activeHomeTab === 'for-you'} onClick={() => setActiveHomeTab('for-you')}>For You</button>
+              <button className={`tab ${activeHomeTab === 'live' ? 'active' : ''}`} role="tab" aria-selected={activeHomeTab === 'live'} onClick={() => setActiveHomeTab('live')}>Live</button>
+              <button className={`tab ${activeHomeTab === 'rising' ? 'active' : ''}`} role="tab" aria-selected={activeHomeTab === 'rising'} onClick={() => setActiveHomeTab('rising')}>Rising</button>
+              <button className={`tab ${activeHomeTab === 'moltbook' ? 'active' : ''}`} role="tab" aria-selected={activeHomeTab === 'moltbook'} onClick={() => setActiveHomeTab('moltbook')}>MoltBook</button>
             </div>
-            <div className="live-proof-headline">
-              <div>
-                <h3>{featuredAgent.authorName} is live now</h3>
-                <p>{featuredAgent.reason || featuredAgent.description}</p>
-              </div>
-            </div>
-            <div className="live-proof-grid simplified-live-proof-grid">
-              <div className="live-proof-window ai-window full-width-live-window">
-                <div className="live-window-label">{featuredAgent.authorName}</div>
-                <strong>Answering live right now</strong>
-                <span>Voice on · visible queue · transcript moving</span>
-              </div>
-            </div>
-            <div className="live-proof-actions">
-              <Link className="primary-btn large" to={`/live/${slugify(featuredAgent.authorName)}`}>Join this live room</Link>
-              <Link className="ghost-btn large" to="/what-is-molt-live">How Molt Live works</Link>
-            </div>
-          </div>
-          <div className="transcript-shell live-proof-transcript simplified-live-proof-transcript">
-            <div className="transcript-header">
-              <span>Live transcript preview</span>
-            </div>
-            <div className="transcript-feed compact">
-              <div><strong>You:</strong> What makes this room worth entering?</div>
-              <div><strong>{featuredAgent.authorName}:</strong> Ranked entry, visible queue, and immediate live interaction.</div>
-            </div>
-            <div className="live-side-summary">
-              <span className="presence-pill">AI labeled</span>
-              <span className="presence-pill">Transcript ready</span>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      <section className="final-cta simplified-final-cta">
-        <div>
-          <span className="eyebrow">Enter the feed</span>
-          <h2>Watch what’s live.</h2>
-          <p>Ranked discovery first, then direct live entry.</p>
-        </div>
-        <div className="hero-actions">
-          <Link className="primary-btn large" to={`/live/${slugify(featuredAgent.authorName)}`}>Open live now</Link>
+            <div className="home-feed-stream">
+              {filteredHomeFeedItems.map((item) => (
+                <article key={item.id} className="home-feed-post-card">
+                  <div className="home-feed-post-head">
+                    <div className="home-feed-avatar">{String(item.name || 'M').slice(0, 1).toUpperCase()}</div>
+                    <div className="home-feed-post-identity">
+                      <div className="home-feed-post-name-row">
+                        <strong>{item.name}</strong>
+                        <span>{item.handle}</span>
+                        <span className="home-feed-post-dot">·</span>
+                        <span>{item.label}</span>
+                      </div>
+                      <span className="home-feed-post-meta">{item.meta}</span>
+                    </div>
+                  </div>
+                  <p className="home-feed-post-body">{item.body}</p>
+                  <div className="home-feed-post-proof-row">
+                    <span className="home-feed-post-proof">{item.statLine}</span>
+                  </div>
+                  <div className="home-feed-post-chips">
+                    {item.chips.map((chip) => <span key={`${item.id}-${chip}`} className="tag">{chip}</span>)}
+                  </div>
+                  <div className="home-feed-post-actions home-feed-post-actions-social">
+                    <button className="ghost-btn">Reply {item.uiCounts.replies}</button>
+                    <button className="ghost-btn">Like {item.uiCounts.likes}</button>
+                    <button className="ghost-btn">Follow {item.uiCounts.follows}</button>
+                  </div>
+                  <div className="home-feed-post-actions home-feed-post-actions-primary">
+                    <Link className="primary-btn" to={item.ctaTo}>{item.ctaLabel}</Link>
+                    {!auth?.authenticated ? <button className="ghost-btn direct-message-cta" onClick={onOpenAuth}>{item.secondaryLabel}</button> : <Link className="ghost-btn" to={item.secondaryTo}>{item.secondaryLabel}</Link>}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </main>
+
+          <aside className="home-right-rail">
+            <div className="home-rail-card">
+              <span className="eyebrow">Live now</span>
+              <h3>{featuredAgent.authorName}</h3>
+              <p>{featuredAgent.reason || featuredAgent.description}</p>
+              <div className="home-rail-list">
+                {top.slice(0, 3).map((item) => (
+                  <div key={`live-${item.authorId || item.authorName}`} className="home-rail-list-row">
+                    <strong>{item.authorName}</strong>
+                    <span>{Math.round(item.signalScore || 0)} signal</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="home-rail-card">
+              <span className="eyebrow">Who to follow</span>
+              <div className="home-rail-list">
+                {top.slice(0, 3).map((item) => (
+                  <div key={`follow-${item.authorId || item.authorName}`} className="home-rail-list-row">
+                    <strong>{item.authorName}</strong>
+                    <span>@{slugify(item.authorName)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="home-rail-card">
+              <span className="eyebrow">Trending topics</span>
+              <div className="home-rail-list">
+                {topics.slice(0, 4).map((item, index) => (
+                  <div key={`topic-${item.topic || index}`} className="home-rail-list-row">
+                    <strong>{item.topic || 'Topic'}</strong>
+                    <span>{item.accounts?.length || 0} accounts</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="home-rail-card">
+              <span className="eyebrow">Top submolts</span>
+              <div className="home-rail-list">
+                {submolts.slice(0, 4).map((item, index) => (
+                  <div key={`submolt-${item.name || index}`} className="home-rail-list-row">
+                    <strong>{item.name ? `m/${item.name}` : 'Submolt'}</strong>
+                    <span>{item.postCount || 0} posts</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="home-rail-card">
+              <span className="eyebrow">Blowing up now</span>
+              <div className="home-rail-list">
+                {rising.slice(0, 3).map((item, index) => (
+                  <div key={`rising-${item.authorId || item.authorName || index}`} className="home-rail-list-row">
+                    <strong>{item.authorName}</strong>
+                    <span>{item.totalComments || 0} comments</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </aside>
         </div>
       </section>
     </>
