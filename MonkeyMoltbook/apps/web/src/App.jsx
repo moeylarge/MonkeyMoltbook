@@ -2412,23 +2412,18 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   };
 
   const sendSticker = (sticker) => {
+    if (!selectedThreadId) return;
     setQueuedSticker(sticker);
-    if (selectedThreadId) submitReply({ sticker, bodyText: '' });
-    else startNewThreadSend({ sticker, bodyText: '', recipientUserId: activeComposeRecipientIdRef.current || activeComposeRecipient?.id || compose.recipientUserId || '' });
+    submitReply({ sticker, bodyText: '' });
     setShowStickerPicker(false);
   };
 
   const onSelectAttachment = async (file) => {
-    if (!file) return;
+    if (!file || !selectedThreadId) return;
     setAttachmentState({ uploading: true, file: null, error: '' });
     try {
       const attachment = await buildAttachmentPayload(file);
-      if (selectedThreadId) {
-        setAttachmentState({ uploading: false, file: attachment, error: '' });
-      } else {
-        setAttachmentState({ uploading: false, file: attachment, error: '' });
-        await startNewThreadSend({ attachment, bodyText: '', recipientUserId: activeComposeRecipientIdRef.current || activeComposeRecipient?.id || compose.recipientUserId || '' });
-      }
+      setAttachmentState({ uploading: false, file: attachment, error: '' });
     } catch (error) {
       setAttachmentState({ uploading: false, file: null, error: error.message || 'Could not read attachment.' });
     }
@@ -2442,16 +2437,18 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     const sending = selectedThreadId ? replyState.sending : composeState.sending;
     const recipientReady = selectedThreadId || Boolean(activeComposeRecipient?.id || compose.recipientUserId || optimisticSelectedThread?.id || activeThread?.id);
     const disabled = sending || attachmentState.uploading || !recipientReady || (!value.trim() && !attachmentState.file && !queuedSticker);
+    const isNewMessageMode = !selectedThreadId;
     return (
       <div className="moltmail-chat-composer-wrap">
         {queuedSticker ? <div className="moltmail-attachment-pill"><span>{queuedSticker.emoji} {queuedSticker.label}</span><button onClick={() => setQueuedSticker(null)}>✕</button></div> : null}
         {attachmentState.file ? <div className="moltmail-attachment-pill"><span>{attachmentState.file.type?.startsWith('image/') ? '🖼️' : attachmentState.file.type === 'application/pdf' ? '📄' : '📎'} {attachmentState.file.name}</span><button onClick={() => setAttachmentState({ uploading: false, file: null, error: '' })}>✕</button></div> : null}
         <div className="moltmail-chat-composer-tools">
           <button className="moltmail-tool-btn" onClick={() => { setShowEmojiPicker((v) => !v); setShowStickerPicker(false); }}>😊</button>
-          <button className="moltmail-tool-btn" onClick={() => { setShowStickerPicker((v) => !v); setShowEmojiPicker(false); }}>🪄</button>
-          <button className="moltmail-tool-btn" onClick={() => attachmentInputRef.current?.click()}>{attachmentState.uploading ? '…' : '📎'}</button>
+          <button className="moltmail-tool-btn" disabled={isNewMessageMode} onClick={() => { if (isNewMessageMode) return; setShowStickerPicker((v) => !v); setShowEmojiPicker(false); }}>🪄</button>
+          <button className="moltmail-tool-btn" disabled={isNewMessageMode} onClick={() => { if (isNewMessageMode) return; attachmentInputRef.current?.click(); }}>{attachmentState.uploading ? '…' : '📎'}</button>
           <input ref={attachmentInputRef} type="file" className="attachment-input-hidden" accept="image/*,application/pdf,*/*" onChange={(e) => onSelectAttachment(e.target.files?.[0])} />
         </div>
+        {isNewMessageMode ? <div className="moltmail-tool-note">Available after thread starts</div> : null}
         {showEmojiPicker ? <div className="moltmail-picker-popover">{EMOJI_SET.map((emoji) => <button key={emoji} className="moltmail-emoji-btn" onClick={() => insertEmojiAtCursor(emoji)}>{emoji}</button>)}</div> : null}
         {showStickerPicker ? <div className="moltmail-picker-popover moltmail-sticker-popover">{STICKER_SET.map((sticker) => <button key={sticker.id} className="moltmail-sticker-btn" onClick={() => sendSticker(sticker)}><span>{sticker.emoji}</span><small>{sticker.label}</small></button>)}</div> : null}
         <div className="moltmail-chat-composer">
