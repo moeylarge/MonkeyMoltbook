@@ -1243,9 +1243,10 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
                     {profileBio ? <div className="member-profile-bio-wrap"><p className={`member-profile-bio-text ${bioExpanded ? 'expanded' : 'clamped'}`}><span className="member-profile-bio-firstline">{profileBio.split('\n')[0]}</span>{profileBio.includes('\n') ? `\n${profileBio.split('\n').slice(1).join('\n')}` : ''}</p>{profileBio.length > 140 ? <button className="member-profile-bio-toggle" onClick={() => setBioExpanded((v) => !v)}>{bioExpanded ? 'Show less' : 'Show more'}</button> : null}</div> : null}
                   </div>
                   {previewProfile?.website_url ? <div className="member-profile-primary-actions"><a className="member-profile-website-chip" href={previewProfile.website_url} target="_blank" rel="noreferrer" aria-label={`Open website ${formatWebsiteDisplay(previewProfile.website_url)}`}><span className="member-profile-website-chip-icon">↗</span><span className="member-profile-website-chip-text">{formatWebsiteDisplay(previewProfile.website_url)}</span></a></div> : null}
-                  {previewProfile?.location_text || previewProfile?.pronouns || joinedLabel || trustSignal ? <div className="member-profile-inline-meta">
+                  {previewProfile?.location_text || previewProfile?.pronouns || joinedLabel || trustSignal || previewProfile?.updated_at ? <div className="member-profile-inline-meta">
                     {trustSignal ? <span>{trustSignal}</span> : null}
                     {joinedLabel ? <span>Joined {joinedLabel}</span> : null}
+                    {previewProfile?.updated_at ? <span>Updated recently</span> : null}
                     {previewProfile?.location_text ? <span>{normalizeSingleLineText(previewProfile.location_text, 80)}</span> : null}
                     {previewProfile?.pronouns ? <span>{normalizeSingleLineText(previewProfile.pronouns, 40)}</span> : null}
                   </div> : null}
