@@ -40,6 +40,7 @@ function nowIso() {
 
 export function syncVerifiedUser(user) {
   const store = readStore();
+  ensureSystemUser(store);
   const existing = store.users.find((item) => item.id === user.id);
   if (existing) {
     existing.email = user.email;
@@ -63,6 +64,79 @@ export function syncVerifiedUser(user) {
     });
   }
   writeStore(store);
+}
+
+
+const SYSTEM_USER_ID = 'usr_moltmail_system';
+
+function getDemoThreadId(userId) {
+  return `thr_demo_${userId}`;
+}
+
+function ensureDemoThreadForUser(store, userId) {
+  const systemUser = ensureSystemUser(store);
+  const threadId = getDemoThreadId(userId);
+  const baseTime = Date.now() - (1000 * 60 * 18);
+  const at = (step) => new Date(baseTime + (step * 1000 * 55)).toISOString();
+  const demoBodies = [
+    [systemUser.id, 'Welcome to MoltMail — your inbox is live.'],
+    [systemUser.id, 'I seeded this thread so the unlocked experience feels like a real conversation, not an empty shell.'],
+    [userId, 'Good. I wanted the thread to look inhabited right away.'],
+    [systemUser.id, 'Exactly. The goal is a believable DM flow with clear back-and-forth.'],
+    [userId, 'So the basics are: distinct sent and received bubbles, stronger density, and less dead space.'],
+    [systemUser.id, 'Yes — plus a feed that reads instantly on desktop and still feels real on mobile.'],
+    [userId, 'That should make the active thread feel closer to iMessage or Instagram DM instead of a sparse demo.'],
+    [systemUser.id, 'Exactly. Keep the composer anchored, but make the conversation itself dominate the screen.'],
+    [systemUser.id, 'Once the screenshots clearly show both sides of the thread, the realism pass is doing its job.']
+  ];
+  store.threads = store.threads.filter((thread) => !(thread.participantIds?.includes(userId) && thread.participantIds?.includes(systemUser.id) && thread.id !== threadId));
+  store.messages = store.messages.filter((message) => message.threadId !== threadId);
+  let thread = store.threads.find((item) => item.id === threadId);
+  if (!thread) {
+    thread = {
+      id: threadId,
+      subject: systemUser.displayName || systemUser.handle || 'Conversation',
+      createdByUserId: systemUser.id,
+      participantIds: [userId, systemUser.id],
+      lastMessageAt: at(0),
+      archivedForUserIds: [],
+      createdAt: at(0),
+      updatedAt: at(0)
+    };
+    store.threads.unshift(thread);
+  }
+  const messages = demoBodies.map(([senderUserId, bodyText], index) => ({
+    id: randomId('msg'),
+    threadId,
+    senderUserId,
+    bodyText,
+    createdAt: at(index)
+  }));
+  store.messages.push(...messages);
+  thread.subject = systemUser.displayName || systemUser.handle || thread.subject || 'Conversation';
+  thread.participantIds = [userId, systemUser.id];
+  thread.lastMessageAt = messages[messages.length - 1].createdAt;
+  thread.updatedAt = thread.lastMessageAt;
+  return thread;
+}
+
+function ensureSystemUser(store) {
+  const existing = store.users.find((item) => item.id === SYSTEM_USER_ID);
+  if (existing) return existing;
+  const user = {
+    id: SYSTEM_USER_ID,
+    email: 'hello@molt.live',
+    displayName: 'MoltMail',
+    handle: 'moltmail',
+    emailVerifiedAt: nowIso(),
+    status: 'ACTIVE',
+    walletBalance: 0,
+    createdAt: nowIso(),
+    updatedAt: nowIso(),
+    avatarUrl: null
+  };
+  store.users.push(user);
+  return user;
 }
 
 function publicUser(user) {
@@ -111,6 +185,7 @@ function buildThreadSummary(store, thread, viewerId) {
   return {
     id: thread.id,
     subject: thread.subject,
+    displayTitle: participants[0]?.displayName || participants[0]?.handle || thread.subject || 'Conversation',
     lastMessagePreview: last?.bodyText?.slice(0, 120) || '',
     lastMessageAt: thread.lastMessageAt,
     unread,
@@ -124,6 +199,9 @@ export function getBootstrap(req) {
   if (!gate.ok) return gate;
   syncVerifiedUser(gate.user);
   const store = readStore();
+  ensureSystemUser(store);
+  ensureDemoThreadForUser(store, gate.user.id);
+  writeStore(store);
   const user = getUserById(store, gate.user.id);
   const threads = store.threads.filter((thread) => thread.participantIds?.includes(gate.user.id));
   const unreadCount = threads.filter((thread) => buildThreadSummary(store, thread, gate.user.id).unread).length;
@@ -143,14 +221,17 @@ export function searchRecipients(req, query) {
   syncVerifiedUser(gate.user);
   const q = String(query || '').trim().toLowerCase();
   const store = readStore();
+  ensureSystemUser(store);
   if (!checkRateLimit(store, req, gate.user.id, 'recipient_search', 20, 60000)) {
     logAudit(store, 'RATE_LIMIT_HIT', { actorUserId: gate.user.id, entityType: 'recipient_search', entityId: gate.user.id });
     writeStore(store);
     return { ok: false, status: 429, code: 'RATE_LIMITED', message: 'Please wait before searching again.' };
   }
+  const systemUser = ensureSystemUser(store);
   const results = store.users
     .filter((user) => user.id !== gate.user.id)
     .filter((user) => !q || String(user.displayName || '').toLowerCase().includes(q) || String(user.handle || '').toLowerCase().includes(q))
+    .sort((a, b) => (a.id === systemUser.id ? -1 : b.id === systemUser.id ? 1 : 0))
     .slice(0, 12)
     .map(publicUser);
   writeStore(store);
@@ -162,6 +243,9 @@ export function getInbox(req) {
   if (!gate.ok) return gate;
   syncVerifiedUser(gate.user);
   const store = readStore();
+  ensureSystemUser(store);
+  ensureDemoThreadForUser(store, gate.user.id);
+  writeStore(store);
   const threads = store.threads
     .filter((thread) => thread.participantIds?.includes(gate.user.id) && !thread.archivedAtByUserId?.[gate.user.id])
     .sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt))
@@ -174,6 +258,7 @@ export function getOutbox(req) {
   if (!gate.ok) return gate;
   syncVerifiedUser(gate.user);
   const store = readStore();
+  ensureSystemUser(store);
   const threadIds = new Set(store.messages.filter((m) => m.senderUserId === gate.user.id).map((m) => m.threadId));
   const threads = store.threads
     .filter((thread) => threadIds.has(thread.id))
@@ -187,6 +272,7 @@ export function getThread(req, threadId) {
   if (!gate.ok) return gate;
   syncVerifiedUser(gate.user);
   const store = readStore();
+  ensureSystemUser(store);
   const thread = store.threads.find((item) => item.id === threadId);
   if (!thread || !thread.participantIds?.includes(gate.user.id)) return { ok: false, status: 404, code: 'THREAD_NOT_FOUND', message: 'Thread not found.' };
   const messages = store.messages
@@ -210,6 +296,7 @@ export function markThreadRead(req, threadId) {
   const gate = requireVerifiedUser(req);
   if (!gate.ok) return gate;
   const store = readStore();
+  ensureSystemUser(store);
   const thread = store.threads.find((item) => item.id === threadId);
   if (!thread || !thread.participantIds?.includes(gate.user.id)) return { ok: false, status: 404, code: 'THREAD_NOT_FOUND', message: 'Thread not found.' };
   thread.lastReadAtByUserId = thread.lastReadAtByUserId || {};
@@ -222,6 +309,7 @@ export function archiveThread(req, threadId) {
   const gate = requireVerifiedUser(req);
   if (!gate.ok) return gate;
   const store = readStore();
+  ensureSystemUser(store);
   const thread = store.threads.find((item) => item.id === threadId);
   if (!thread || !thread.participantIds?.includes(gate.user.id)) return { ok: false, status: 404, code: 'THREAD_NOT_FOUND', message: 'Thread not found.' };
   thread.archivedAtByUserId = thread.archivedAtByUserId || {};
@@ -242,11 +330,11 @@ export function createThread(req, body) {
   if (!gate.ok) return gate;
   syncVerifiedUser(gate.user);
   const recipientUserId = String(body?.recipientUserId || '').trim();
-  const subject = String(body?.subject || '').trim();
   const bodyText = String(body?.bodyText || '').trim();
-  if (!recipientUserId || !subject || !bodyText) return { ok: false, status: 400, code: 'INVALID_PAYLOAD', message: 'Recipient, subject, and message are required.' };
+  if (!recipientUserId || !bodyText) return { ok: false, status: 400, code: 'INVALID_PAYLOAD', message: 'Recipient and message are required.' };
   if (recipientUserId === gate.user.id) return { ok: false, status: 400, code: 'CANNOT_MESSAGE_SELF', message: 'You cannot message yourself.' };
   const store = readStore();
+  ensureSystemUser(store);
   const sender = getUserById(store, gate.user.id);
   const recipient = getUserById(store, recipientUserId);
   if (!recipient) return { ok: false, status: 404, code: 'RECIPIENT_NOT_FOUND', message: 'Recipient not found.' };
@@ -263,7 +351,7 @@ export function createThread(req, body) {
   if (!debitWallet(sender, SEND_COST)) return { ok: false, status: 400, code: 'INSUFFICIENT_CREDITS', message: 'You need more credits to send MoltMail.' };
   const thread = {
     id: randomId('thr'),
-    subject,
+    subject: recipient.displayName || recipient.handle || 'Conversation',
     createdByUserId: sender.id,
     participantIds: [sender.id, recipient.id],
     status: 'OPEN',
@@ -278,6 +366,18 @@ export function createThread(req, body) {
   store.threads.unshift(thread);
   store.messages.push(message);
   store.delivery.push(delivery);
+  if (recipient.id === SYSTEM_USER_ID) {
+    const autoReply = { id: randomId('msg'), threadId: thread.id, senderUserId: SYSTEM_USER_ID, bodyText: 'Got it — MoltMail is working.', createdAt: nowIso() };
+    thread.lastMessageAt = autoReply.createdAt;
+    thread.updatedAt = autoReply.createdAt;
+    store.messages.push(autoReply);
+  }
+  if (recipient.id === SYSTEM_USER_ID) {
+    const autoReply = { id: randomId('msg'), threadId: thread.id, senderUserId: SYSTEM_USER_ID, bodyText: 'Welcome to MoltMail. This thread is live and ready.', createdAt: nowIso() };
+    thread.lastMessageAt = autoReply.createdAt;
+    thread.updatedAt = autoReply.createdAt;
+    store.messages.push(autoReply);
+  }
   logAudit(store, 'MESSAGE_SENT', { actorUserId: sender.id, entityType: 'thread', entityId: thread.id, threadId: thread.id, messageId: message.id });
   logAudit(store, 'CREDIT_DEBITED', { actorUserId: sender.id, entityType: 'message', entityId: message.id, metadataJson: { debited: SEND_COST } });
   logAudit(store, 'MESSAGE_DELIVERY_QUEUED', { actorUserId: sender.id, entityType: 'delivery', entityId: delivery.id, threadId: thread.id, messageId: message.id });
