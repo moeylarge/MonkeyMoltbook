@@ -260,13 +260,40 @@ function AppFrame({ children, auth, onOpenAuth, onLogout }) {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [profileHref, setProfileHref] = useState('/u/jimmythelizard');
   const authLabel = !auth?.authenticated ? 'Direct Message' : auth?.user?.emailVerified ? 'Direct Message' : 'Verify Email';
   const authHref = !auth?.authenticated ? '/moltmail' : auth?.user?.emailVerified ? '/moltmail' : '/verify-email';
-  const profileHref = auth?.user?.email ? `/u/${slugify(auth.user.email.split('@')[0])}` : '/u/jimmythelizard';
 
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    let active = true;
+    const loadProfileHref = async () => {
+      if (!auth?.authenticated) {
+        setProfileHref('/u/jimmythelizard');
+        return;
+      }
+      try {
+        const response = await fetch(`${API}/profile/me`, { credentials: 'include' });
+        const payload = await response.json();
+        if (!active) return;
+        if (response.ok && payload?.profile?.username) {
+          setProfileHref(`/u/${payload.profile.username}`);
+          return;
+        }
+      } catch {}
+      if (active) {
+        const fallback = auth?.user?.email ? `/u/${slugify(auth.user.email.split('@')[0])}` : '/u/jimmythelizard';
+        setProfileHref(fallback);
+      }
+    };
+    loadProfileHref();
+    return () => {
+      active = false;
+    };
+  }, [auth?.authenticated, auth?.user?.email]);
 
   useEffect(() => {
     if (!auth?.authenticated || !auth?.user?.emailVerified) {
