@@ -2047,8 +2047,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     setBootstrap({ loading: false, data: bootstrapRes.json, error: '' });
     setInbox(nextInbox);
     setOutbox(nextOutbox);
-    const nextThreadId = preferredThreadId || selectedThreadId || nextInbox[0]?.id || nextOutbox[0]?.id || '';
-    if (nextThreadId) setSelectedThreadId(nextThreadId);
+    setSelectedThreadId((currentThreadId) => preferredThreadId || currentThreadId || nextInbox[0]?.id || nextOutbox[0]?.id || '');
   };
 
   useEffect(() => {
