@@ -2054,6 +2054,11 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
 
   useEffect(() => {
     if (!auth?.authenticated || !auth?.user?.emailVerified || !selectedThreadId) return;
+    if (optimisticThreads.some((thread) => thread.id === selectedThreadId)) {
+      setThreadData({ loading: false, data: null, error: '' });
+      setMobileView('chat');
+      return;
+    }
     let active = true;
     setThreadData({ loading: true, data: null, error: '' });
     fetch(`${API}/moltmail/thread/${selectedThreadId}`, { credentials: 'include' })
@@ -2069,7 +2074,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
       })
       .catch(() => active && setThreadData({ loading: false, data: null, error: 'Could not load thread.' }));
     return () => { active = false; };
-  }, [auth?.authenticated, auth?.user?.emailVerified, selectedThreadId]);
+  }, [auth?.authenticated, auth?.user?.emailVerified, selectedThreadId, optimisticThreads]);
 
   useEffect(() => {
     if (!auth?.authenticated || !auth?.user?.emailVerified || !recipientQuery.trim()) {

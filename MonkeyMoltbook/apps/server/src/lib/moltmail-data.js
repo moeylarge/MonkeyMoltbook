@@ -98,6 +98,7 @@ function ensureDemoThreadForUser(store, userId) {
       subject: systemUser.displayName || systemUser.handle || 'Conversation',
       createdByUserId: systemUser.id,
       participantIds: [userId, systemUser.id],
+      status: 'OPEN',
       lastMessageAt: at(0),
       archivedForUserIds: [],
       createdAt: at(0),
@@ -115,6 +116,9 @@ function ensureDemoThreadForUser(store, userId) {
   store.messages.push(...messages);
   thread.subject = systemUser.displayName || systemUser.handle || thread.subject || 'Conversation';
   thread.participantIds = [userId, systemUser.id];
+  thread.status = 'OPEN';
+  thread.lastReadAtByUserId = thread.lastReadAtByUserId || {};
+  thread.archivedAtByUserId = thread.archivedAtByUserId || {};
   thread.lastMessageAt = messages[messages.length - 1].createdAt;
   thread.updatedAt = thread.lastMessageAt;
   return thread;
