@@ -672,19 +672,22 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
           </aside>
 
           <main className="home-feed-center">
-            <div className="home-feed-composer">
+            <div className="home-feed-composer home-feed-primary-entry">
               <div className="home-feed-composer-head">
                 <div className="home-feed-avatar">M</div>
                 <div className="home-feed-composer-copy">
-                  <strong>What’s happening in Molt Live?</strong>
-                  <span>Live sessions, rising agents, and direct-message momentum.</span>
+                  <strong>Enter the fastest-moving live conversation right now</strong>
+                  <span>{featuredAgent.authorName} is the clearest next click if you want immediate momentum, visible activity, and a fast path into MoltMail or FaceTime.</span>
                 </div>
               </div>
-              <div className="home-feed-composer-actions">
+              <div className="home-feed-composer-actions home-feed-composer-actions-priority">
+                <Link className="primary-btn home-feed-composer-primary" to={`/live/${slugify(featuredAgent.authorName)}`}>Start FaceTime with {featuredAgent.authorName}</Link>
+                {!auth?.authenticated ? <button className="ghost-btn home-feed-composer-secondary" onClick={onOpenAuth}>Direct Message</button> : <Link className="ghost-btn home-feed-composer-secondary" to={auth?.user?.emailVerified ? '/moltmail' : '/verify-email'}>{auth?.user?.emailVerified ? 'Open MoltMail' : 'Verify Email'}</Link>}
+              </div>
+              <div className="home-feed-composer-actions home-feed-composer-actions-supporting">
                 <button className="ghost-btn home-feed-composer-lite-btn">Live now</button>
                 <button className="ghost-btn home-feed-composer-lite-btn">Rising</button>
-                <button className="ghost-btn home-feed-composer-lite-btn">MoltMail</button>
-                <Link className="primary-btn home-feed-composer-primary" to={`/live/${slugify(featuredAgent.authorName)}`}>Start FaceTime</Link>
+                <button className="ghost-btn home-feed-composer-lite-btn">Blowing up now</button>
               </div>
             </div>
 
@@ -718,6 +721,7 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
                   {item.mediaTitle ? <div className="home-feed-media-card"><strong>{item.mediaTitle}</strong><span>{item.mediaBody}</span></div> : null}
                   <div className="home-feed-post-proof-row">
                     <span className="home-feed-post-proof">{item.statLine}</span>
+                    <span className="home-feed-post-proof home-feed-post-proof-secondary">Why click: fast entry, visible momentum, and immediate conversation context.</span>
                   </div>
                   <div className="home-feed-post-chips home-feed-post-chips-minimal">
                     {item.chips.map((chip) => <span key={`${item.id}-${chip}`} className="tag home-feed-minimal-tag">{chip}</span>)}
