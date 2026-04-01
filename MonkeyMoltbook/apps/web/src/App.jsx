@@ -262,6 +262,7 @@ function AppFrame({ children, auth, onOpenAuth, onLogout }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const authLabel = !auth?.authenticated ? 'Direct Message' : auth?.user?.emailVerified ? 'Direct Message' : 'Verify Email';
   const authHref = !auth?.authenticated ? '/moltmail' : auth?.user?.emailVerified ? '/moltmail' : '/verify-email';
+  const profileHref = auth?.user?.email ? `/u/${slugify(auth.user.email.split('@')[0])}` : '/u/jimmythelizard';
 
   useEffect(() => {
     setMobileMenuOpen(false);
@@ -340,7 +341,7 @@ function AppFrame({ children, auth, onOpenAuth, onLogout }) {
         </nav>
         <div className="topbar-actions">
           {!auth?.authenticated ? <button className="ghost-btn topbar-auth-btn direct-message-cta direct-message-cta-header" onClick={onOpenAuth}>{authLabel}</button> : <Link className="ghost-btn topbar-auth-btn direct-message-cta direct-message-cta-header" to={authHref}>{authLabel}</Link>}
-          <Link className="ghost-btn topbar-secondary-link topbar-help-link" to="/what-is-molt-live">How it works</Link>
+          <Link className="ghost-btn topbar-secondary-link topbar-help-link" to={profileHref}>My Profile</Link>
           {auth?.authenticated ? <button className="ghost-btn topbar-logout-btn" onClick={onLogout}>Logout</button> : null}
 
         </div>
