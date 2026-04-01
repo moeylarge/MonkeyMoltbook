@@ -4,7 +4,8 @@
 }
 
 .auth-modal-master-cta {
-  width: calc(100% - 0px);
+  width: 100% !important;
+  max-width: none !important;
   min-height: 56px;
   display: flex;
   align-items: center;
