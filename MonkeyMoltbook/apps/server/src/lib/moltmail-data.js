@@ -238,7 +238,7 @@ function getUserById(store, id) {
 }
 
 function buildThreadSummary(store, thread, viewerId) {
-  const messages = store.messages.filter((m) => m.threadId === thread.id && !m.deletedAt).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  const messages = store.messages.filter((m) => m.threadId === thread.id).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
   const last = messages[messages.length - 1] || null;
   const participantIds = (thread.participantIds || []).filter((id) => id !== viewerId);
   const participants = participantIds.map((id) => publicUser(getUserById(store, id))).filter(Boolean);
@@ -249,11 +249,12 @@ function buildThreadSummary(store, thread, viewerId) {
     id: thread.id,
     subject: thread.subject,
     displayTitle: participants[0]?.displayName || participants[0]?.handle || thread.subject || 'Conversation',
-    lastMessagePreview: last?.bodyText?.slice(0, 120) || last?.sticker?.label || last?.attachment?.name || '',
+    lastMessagePreview: last?.deletedAt ? 'Message removed' : (last?.bodyText?.slice(0, 120) || last?.sticker?.label || last?.attachment?.name || ''),
     lastMessageAt: thread.lastMessageAt,
     unread,
     deliveryStatus: latestSentStatus || 'Delivered',
-    participants
+    participants,
+    pinned: Boolean(thread.pinnedByUserIds?.includes(viewerId))
   };
 }
 
@@ -339,9 +340,9 @@ export function getThread(req, threadId) {
   const thread = store.threads.find((item) => item.id === threadId);
   if (!thread || !thread.participantIds?.includes(gate.user.id)) return { ok: false, status: 404, code: 'THREAD_NOT_FOUND', message: 'Thread not found.' };
   const messages = store.messages
-    .filter((m) => m.threadId === thread.id && !m.deletedAt)
+    .filter((m) => m.threadId === thread.id)
     .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
-    .map((m) => ({ id: m.id, senderUserId: m.senderUserId, bodyText: m.bodyText, createdAt: m.createdAt, clientMessageId: m.clientMessageId || null, sticker: m.sticker || null, attachment: m.attachment || null, replyToMessageId: m.replyToMessageId || null, replyPreview: summarizeReply(store, m), reactions: mapReactions(m.reactions, gate.user.id) }));
+    .map((m) => ({ id: m.id, senderUserId: m.senderUserId, bodyText: m.deletedAt ? 'Message removed' : m.bodyText, createdAt: m.createdAt, clientMessageId: m.clientMessageId || null, sticker: m.deletedAt ? null : (m.sticker || null), attachment: m.deletedAt ? null : (m.attachment || null), replyToMessageId: m.deletedAt ? null : (m.replyToMessageId || null), replyPreview: m.deletedAt ? null : summarizeReply(store, m), reactions: m.deletedAt ? [] : mapReactions(m.reactions, gate.user.id), deletedAt: m.deletedAt || null }));
   thread.lastReadAtByUserId = thread.lastReadAtByUserId || {};
   thread.lastReadAtByUserId[gate.user.id] = nowIso();
   writeStore(store);
@@ -351,6 +352,7 @@ export function getThread(req, threadId) {
       id: thread.id,
       subject: thread.subject,
       status: thread.status,
+      pinnedMessageId: thread.pinnedMessageId || null,
       participants: (thread.participantIds || []).map((id) => publicUser(getUserById(store, id))).filter(Boolean),
       messages
     },
@@ -518,6 +520,51 @@ export function getUnreadCount(req) {
   const inbox = getInbox(req);
   if (!inbox.ok) return inbox;
   return { ok: true, unreadCount: inbox.threads.filter((item) => item.unread).length };
+}
+
+export function togglePinThread(req, threadId) {
+  const gate = requireVerifiedUser(req);
+  if (!gate.ok) return gate;
+  const store = readStore();
+  const thread = store.threads.find((item) => item.id === threadId);
+  if (!thread || !thread.participantIds?.includes(gate.user.id)) return { ok: false, status: 404, code: 'THREAD_NOT_FOUND', message: 'Thread not found.' };
+  thread.pinnedByUserIds = Array.isArray(thread.pinnedByUserIds) ? thread.pinnedByUserIds : [];
+  if (thread.pinnedByUserIds.includes(gate.user.id)) thread.pinnedByUserIds = thread.pinnedByUserIds.filter((id) => id !== gate.user.id);
+  else thread.pinnedByUserIds.push(gate.user.id);
+  writeStore(store);
+  return { ok: true, pinned: thread.pinnedByUserIds.includes(gate.user.id) };
+}
+
+export function pinMessage(req, threadId, messageId) {
+  const gate = requireVerifiedUser(req);
+  if (!gate.ok) return gate;
+  const store = readStore();
+  const thread = store.threads.find((item) => item.id === threadId);
+  if (!thread || !thread.participantIds?.includes(gate.user.id)) return { ok: false, status: 404, code: 'THREAD_NOT_FOUND', message: 'Thread not found.' };
+  const message = store.messages.find((item) => item.id === messageId && item.threadId === threadId);
+  if (!message) return { ok: false, status: 404, code: 'MESSAGE_NOT_FOUND', message: 'Message not found.' };
+  thread.pinnedMessageId = thread.pinnedMessageId === messageId ? null : messageId;
+  writeStore(store);
+  return { ok: true, pinnedMessageId: thread.pinnedMessageId };
+}
+
+export function unsendMessage(req, threadId, messageId) {
+  const gate = requireVerifiedUser(req);
+  if (!gate.ok) return gate;
+  const store = readStore();
+  const thread = store.threads.find((item) => item.id === threadId);
+  if (!thread || !thread.participantIds?.includes(gate.user.id)) return { ok: false, status: 404, code: 'THREAD_NOT_FOUND', message: 'Thread not found.' };
+  const message = store.messages.find((item) => item.id === messageId && item.threadId === threadId);
+  if (!message) return { ok: false, status: 404, code: 'MESSAGE_NOT_FOUND', message: 'Message not found.' };
+  if (message.senderUserId !== gate.user.id) return { ok: false, status: 403, code: 'FORBIDDEN', message: 'Cannot remove this message.' };
+  message.deletedAt = nowIso();
+  message.bodyText = 'Message removed';
+  message.sticker = null;
+  message.attachment = null;
+  message.replyToMessageId = null;
+  message.reactions = [];
+  writeStore(store);
+  return { ok: true };
 }
 
 export function toggleReaction(req, threadId, messageId, body) {

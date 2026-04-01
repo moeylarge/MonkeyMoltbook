@@ -1941,6 +1941,11 @@ function CommunityPage() {
 
 function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   const EMOJI_SET = ['😀','😂','😍','😭','🔥','❤️','👍','👀','😮','😎','🙏','💯','✨','🥲','😴','🤝','💀','🙌'];
+  const GIF_SET = [
+    { id: 'gif_1', label: 'Celebrate', url: 'https://media.giphy.com/media/111ebonMs90YLu/giphy.gif' },
+    { id: 'gif_2', label: 'Wow', url: 'https://media.giphy.com/media/l3q2K5jinAlChoCLS/giphy.gif' },
+    { id: 'gif_3', label: 'Nice', url: 'https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif' }
+  ];
   const STICKER_SET = [
     { id: 'sticker_1', emoji: '🔥', label: 'Fire' },
     { id: 'sticker_2', emoji: '💯', label: 'Hundred' },
@@ -1971,6 +1976,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   const [optimisticMessages, setOptimisticMessages] = useState([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showStickerPicker, setShowStickerPicker] = useState(false);
+  const [showGifPicker, setShowGifPicker] = useState(false);
   const [queuedSticker, setQueuedSticker] = useState(null);
   const [activeComposeRecipient, setActiveComposeRecipient] = useState(null);
   const [attachmentState, setAttachmentState] = useState({ uploading: false, file: null, error: '' });
@@ -2058,7 +2064,10 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
       if (seen.has(thread.id)) return false;
       seen.add(thread.id);
       return true;
-    }).sort((a,b)=> new Date(b.lastMessageAt||0)-new Date(a.lastMessageAt||0));
+    }).sort((a,b)=> {
+      if (Boolean(b.pinned) !== Boolean(a.pinned)) return b.pinned ? 1 : -1;
+      return new Date(b.lastMessageAt||0)-new Date(a.lastMessageAt||0);
+    });
     const query = searchQuery.trim().toLowerCase();
     if (!query) return deduped;
     return deduped.filter((thread) => {
@@ -2502,6 +2511,36 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     return threadSummary?.deliveryStatus === 'Read' ? 'Read' : 'Delivered';
   };
 
+  const togglePinConversation = async () => {
+    if (!selectedThreadId) return;
+    await fetch(`${API}/moltmail/thread/${selectedThreadId}/pin`, { method: 'POST', credentials: 'include' });
+    await loadMailbox(selectedThreadId, { suppressAutoSelect: true });
+  };
+
+  const pinMessageInThread = async (messageId) => {
+    if (!selectedThreadId || !messageId) return;
+    const response = await fetch(`${API}/moltmail/thread/${selectedThreadId}/message/${messageId}/pin`, { method: 'POST', credentials: 'include' });
+    const payload = await response.json();
+    if (!response.ok) return;
+    setThreadData((current) => current?.data?.thread ? ({ ...current, data: { ...current.data, thread: { ...current.data.thread, pinnedMessageId: payload.pinnedMessageId } } }) : current);
+    try { await hydrateConfirmedThread(selectedThreadId); } catch {}
+  };
+
+  const unsendOwnedMessage = async (messageId) => {
+    if (!selectedThreadId || !messageId) return;
+    const response = await fetch(`${API}/moltmail/thread/${selectedThreadId}/message/${messageId}/unsend`, { method: 'POST', credentials: 'include' });
+    if (!response.ok) return;
+    try { await hydrateConfirmedThread(selectedThreadId); } catch {}
+    try { await loadMailbox(selectedThreadId, { suppressAutoSelect: true }); } catch {}
+  };
+
+  const sendGif = async (gif) => {
+    if (!selectedThreadId) return;
+    const attachment = { name: `${gif.label}.gif`, type: 'image/gif', size: 0, dataUrl: gif.url };
+    await submitReply({ attachment, bodyText: '' });
+    setShowGifPicker(false);
+  };
+
   const toggleReactionOnMessage = async (messageId, emoji) => {
     if (!selectedThreadId || !messageId) return;
     const response = await fetch(`${API}/moltmail/thread/${selectedThreadId}/message/${messageId}/reaction`, {
@@ -2574,9 +2613,10 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
         {queuedSticker ? <div className="moltmail-attachment-pill"><span>{queuedSticker.emoji} {queuedSticker.label}</span><button onClick={() => setQueuedSticker(null)}>✕</button></div> : null}
         {attachmentState.file ? <div className="moltmail-attachment-pill"><span>{attachmentState.file.type?.startsWith('image/') ? '🖼️' : attachmentState.file.type === 'application/pdf' ? '📄' : '📎'} {attachmentState.file.name}</span><button onClick={() => setAttachmentState({ uploading: false, file: null, error: '' })}>✕</button></div> : null}
         <div className="moltmail-chat-composer-tools">
-          <button className="moltmail-tool-btn" onClick={() => { setShowEmojiPicker((v) => !v); setShowStickerPicker(false); }}>😊</button>
-          <button className="moltmail-tool-btn" disabled={isNewMessageMode} onClick={() => { if (isNewMessageMode) return; setShowStickerPicker((v) => !v); setShowEmojiPicker(false); }}>🪄</button>
+          <button className="moltmail-tool-btn" onClick={() => { setShowEmojiPicker((v) => !v); setShowStickerPicker(false); setShowGifPicker(false); }}>😊</button>
+          <button className="moltmail-tool-btn" disabled={isNewMessageMode} onClick={() => { if (isNewMessageMode) return; setShowStickerPicker((v) => !v); setShowEmojiPicker(false); setShowGifPicker(false); }}>🪄</button>
           <button className="moltmail-tool-btn" disabled={isNewMessageMode} onClick={() => { if (isNewMessageMode) return; attachmentInputRef.current?.click(); }}>{attachmentState.uploading ? '…' : '📎'}</button>
+          <button className="moltmail-tool-btn" disabled={isNewMessageMode} onClick={() => { if (isNewMessageMode) return; setShowGifPicker((v) => !v); setShowEmojiPicker(false); setShowStickerPicker(false); }}>GIF</button>
           <button className="moltmail-tool-btn" disabled={isNewMessageMode} onClick={toggleVoiceRecording}>{recordingVoice ? '⏹' : '🎙️'}</button>
           <button className="moltmail-tool-btn" disabled={!selectedThreadId || !threadMedia.length} onClick={() => setShowGallery(true)}>🖼️</button>
           <input ref={attachmentInputRef} type="file" className="attachment-input-hidden" accept="image/*,application/pdf,*/*" onChange={(e) => onSelectAttachment(e.target.files?.[0])} />
@@ -2585,6 +2625,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
         {isNewMessageMode ? <div className="moltmail-tool-note">Available after thread starts</div> : null}
         {showEmojiPicker ? <div className="moltmail-picker-popover">{EMOJI_SET.map((emoji) => <button key={emoji} className="moltmail-emoji-btn" onClick={() => insertEmojiAtCursor(emoji)}>{emoji}</button>)}</div> : null}
         {showStickerPicker ? <div className="moltmail-picker-popover moltmail-sticker-popover">{STICKER_SET.map((sticker) => <button key={sticker.id} className="moltmail-sticker-btn" onClick={() => sendSticker(sticker)}><span>{sticker.emoji}</span><small>{sticker.label}</small></button>)}</div> : null}
+        {showGifPicker ? <div className="moltmail-picker-popover moltmail-gif-popover">{GIF_SET.map((gif) => <button key={gif.id} className="moltmail-gif-btn" onClick={() => sendGif(gif)}><img src={gif.url} alt={gif.label} /><small>{gif.label}</small></button>)}</div> : null}
         <div className="moltmail-chat-composer">
           <textarea ref={composerInputRef} className="moltmail-message-input" rows={1} placeholder="Message…" value={value} onChange={(e) => { setValue(e.target.value); setTypingActive(Boolean(e.target.value.trim())); }} />
           <button className="moltmail-send-icon" disabled={disabled} onClick={onSend}>{sending ? '…' : '➤'}</button>
@@ -2605,7 +2646,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
           <aside className={`moltmail-conversations ${mobileView === 'chat' ? 'mobile-hidden' : ''}`}>
             <div className="moltmail-conversations-head">
               <h1>MoltMail</h1>
-              <button className="moltmail-new-message" onClick={openNewMessage}>New message</button>
+              <div className="moltmail-head-actions"><button className="ghost-btn" disabled={!selectedThreadId} onClick={togglePinConversation}>Pin</button><button className="moltmail-new-message" onClick={openNewMessage}>New message</button></div>
             </div>
             <div className="moltmail-search-wrap"><input className="moltmail-search-input" placeholder="Search people or messages" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} /><button className="ghost-btn moltmail-audit-btn" onClick={() => setPhase4Audit(buildFrictionAudit())}>Audit first-use friction</button></div>
             <div className="moltmail-conversation-list">{renderThreadRows()}</div>
@@ -2616,6 +2657,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
               <div className="moltmail-chat-identity">
                 <strong>{activeThread?.participants?.[0]?.displayName || activeThread?.participants?.[0]?.handle || selectedRecipient?.displayName || selectedRecipient?.handle || 'New message'}</strong>
                 {activeMessages.length ? <span>{`${activeMessages.length} messages`}</span> : null}
+                {activeThread?.pinnedMessageId ? <button className="moltmail-pinned-chip" onClick={() => document.getElementById(`message-${activeThread.pinnedMessageId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>Pinned message</button> : null}
                 {selectedThreadId ? <span className="moltmail-presence-chip">{typingActive ? 'typing…' : formatPresence(threads.find((thread) => thread.id === selectedThreadId)?.lastMessageAt || activeMessages[activeMessages.length - 1]?.createdAt)}</span> : null}
               </div>
             </div>
@@ -2640,6 +2682,8 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
                         <div className="moltmail-bubble-actions">
                           {['❤️','🔥','😂','👍'].map((emoji) => <button key={emoji} className="moltmail-inline-action" onClick={() => toggleReactionOnMessage(message.id, emoji)}>{emoji}</button>)}
                           <button className="moltmail-inline-action" onClick={() => setReplyTarget(message)}>Reply</button>
+                          <button className="moltmail-inline-action" onClick={() => pinMessageInThread(message.id)}>Pin</button>
+                          {isSent && !message.deletedAt ? <button className="moltmail-inline-action" onClick={() => unsendOwnedMessage(message.id)}>Unsend</button> : null}
                         </div>
                       </div>
                       {!nextWasSameSide ? <span className="moltmail-bubble-time">{formatThreadStamp(message.createdAt)}</span> : null}
