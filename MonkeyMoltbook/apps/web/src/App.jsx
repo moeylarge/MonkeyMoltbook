@@ -2058,7 +2058,6 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   useEffect(() => {
     if (!auth?.authenticated || !auth?.user?.emailVerified || !selectedThreadId) return;
     if (optimisticThreads.some((thread) => thread.id === selectedThreadId)) {
-      setThreadData({ loading: false, data: null, error: '' });
       setMobileView('chat');
       return;
     }
