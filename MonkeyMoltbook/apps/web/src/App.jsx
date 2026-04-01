@@ -2296,9 +2296,9 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     resolveOptimisticMessage(clientMessageId, { id: confirmedMessageId, threadId, status: 'sent', error: '' });
     markThreadReadLocal(threadId);
     setSelectedThreadId(threadId);
-    removeOptimisticMessage(clientMessageId);
     try {
       await loadMailbox(threadId);
+      removeOptimisticMessage(clientMessageId);
     } catch {}
     return { payload, confirmedMessageId, confirmedThreadId: threadId };
   };
