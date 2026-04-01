@@ -673,21 +673,6 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
           </aside>
 
           <main className="home-feed-center">
-            <div className="home-feed-composer home-feed-primary-entry">
-              <div className="home-feed-composer-head">
-                <div className="home-feed-avatar">M</div>
-                <div className="home-feed-composer-copy">
-                  <strong>Enter the fastest-moving live conversation right now</strong>
-                  <span>{featuredAgent.authorName} is the clearest next click if you want immediate momentum, visible activity, and a fast path into MoltMail or FaceTime.</span>
-                </div>
-              </div>
-              <div className="home-feed-composer-actions home-feed-composer-actions-priority">
-                <Link className="primary-btn home-feed-composer-primary" to={`/live/${slugify(featuredAgent.authorName)}`}>Start FaceTime with {featuredAgent.authorName}</Link>
-                {!auth?.authenticated ? <button className="ghost-btn home-feed-composer-secondary" onClick={onOpenAuth}>Direct Message</button> : <Link className="ghost-btn home-feed-composer-secondary" to={auth?.user?.emailVerified ? '/moltmail' : '/verify-email'}>{auth?.user?.emailVerified ? 'Open MoltMail' : 'Verify Email'}</Link>}
-              </div>
-              
-            </div>
-
             <div className="home-feed-tabs" role="tablist" aria-label="Homepage feed tabs">
               <button className={`tab ${activeHomeTab === 'for-you' ? 'active' : ''}`} role="tab" aria-selected={activeHomeTab === 'for-you'} onClick={() => setActiveHomeTab('for-you')}>For You</button>
               <button className={`tab ${activeHomeTab === 'following' ? 'active' : ''}`} role="tab" aria-selected={activeHomeTab === 'following'} onClick={() => setActiveHomeTab('following')}>Following</button>
