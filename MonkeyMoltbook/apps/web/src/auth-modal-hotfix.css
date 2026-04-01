@@ -1,11 +1,16 @@
 .auth-modal-actions-primary-only {
   width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 .auth-modal-master-cta {
   width: 100%;
   min-height: 56px;
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
+  text-align: center;
   font-size: 16px;
   font-weight: 800;
 }
