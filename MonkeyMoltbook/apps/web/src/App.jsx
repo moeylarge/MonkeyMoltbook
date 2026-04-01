@@ -1001,7 +1001,6 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
   const profileTopics = Array.isArray(profile?.topics) ? profile.topics.slice(0, 5) : [];
   const overflowTopics = Array.isArray(profile?.topics) ? profile.topics.slice(5) : [];
   const profileHighlights = Array.isArray(profile?.highlights) ? profile.highlights.map((item) => normalizeRenderText(item, 24)).filter(Boolean) : [];
-  const suggestedCreators = top.filter((item) => slugify(item.authorName) !== normalizedSlug).slice(0, 4);
   const [bioExpanded, setBioExpanded] = useState(false);
 
   const addTopic = () => {
@@ -1139,7 +1138,6 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
                 {showOwnerEditAffordances ? <>
                   <button className="primary-btn member-profile-owner-primary" onClick={() => { setEditOpen((v) => !v); }}>Edit Profile</button>
                 </> : <>
-                  <button className="ghost-btn">Follow</button>
                   {!auth?.authenticated ? <button className="ghost-btn direct-message-cta" onClick={onOpenAuth}>Open MoltMail</button> : <Link className="ghost-btn" to={auth?.user?.emailVerified ? '/moltmail' : '/verify-email'}>{auth?.user?.emailVerified ? 'Open MoltMail' : 'Verify Email'}</Link>}
                   <Link className="primary-btn large" to={`/live/${profileSlug}`}>Start Live Session</Link>
                 </>}
@@ -1204,8 +1202,11 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
               <p>{profileAbout}</p>
             </div> : null}
 
-            {(profile?.category || profile?.website_url || profile?.location_text || profile?.pronouns || profile?.tagline || profileTopics.length || overflowTopics.length || profileHighlights.length) ? <div className="member-profile-content-block member-profile-inline-section-card">
-              <div className="member-profile-inline-section-head"><h3>Profile details</h3>{showOwnerEditAffordances ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>📌</button><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>🎬</button></div> : null}</div>
+          </div>
+
+          {(profile?.category || profile?.website_url || profile?.location_text || profile?.pronouns || profile?.tagline || profileTopics.length || overflowTopics.length || profileHighlights.length) ? <div className="member-profile-right-column">
+            <div className="member-profile-content-block member-profile-inline-section-card member-profile-metadata-card">
+              <div className="member-profile-inline-section-head"><h3>Details</h3>{showOwnerEditAffordances ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>✏️</button></div> : null}</div>
               <div className="member-profile-detail-pills">
                 <span className="tag">@{profileSlug}</span>
                 {profile?.category ? <span className="tag">{profile.category}</span> : null}
@@ -1213,11 +1214,19 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
                 {profile?.pronouns ? <span className="tag">{profile.pronouns}</span> : null}
                 {profile?.tagline ? <span className="tag">{profile.tagline}</span> : null}
               </div>
-              {profileTopics.length ? <div className="tag-row">{profileTopics.map((tag) => <span key={tag} className="tag">{normalizeRenderText(tag, 24)}</span>)}</div> : null}
+            </div>
+
+            {profileTopics.length ? <div className="member-profile-content-block member-profile-inline-section-card member-profile-metadata-card">
+              <div className="member-profile-inline-section-head"><h3>Topics</h3>{showOwnerEditAffordances ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>✏️</button></div> : null}</div>
+              <div className="tag-row">{profileTopics.map((tag) => <span key={tag} className="tag">{normalizeRenderText(tag, 24)}</span>)}</div>
               {overflowTopics.length ? <div className="tag-row">{overflowTopics.map((tag) => <span key={tag} className="tag">{normalizeRenderText(tag, 24)}</span>)}</div> : null}
-              {profileHighlights.length ? <div className="tag-row">{profileHighlights.map((item) => <span key={item} className="tag">{item}</span>)}</div> : null}
             </div> : null}
-          </div>
+
+            {profileHighlights.length ? <div className="member-profile-content-block member-profile-inline-section-card member-profile-metadata-card">
+              <div className="member-profile-inline-section-head"><h3>Highlights</h3>{showOwnerEditAffordances ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>✏️</button></div> : null}</div>
+              <div className="tag-row">{profileHighlights.map((item) => <span key={item} className="tag">{item}</span>)}</div>
+            </div> : null}
+          </div> : null}
 
         </div>
 
