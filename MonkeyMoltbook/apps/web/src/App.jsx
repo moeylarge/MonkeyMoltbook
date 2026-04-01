@@ -232,8 +232,8 @@ function AuthModal({ open, onClose, onVerified }) {
             <h3>Unlock MoltMail</h3>
             <p>Browsing stays open. Verify your email once to start direct messages.</p>
             <input className="mega-search auth-input" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-            <div className="auth-modal-actions">
-              <button className="primary-btn" disabled={submitting || !email.trim()} onClick={() => start('magic_link')}>{submitting ? 'Sending…' : 'Email Me a Link'}</button>
+            <div className="auth-modal-actions auth-modal-actions-primary-only">
+              <button className="primary-btn auth-modal-master-cta" disabled={submitting || !email.trim()} onClick={() => start('magic_link')}>{submitting ? 'Sending…' : 'Email Me a Link'}</button>
             </div>
             <div className="auth-status-note auth-status-note-subtle">
               Prefer a code instead? <button type="button" className="auth-inline-link" disabled={submitting || !email.trim()} onClick={() => start('otp')}>Send one-time code</button>
