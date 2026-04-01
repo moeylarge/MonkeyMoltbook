@@ -1221,14 +1221,16 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
                 </div>
                 <div className="member-profile-identity-copy">
                   <h1>{normalizeSingleLineText(previewProfile?.display_name || profileName, 80)}</h1>
-                  <span className="member-profile-handle">@{normalizeSingleLineText(previewProfile?.username || profileSlug, 32)}</span>
-                  {previewProfile?.category ? <div className="member-profile-category-line">{normalizeSingleLineText(previewProfile.category, 60)}</div> : null}
-                  {profileBio ? <div className="member-profile-bio-wrap"><p className={`member-profile-bio-text ${bioExpanded ? 'expanded' : 'clamped'}`}><span className="member-profile-bio-firstline">{profileBio.split('\n')[0]}</span>{profileBio.includes('\n') ? `\n${profileBio.split('\n').slice(1).join('\n')}` : ''}</p>{profileBio.length > 140 ? <button className="member-profile-bio-toggle" onClick={() => setBioExpanded((v) => !v)}>{bioExpanded ? 'Show less' : 'Show more'}</button> : null}</div> : null}
-                  {previewProfile?.location_text || previewProfile?.website_url || previewProfile?.pronouns || joinedLabel ? <div className="member-profile-inline-meta">
+                  <div className="member-profile-identity-stack">
+                    <span className="member-profile-handle">@{normalizeSingleLineText(previewProfile?.username || profileSlug, 32)}</span>
+                    {previewProfile?.category ? <div className="member-profile-category-line">{normalizeSingleLineText(previewProfile.category, 60)}</div> : null}
+                    {profileBio ? <div className="member-profile-bio-wrap"><p className={`member-profile-bio-text ${bioExpanded ? 'expanded' : 'clamped'}`}><span className="member-profile-bio-firstline">{profileBio.split('\n')[0]}</span>{profileBio.includes('\n') ? `\n${profileBio.split('\n').slice(1).join('\n')}` : ''}</p>{profileBio.length > 140 ? <button className="member-profile-bio-toggle" onClick={() => setBioExpanded((v) => !v)}>{bioExpanded ? 'Show less' : 'Show more'}</button> : null}</div> : null}
+                  </div>
+                  {previewProfile?.website_url ? <div className="member-profile-primary-actions"><a className="member-profile-website-chip" href={previewProfile.website_url} target="_blank" rel="noreferrer">↗ {formatWebsiteDisplay(previewProfile.website_url)}</a></div> : null}
+                  {previewProfile?.location_text || previewProfile?.pronouns || joinedLabel ? <div className="member-profile-inline-meta">
+                    {joinedLabel ? <span>Joined {joinedLabel}</span> : null}
                     {previewProfile?.location_text ? <span>{normalizeSingleLineText(previewProfile.location_text, 80)}</span> : null}
                     {previewProfile?.pronouns ? <span>{normalizeSingleLineText(previewProfile.pronouns, 40)}</span> : null}
-                    {previewProfile?.website_url ? <a className="member-profile-website-chip" href={previewProfile.website_url} target="_blank" rel="noreferrer">↗ {formatWebsiteDisplay(previewProfile.website_url)}</a> : null}
-                    {joinedLabel ? <span>Joined {joinedLabel}</span> : null}
                   </div> : null}
                 </div>
               </div>
@@ -1311,39 +1313,32 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
             </div> : null}
 
 
-            {profileBio ? <div className="member-profile-content-block member-profile-inline-section-card">
-              <div className="member-profile-inline-section-head"><h3>Bio</h3>{showOwnerEditAffordances ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>📌</button><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>🎬</button></div> : null}</div>
-              <div className="member-profile-bio-wrap"><p className={`member-profile-bio-text ${bioExpanded ? 'expanded' : 'clamped'}`}>{profileBio}</p>{profileBio.length > 140 ? <button className="member-profile-bio-toggle" onClick={() => setBioExpanded((v) => !v)}>{bioExpanded ? 'Show less' : 'Show more'}</button> : null}</div>
-            </div> : null}
-
-            {profileAbout ? <div className="member-profile-content-block member-profile-inline-section-card">
+            {profileAbout ? <div className="member-profile-content-block member-profile-inline-section-card member-profile-about-section">
               <div className="member-profile-inline-section-head"><h3>About</h3>{showOwnerEditAffordances ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>📌</button><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>🎬</button></div> : null}</div>
               <p className="member-profile-about-copy">{profileAbout}</p>
             </div> : null}
 
           </div>
 
-          {(profile?.category || profile?.website_url || profile?.location_text || profile?.pronouns || profile?.tagline || profileTopics.length || overflowTopics.length || profileHighlights.length) ? <div className="member-profile-right-column">
-            <div className="member-profile-content-block member-profile-inline-section-card member-profile-metadata-card member-profile-clickable-section" onClick={() => showOwnerEditAffordances && setEditOpen(true)}>
+          {(previewProfile?.location_text || previewProfile?.pronouns || previewProfile?.tagline || profileTopics.length || overflowTopics.length || profileHighlights.length) ? <div className="member-profile-right-column">
+            {(previewProfile?.location_text || previewProfile?.pronouns || previewProfile?.tagline) ? <div className="member-profile-content-block member-profile-inline-section-card member-profile-metadata-card member-profile-clickable-section" onClick={() => showOwnerEditAffordances && setEditOpen(true)}>
               <div className="member-profile-inline-section-head"><h3>Details</h3>{showOwnerEditAffordances ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={(e) => { e.stopPropagation(); setEditOpen(true); }}>✏️</button></div> : null}</div>
               <div className="member-profile-detail-pills">
-                <span className="tag">@{profileSlug}</span>
-                {previewProfile?.category ? <span className="tag">{normalizeSingleLineText(previewProfile.category, 60)}</span> : null}
                 {previewProfile?.location_text ? <span className="tag">{normalizeSingleLineText(previewProfile.location_text, 80)}</span> : null}
                 {previewProfile?.pronouns ? <span className="tag">{normalizeSingleLineText(previewProfile.pronouns, 40)}</span> : null}
                 {previewProfile?.tagline ? <span className="tag">{normalizeSingleLineText(previewProfile.tagline, 80)}</span> : null}
               </div>
-            </div>
-
-            {profileTopics.length ? <div className="member-profile-content-block member-profile-inline-section-card member-profile-metadata-card member-profile-clickable-section" onClick={() => showOwnerEditAffordances && setEditOpen(true)}>
-              <div className="member-profile-inline-section-head"><h3>Topics</h3>{showOwnerEditAffordances ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={(e) => { e.stopPropagation(); setEditOpen(true); }}>✏️</button></div> : null}</div>
-              <div className="tag-row member-profile-topics-row">{profileTopics.map((tag) => <span key={tag} className="tag">{normalizeRenderText(tag, 24)}</span>)}</div>
-              {overflowTopics.length ? <div className="tag-row">{overflowTopics.map((tag) => <span key={tag} className="tag">{normalizeRenderText(tag, 24)}</span>)}</div> : null}
             </div> : null}
 
             {profileHighlights.length ? <div className="member-profile-content-block member-profile-inline-section-card member-profile-metadata-card member-profile-clickable-section" onClick={() => showOwnerEditAffordances && setEditOpen(true)}>
               <div className="member-profile-inline-section-head"><h3>Highlights</h3>{showOwnerEditAffordances ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={(e) => { e.stopPropagation(); setEditOpen(true); }}>✏️</button></div> : null}</div>
               <div className="member-profile-highlights-list">{profileHighlights.map((item) => <span key={item} className="member-profile-highlight-chip">{item}</span>)}</div>
+            </div> : null}
+
+            {profileTopics.length ? <div className="member-profile-content-block member-profile-inline-section-card member-profile-metadata-card member-profile-clickable-section" onClick={() => showOwnerEditAffordances && setEditOpen(true)}>
+              <div className="member-profile-inline-section-head"><h3>Topics</h3>{showOwnerEditAffordances ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={(e) => { e.stopPropagation(); setEditOpen(true); }}>✏️</button></div> : null}</div>
+              <div className="tag-row member-profile-topics-row">{profileTopics.map((tag) => <span key={tag} className="tag">{normalizeRenderText(tag, 24)}</span>)}</div>
+              {overflowTopics.length ? <div className="tag-row member-profile-topics-row member-profile-topics-overflow">{overflowTopics.map((tag) => <span key={tag} className="tag">{normalizeRenderText(tag, 24)}</span>)}</div> : null}
             </div> : null}
           </div> : null}
 
