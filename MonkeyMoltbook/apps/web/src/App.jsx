@@ -99,7 +99,6 @@ function useIntelData(enabled = true, options = {}) {
     const load = async () => {
       try {
         setData({ loading: true, report: null, rising: [], hot: [], topics: [], submolts: [], growth: null });
-        fetch(`${API}/moltbook/refresh`, { method: 'POST', cache: 'no-store' }).catch(() => {});
         const requests = [
           includeReport ? fetch(`${API}/moltbook/report`, { cache: 'no-store' }) : Promise.resolve(null),
           includeRising ? fetch(`${API}/moltbook/rising`, { cache: 'no-store' }) : Promise.resolve(null),
