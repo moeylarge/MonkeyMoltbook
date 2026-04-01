@@ -20,7 +20,16 @@ const PROFILE_MEDIA_DIR = process.env.VERCEL ? '/tmp/monkeymoltbook-profile-medi
 
 export const app = express();
 app.use(express.json({ limit: '8mb' }));
-app.use('/profile-media', express.static(PROFILE_MEDIA_DIR));
+app.use('/profile-media', express.static(PROFILE_MEDIA_DIR, {
+  etag: false,
+  lastModified: false,
+  setHeaders(res) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+  }
+}));
 
 app.post('/auth/email/start', async (req, res) => {
   const result = await startEmailAuth({
@@ -161,7 +170,7 @@ app.post('/profile/me/avatar', async (req, res) => {
     const key = `${String(session.user.id).replace(/[^a-zA-Z0-9_-]/g, '_')}-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.${ext}`;
     const outPath = path.join(PROFILE_MEDIA_DIR, key);
     fs.writeFileSync(outPath, buffer);
-    const avatarUrl = `/profile-media/${key}`;
+    const avatarUrl = `/profile-media/${key}?v=${Date.now()}`;
     const profile = await updateProfileAvatar(session.user, avatarUrl);
     res.json({ ok: true, profile, avatarUrl });
   } catch (error) {
@@ -183,7 +192,7 @@ app.delete('/profile/me/avatar', async (req, res) => {
     const current = await getOrCreateProfileForUser(session.user);
     const currentUrl = String(current?.avatar_url || '');
     if (currentUrl.startsWith('/profile-media/')) {
-      const filename = currentUrl.replace('/profile-media/', '');
+      const filename = currentUrl.replace('/profile-media/', '').split('?')[0];
       const targetPath = path.join(PROFILE_MEDIA_DIR, filename);
       if (fs.existsSync(targetPath)) fs.unlinkSync(targetPath);
     }
@@ -225,7 +234,7 @@ app.post('/profile/me/banner', async (req, res) => {
     const key = `banner-${String(session.user.id).replace(/[^a-zA-Z0-9_-]/g, '_')}-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.${ext}`;
     const outPath = path.join(PROFILE_MEDIA_DIR, key);
     fs.writeFileSync(outPath, buffer);
-    const bannerUrl = `/profile-media/${key}`;
+    const bannerUrl = `/profile-media/${key}?v=${Date.now()}`;
     const profile = await updateProfileBanner(session.user, bannerUrl);
     res.json({ ok: true, profile, bannerUrl });
   } catch (error) {
@@ -247,7 +256,7 @@ app.delete('/profile/me/banner', async (req, res) => {
     const current = await getOrCreateProfileForUser(session.user);
     const currentUrl = String(current?.banner_url || '');
     if (currentUrl.startsWith('/profile-media/')) {
-      const filename = currentUrl.replace('/profile-media/', '');
+      const filename = currentUrl.replace('/profile-media/', '').split('?')[0];
       const targetPath = path.join(PROFILE_MEDIA_DIR, filename);
       if (fs.existsSync(targetPath)) fs.unlinkSync(targetPath);
     }

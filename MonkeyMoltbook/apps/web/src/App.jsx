@@ -936,7 +936,8 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
   const { slug } = useParams();
   const top = data.report?.topSources || [];
   const normalizedSlug = slugify(slug);
-  const [profileState, setProfileState] = useState({ loading: true, profile: null, ownerView: false, error: '' });
+  const emptyProfileState = { loading: true, loaded: false, profile: null, ownerView: false, error: '' };
+  const [profileState, setProfileState] = useState(emptyProfileState);
   const [ownerProfile, setOwnerProfile] = useState(null);
   const [editOpen, setEditOpen] = useState(false);
   const [profileForm, setProfileForm] = useState({ display_name: '', username: '', bio: '', about: '', category: '', website_url: '', location_text: '', media: '', pronouns: '', topics: [], topicDraft: '', highlights: [], highlightDraft: '', is_public: true, message_permission: 'everyone', notification_messages_enabled: true, notification_mentions_enabled: true, notification_follows_enabled: true, notification_marketing_enabled: false, theme_preference: 'system' });
@@ -946,6 +947,8 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
   const [avatarState, setAvatarState] = useState({ error: '', busy: false });
   const [bannerState, setBannerState] = useState({ error: '', busy: false });
   const [connectionsOpen, setConnectionsOpen] = useState('');
+  const avatarInputRef = useRef(null);
+  const bannerInputRef = useRef(null);
   const fallbackAgent = {
     authorName: slug?.replace(/-/g, ' ') || 'Member',
     description: '',
@@ -953,73 +956,115 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
     topics: [],
     profileUrl: null,
   };
+  const authBaseSlug = slugify(String(auth?.user?.email || '').split('@')[0]);
+  const authDisplaySlug = slugify(auth?.user?.displayName || '');
+  const isOwnRequestedProfile = Boolean(normalizedSlug && (normalizedSlug === authBaseSlug || normalizedSlug === authDisplaySlug));
 
   useEffect(() => {
     let active = true;
+    const controller = new AbortController();
+    const resetState = () => {
+      setProfileState({ loading: true, loaded: false, profile: null, ownerView: false, error: '' });
+      setOwnerProfile(null);
+      setEditOpen(false);
+      setProfileSaveState({ error: '', success: '' });
+      setProfileFieldErrors({});
+      setAvatarState({ error: '', busy: false });
+      setBannerState({ error: '', busy: false });
+    };
+
+    const applyOwnerProfile = (nextProfile) => {
+      setOwnerProfile(nextProfile);
+      setProfileForm({
+        display_name: nextProfile?.display_name || '',
+        username: nextProfile?.username || '',
+        bio: nextProfile?.bio || '',
+        about: nextProfile?.about || '',
+        category: nextProfile?.category || '',
+        website_url: nextProfile?.website_url || '',
+        location_text: nextProfile?.location_text || '',
+        media: nextProfile?.tagline || '',
+        pronouns: nextProfile?.pronouns || '',
+        topics: Array.isArray(nextProfile?.topics) ? nextProfile.topics : [],
+        topicDraft: '',
+        highlights: Array.isArray(nextProfile?.highlights) ? nextProfile.highlights : [],
+        highlightDraft: '',
+        is_public: nextProfile?.is_public !== false,
+        message_permission: nextProfile?.message_permission || 'everyone',
+        notification_messages_enabled: nextProfile?.notification_messages_enabled !== false,
+        notification_mentions_enabled: nextProfile?.notification_mentions_enabled !== false,
+        notification_follows_enabled: nextProfile?.notification_follows_enabled !== false,
+        notification_marketing_enabled: Boolean(nextProfile?.notification_marketing_enabled),
+        theme_preference: nextProfile?.theme_preference || 'system'
+      });
+    };
+
+    const fetchJson = async (url) => {
+      const response = await fetch(url, {
+        credentials: 'include',
+        cache: 'no-store',
+        signal: controller.signal,
+        headers: { 'Cache-Control': 'no-cache' }
+      });
+      const payload = await response.json().catch(() => ({}));
+      return { response, payload };
+    };
+
     const loadProfile = async () => {
-      setProfileState({ loading: true, profile: null, ownerView: false, error: '' });
+      resetState();
+      if (!normalizedSlug) {
+        if (!active) return;
+        setProfileState({ loading: false, loaded: true, profile: null, ownerView: false, error: 'Profile not found.' });
+        return;
+      }
       try {
-        const response = await fetch(`${API}/profile/${encodeURIComponent(normalizedSlug)}`, { credentials: 'include', cache: 'no-store' });
-        const payload = await response.json();
-        if (!active) return;
-        if (!response.ok) {
-          setProfileState({ loading: false, profile: null, ownerView: false, error: payload?.message || 'Could not load profile.' });
-          return;
-        }
-        const fetchedProfile = payload.profile || null;
-        if (!fetchedProfile || slugify(fetchedProfile.username) !== normalizedSlug) {
-          setProfileState({ loading: false, profile: null, ownerView: false, error: 'Profile route mismatch.' });
-          return;
-        }
-        setProfileState({ loading: false, profile: fetchedProfile, ownerView: Boolean(payload.ownerView), error: '' });
-        if (payload.ownerView) {
-          const meRes = await fetch(`${API}/profile/me`, { credentials: 'include' });
-          const mePayload = await meRes.json();
-          if (!active) return;
-          if (meRes.ok && mePayload?.profile) {
-            setOwnerProfile(mePayload.profile);
-            setProfileForm({
-              display_name: mePayload.profile.display_name || '',
-              username: mePayload.profile.username || '',
-              bio: mePayload.profile.bio || '',
-              about: mePayload.profile.about || '',
-              category: mePayload.profile.category || '',
-              website_url: mePayload.profile.website_url || '',
-              location_text: mePayload.profile.location_text || '',
-              media: mePayload.profile.tagline || '',
-              pronouns: mePayload.profile.pronouns || '',
-              topics: Array.isArray(mePayload.profile.topics) ? mePayload.profile.topics : [],
-              topicDraft: '',
-              highlights: Array.isArray(mePayload.profile.highlights) ? mePayload.profile.highlights : [],
-              highlightDraft: '',
-              is_public: mePayload.profile.is_public !== false,
-              message_permission: mePayload.profile.message_permission || 'everyone',
-              notification_messages_enabled: mePayload.profile.notification_messages_enabled !== false,
-              notification_mentions_enabled: mePayload.profile.notification_mentions_enabled !== false,
-              notification_follows_enabled: mePayload.profile.notification_follows_enabled !== false,
-              notification_marketing_enabled: Boolean(mePayload.profile.notification_marketing_enabled),
-              theme_preference: mePayload.profile.theme_preference || 'system'
-            });
+        const shouldUseOwnerRoute = Boolean(auth?.authenticated && isOwnRequestedProfile);
+        if (shouldUseOwnerRoute) {
+          const { response, payload } = await fetchJson(`${API}/profile/me`);
+          if (!active || controller.signal.aborted) return;
+          const ownerProfilePayload = payload?.profile || null;
+          if (!response.ok || !ownerProfilePayload) {
+            setProfileState({ loading: false, loaded: true, profile: null, ownerView: false, error: payload?.message || 'Could not load profile.' });
+            return;
           }
+          const ownerSlug = slugify(ownerProfilePayload.username);
+          if (ownerSlug !== normalizedSlug && normalizedSlug !== authDisplaySlug) {
+            setProfileState({ loading: false, loaded: true, profile: null, ownerView: false, error: 'Profile route mismatch.' });
+            return;
+          }
+          applyOwnerProfile(ownerProfilePayload);
+          setProfileState({ loading: false, loaded: true, profile: ownerProfilePayload, ownerView: true, error: '' });
+          return;
         }
-      } catch {
-        if (!active) return;
-        setProfileState({ loading: false, profile: null, ownerView: false, error: 'Could not load profile.' });
+
+        const { response, payload } = await fetchJson(`${API}/profile/${encodeURIComponent(normalizedSlug)}`);
+        if (!active || controller.signal.aborted) return;
+        if (!response.ok) {
+          setProfileState({ loading: false, loaded: true, profile: null, ownerView: false, error: payload?.message || 'Could not load profile.' });
+          return;
+        }
+        const fetchedProfile = payload?.profile || null;
+        if (!fetchedProfile || slugify(fetchedProfile.username) !== normalizedSlug) {
+          setProfileState({ loading: false, loaded: true, profile: null, ownerView: false, error: 'Profile route mismatch.' });
+          return;
+        }
+        setProfileState({ loading: false, loaded: true, profile: fetchedProfile, ownerView: false, error: '' });
+      } catch (error) {
+        if (!active || controller.signal.aborted || error?.name === 'AbortError') return;
+        setProfileState({ loading: false, loaded: true, profile: null, ownerView: false, error: 'Could not load profile.' });
       }
     };
     loadProfile();
     return () => {
       active = false;
+      controller.abort();
     };
-  }, [normalizedSlug]);
+  }, [normalizedSlug, auth?.authenticated, authDisplaySlug, isOwnRequestedProfile]);
 
   const profile = profileState.profile;
   const profileSlug = normalizeRenderText(profile?.username || normalizedSlug, 32);
   const profileName = normalizeRenderText(profile?.display_name || fallbackAgent.authorName, 80);
-  const authBaseSlug = slugify(String(auth?.user?.email || '').split('@')[0]);
-  const authDisplaySlug = slugify(auth?.user?.displayName || '');
-  const isOwnRequestedProfile = Boolean(normalizedSlug && (normalizedSlug === authBaseSlug || normalizedSlug === authDisplaySlug));
-  const showOwnerEditAffordances = Boolean(profileState.profile && profileState.ownerView);
+  const showOwnerEditAffordances = Boolean(profileState.loaded && profileState.profile && profileState.ownerView);
   const previewProfile = editOpen ? {
     ...profile,
     display_name: normalizeSingleLineText(profileForm.display_name || profile?.display_name || '', 80),
@@ -1034,6 +1079,11 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
     topics: Array.isArray(profileForm.topics) ? profileForm.topics.map((item) => normalizeSingleLineText(item, 24)).filter(Boolean) : (profile?.topics || []),
     highlights: Array.isArray(profileForm.highlights) ? profileForm.highlights.map((item) => normalizeSingleLineText(item, 24)).filter(Boolean) : (profile?.highlights || [])
   } : profile;
+  const renderedProfile = previewProfile || profile;
+  const hasAvatar = Boolean(String(renderedProfile?.avatar_url || '').trim());
+  const avatarUrl = hasAvatar ? String(renderedProfile?.avatar_url || '').trim() : '';
+  const hasBanner = Boolean(String(renderedProfile?.banner_url || '').trim());
+  const bannerUrl = hasBanner ? String(renderedProfile?.banner_url || '').trim() : '';
   const profileBio = normalizeRenderText(previewProfile?.bio || '', 280);
   const profileAbout = normalizeRenderText(previewProfile?.about || '', 600);
   const shouldShowAbout = Boolean(profileAbout && normalizeRenderText(profileAbout, 600).toLowerCase() !== normalizeRenderText(profileBio, 280).toLowerCase());
@@ -1131,6 +1181,16 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
     }
   };
 
+  const syncProfileMediaState = (nextProfile) => {
+    if (!nextProfile) return;
+    setOwnerProfile(nextProfile);
+    setProfileState((current) => ({ ...current, profile: nextProfile, ownerView: true }));
+  };
+
+  const resetFileInput = (inputRef) => {
+    if (inputRef?.current) inputRef.current.value = '';
+  };
+
   const onAvatarFileChange = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -1145,17 +1205,40 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
           body: JSON.stringify({ dataUrl: String(reader.result || '') })
         });
         const payload = await response.json();
-        if (!response.ok) {
+        if (!response.ok || !payload?.profile) {
           setAvatarState({ error: payload?.message || 'Could not upload avatar.', busy: false });
+          resetFileInput(avatarInputRef);
           return;
         }
-        setProfileState((current) => ({ ...current, profile: payload.profile || current.profile, ownerView: true }));
+        syncProfileMediaState(payload.profile);
         setAvatarState({ error: '', busy: false });
+        resetFileInput(avatarInputRef);
       } catch {
         setAvatarState({ error: 'Could not upload avatar.', busy: false });
+        resetFileInput(avatarInputRef);
       }
     };
     reader.readAsDataURL(file);
+  };
+
+  const removeAvatar = async () => {
+    setAvatarState({ error: '', busy: true });
+    try {
+      const response = await fetch(`${API}/profile/me/avatar`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload?.profile) {
+        setAvatarState({ error: payload?.message || 'Could not remove avatar.', busy: false });
+        return;
+      }
+      syncProfileMediaState(payload.profile);
+      setAvatarState({ error: '', busy: false });
+      resetFileInput(avatarInputRef);
+    } catch {
+      setAvatarState({ error: 'Could not remove avatar.', busy: false });
+    }
   };
 
   const onBannerFileChange = async (event) => {
@@ -1172,17 +1255,40 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
           body: JSON.stringify({ dataUrl: String(reader.result || '') })
         });
         const payload = await response.json();
-        if (!response.ok) {
+        if (!response.ok || !payload?.profile) {
           setBannerState({ error: payload?.message || 'Could not upload banner.', busy: false });
+          resetFileInput(bannerInputRef);
           return;
         }
-        setProfileState((current) => ({ ...current, profile: payload.profile || current.profile, ownerView: true }));
+        syncProfileMediaState(payload.profile);
         setBannerState({ error: '', busy: false });
+        resetFileInput(bannerInputRef);
       } catch {
         setBannerState({ error: 'Could not upload banner.', busy: false });
+        resetFileInput(bannerInputRef);
       }
     };
     reader.readAsDataURL(file);
+  };
+
+  const removeBanner = async () => {
+    setBannerState({ error: '', busy: true });
+    try {
+      const response = await fetch(`${API}/profile/me/banner`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload?.profile) {
+        setBannerState({ error: payload?.message || 'Could not remove banner.', busy: false });
+        return;
+      }
+      syncProfileMediaState(payload.profile);
+      setBannerState({ error: '', busy: false });
+      resetFileInput(bannerInputRef);
+    } catch {
+      setBannerState({ error: 'Could not remove banner.', busy: false });
+    }
   };
 
   if (isOwnRequestedProfile && !auth?.authenticated) {
@@ -1209,7 +1315,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
     );
   }
 
-  if (profileState.loading) {
+  if (profileState.loading || !profileState.loaded) {
     return <section className="page-section narrow"><div className="profile-card member-profile-gate-card"><h2>Loading profile…</h2></div></section>;
   }
 
@@ -1229,9 +1335,9 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
           <div className="profile-card main profile-card-main-upgraded member-profile-main member-profile-left-column">
             <div className="member-profile-topbar">
               <div className="member-profile-identity-row">
-                <div className={`member-profile-avatar ${showOwnerEditAffordances ? 'editable' : ''}`}>
-                  {profile?.avatar_url ? <img src={profile.avatar_url} alt={profileName} className="member-profile-avatar-img" /> : <div className="member-profile-avatar-fallback">{String(profileName || 'M').slice(0, 1).toUpperCase()}</div>}
-                  {showOwnerEditAffordances ? <label className="member-profile-avatar-edit"><input type="file" accept="image/png,image/jpeg,image/webp" onChange={onAvatarFileChange} /><span className="member-profile-avatar-edit-icon">📷</span><span className="member-profile-avatar-edit-text">{avatarState.busy ? 'Uploading…' : 'Change photo'}</span></label> : null}
+                <div className={`member-profile-avatar ${showOwnerEditAffordances ? 'editable' : ''} ${hasAvatar ? 'has-image' : 'is-empty'}`}>
+                  {hasAvatar ? <img key={avatarUrl} src={avatarUrl} alt={profileName} className="member-profile-avatar-img" /> : <div className="member-profile-avatar-fallback">{String(profileName || 'M').slice(0, 1).toUpperCase()}</div>}
+                  {showOwnerEditAffordances ? <div className="member-profile-avatar-edit-group"><label className="member-profile-avatar-edit"><input ref={avatarInputRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={onAvatarFileChange} /><span className="member-profile-avatar-edit-icon">📷</span><span className="member-profile-avatar-edit-text">{avatarState.busy ? 'Uploading…' : (hasAvatar ? 'Change photo' : 'Add photo')}</span></label>{hasAvatar ? <button className="member-profile-avatar-remove" type="button" onClick={removeAvatar} disabled={avatarState.busy}>{avatarState.busy ? 'Removing…' : 'Remove photo'}</button> : null}</div> : null}
                 </div>
                 <div className="member-profile-identity-copy">
                   <div className="member-profile-name-block">
@@ -1268,9 +1374,9 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
               {joinedLabel ? <div className="listing-strip-card"><strong>{joinedLabel}</strong><span>joined</span></div> : null}
             </div>
 
-            <div className="member-profile-hero-banner">
-              {previewProfile?.banner_url ? <img src={previewProfile.banner_url} alt={`${profileName} banner`} className="member-profile-banner-img" /> : <div className="member-profile-banner-fallback"><div className="member-profile-banner-empty-copy"><strong>{normalizeSingleLineText(previewProfile?.category || profileName, 60)}</strong><span>{profileBio || 'Add a cover image to make your profile feel more alive.'}</span></div></div>}
-              {showOwnerEditAffordances ? <div className="member-profile-banner-actions"><label className="member-profile-banner-btn member-profile-banner-btn-primary"><input type="file" accept="image/png,image/jpeg,image/webp" onChange={onBannerFileChange} /><span className="member-profile-banner-btn-icon">🖼️</span><span>{bannerState.busy ? 'Uploading…' : (previewProfile?.banner_url ? 'Change banner' : 'Add banner')}</span></label>{previewProfile?.banner_url ? <button className="member-profile-banner-btn member-profile-banner-btn-secondary" onClick={async () => { const response = await fetch(`${API}/profile/me/banner`, { method: 'DELETE', credentials: 'include' }); const payload = await response.json(); if (response.ok) setProfileState((current) => ({ ...current, profile: payload.profile || current.profile, ownerView: true })); }}>Remove</button> : null}</div> : null}
+            <div className={`member-profile-hero-banner ${hasBanner ? 'has-image' : 'is-empty'}`}>
+              {hasBanner ? <img key={bannerUrl} src={bannerUrl} alt={`${profileName} banner`} className="member-profile-banner-img" /> : <div className="member-profile-banner-fallback"><div className="member-profile-banner-empty-copy"><strong>{normalizeSingleLineText(previewProfile?.category || profileName, 60)}</strong><span>{profileBio || 'Add a cover image to make your profile feel more alive.'}</span></div></div>}
+              {showOwnerEditAffordances ? <div className="member-profile-banner-actions"><label className="member-profile-banner-btn member-profile-banner-btn-primary"><input ref={bannerInputRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={onBannerFileChange} /><span className="member-profile-banner-btn-icon">🖼️</span><span>{bannerState.busy ? 'Uploading…' : (hasBanner ? 'Change banner' : 'Add banner')}</span></label>{hasBanner ? <button className="member-profile-banner-btn member-profile-banner-btn-secondary" type="button" onClick={removeBanner} disabled={bannerState.busy}>{bannerState.busy ? 'Removing…' : 'Remove banner'}</button> : null}</div> : null}
               {bannerState.error ? <div className="feed-note">{bannerState.error}</div> : null}
             </div>
 
