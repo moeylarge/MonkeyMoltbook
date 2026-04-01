@@ -922,7 +922,6 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
   const [ownerProfile, setOwnerProfile] = useState(null);
   const [clipsState, setClipsState] = useState({ loading: true, clips: [], error: '' });
   const [editOpen, setEditOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileForm, setProfileForm] = useState({ display_name: '', username: '', bio: '', about: '', category: '', website_url: '', location_text: '', tagline: '', pronouns: '', topics: [], topicDraft: '', featured_links: [{ label: '', url: '' }, { label: '', url: '' }, { label: '', url: '' }], highlights: [], highlightDraft: '', is_public: true, message_permission: 'everyone', notification_messages_enabled: true, notification_mentions_enabled: true, notification_follows_enabled: true, notification_marketing_enabled: false, theme_preference: 'system' });
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSaveState, setProfileSaveState] = useState({ error: '', success: '' });
@@ -1165,8 +1164,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
               </div>
               <div className="member-profile-owner-cta-stack">
                 {profileState.ownerView ? <>
-                  <button className="primary-btn member-profile-owner-primary" onClick={() => { setEditOpen((v) => !v); setSettingsOpen(false); }}>Edit Profile</button>
-                  <button className="ghost-btn member-profile-owner-secondary" onClick={() => { setSettingsOpen((v) => !v); setEditOpen(false); }}>Settings</button>
+                  <button className="primary-btn member-profile-owner-primary" onClick={() => { setEditOpen((v) => !v); }}>Edit Profile</button>
                 </> : <>
                   <button className="ghost-btn">Follow</button>
                   {!auth?.authenticated ? <button className="ghost-btn direct-message-cta" onClick={onOpenAuth}>Open MoltMail</button> : <Link className="ghost-btn" to={auth?.user?.emailVerified ? '/moltmail' : '/verify-email'}>{auth?.user?.emailVerified ? 'Open MoltMail' : 'Verify Email'}</Link>}
@@ -1230,23 +1228,6 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
               {profileSaveState.success ? <div className="feed-note">{profileSaveState.success}</div> : null}
             </div> : null}
 
-            {profileState.ownerView && settingsOpen ? <div className="member-profile-editor-panel">
-              <h3>Settings</h3>
-              <div className="member-profile-settings-grid">
-                <label className="member-profile-toggle-row"><span>Public profile</span><input type="checkbox" checked={profileForm.is_public} onChange={(e) => setProfileForm((s) => ({ ...s, is_public: e.target.checked }))} /></label>
-                <label className="member-profile-toggle-row"><span>Messages</span><select className="mega-search auth-input" value={profileForm.message_permission} onChange={(e) => setProfileForm((s) => ({ ...s, message_permission: e.target.value }))}><option value="everyone">Everyone</option><option value="followers">Followers</option><option value="nobody">Nobody</option></select></label>
-                <label className="member-profile-toggle-row"><span>Message notifications</span><input type="checkbox" checked={profileForm.notification_messages_enabled} onChange={(e) => setProfileForm((s) => ({ ...s, notification_messages_enabled: e.target.checked }))} /></label>
-                <label className="member-profile-toggle-row"><span>Mention notifications</span><input type="checkbox" checked={profileForm.notification_mentions_enabled} onChange={(e) => setProfileForm((s) => ({ ...s, notification_mentions_enabled: e.target.checked }))} /></label>
-                <label className="member-profile-toggle-row"><span>Follow notifications</span><input type="checkbox" checked={profileForm.notification_follows_enabled} onChange={(e) => setProfileForm((s) => ({ ...s, notification_follows_enabled: e.target.checked }))} /></label>
-                <label className="member-profile-toggle-row"><span>Marketing notifications</span><input type="checkbox" checked={profileForm.notification_marketing_enabled} onChange={(e) => setProfileForm((s) => ({ ...s, notification_marketing_enabled: e.target.checked }))} /></label>
-              </div>
-              <div className="auth-modal-actions">
-                <button className="primary-btn" disabled={profileSaving} onClick={saveProfile}>{profileSaving ? 'Saving…' : 'Save Settings'}</button>
-              </div>
-              {profileSaveState.error ? <div className="feed-note">{profileSaveState.error}</div> : null}
-              {profileSaveState.success ? <div className="feed-note">{profileSaveState.success}</div> : null}
-            </div> : null}
-
             <div className="member-profile-content-block">
               <div className="member-profile-section-head">
                 <h3>Clips</h3>
@@ -1271,16 +1252,29 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
 
             <div className="member-profile-lower-grid">
               <div className="profile-card side member-profile-side member-profile-meta-card">
-                <h3>About</h3>
-                <p>{profileAbout || profileBio || 'No profile details yet.'}</p>
-                <ul>
-                  <li>Username: @{profileSlug}</li>
-                  <li>Category: {profile?.category || 'Not set'}</li>
-                  <li>Visibility: {profile?.is_public === false ? 'Private' : 'Public'}</li>
-                  <li>Theme: {profile?.theme_preference || 'system'}</li>
-                </ul>
-                {profileTopics.length ? <><h3>Topics</h3><div className="tag-row">{profileTopics.map((tag) => <span key={tag} className="tag">{tag}</span>)}</div></> : null}
-                {profileHighlights.length ? <><h3>Highlights</h3><div className="tag-row">{profileHighlights.map((item) => <span key={item} className="tag">{item}</span>)}</div></> : null}
+                <div className="member-profile-inline-section-head"><h3>Bio</h3>{profileState.ownerView ? <button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>✏️</button> : null}</div>
+                <p>{profileBio || 'No bio yet.'}</p>
+              </div>
+
+              {profileAbout ? <div className="profile-card side member-profile-side member-profile-meta-card">
+                <div className="member-profile-inline-section-head"><h3>About</h3>{profileState.ownerView ? <button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>✏️</button> : null}</div>
+                <p>{profileAbout}</p>
+              </div> : null}
+
+              {profileTopics.length ? <div className="profile-card side member-profile-side member-profile-meta-card">
+                <div className="member-profile-inline-section-head"><h3>Topics</h3>{profileState.ownerView ? <button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>✏️</button> : null}</div>
+                <div className="tag-row">{profileTopics.map((tag) => <span key={tag} className="tag">{tag}</span>)}</div>
+              </div> : null}
+
+              <div className="profile-card side member-profile-side member-profile-meta-card">
+                <div className="member-profile-inline-section-head"><h3>Details</h3>{profileState.ownerView ? <button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>✏️</button> : null}</div>
+                <div className="member-profile-detail-pills">
+                  <span className="tag">@{profileSlug}</span>
+                  {profile?.category ? <span className="tag">{profile.category}</span> : null}
+                  <span className="tag">{profile?.is_public === false ? 'Private' : 'Public'}</span>
+                  <span className="tag">{profile?.theme_preference || 'system'}</span>
+                </div>
+                {profileHighlights.length ? <div className="tag-row">{profileHighlights.map((item) => <span key={item} className="tag">{item}</span>)}</div> : null}
                 {profileLinks.length ? <div className="member-profile-links-grid">{profileLinks.map((item, index) => <a key={`${item.url}-${index}`} href={item.url} target="_blank" rel="noreferrer" className="ghost-btn member-profile-link-card"><strong>{item.label}</strong><span>{item.url}</span></a>)}</div> : null}
               </div>
             </div>
