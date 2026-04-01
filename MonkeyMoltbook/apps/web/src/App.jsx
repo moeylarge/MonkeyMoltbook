@@ -2192,14 +2192,20 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload?.message || 'Could not send message.');
-    resolveOptimisticMessage(clientMessageId, { id: payload?.message?.id || clientMessageId, threadId: payload?.thread?.id || optimisticThreadId, status: 'sent' });
-    await loadMailbox(payload?.thread?.id || '');
-    setSelectedThreadId(payload?.thread?.id || '');
+    const confirmedThreadId = payload?.thread?.id || optimisticThreadId;
+    const confirmedMessageId = payload?.message?.id || clientMessageId;
+    resolveOptimisticMessage(clientMessageId, { id: confirmedMessageId, threadId: confirmedThreadId, status: 'sent', error: '' });
+    resolveOptimisticThread(optimisticThreadId, { id: confirmedThreadId, status: 'sent' });
+    setSelectedThreadId(confirmedThreadId);
     setRecipientQuery('');
     setRecipients([]);
     setMobileView('chat');
     removeOptimisticMessage(clientMessageId);
     removeOptimisticThread(optimisticThreadId);
+    try {
+      await loadMailbox(confirmedThreadId);
+    } catch {}
+    return { payload, confirmedThreadId, confirmedMessageId };
   };
 
   const submitCompose = async (overrides = {}) => {
@@ -2286,11 +2292,15 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload?.message || 'Could not send reply.');
-    resolveOptimisticMessage(clientMessageId, { id: payload?.message?.id || clientMessageId, status: 'sent' });
-    await loadMailbox(threadId);
+    const confirmedMessageId = payload?.message?.id || clientMessageId;
+    resolveOptimisticMessage(clientMessageId, { id: confirmedMessageId, threadId, status: 'sent', error: '' });
     markThreadReadLocal(threadId);
     setSelectedThreadId(threadId);
     removeOptimisticMessage(clientMessageId);
+    try {
+      await loadMailbox(threadId);
+    } catch {}
+    return { payload, confirmedMessageId, confirmedThreadId: threadId };
   };
 
   const submitReply = async (overrides = {}) => {
