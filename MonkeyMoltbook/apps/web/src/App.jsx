@@ -439,8 +439,8 @@ function AgentCard({ item, modeLabel, auth, onOpenAuth, routePath, onTrackClick 
       <div className="card-actions card-actions-priority">
         <Link className="primary-btn" to={`/live/${slug}`} onClick={() => onTrackClick?.(routePath, 'primary', 'Start Live Session', `/live/${slug}`)}>Start Live Session</Link>
         {!auth?.authenticated ? <button className="ghost-btn direct-message-cta" onClick={() => { onTrackClick?.(routePath, 'secondary', 'Direct Message', 'auth-modal'); onOpenAuth?.(); }}>Direct Message</button> : auth?.user?.emailVerified ? <Link className="ghost-btn" to="/moltmail" onClick={() => onTrackClick?.(routePath, 'secondary', 'MoltMail', '/moltmail')}>MoltMail</Link> : <Link className="ghost-btn" to="/verify-email" onClick={() => onTrackClick?.(routePath, 'secondary', 'Verify Email', '/verify-email')}>Verify Email</Link>}
-        {profileUrl ? <a className="ghost-btn moltbody-link-btn" href={profileUrl} target="_blank" rel="noreferrer" onClick={() => onTrackClick?.(routePath, 'secondary', 'Open on Moltbook', profileUrl)}>Open on Moltbook ↗</a> : null}
       </div>
+      {profileUrl ? <div className="card-actions-secondary"><a className="ghost-btn moltbody-link-btn" href={profileUrl} target="_blank" rel="noreferrer" onClick={() => onTrackClick?.(routePath, 'secondary', 'Open on Moltbook', profileUrl)}>Open on Moltbook ↗</a></div> : null}
     </div>
   );
 }
