@@ -920,15 +920,10 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
   const normalizedSlug = slugify(slug);
   const [profileState, setProfileState] = useState({ loading: true, profile: null, ownerView: false, error: '' });
   const [ownerProfile, setOwnerProfile] = useState(null);
-  const [clipsState, setClipsState] = useState({ loading: true, clips: [], error: '' });
   const [editOpen, setEditOpen] = useState(false);
   const [profileForm, setProfileForm] = useState({ display_name: '', username: '', bio: '', about: '', category: '', website_url: '', location_text: '', tagline: '', pronouns: '', topics: [], topicDraft: '', featured_links: [{ label: '', url: '' }, { label: '', url: '' }, { label: '', url: '' }], highlights: [], highlightDraft: '', is_public: true, message_permission: 'everyone', notification_messages_enabled: true, notification_mentions_enabled: true, notification_follows_enabled: true, notification_marketing_enabled: false, theme_preference: 'system' });
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSaveState, setProfileSaveState] = useState({ error: '', success: '' });
-  const [clipForm, setClipForm] = useState({ title: '', thumbnailUrl: '', videoUrl: '', durationSeconds: '' });
-  const [clipSaving, setClipSaving] = useState(false);
-  const [clipState, setClipState] = useState({ error: '', success: '' });
-  const [viewerClip, setViewerClip] = useState(null);
   const [connectionsOpen, setConnectionsOpen] = useState('');
   const fallbackAgent = {
     authorName: slug?.replace(/-/g, ' ') || 'Featured Agent',
@@ -949,18 +944,15 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
         if (!active) return;
         if (!response.ok) {
           setProfileState({ loading: false, profile: null, ownerView: false, error: payload?.message || 'Could not load profile.' });
-          setClipsState({ loading: false, clips: [], error: payload?.message || 'Could not load clips.' });
-          return;
+            return;
         }
         setProfileState({ loading: false, profile: payload.profile || null, ownerView: Boolean(payload.ownerView), error: '' });
-        setClipsState({ loading: false, clips: payload.clips || [], error: '' });
         if (payload.ownerView) {
           const meRes = await fetch(`${API}/profile/me`, { credentials: 'include' });
           const mePayload = await meRes.json();
           if (!active) return;
           if (meRes.ok && mePayload?.profile) {
             setOwnerProfile(mePayload.profile);
-            setClipsState({ loading: false, clips: mePayload.clips || payload.clips || [], error: '' });
             setProfileForm({
               display_name: mePayload.profile.display_name || '',
               username: mePayload.profile.username || '',
@@ -989,7 +981,6 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
       } catch {
         if (!active) return;
         setProfileState({ loading: false, profile: null, ownerView: false, error: 'Could not load profile.' });
-        setClipsState({ loading: false, clips: [], error: 'Could not load clips.' });
       }
     };
     loadProfile();
@@ -1006,18 +997,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
   const profileTopics = Array.isArray(profile?.topics) ? profile.topics : [];
   const profileHighlights = Array.isArray(profile?.highlights) ? profile.highlights : [];
   const profileLinks = Array.isArray(profile?.featured_links) ? profile.featured_links.filter((item) => item?.label && item?.url) : [];
-  const clips = Array.isArray(clipsState.clips) ? clipsState.clips : [];
-  const pinnedClipIds = Array.isArray(profile?.pinned_clip_ids) ? profile.pinned_clip_ids : [];
-  const pinnedClips = pinnedClipIds.map((id) => clips.find((clip) => clip.id === id)).filter(Boolean);
-  const unpinnedClips = clips.filter((clip) => !pinnedClipIds.includes(clip.id));
   const suggestedCreators = top.filter((item) => slugify(item.authorName) !== normalizedSlug).slice(0, 4);
-  const formatDuration = (value) => {
-    const total = Number(value || 0);
-    if (!total) return '';
-    const minutes = Math.floor(total / 60);
-    const seconds = total % 60;
-    return `${minutes}:${String(seconds).padStart(2, '0')}`;
-  };
 
   const addTopic = () => {
     const next = String(profileForm.topicDraft || '').trim().toLowerCase();
@@ -1046,15 +1026,6 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
     }));
   };
 
-  const togglePinClip = (clipId) => {
-    setProfileForm((s) => {
-      const current = Array.isArray(profile?.pinned_clip_ids) ? profile.pinned_clip_ids : [];
-      const exists = current.includes(clipId);
-      const next = exists ? current.filter((id) => id !== clipId) : [...current, clipId].slice(0, 3);
-      return { ...s, pinned_clip_ids: next };
-    });
-  };
-
   const saveProfile = async () => {
     setProfileSaving(true);
     setProfileSaveState({ error: '', success: '' });
@@ -1067,8 +1038,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
           ...profileForm,
           topics: profileForm.topics,
           highlights: profileForm.highlights,
-          featured_links: (profileForm.featured_links || []).filter((item) => item?.label && item?.url),
-          pinned_clip_ids: Array.isArray(profileForm.pinned_clip_ids) ? profileForm.pinned_clip_ids : (Array.isArray(profile?.pinned_clip_ids) ? profile.pinned_clip_ids : [])
+          featured_links: (profileForm.featured_links || []).filter((item) => item?.label && item?.url)
         })
       });
       const payload = await response.json();
@@ -1086,56 +1056,6 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
     }
   };
 
-  const saveClip = async () => {
-    setClipSaving(true);
-    setClipState({ error: '', success: '' });
-    try {
-      const response = await fetch(`${API}/profile/me/clips`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          title: clipForm.title,
-          thumbnailUrl: clipForm.thumbnailUrl,
-          videoUrl: clipForm.videoUrl,
-          durationSeconds: clipForm.durationSeconds ? Number(clipForm.durationSeconds) : null
-        })
-      });
-      const payload = await response.json();
-      if (!response.ok) {
-        setClipState({ error: payload?.message || 'Could not save clip.', success: '' });
-        return;
-      }
-      setClipsState({ loading: false, clips: payload.clips || [], error: '' });
-      setProfileState((current) => ({ ...current, profile: payload.profile || current.profile }));
-      setClipForm({ title: '', thumbnailUrl: '', videoUrl: '', durationSeconds: '' });
-      setClipState({ error: '', success: 'Clip added.' });
-    } catch {
-      setClipState({ error: 'Could not save clip.', success: '' });
-    } finally {
-      setClipSaving(false);
-    }
-  };
-
-  const removeClip = async (clipId) => {
-    try {
-      const response = await fetch(`${API}/profile/me/clips/${encodeURIComponent(clipId)}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      });
-      const payload = await response.json();
-      if (!response.ok) {
-        setClipState({ error: payload?.message || 'Could not remove clip.', success: '' });
-        return;
-      }
-      setClipsState({ loading: false, clips: payload.clips || [], error: '' });
-      setProfileState((current) => ({ ...current, profile: payload.profile || current.profile }));
-      setClipState({ error: '', success: 'Clip removed.' });
-    } catch {
-      setClipState({ error: 'Could not remove clip.', success: '' });
-    }
-  };
-
   return (
     <>
       <SeoHead
@@ -1143,9 +1063,9 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
         description={profileBio || 'Explore this member profile, clips, and account details on Molt Live.'}
         canonical={`https://molt-live.com/u/${profileSlug}`}
       />
-      <section className="page-section agent-profile member-profile-page">
-        <div className="profile-hero member-profile-hero member-profile-hero-single">
-          <div className="profile-card main profile-card-main-upgraded member-profile-main">
+      <section className="page-section agent-profile member-profile-page member-profile-page-shell">
+        <div className="member-profile-grid">
+          <div className="profile-card main profile-card-main-upgraded member-profile-main member-profile-left-column">
             <span className="hero-kicker">{profileState.ownerView ? 'My Profile' : 'Member profile'}</span>
             <div className="member-profile-topbar">
               <div className="member-profile-identity-row">
@@ -1176,17 +1096,12 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
               <button className="listing-strip-card member-profile-stat-btn" onClick={() => setConnectionsOpen('followers')}><strong>{Number(profile?.follower_count || 0)}</strong><span>followers</span></button>
               <button className="listing-strip-card member-profile-stat-btn" onClick={() => setConnectionsOpen('following')}><strong>{Number(profile?.following_count || 0)}</strong><span>following</span></button>
               <div className="listing-strip-card"><strong>{Number(profile?.like_count || 0)}</strong><span>likes</span></div>
-              <div className="listing-strip-card"><strong>{Number(profile?.activity_item_count || clips.length || 0)}</strong><span>activity items</span></div>
+              <div className="listing-strip-card"><strong>{Number(profile?.activity_item_count || 0)}</strong><span>activity items</span></div>
             </div>
 
             <div className="member-profile-hero-banner">
-              {profile?.banner_url ? <img src={profile.banner_url} alt={`${profileName} banner`} className="member-profile-banner-img" /> : <div className="member-profile-banner-fallback"><strong>{profile?.category || 'Creator profile'}</strong><span>{profileBio || 'Build your profile with clips, links, and highlights.'}</span></div>}
+              {profile?.banner_url ? <img src={profile.banner_url} alt={`${profileName} banner`} className="member-profile-banner-img" /> : <div className="member-profile-banner-fallback"><strong>{profile?.category || 'Creator profile'}</strong><span>{profileBio || 'Build your profile with a clear identity and clean social proof.'}</span></div>}
             </div>
-
-            {pinnedClips.length ? <div className="member-profile-content-block">
-              <div className="member-profile-section-head"><h3>Pinned clips</h3><span>Top content</span></div>
-              <div className="member-profile-clips-grid">{pinnedClips.map((clip) => <button key={clip.id} className="member-profile-clip-card member-profile-clip-button" onClick={() => setViewerClip(clip)}><div className="member-profile-clip-media">{clip.thumbnail_url ? <img src={clip.thumbnail_url} alt={clip.title || 'Pinned clip'} className="member-profile-clip-thumb" /> : <div className="member-profile-clip-fallback">No thumbnail</div>}<div className="member-profile-clip-overlay"><span>▶ View</span></div>{clip.duration_seconds ? <span className="member-profile-clip-duration">{formatDuration(clip.duration_seconds)}</span> : null}</div><div className="member-profile-clip-meta"><strong>{clip.title || 'Untitled clip'}</strong><span>Pinned</span></div></button>)}</div>
-            </div> : null}
 
             {profileState.ownerView && editOpen ? <div className="member-profile-editor-panel">
               <h3>Edit Profile</h3>
@@ -1228,56 +1143,35 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
               {profileSaveState.success ? <div className="feed-note">{profileSaveState.success}</div> : null}
             </div> : null}
 
-            <div className="member-profile-content-block">
-              <div className="member-profile-section-head">
-                <h3>Clips</h3>
-                <span>{clips.length} total</span>
-              </div>
-              {profileState.ownerView ? <div className="member-profile-add-clip-form">
-                <input className="mega-search auth-input" value={clipForm.title} onChange={(e) => setClipForm((s) => ({ ...s, title: e.target.value }))} placeholder="Clip title" />
-                <input className="mega-search auth-input" value={clipForm.thumbnailUrl} onChange={(e) => setClipForm((s) => ({ ...s, thumbnailUrl: e.target.value }))} placeholder="Thumbnail URL" />
-                <input className="mega-search auth-input" value={clipForm.videoUrl} onChange={(e) => setClipForm((s) => ({ ...s, videoUrl: e.target.value }))} placeholder="Video URL (optional)" />
-                <input className="mega-search auth-input" value={clipForm.durationSeconds} onChange={(e) => setClipForm((s) => ({ ...s, durationSeconds: e.target.value }))} placeholder="Duration in seconds" />
-                <button className="primary-btn" disabled={clipSaving} onClick={saveClip}>{clipSaving ? 'Saving…' : 'Add Clip'}</button>
-              </div> : null}
-              {clipState.error ? <div className="feed-note">{clipState.error}</div> : null}
-              {clipState.success ? <div className="feed-note">{clipState.success}</div> : null}
-              {clipsState.loading ? <div className="member-profile-empty-state">Loading clips…</div> : clipsState.error ? <div className="member-profile-empty-state">{clipsState.error}</div> : !clips.length ? <div className="member-profile-empty-state"><strong>No content yet.</strong>{profileState.ownerView ? <div className="member-profile-empty-actions"><button className="primary-btn" onClick={() => setEditOpen(true)}>Upload your first clip</button></div> : null}</div> : <div className="member-profile-clips-grid">{unpinnedClips.map((clip) => <div key={clip.id} className="member-profile-clip-card"><button className="member-profile-clip-button" onClick={() => setViewerClip(clip)}><div className="member-profile-clip-media">{clip.thumbnail_url ? <img src={clip.thumbnail_url} alt={clip.title || 'Clip thumbnail'} className="member-profile-clip-thumb" /> : <div className="member-profile-clip-fallback">No thumbnail</div>}<div className="member-profile-clip-overlay"><span>▶ View</span></div>{clip.duration_seconds ? <span className="member-profile-clip-duration">{formatDuration(clip.duration_seconds)}</span> : null}</div></button><div className="member-profile-clip-meta"><strong>{clip.title || 'Untitled clip'}</strong><span>{new Date(clip.created_at).toLocaleDateString()}</span></div>{profileState.ownerView ? <div className="member-profile-clip-owner-actions"><button className="ghost-btn member-profile-clip-delete" onClick={() => removeClip(clip.id)}>Remove</button><button className="ghost-btn member-profile-clip-delete" onClick={() => togglePinClip(clip.id)}>{pinnedClipIds.includes(clip.id) ? 'Unpin' : 'Pin'}</button></div> : null}</div>)}</div>}
+
+            <div className="member-profile-content-block member-profile-inline-section-card">
+              <div className="member-profile-inline-section-head"><h3>Bio</h3>{profileState.ownerView ? <button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>✏️</button> : null}</div>
+              <p>{profileBio || 'No bio yet.'}</p>
             </div>
 
-            <div className="member-profile-content-block">
-              <div className="member-profile-section-head"><h3>Recent activity</h3><span>Latest profile motion</span></div>
-              {!clips.length ? <div className="member-profile-empty-state">No recent activity yet.</div> : <div className="member-profile-activity-list">{clips.slice(0, 4).map((clip) => <button key={`activity-${clip.id}`} className="member-profile-activity-row" onClick={() => setViewerClip(clip)}><strong>{clip.title || 'Untitled clip'}</strong><span>{new Date(clip.created_at).toLocaleDateString()}</span></button>)}</div>}
+            {profileAbout ? <div className="member-profile-content-block member-profile-inline-section-card">
+              <div className="member-profile-inline-section-head"><h3>About</h3>{profileState.ownerView ? <button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>✏️</button> : null}</div>
+              <p>{profileAbout}</p>
+            </div> : null}
+          </div>
+
+          <div className="member-profile-right-column">
+            <div className="profile-card side member-profile-side member-profile-meta-card">
+              <div className="member-profile-inline-section-head"><h3>Details</h3>{profileState.ownerView ? <button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>✏️</button> : null}</div>
+              <div className="member-profile-detail-pills">
+                <span className="tag">@{profileSlug}</span>
+                {profile?.category ? <span className="tag">{profile.category}</span> : null}
+                <span className="tag">{profile?.is_public === false ? 'Private' : 'Public'}</span>
+                <span className="tag">{profile?.theme_preference || 'system'}</span>
+              </div>
+              {profileHighlights.length ? <div className="tag-row">{profileHighlights.map((item) => <span key={item} className="tag">{item}</span>)}</div> : null}
+              {profileLinks.length ? <div className="member-profile-links-grid">{profileLinks.map((item, index) => <a key={`${item.url}-${index}`} href={item.url} target="_blank" rel="noreferrer" className="ghost-btn member-profile-link-card"><strong>{item.label}</strong><span>{item.url}</span></a>)}</div> : null}
             </div>
 
-            <div className="member-profile-lower-grid">
-              <div className="profile-card side member-profile-side member-profile-meta-card">
-                <div className="member-profile-inline-section-head"><h3>Bio</h3>{profileState.ownerView ? <button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>✏️</button> : null}</div>
-                <p>{profileBio || 'No bio yet.'}</p>
-              </div>
-
-              {profileAbout ? <div className="profile-card side member-profile-side member-profile-meta-card">
-                <div className="member-profile-inline-section-head"><h3>About</h3>{profileState.ownerView ? <button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>✏️</button> : null}</div>
-                <p>{profileAbout}</p>
-              </div> : null}
-
-              {profileTopics.length ? <div className="profile-card side member-profile-side member-profile-meta-card">
-                <div className="member-profile-inline-section-head"><h3>Topics</h3>{profileState.ownerView ? <button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>✏️</button> : null}</div>
-                <div className="tag-row">{profileTopics.map((tag) => <span key={tag} className="tag">{tag}</span>)}</div>
-              </div> : null}
-
-              <div className="profile-card side member-profile-side member-profile-meta-card">
-                <div className="member-profile-inline-section-head"><h3>Details</h3>{profileState.ownerView ? <button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>✏️</button> : null}</div>
-                <div className="member-profile-detail-pills">
-                  <span className="tag">@{profileSlug}</span>
-                  {profile?.category ? <span className="tag">{profile.category}</span> : null}
-                  <span className="tag">{profile?.is_public === false ? 'Private' : 'Public'}</span>
-                  <span className="tag">{profile?.theme_preference || 'system'}</span>
-                </div>
-                {profileHighlights.length ? <div className="tag-row">{profileHighlights.map((item) => <span key={item} className="tag">{item}</span>)}</div> : null}
-                {profileLinks.length ? <div className="member-profile-links-grid">{profileLinks.map((item, index) => <a key={`${item.url}-${index}`} href={item.url} target="_blank" rel="noreferrer" className="ghost-btn member-profile-link-card"><strong>{item.label}</strong><span>{item.url}</span></a>)}</div> : null}
-              </div>
-            </div>
+            {profileTopics.length ? <div className="profile-card side member-profile-side member-profile-meta-card">
+              <div className="member-profile-inline-section-head"><h3>Topics</h3>{profileState.ownerView ? <button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>✏️</button> : null}</div>
+              <div className="tag-row">{profileTopics.map((tag) => <span key={tag} className="tag">{tag}</span>)}</div>
+            </div> : null}
 
             <div className="member-profile-content-block">
               <div className="member-profile-section-head"><h3>Suggested creators</h3><span>Discover more</span></div>
@@ -1285,8 +1179,6 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
             </div>
           </div>
         </div>
-
-        {viewerClip ? <div className="member-profile-viewer-backdrop" onClick={() => setViewerClip(null)}><div className="member-profile-viewer" onClick={(e) => e.stopPropagation()}><button className="ghost-btn member-profile-viewer-close" onClick={() => setViewerClip(null)}>Close</button>{viewerClip.video_url ? <video className="member-profile-viewer-video" src={viewerClip.video_url} controls autoPlay playsInline poster={viewerClip.thumbnail_url || undefined} /> : viewerClip.thumbnail_url ? <img src={viewerClip.thumbnail_url} alt={viewerClip.title || 'Clip'} className="member-profile-viewer-image" /> : <div className="member-profile-empty-state">No media available.</div>}<div className="member-profile-viewer-meta"><strong>{viewerClip.title || 'Untitled clip'}</strong><span>{viewerClip.duration_seconds ? formatDuration(viewerClip.duration_seconds) : 'Clip'} · {new Date(viewerClip.created_at).toLocaleDateString()}</span></div></div></div> : null}
 
         {connectionsOpen ? <div className="member-profile-viewer-backdrop" onClick={() => setConnectionsOpen('')}><div className="member-profile-connections-modal" onClick={(e) => e.stopPropagation()}><button className="ghost-btn member-profile-viewer-close" onClick={() => setConnectionsOpen('')}>Close</button><h3>{connectionsOpen === 'followers' ? 'Followers' : 'Following'}</h3><div className="member-profile-empty-state">No real {connectionsOpen} yet.</div></div></div> : null}
       </section>
