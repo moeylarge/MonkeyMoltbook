@@ -58,7 +58,15 @@ export function validateProfilePatch(input = {}) {
   if ('bio' in input) {
     const bio = safeText(input.bio) || '';
     if (bio.length > 220) errors.bio = 'Bio must be 220 characters or fewer.';
-    patch.bio = bio || null;
+    patch.bio = bio;
+  }
+  if ('about' in input) {
+    const about = safeText(input.about) || '';
+    if (about.length > 600) errors.about = 'About must be 600 characters or fewer.';
+    patch.about = about;
+  }
+  if ('category' in input) {
+    patch.category = (safeText(input.category) || '').slice(0, 60);
   }
   if ('website_url' in input) {
     const raw = safeText(input.website_url) || '';
@@ -97,6 +105,35 @@ export function validateProfilePatch(input = {}) {
   if ('notification_marketing_enabled' in input) patch.notification_marketing_enabled = Boolean(input.notification_marketing_enabled);
   if ('theme_preference' in input) patch.theme_preference = ['system', 'light', 'dark'].includes(input.theme_preference) ? input.theme_preference : 'system';
 
+  if ('topics' in input) {
+    const rawTopics = Array.isArray(input.topics) ? input.topics : [];
+    const topics = rawTopics
+      .map((topic) => String(topic || '').trim().toLowerCase())
+      .filter(Boolean)
+      .filter((topic, index, array) => array.indexOf(topic) === index);
+    if (topics.length > 8) errors.topics = 'Choose up to 8 topics.';
+    if (topics.some((topic) => topic.length > 24)) errors.topics = 'Each topic must be 24 characters or fewer.';
+    patch.topics = topics;
+  }
+
+  if ('featured_links' in input) {
+    const links = Array.isArray(input.featured_links) ? input.featured_links.slice(0, 3).map((item) => ({
+      label: String(item?.label || '').trim().slice(0, 30),
+      url: String(item?.url || '').trim().slice(0, 240)
+    })).filter((item) => item.label && item.url) : [];
+    patch.featured_links = links;
+  }
+
+  if ('highlights' in input) {
+    const highlights = Array.isArray(input.highlights) ? input.highlights.slice(0, 6).map((item) => String(item || '').trim().slice(0, 24)).filter(Boolean) : [];
+    patch.highlights = highlights;
+  }
+
+  if ('pinned_clip_ids' in input) {
+    const pinned = Array.isArray(input.pinned_clip_ids) ? input.pinned_clip_ids.slice(0, 3).map((item) => String(item || '').trim()).filter(Boolean) : [];
+    patch.pinned_clip_ids = pinned;
+  }
+
   if ('username' in input) {
     const username = normalizeUsername(input.username);
     if (!username) {
@@ -121,13 +158,23 @@ function buildDefaultProfile(user) {
     email,
     username: normalizeUsername(user?.handle || base),
     display_name: safeText(user?.displayName) || base,
-    bio: null,
+    bio: '',
+    about: '',
     website_url: null,
     location_text: null,
     tagline: null,
     pronouns: null,
     avatar_url: null,
     banner_url: null,
+    category: '',
+    topics: [],
+    featured_links: [],
+    highlights: [],
+    follower_count: 0,
+    following_count: 0,
+    like_count: 0,
+    activity_item_count: 0,
+    pinned_clip_ids: [],
     is_public: true,
     message_permission: 'everyone',
     mention_permission: 'everyone',
@@ -207,6 +254,62 @@ export async function updateProfileAvatar(user, avatarUrl = null) {
   return result.data?.[0] || null;
 }
 
+export async function listClipsForUser(userId = '') {
+  if (!userId) return [];
+  const result = await supabaseFetch('profile_clips', {
+    query: `user_id=eq.${encodeURIComponent(String(userId))}&select=*&order=created_at.desc`
+  });
+  return Array.isArray(result.data) ? result.data : [];
+}
+
+export async function createClipForUser(user, input = {}) {
+  await getOrCreateProfileForUser(user);
+  const title = String(input.title || '').trim().slice(0, 80);
+  const videoUrl = safeText(input.videoUrl) || null;
+  const thumbnailUrl = safeText(input.thumbnailUrl) || null;
+  const durationSeconds = Number.isFinite(Number(input.durationSeconds)) ? Math.max(0, Math.floor(Number(input.durationSeconds))) : null;
+  if (!thumbnailUrl) throw new Error('Clip thumbnail is required.');
+  const result = await supabaseFetch('profile_clips', {
+    method: 'POST',
+    body: {
+      user_id: String(user.id),
+      thumbnail_url: thumbnailUrl,
+      video_url: videoUrl,
+      title: title || null,
+      duration_seconds: durationSeconds
+    },
+    prefer: 'return=representation'
+  });
+  const clips = await listClipsForUser(user.id);
+  await supabaseFetch('profiles', {
+    method: 'PATCH',
+    query: `user_id=eq.${encodeURIComponent(String(user.id))}`,
+    body: {
+      activity_item_count: clips.length,
+      updated_at: new Date().toISOString()
+    }
+  });
+  return result.data?.[0] || null;
+}
+
+export async function deleteClipForUser(user, clipId = '') {
+  if (!clipId) return false;
+  await supabaseFetch('profile_clips', {
+    method: 'DELETE',
+    query: `id=eq.${encodeURIComponent(String(clipId))}&user_id=eq.${encodeURIComponent(String(user.id))}`
+  });
+  const clips = await listClipsForUser(user.id);
+  await supabaseFetch('profiles', {
+    method: 'PATCH',
+    query: `user_id=eq.${encodeURIComponent(String(user.id))}`,
+    body: {
+      activity_item_count: clips.length,
+      updated_at: new Date().toISOString()
+    }
+  });
+  return true;
+}
+
 export function toPublicProfile(profile) {
   if (!profile) return null;
   return {
@@ -219,6 +322,16 @@ export function toPublicProfile(profile) {
     location_text: profile.location_text,
     tagline: profile.tagline,
     pronouns: profile.pronouns,
+    about: profile.about || '',
+    category: profile.category || '',
+    topics: Array.isArray(profile.topics) ? profile.topics : [],
+    featured_links: Array.isArray(profile.featured_links) ? profile.featured_links : [],
+    highlights: Array.isArray(profile.highlights) ? profile.highlights : [],
+    pinned_clip_ids: Array.isArray(profile.pinned_clip_ids) ? profile.pinned_clip_ids : [],
+    follower_count: Number(profile.follower_count || 0),
+    following_count: Number(profile.following_count || 0),
+    like_count: Number(profile.like_count || 0),
+    activity_item_count: Number(profile.activity_item_count || 0),
     avatar_url: profile.avatar_url,
     banner_url: profile.banner_url,
     is_public: profile.is_public,

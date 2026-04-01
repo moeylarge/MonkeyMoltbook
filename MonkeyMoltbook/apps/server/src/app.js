@@ -14,7 +14,7 @@ import { addAgentReply, addLiveMessage, createLiveSession, endLiveSession, expor
 import { createCheckoutSession, creditsEnabled, ensureCreditProducts, getSpendRules, getWallet, grantCredits, listCreditProducts, listCreditTransactions, spendCredits } from './lib/credits.js';
 import { applySessionCookie, getAccountMe, getSessionResponse, logoutSession, startEmailAuth, verifyEmailAuth } from './lib/moltmail-auth.js';
 import { archiveThread, createThread, getAuditSummary, getBootstrap, getInbox, getOutbox, getThread, getUnreadCount, markThreadRead, pinMessage, replyThread, searchRecipients, togglePinThread, toggleReaction, unsendMessage } from './lib/moltmail-data.js';
-import { getOrCreateProfileForUser, getProfileByUsername, isProfileStorageEnabled, toPublicProfile, updateProfileAvatar, updateProfileForUser } from './lib/profile-storage.js';
+import { createClipForUser, deleteClipForUser, getOrCreateProfileForUser, getProfileByUsername, isProfileStorageEnabled, listClipsForUser, toPublicProfile, updateProfileAvatar, updateProfileForUser } from './lib/profile-storage.js';
 
 const PROFILE_MEDIA_DIR = process.env.VERCEL ? '/tmp/monkeymoltbook-profile-media' : path.join(process.cwd(), 'data', 'profile-media');
 
@@ -77,7 +77,8 @@ app.get('/profile/me', async (req, res) => {
   }
   try {
     const profile = await getOrCreateProfileForUser(session.user);
-    res.json({ ok: true, profile });
+    const clips = await listClipsForUser(session.user.id);
+    res.json({ ok: true, profile, clips });
   } catch (error) {
     res.status(500).json({ ok: false, code: 'PROFILE_ME_FAILED', message: String(error?.message || error) });
   }
@@ -122,7 +123,8 @@ app.get('/profile/:username', async (req, res) => {
       res.status(403).json({ ok: false, code: 'PROFILE_PRIVATE', message: 'This profile is private.' });
       return;
     }
-    res.json({ ok: true, profile: ownerView ? profile : toPublicProfile(profile), ownerView });
+    const clips = await listClipsForUser(profile.user_id);
+    res.json({ ok: true, profile: ownerView ? profile : toPublicProfile(profile), ownerView, clips });
   } catch (error) {
     res.status(500).json({ ok: false, code: 'PROFILE_FETCH_FAILED', message: String(error?.message || error) });
   }
@@ -189,6 +191,46 @@ app.delete('/profile/me/avatar', async (req, res) => {
     res.json({ ok: true, profile });
   } catch (error) {
     res.status(500).json({ ok: false, code: 'AVATAR_REMOVE_FAILED', message: String(error?.message || error) });
+  }
+});
+
+app.post('/profile/me/clips', async (req, res) => {
+  const session = getSessionResponse(req);
+  if (!session.authenticated || !session.user?.id) {
+    res.status(401).json({ ok: false, code: 'UNAUTHENTICATED', message: 'Sign in to continue.' });
+    return;
+  }
+  if (!isProfileStorageEnabled()) {
+    res.status(503).json({ ok: false, code: 'PROFILE_STORAGE_DISABLED', message: 'Profile storage is not configured.' });
+    return;
+  }
+  try {
+    const clip = await createClipForUser(session.user, req.body || {});
+    const clips = await listClipsForUser(session.user.id);
+    const profile = await getOrCreateProfileForUser(session.user);
+    res.json({ ok: true, clip, clips, profile });
+  } catch (error) {
+    res.status(400).json({ ok: false, code: 'CLIP_CREATE_FAILED', message: String(error?.message || error) });
+  }
+});
+
+app.delete('/profile/me/clips/:clipId', async (req, res) => {
+  const session = getSessionResponse(req);
+  if (!session.authenticated || !session.user?.id) {
+    res.status(401).json({ ok: false, code: 'UNAUTHENTICATED', message: 'Sign in to continue.' });
+    return;
+  }
+  if (!isProfileStorageEnabled()) {
+    res.status(503).json({ ok: false, code: 'PROFILE_STORAGE_DISABLED', message: 'Profile storage is not configured.' });
+    return;
+  }
+  try {
+    await deleteClipForUser(session.user, req.params.clipId);
+    const clips = await listClipsForUser(session.user.id);
+    const profile = await getOrCreateProfileForUser(session.user);
+    res.json({ ok: true, clips, profile });
+  } catch (error) {
+    res.status(400).json({ ok: false, code: 'CLIP_DELETE_FAILED', message: String(error?.message || error) });
   }
 });
 

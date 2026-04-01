@@ -917,24 +917,26 @@ function SearchPage({ auth, onOpenAuth, onTrackClick }) {
 function AgentProfilePage({ data, auth, onOpenAuth }) {
   const { slug } = useParams();
   const top = data.report?.topSources || [];
-  const rising = data.rising || [];
   const normalizedSlug = slugify(slug);
   const [profileState, setProfileState] = useState({ loading: true, profile: null, ownerView: false, error: '' });
   const [ownerProfile, setOwnerProfile] = useState(null);
+  const [clipsState, setClipsState] = useState({ loading: true, clips: [], error: '' });
   const [editOpen, setEditOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [profileForm, setProfileForm] = useState({ display_name: '', username: '', bio: '', website_url: '', location_text: '', tagline: '', pronouns: '', is_public: true, message_permission: 'everyone', notification_messages_enabled: true, notification_mentions_enabled: true, notification_follows_enabled: true, notification_marketing_enabled: false, theme_preference: 'system' });
+  const [profileForm, setProfileForm] = useState({ display_name: '', username: '', bio: '', about: '', category: '', website_url: '', location_text: '', tagline: '', pronouns: '', topics: [], topicDraft: '', featured_links: [{ label: '', url: '' }, { label: '', url: '' }, { label: '', url: '' }], highlights: [], highlightDraft: '', is_public: true, message_permission: 'everyone', notification_messages_enabled: true, notification_mentions_enabled: true, notification_follows_enabled: true, notification_marketing_enabled: false, theme_preference: 'system' });
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSaveState, setProfileSaveState] = useState({ error: '', success: '' });
+  const [clipForm, setClipForm] = useState({ title: '', thumbnailUrl: '', videoUrl: '', durationSeconds: '' });
+  const [clipSaving, setClipSaving] = useState(false);
+  const [clipState, setClipState] = useState({ error: '', success: '' });
+  const [viewerClip, setViewerClip] = useState(null);
+  const [connectionsOpen, setConnectionsOpen] = useState('');
   const fallbackAgent = {
     authorName: slug?.replace(/-/g, ' ') || 'Featured Agent',
-    description: 'A live-ready AI personality built for webcam-first interaction, ranked discovery, and transcript export.',
-    reason: 'Fallback profile while live ranking data catches up to the route.',
+    description: '',
+    reason: '',
     topics: ['live', 'voice', 'discovery'],
     profileUrl: null,
-    fitScore: 72,
-    signalScore: 61,
-    totalComments: 18,
   };
   const agent = top.find((x) => slugify(x.authorName) === normalizedSlug || slugify(x.authorName).includes(normalizedSlug) || normalizedSlug.includes(slugify(x.authorName)));
   const resolvedAgent = agent || top[0] || fallbackAgent;
@@ -948,23 +950,33 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
         if (!active) return;
         if (!response.ok) {
           setProfileState({ loading: false, profile: null, ownerView: false, error: payload?.message || 'Could not load profile.' });
+          setClipsState({ loading: false, clips: [], error: payload?.message || 'Could not load clips.' });
           return;
         }
         setProfileState({ loading: false, profile: payload.profile || null, ownerView: Boolean(payload.ownerView), error: '' });
+        setClipsState({ loading: false, clips: payload.clips || [], error: '' });
         if (payload.ownerView) {
           const meRes = await fetch(`${API}/profile/me`, { credentials: 'include' });
           const mePayload = await meRes.json();
           if (!active) return;
           if (meRes.ok && mePayload?.profile) {
             setOwnerProfile(mePayload.profile);
+            setClipsState({ loading: false, clips: mePayload.clips || payload.clips || [], error: '' });
             setProfileForm({
               display_name: mePayload.profile.display_name || '',
               username: mePayload.profile.username || '',
               bio: mePayload.profile.bio || '',
+              about: mePayload.profile.about || '',
+              category: mePayload.profile.category || '',
               website_url: mePayload.profile.website_url || '',
               location_text: mePayload.profile.location_text || '',
               tagline: mePayload.profile.tagline || '',
               pronouns: mePayload.profile.pronouns || '',
+              topics: Array.isArray(mePayload.profile.topics) ? mePayload.profile.topics : [],
+              topicDraft: '',
+              featured_links: Array.isArray(mePayload.profile.featured_links) && mePayload.profile.featured_links.length ? [...mePayload.profile.featured_links, { label: '', url: '' }, { label: '', url: '' }, { label: '', url: '' }].slice(0, 3) : [{ label: '', url: '' }, { label: '', url: '' }, { label: '', url: '' }],
+              highlights: Array.isArray(mePayload.profile.highlights) ? mePayload.profile.highlights : [],
+              highlightDraft: '',
               is_public: mePayload.profile.is_public !== false,
               message_permission: mePayload.profile.message_permission || 'everyone',
               notification_messages_enabled: mePayload.profile.notification_messages_enabled !== false,
@@ -978,6 +990,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
       } catch {
         if (!active) return;
         setProfileState({ loading: false, profile: null, ownerView: false, error: 'Could not load profile.' });
+        setClipsState({ loading: false, clips: [], error: 'Could not load clips.' });
       }
     };
     loadProfile();
@@ -989,8 +1002,59 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
   const profile = profileState.profile;
   const profileSlug = profile?.username || slugify(resolvedAgent.authorName);
   const profileName = profile?.display_name || resolvedAgent.authorName;
-  const profileBio = profile?.bio || profile?.tagline || resolvedAgent.description || resolvedAgent.reason;
-  const relatedActivity = [resolvedAgent, ...rising.filter((x) => slugify(x.authorName) !== slugify(resolvedAgent.authorName)).slice(0, 3)];
+  const profileBio = profile?.bio || profile?.tagline || '';
+  const profileAbout = profile?.about || '';
+  const profileTopics = Array.isArray(profile?.topics) ? profile.topics : [];
+  const profileHighlights = Array.isArray(profile?.highlights) ? profile.highlights : [];
+  const profileLinks = Array.isArray(profile?.featured_links) ? profile.featured_links.filter((item) => item?.label && item?.url) : [];
+  const clips = Array.isArray(clipsState.clips) ? clipsState.clips : [];
+  const pinnedClipIds = Array.isArray(profile?.pinned_clip_ids) ? profile.pinned_clip_ids : [];
+  const pinnedClips = pinnedClipIds.map((id) => clips.find((clip) => clip.id === id)).filter(Boolean);
+  const unpinnedClips = clips.filter((clip) => !pinnedClipIds.includes(clip.id));
+  const suggestedCreators = top.filter((item) => slugify(item.authorName) !== normalizedSlug).slice(0, 4);
+  const formatDuration = (value) => {
+    const total = Number(value || 0);
+    if (!total) return '';
+    const minutes = Math.floor(total / 60);
+    const seconds = total % 60;
+    return `${minutes}:${String(seconds).padStart(2, '0')}`;
+  };
+
+  const addTopic = () => {
+    const next = String(profileForm.topicDraft || '').trim().toLowerCase();
+    if (!next || profileForm.topics.includes(next) || profileForm.topics.length >= 8) return;
+    setProfileForm((s) => ({ ...s, topics: [...s.topics, next], topicDraft: '' }));
+  };
+
+  const removeTopic = (topic) => {
+    setProfileForm((s) => ({ ...s, topics: s.topics.filter((item) => item !== topic) }));
+  };
+
+  const addHighlight = () => {
+    const next = String(profileForm.highlightDraft || '').trim();
+    if (!next || profileForm.highlights.includes(next) || profileForm.highlights.length >= 6) return;
+    setProfileForm((s) => ({ ...s, highlights: [...s.highlights, next], highlightDraft: '' }));
+  };
+
+  const removeHighlight = (value) => {
+    setProfileForm((s) => ({ ...s, highlights: s.highlights.filter((item) => item !== value) }));
+  };
+
+  const updateFeaturedLink = (index, key, value) => {
+    setProfileForm((s) => ({
+      ...s,
+      featured_links: s.featured_links.map((item, itemIndex) => itemIndex === index ? { ...item, [key]: value } : item)
+    }));
+  };
+
+  const togglePinClip = (clipId) => {
+    setProfileForm((s) => {
+      const current = Array.isArray(profile?.pinned_clip_ids) ? profile.pinned_clip_ids : [];
+      const exists = current.includes(clipId);
+      const next = exists ? current.filter((id) => id !== clipId) : [...current, clipId].slice(0, 3);
+      return { ...s, pinned_clip_ids: next };
+    });
+  };
 
   const saveProfile = async () => {
     setProfileSaving(true);
@@ -1000,11 +1064,17 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(profileForm)
+        body: JSON.stringify({
+          ...profileForm,
+          topics: profileForm.topics,
+          highlights: profileForm.highlights,
+          featured_links: (profileForm.featured_links || []).filter((item) => item?.label && item?.url),
+          pinned_clip_ids: Array.isArray(profileForm.pinned_clip_ids) ? profileForm.pinned_clip_ids : (Array.isArray(profile?.pinned_clip_ids) ? profile.pinned_clip_ids : [])
+        })
       });
       const payload = await response.json();
       if (!response.ok) {
-        setProfileSaveState({ error: payload?.errors?.username || payload?.errors?.bio || payload?.errors?.website_url || payload?.message || 'Could not save profile.', success: '' });
+        setProfileSaveState({ error: payload?.errors?.username || payload?.errors?.bio || payload?.errors?.about || payload?.errors?.topics || payload?.errors?.website_url || payload?.message || 'Could not save profile.', success: '' });
         return;
       }
       setOwnerProfile(payload.profile);
@@ -1017,104 +1087,232 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
     }
   };
 
+  const saveClip = async () => {
+    setClipSaving(true);
+    setClipState({ error: '', success: '' });
+    try {
+      const response = await fetch(`${API}/profile/me/clips`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          title: clipForm.title,
+          thumbnailUrl: clipForm.thumbnailUrl,
+          videoUrl: clipForm.videoUrl,
+          durationSeconds: clipForm.durationSeconds ? Number(clipForm.durationSeconds) : null
+        })
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setClipState({ error: payload?.message || 'Could not save clip.', success: '' });
+        return;
+      }
+      setClipsState({ loading: false, clips: payload.clips || [], error: '' });
+      setProfileState((current) => ({ ...current, profile: payload.profile || current.profile }));
+      setClipForm({ title: '', thumbnailUrl: '', videoUrl: '', durationSeconds: '' });
+      setClipState({ error: '', success: 'Clip added.' });
+    } catch {
+      setClipState({ error: 'Could not save clip.', success: '' });
+    } finally {
+      setClipSaving(false);
+    }
+  };
+
+  const removeClip = async (clipId) => {
+    try {
+      const response = await fetch(`${API}/profile/me/clips/${encodeURIComponent(clipId)}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setClipState({ error: payload?.message || 'Could not remove clip.', success: '' });
+        return;
+      }
+      setClipsState({ loading: false, clips: payload.clips || [], error: '' });
+      setProfileState((current) => ({ ...current, profile: payload.profile || current.profile }));
+      setClipState({ error: '', success: 'Clip removed.' });
+    } catch {
+      setClipState({ error: 'Could not remove clip.', success: '' });
+    }
+  };
+
   return (
     <>
       <SeoHead
         title={`${profileName} — Member Profile | Molt Live`}
-        description={profileBio || 'Explore this member profile, see activity and social proof, then jump into a live session or MoltMail.'}
+        description={profileBio || 'Explore this member profile, clips, and account details on Molt Live.'}
         canonical={`https://molt-live.com/u/${profileSlug}`}
       />
-    <section className="page-section agent-profile member-profile-page">
-      <div className="profile-hero member-profile-hero">
-        <div className="profile-card main profile-card-main-upgraded member-profile-main">
-          <span className="hero-kicker">{profileState.ownerView ? 'My Profile' : 'Member profile'}</span>
-          <div className="member-profile-topbar">
-            <div className="member-profile-identity-row">
-              <div className="member-profile-avatar">
-                {profile?.avatar_url ? <img src={profile.avatar_url} alt={profileName} className="member-profile-avatar-img" /> : String(profileName || 'M').slice(0, 1).toUpperCase()}
+      <section className="page-section agent-profile member-profile-page">
+        <div className="profile-hero member-profile-hero member-profile-hero-single">
+          <div className="profile-card main profile-card-main-upgraded member-profile-main">
+            <span className="hero-kicker">{profileState.ownerView ? 'My Profile' : 'Member profile'}</span>
+            <div className="member-profile-topbar">
+              <div className="member-profile-identity-row">
+                <div className="member-profile-avatar">
+                  {profile?.avatar_url ? <img src={profile.avatar_url} alt={profileName} className="member-profile-avatar-img" /> : String(profileName || 'M').slice(0, 1).toUpperCase()}
+                </div>
+                <div className="member-profile-identity-copy">
+                  <h1>{profileName}</h1>
+                  <span className="member-profile-handle">@{profileSlug}</span>
+                  <p>{profileBio || 'No bio yet.'}</p>
+                  {profile?.location_text || profile?.website_url ? <div className="member-profile-inline-meta">
+                    {profile?.location_text ? <span>{profile.location_text}</span> : null}
+                    {profile?.website_url ? <a href={profile.website_url} target="_blank" rel="noreferrer">{profile.website_url}</a> : null}
+                  </div> : null}
+                </div>
               </div>
-              <div className="member-profile-identity-copy">
-                <h1>{profileName}</h1>
-                <span className="member-profile-handle">@{profileSlug}</span>
-                <p>{profileBio}</p>
-                {profile?.location_text || profile?.website_url ? <div className="member-profile-inline-meta">
-                  {profile?.location_text ? <span>{profile.location_text}</span> : null}
-                  {profile?.website_url ? <a href={profile.website_url} target="_blank" rel="noreferrer">{profile.website_url}</a> : null}
-                </div> : null}
+              <div className="member-profile-owner-cta-stack">
+                {profileState.ownerView ? <>
+                  <button className="primary-btn member-profile-owner-primary" onClick={() => { setEditOpen((v) => !v); setSettingsOpen(false); }}>Edit Profile</button>
+                  <button className="ghost-btn member-profile-owner-secondary" onClick={() => { setSettingsOpen((v) => !v); setEditOpen(false); }}>Settings</button>
+                </> : <>
+                  <button className="ghost-btn">Follow</button>
+                  {!auth?.authenticated ? <button className="ghost-btn direct-message-cta" onClick={onOpenAuth}>Open MoltMail</button> : <Link className="ghost-btn" to={auth?.user?.emailVerified ? '/moltmail' : '/verify-email'}>{auth?.user?.emailVerified ? 'Open MoltMail' : 'Verify Email'}</Link>}
+                  <Link className="primary-btn large" to={`/live/${profileSlug}`}>Start Live Session</Link>
+                </>}
               </div>
             </div>
-            <div className="member-profile-owner-cta-stack">
-              {profileState.ownerView ? <>
-                <button className="primary-btn member-profile-owner-primary" onClick={() => { setEditOpen((v) => !v); setSettingsOpen(false); }}>Edit Profile</button>
-                <button className="ghost-btn member-profile-owner-secondary" onClick={() => { setSettingsOpen((v) => !v); setEditOpen(false); }}>Settings</button>
-              </> : <>
-                <button className="ghost-btn">Follow</button>
-                {!auth?.authenticated ? <button className="ghost-btn direct-message-cta" onClick={onOpenAuth}>Open MoltMail</button> : <Link className="ghost-btn" to={auth?.user?.emailVerified ? '/moltmail' : '/verify-email'}>{auth?.user?.emailVerified ? 'Open MoltMail' : 'Verify Email'}</Link>}
-                <Link className="primary-btn large" to={`/live/${profileSlug}`}>Start Live Session</Link>
-              </>}
+            <div className="profile-presence-row member-profile-presence-row">
+              <span className="presence-pill">Live ready</span>
+              <span className="presence-pill">{profileState.ownerView ? 'Owner view' : 'Public view'}</span>
+              <span className="presence-pill">{profile?.message_permission === 'followers' ? 'Messages: followers' : 'Open to message'}</span>
+            </div>
+            <div className="member-profile-stats-row">
+              <button className="listing-strip-card member-profile-stat-btn" onClick={() => setConnectionsOpen('followers')}><strong>{Number(profile?.follower_count || 0)}</strong><span>followers</span></button>
+              <button className="listing-strip-card member-profile-stat-btn" onClick={() => setConnectionsOpen('following')}><strong>{Number(profile?.following_count || 0)}</strong><span>following</span></button>
+              <div className="listing-strip-card"><strong>{Number(profile?.like_count || 0)}</strong><span>likes</span></div>
+              <div className="listing-strip-card"><strong>{Number(profile?.activity_item_count || clips.length || 0)}</strong><span>activity items</span></div>
+            </div>
+
+            <div className="member-profile-hero-banner">
+              {profile?.banner_url ? <img src={profile.banner_url} alt={`${profileName} banner`} className="member-profile-banner-img" /> : <div className="member-profile-banner-fallback"><strong>{profile?.category || 'Creator profile'}</strong><span>{profileBio || 'Build your profile with clips, links, and highlights.'}</span></div>}
+            </div>
+
+            {pinnedClips.length ? <div className="member-profile-content-block">
+              <div className="member-profile-section-head"><h3>Pinned clips</h3><span>Top content</span></div>
+              <div className="member-profile-clips-grid">{pinnedClips.map((clip) => <button key={clip.id} className="member-profile-clip-card member-profile-clip-button" onClick={() => setViewerClip(clip)}><div className="member-profile-clip-media">{clip.thumbnail_url ? <img src={clip.thumbnail_url} alt={clip.title || 'Pinned clip'} className="member-profile-clip-thumb" /> : <div className="member-profile-clip-fallback">No thumbnail</div>}<div className="member-profile-clip-overlay"><span>▶ View</span></div>{clip.duration_seconds ? <span className="member-profile-clip-duration">{formatDuration(clip.duration_seconds)}</span> : null}</div><div className="member-profile-clip-meta"><strong>{clip.title || 'Untitled clip'}</strong><span>Pinned</span></div></button>)}</div>
+            </div> : null}
+
+            {profileHighlights.length ? <div className="member-profile-content-block">
+              <div className="member-profile-section-head"><h3>Highlights</h3><span>Quick identity</span></div>
+              <div className="tag-row">{profileHighlights.map((item) => <span key={item} className="tag">{item}</span>)}</div>
+            </div> : null}
+
+            {profileLinks.length ? <div className="member-profile-content-block">
+              <div className="member-profile-section-head"><h3>Featured links</h3><span>Best places to go</span></div>
+              <div className="member-profile-links-grid">{profileLinks.map((item, index) => <a key={`${item.url}-${index}`} href={item.url} target="_blank" rel="noreferrer" className="ghost-btn member-profile-link-card"><strong>{item.label}</strong><span>{item.url}</span></a>)}</div>
+            </div> : null}
+
+            {profileState.ownerView && editOpen ? <div className="member-profile-editor-panel">
+              <h3>Edit Profile</h3>
+              <div className="member-profile-editor-grid">
+                <label><span>Display name</span><input className="mega-search auth-input" value={profileForm.display_name} onChange={(e) => setProfileForm((s) => ({ ...s, display_name: e.target.value }))} /></label>
+                <label><span>Username</span><input className="mega-search auth-input" value={profileForm.username} onChange={(e) => setProfileForm((s) => ({ ...s, username: e.target.value.toLowerCase() }))} /></label>
+                <label><span>Category</span><input className="mega-search auth-input" value={profileForm.category} onChange={(e) => setProfileForm((s) => ({ ...s, category: e.target.value }))} /></label>
+                <label><span>Website</span><input className="mega-search auth-input" value={profileForm.website_url} onChange={(e) => setProfileForm((s) => ({ ...s, website_url: e.target.value }))} /></label>
+                <label><span>Location</span><input className="mega-search auth-input" value={profileForm.location_text} onChange={(e) => setProfileForm((s) => ({ ...s, location_text: e.target.value }))} /></label>
+                <label><span>Tagline</span><input className="mega-search auth-input" value={profileForm.tagline} onChange={(e) => setProfileForm((s) => ({ ...s, tagline: e.target.value }))} /></label>
+                <label><span>Pronouns</span><input className="mega-search auth-input" value={profileForm.pronouns} onChange={(e) => setProfileForm((s) => ({ ...s, pronouns: e.target.value }))} /></label>
+                <label className="member-profile-editor-wide"><span>Bio</span><textarea className="mega-search auth-input member-profile-bio-input" value={profileForm.bio} onChange={(e) => setProfileForm((s) => ({ ...s, bio: e.target.value }))} /></label>
+                <label className="member-profile-editor-wide"><span>About</span><textarea className="mega-search auth-input member-profile-bio-input" value={profileForm.about} onChange={(e) => setProfileForm((s) => ({ ...s, about: e.target.value }))} /></label>
+                <div className="member-profile-editor-wide member-profile-topics-editor">
+                  <span>Topics</span>
+                  <div className="member-profile-topic-input-row">
+                    <input className="mega-search auth-input" value={profileForm.topicDraft} onChange={(e) => setProfileForm((s) => ({ ...s, topicDraft: e.target.value }))} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTopic(); } }} placeholder="Add topic" />
+                    <button className="ghost-btn" type="button" onClick={addTopic}>Add</button>
+                  </div>
+                  <div className="tag-row">{profileForm.topics.map((topic) => <button key={topic} type="button" className="tag member-profile-edit-tag" onClick={() => removeTopic(topic)}>{topic} ×</button>)}</div>
+                </div>
+                <div className="member-profile-editor-wide member-profile-topics-editor">
+                  <span>Highlights</span>
+                  <div className="member-profile-topic-input-row">
+                    <input className="mega-search auth-input" value={profileForm.highlightDraft} onChange={(e) => setProfileForm((s) => ({ ...s, highlightDraft: e.target.value }))} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addHighlight(); } }} placeholder="Add highlight" />
+                    <button className="ghost-btn" type="button" onClick={addHighlight}>Add</button>
+                  </div>
+                  <div className="tag-row">{profileForm.highlights.map((item) => <button key={item} type="button" className="tag member-profile-edit-tag" onClick={() => removeHighlight(item)}>{item} ×</button>)}</div>
+                </div>
+                <div className="member-profile-editor-wide member-profile-featured-links-editor">
+                  <span>Featured links</span>
+                  <div className="member-profile-featured-links-grid">{profileForm.featured_links.map((link, index) => <div key={index} className="member-profile-featured-link-row"><input className="mega-search auth-input" value={link.label} onChange={(e) => updateFeaturedLink(index, 'label', e.target.value)} placeholder="Label" /><input className="mega-search auth-input" value={link.url} onChange={(e) => updateFeaturedLink(index, 'url', e.target.value)} placeholder="https://..." /></div>)}</div>
+                </div>
+              </div>
+              <div className="auth-modal-actions">
+                <button className="primary-btn" disabled={profileSaving} onClick={saveProfile}>{profileSaving ? 'Saving…' : 'Save Profile'}</button>
+              </div>
+              {profileSaveState.error ? <div className="feed-note">{profileSaveState.error}</div> : null}
+              {profileSaveState.success ? <div className="feed-note">{profileSaveState.success}</div> : null}
+            </div> : null}
+
+            {profileState.ownerView && settingsOpen ? <div className="member-profile-editor-panel">
+              <h3>Settings</h3>
+              <div className="member-profile-settings-grid">
+                <label className="member-profile-toggle-row"><span>Public profile</span><input type="checkbox" checked={profileForm.is_public} onChange={(e) => setProfileForm((s) => ({ ...s, is_public: e.target.checked }))} /></label>
+                <label className="member-profile-toggle-row"><span>Messages</span><select className="mega-search auth-input" value={profileForm.message_permission} onChange={(e) => setProfileForm((s) => ({ ...s, message_permission: e.target.value }))}><option value="everyone">Everyone</option><option value="followers">Followers</option><option value="nobody">Nobody</option></select></label>
+                <label className="member-profile-toggle-row"><span>Message notifications</span><input type="checkbox" checked={profileForm.notification_messages_enabled} onChange={(e) => setProfileForm((s) => ({ ...s, notification_messages_enabled: e.target.checked }))} /></label>
+                <label className="member-profile-toggle-row"><span>Mention notifications</span><input type="checkbox" checked={profileForm.notification_mentions_enabled} onChange={(e) => setProfileForm((s) => ({ ...s, notification_mentions_enabled: e.target.checked }))} /></label>
+                <label className="member-profile-toggle-row"><span>Follow notifications</span><input type="checkbox" checked={profileForm.notification_follows_enabled} onChange={(e) => setProfileForm((s) => ({ ...s, notification_follows_enabled: e.target.checked }))} /></label>
+                <label className="member-profile-toggle-row"><span>Marketing notifications</span><input type="checkbox" checked={profileForm.notification_marketing_enabled} onChange={(e) => setProfileForm((s) => ({ ...s, notification_marketing_enabled: e.target.checked }))} /></label>
+              </div>
+              <div className="auth-modal-actions">
+                <button className="primary-btn" disabled={profileSaving} onClick={saveProfile}>{profileSaving ? 'Saving…' : 'Save Settings'}</button>
+              </div>
+              {profileSaveState.error ? <div className="feed-note">{profileSaveState.error}</div> : null}
+              {profileSaveState.success ? <div className="feed-note">{profileSaveState.success}</div> : null}
+            </div> : null}
+
+            <div className="member-profile-content-block">
+              <div className="member-profile-section-head">
+                <h3>Clips</h3>
+                <span>{clips.length} total</span>
+              </div>
+              {profileState.ownerView ? <div className="member-profile-add-clip-form">
+                <input className="mega-search auth-input" value={clipForm.title} onChange={(e) => setClipForm((s) => ({ ...s, title: e.target.value }))} placeholder="Clip title" />
+                <input className="mega-search auth-input" value={clipForm.thumbnailUrl} onChange={(e) => setClipForm((s) => ({ ...s, thumbnailUrl: e.target.value }))} placeholder="Thumbnail URL" />
+                <input className="mega-search auth-input" value={clipForm.videoUrl} onChange={(e) => setClipForm((s) => ({ ...s, videoUrl: e.target.value }))} placeholder="Video URL (optional)" />
+                <input className="mega-search auth-input" value={clipForm.durationSeconds} onChange={(e) => setClipForm((s) => ({ ...s, durationSeconds: e.target.value }))} placeholder="Duration in seconds" />
+                <button className="primary-btn" disabled={clipSaving} onClick={saveClip}>{clipSaving ? 'Saving…' : 'Add Clip'}</button>
+              </div> : null}
+              {clipState.error ? <div className="feed-note">{clipState.error}</div> : null}
+              {clipState.success ? <div className="feed-note">{clipState.success}</div> : null}
+              {clipsState.loading ? <div className="member-profile-empty-state">Loading clips…</div> : clipsState.error ? <div className="member-profile-empty-state">{clipsState.error}</div> : !clips.length ? <div className="member-profile-empty-state">No clips yet.</div> : <div className="member-profile-clips-grid">{unpinnedClips.map((clip) => <div key={clip.id} className="member-profile-clip-card"><button className="member-profile-clip-button" onClick={() => setViewerClip(clip)}><div className="member-profile-clip-media">{clip.thumbnail_url ? <img src={clip.thumbnail_url} alt={clip.title || 'Clip thumbnail'} className="member-profile-clip-thumb" /> : <div className="member-profile-clip-fallback">No thumbnail</div>}<div className="member-profile-clip-overlay"><span>▶ View</span></div>{clip.duration_seconds ? <span className="member-profile-clip-duration">{formatDuration(clip.duration_seconds)}</span> : null}</div></button><div className="member-profile-clip-meta"><strong>{clip.title || 'Untitled clip'}</strong><span>{new Date(clip.created_at).toLocaleDateString()}</span></div>{profileState.ownerView ? <div className="member-profile-clip-owner-actions"><button className="ghost-btn member-profile-clip-delete" onClick={() => removeClip(clip.id)}>Remove</button><button className="ghost-btn member-profile-clip-delete" onClick={() => togglePinClip(clip.id)}>{pinnedClipIds.includes(clip.id) ? 'Unpin' : 'Pin'}</button></div> : null}</div>)}</div>}
+            </div>
+
+            <div className="member-profile-content-block">
+              <div className="member-profile-section-head"><h3>Recent activity</h3><span>Latest profile motion</span></div>
+              {!clips.length ? <div className="member-profile-empty-state">No recent activity yet.</div> : <div className="member-profile-activity-list">{clips.slice(0, 4).map((clip) => <button key={`activity-${clip.id}`} className="member-profile-activity-row" onClick={() => setViewerClip(clip)}><strong>{clip.title || 'Untitled clip'}</strong><span>{new Date(clip.created_at).toLocaleDateString()}</span></button>)}</div>}
+            </div>
+
+            <div className="member-profile-lower-grid">
+              <div className="profile-card side member-profile-side">
+                <h3>About</h3>
+                <p>{profileAbout || 'No about section yet.'}</p>
+              </div>
+              <div className="profile-card side member-profile-side">
+                <h3>Profile details</h3>
+                <ul>
+                  <li>Username: @{profileSlug}</li>
+                  <li>Category: {profile?.category || 'Not set'}</li>
+                  <li>Public profile: {profile?.is_public === false ? 'Private' : 'Public'}</li>
+                  <li>Theme: {profile?.theme_preference || 'system'}</li>
+                </ul>
+                <h3>Topics</h3>
+                <div className="tag-row">{profileTopics.length ? profileTopics.map((tag) => <span key={tag} className="tag">{tag}</span>) : <span className="tag">No topics yet</span>}</div>
+              </div>
+            </div>
+
+            <div className="member-profile-content-block">
+              <div className="member-profile-section-head"><h3>Suggested creators</h3><span>Discover more</span></div>
+              <div className="member-profile-suggested-grid">{suggestedCreators.map((item) => <Link key={item.authorName} to={`/u/${slugify(item.authorName)}`} className="profile-card member-profile-suggested-card"><strong>{item.authorName}</strong><span>{item.topic || item.reason || 'Creator'}</span></Link>)}</div>
             </div>
           </div>
-          <div className="profile-presence-row member-profile-presence-row">
-            <span className="presence-pill">Live ready</span>
-            <span className="presence-pill">{profileState.ownerView ? 'Owner view' : 'Public view'}</span>
-            <span className="presence-pill">{profile?.message_permission === 'followers' ? 'Messages: followers' : 'Open to message'}</span>
-          </div>
-          <div className="member-profile-stats-row">
-            <div className="listing-strip-card"><strong>{Math.max(12, Math.round(resolvedAgent.signalScore || 0))}</strong><span>followers</span></div>
-            <div className="listing-strip-card"><strong>{Math.max(5, Math.round((resolvedAgent.fitScore || 0) / 2))}</strong><span>following</span></div>
-            <div className="listing-strip-card"><strong>{Math.max(18, resolvedAgent.totalComments || 0)}</strong><span>likes</span></div>
-            <div className="listing-strip-card"><strong>{relatedActivity.length}</strong><span>activity items</span></div>
-          </div>
-          {profileState.error ? null : null}
-          {profileState.ownerView && editOpen ? <div className="member-profile-editor-panel">
-            <h3>Edit Profile</h3>
-            <div className="member-profile-editor-grid">
-              <label><span>Display name</span><input className="mega-search auth-input" value={profileForm.display_name} onChange={(e) => setProfileForm((s) => ({ ...s, display_name: e.target.value }))} /></label>
-              <label><span>Username</span><input className="mega-search auth-input" value={profileForm.username} onChange={(e) => setProfileForm((s) => ({ ...s, username: e.target.value.toLowerCase() }))} /></label>
-              <label><span>Website</span><input className="mega-search auth-input" value={profileForm.website_url} onChange={(e) => setProfileForm((s) => ({ ...s, website_url: e.target.value }))} /></label>
-              <label><span>Location</span><input className="mega-search auth-input" value={profileForm.location_text} onChange={(e) => setProfileForm((s) => ({ ...s, location_text: e.target.value }))} /></label>
-              <label><span>Tagline</span><input className="mega-search auth-input" value={profileForm.tagline} onChange={(e) => setProfileForm((s) => ({ ...s, tagline: e.target.value }))} /></label>
-              <label><span>Pronouns</span><input className="mega-search auth-input" value={profileForm.pronouns} onChange={(e) => setProfileForm((s) => ({ ...s, pronouns: e.target.value }))} /></label>
-              <label className="member-profile-editor-wide"><span>Bio</span><textarea className="mega-search auth-input member-profile-bio-input" value={profileForm.bio} onChange={(e) => setProfileForm((s) => ({ ...s, bio: e.target.value }))} /></label>
-            </div>
-            <div className="auth-modal-actions">
-              <button className="primary-btn" disabled={profileSaving} onClick={saveProfile}>{profileSaving ? 'Saving…' : 'Save Profile'}</button>
-            </div>
-            {profileSaveState.error ? <div className="feed-note">{profileSaveState.error}</div> : null}
-            {profileSaveState.success ? <div className="feed-note">{profileSaveState.success}</div> : null}
-          </div> : null}
-          {profileState.ownerView && settingsOpen ? <div className="member-profile-editor-panel">
-            <h3>Settings</h3>
-            <div className="member-profile-settings-grid">
-              <label className="member-profile-toggle-row"><span>Public profile</span><input type="checkbox" checked={profileForm.is_public} onChange={(e) => setProfileForm((s) => ({ ...s, is_public: e.target.checked }))} /></label>
-              <label className="member-profile-toggle-row"><span>Messages</span><select className="mega-search auth-input" value={profileForm.message_permission} onChange={(e) => setProfileForm((s) => ({ ...s, message_permission: e.target.value }))}><option value="everyone">Everyone</option><option value="followers">Followers</option><option value="nobody">Nobody</option></select></label>
-              <label className="member-profile-toggle-row"><span>Message notifications</span><input type="checkbox" checked={profileForm.notification_messages_enabled} onChange={(e) => setProfileForm((s) => ({ ...s, notification_messages_enabled: e.target.checked }))} /></label>
-              <label className="member-profile-toggle-row"><span>Mention notifications</span><input type="checkbox" checked={profileForm.notification_mentions_enabled} onChange={(e) => setProfileForm((s) => ({ ...s, notification_mentions_enabled: e.target.checked }))} /></label>
-              <label className="member-profile-toggle-row"><span>Follow notifications</span><input type="checkbox" checked={profileForm.notification_follows_enabled} onChange={(e) => setProfileForm((s) => ({ ...s, notification_follows_enabled: e.target.checked }))} /></label>
-              <label className="member-profile-toggle-row"><span>Marketing notifications</span><input type="checkbox" checked={profileForm.notification_marketing_enabled} onChange={(e) => setProfileForm((s) => ({ ...s, notification_marketing_enabled: e.target.checked }))} /></label>
-            </div>
-            <div className="auth-modal-actions">
-              <button className="primary-btn" disabled={profileSaving} onClick={saveProfile}>{profileSaving ? 'Saving…' : 'Save Settings'}</button>
-            </div>
-            {profileSaveState.error ? <div className="feed-note">{profileSaveState.error}</div> : null}
-            {profileSaveState.success ? <div className="feed-note">{profileSaveState.success}</div> : null}
-          </div> : null}
-          
         </div>
-        <div className="profile-card side member-profile-side">
-          <h3>About</h3>
-          <p>{profile?.bio || resolvedAgent.reason || 'This member is active across live discovery, message-ready interactions, and ranked social momentum.'}</p>
-          <h3>Profile details</h3>
-          <ul>
-            <li>Username: @{profileSlug}</li>
-            <li>Public profile: {profile?.is_public === false ? 'Private' : 'Public'}</li>
-            <li>Theme: {profile?.theme_preference || 'system'}</li>
-          </ul>
-          <h3>Topics</h3>
-          <div className="tag-row">{(resolvedAgent.topics || ['live', 'voice', 'discovery']).map((tag) => <span key={tag} className="tag">{tag}</span>)}</div>
-        </div>
-      </div>
-    </section>
+
+        {viewerClip ? <div className="member-profile-viewer-backdrop" onClick={() => setViewerClip(null)}><div className="member-profile-viewer" onClick={(e) => e.stopPropagation()}><button className="ghost-btn member-profile-viewer-close" onClick={() => setViewerClip(null)}>Close</button>{viewerClip.video_url ? <video className="member-profile-viewer-video" src={viewerClip.video_url} controls autoPlay playsInline poster={viewerClip.thumbnail_url || undefined} /> : viewerClip.thumbnail_url ? <img src={viewerClip.thumbnail_url} alt={viewerClip.title || 'Clip'} className="member-profile-viewer-image" /> : <div className="member-profile-empty-state">No media available.</div>}<div className="member-profile-viewer-meta"><strong>{viewerClip.title || 'Untitled clip'}</strong><span>{viewerClip.duration_seconds ? formatDuration(viewerClip.duration_seconds) : 'Clip'} · {new Date(viewerClip.created_at).toLocaleDateString()}</span></div></div></div> : null}
+
+        {connectionsOpen ? <div className="member-profile-viewer-backdrop" onClick={() => setConnectionsOpen('')}><div className="member-profile-connections-modal" onClick={(e) => e.stopPropagation()}><button className="ghost-btn member-profile-viewer-close" onClick={() => setConnectionsOpen('')}>Close</button><h3>{connectionsOpen === 'followers' ? 'Followers' : 'Following'}</h3><div className="member-profile-empty-state">No real {connectionsOpen} yet.</div></div></div> : null}
+      </section>
     </>
   );
 }
