@@ -2183,6 +2183,14 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     optimistic: true
   });
 
+  const hydrateConfirmedThread = async (threadId) => {
+    const response = await fetch(`${API}/moltmail/thread/${threadId}`, { credentials: 'include' });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload?.message || 'Could not load thread.');
+    setThreadData({ loading: false, data: payload, error: '' });
+    return payload;
+  };
+
   const sendNewThreadMessage = async ({ submittedCompose, clientMessageId, optimisticThreadId }) => {
     const response = await fetch(`${API}/moltmail/thread`, {
       method: 'POST',
@@ -2200,10 +2208,11 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     setRecipientQuery('');
     setRecipients([]);
     setMobileView('chat');
-    removeOptimisticMessage(clientMessageId);
-    removeOptimisticThread(optimisticThreadId);
     try {
+      await hydrateConfirmedThread(confirmedThreadId);
       await loadMailbox(confirmedThreadId);
+      removeOptimisticMessage(clientMessageId);
+      removeOptimisticThread(optimisticThreadId);
     } catch {}
     return { payload, confirmedThreadId, confirmedMessageId };
   };
@@ -2297,6 +2306,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     markThreadReadLocal(threadId);
     setSelectedThreadId(threadId);
     try {
+      await hydrateConfirmedThread(threadId);
       await loadMailbox(threadId);
       removeOptimisticMessage(clientMessageId);
     } catch {}
