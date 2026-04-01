@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { BrowserRouter, Link, NavLink, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
+import './auth-modal-hotfix.css';
 
 function SeoHead({ title, description, canonical }) {
   useEffect(() => {
@@ -233,7 +234,9 @@ function AuthModal({ open, onClose, onVerified }) {
             <input className="mega-search auth-input" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
             <div className="auth-modal-actions">
               <button className="primary-btn" disabled={submitting || !email.trim()} onClick={() => start('magic_link')}>{submitting ? 'Sending…' : 'Email Me a Link'}</button>
-              <button className="ghost-btn" disabled={submitting || !email.trim()} onClick={() => start('otp')}>Send One-Time Code</button>
+            </div>
+            <div className="auth-status-note auth-status-note-subtle">
+              Prefer a code instead? <button type="button" className="auth-inline-link" disabled={submitting || !email.trim()} onClick={() => start('otp')}>Send one-time code</button>
             </div>
           </>
         ) : (
