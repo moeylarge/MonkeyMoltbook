@@ -2203,7 +2203,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     const confirmedThreadId = payload?.thread?.id || optimisticThreadId;
     const confirmedMessageId = payload?.message?.id || clientMessageId;
     resolveOptimisticMessage(clientMessageId, { id: confirmedMessageId, threadId: confirmedThreadId, status: 'sent', error: '' });
-    resolveOptimisticThread(optimisticThreadId, { id: confirmedThreadId, status: 'sent' });
+    resolveOptimisticThread(optimisticThreadId, { status: 'sent' });
     setSelectedThreadId(confirmedThreadId);
     setRecipientQuery('');
     setRecipients([]);
