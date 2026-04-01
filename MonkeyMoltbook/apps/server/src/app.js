@@ -1,6 +1,7 @@
 import express from 'express';
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { getAgentStats, getNextAgentHook, getNextAgentHooks, listAgents } from './lib/agents.js';
 import { authorsToCsv, buildGrowthMetrics, snapshotsToCsv } from './lib/moltbook-export.js';
 import { getMoltbookIntel, getMoltbookStats, getMoltbookAgents } from './lib/moltbook.js';
@@ -13,9 +14,13 @@ import { addAgentReply, addLiveMessage, createLiveSession, endLiveSession, expor
 import { createCheckoutSession, creditsEnabled, ensureCreditProducts, getSpendRules, getWallet, grantCredits, listCreditProducts, listCreditTransactions, spendCredits } from './lib/credits.js';
 import { applySessionCookie, getAccountMe, getSessionResponse, logoutSession, startEmailAuth, verifyEmailAuth } from './lib/moltmail-auth.js';
 import { archiveThread, createThread, getAuditSummary, getBootstrap, getInbox, getOutbox, getThread, getUnreadCount, markThreadRead, pinMessage, replyThread, searchRecipients, togglePinThread, toggleReaction, unsendMessage } from './lib/moltmail-data.js';
+import { getOrCreateProfileForUser, getProfileByUsername, isProfileStorageEnabled, toPublicProfile, updateProfileAvatar, updateProfileForUser } from './lib/profile-storage.js';
+
+const PROFILE_MEDIA_DIR = process.env.VERCEL ? '/tmp/monkeymoltbook-profile-media' : path.join(process.cwd(), 'data', 'profile-media');
 
 export const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '8mb' }));
+app.use('/profile-media', express.static(PROFILE_MEDIA_DIR));
 
 app.post('/auth/email/start', async (req, res) => {
   const result = await startEmailAuth({
@@ -58,6 +63,133 @@ app.get('/account/me', (req, res) => {
     return;
   }
   res.json(account);
+});
+
+app.get('/profile/me', async (req, res) => {
+  const session = getSessionResponse(req);
+  if (!session.authenticated || !session.user?.id) {
+    res.status(401).json({ ok: false, code: 'UNAUTHENTICATED', message: 'Sign in to continue.' });
+    return;
+  }
+  if (!isProfileStorageEnabled()) {
+    res.status(503).json({ ok: false, code: 'PROFILE_STORAGE_DISABLED', message: 'Profile storage is not configured.' });
+    return;
+  }
+  try {
+    const profile = await getOrCreateProfileForUser(session.user);
+    res.json({ ok: true, profile });
+  } catch (error) {
+    res.status(500).json({ ok: false, code: 'PROFILE_ME_FAILED', message: String(error?.message || error) });
+  }
+});
+
+app.patch('/profile/me', async (req, res) => {
+  const session = getSessionResponse(req);
+  if (!session.authenticated || !session.user?.id) {
+    res.status(401).json({ ok: false, code: 'UNAUTHENTICATED', message: 'Sign in to continue.' });
+    return;
+  }
+  if (!isProfileStorageEnabled()) {
+    res.status(503).json({ ok: false, code: 'PROFILE_STORAGE_DISABLED', message: 'Profile storage is not configured.' });
+    return;
+  }
+  try {
+    const result = await updateProfileForUser(session.user, req.body || {});
+    if (!result.ok) {
+      res.status(400).json({ ok: false, code: 'VALIDATION_FAILED', errors: result.errors || {} });
+      return;
+    }
+    res.json({ ok: true, profile: result.profile });
+  } catch (error) {
+    res.status(500).json({ ok: false, code: 'PROFILE_UPDATE_FAILED', message: String(error?.message || error) });
+  }
+});
+
+app.get('/profile/:username', async (req, res) => {
+  if (!isProfileStorageEnabled()) {
+    res.status(503).json({ ok: false, code: 'PROFILE_STORAGE_DISABLED', message: 'Profile storage is not configured.' });
+    return;
+  }
+  try {
+    const profile = await getProfileByUsername(String(req.params.username || ''));
+    if (!profile) {
+      res.status(404).json({ ok: false, code: 'PROFILE_NOT_FOUND', message: 'Profile not found.' });
+      return;
+    }
+    const session = getSessionResponse(req);
+    const ownerView = Boolean(session.authenticated && session.user?.id && String(session.user.id) === String(profile.user_id));
+    if (!profile.is_public && !ownerView) {
+      res.status(403).json({ ok: false, code: 'PROFILE_PRIVATE', message: 'This profile is private.' });
+      return;
+    }
+    res.json({ ok: true, profile: ownerView ? profile : toPublicProfile(profile), ownerView });
+  } catch (error) {
+    res.status(500).json({ ok: false, code: 'PROFILE_FETCH_FAILED', message: String(error?.message || error) });
+  }
+});
+
+app.post('/profile/me/avatar', async (req, res) => {
+  const session = getSessionResponse(req);
+  if (!session.authenticated || !session.user?.id) {
+    res.status(401).json({ ok: false, code: 'UNAUTHENTICATED', message: 'Sign in to continue.' });
+    return;
+  }
+  if (!isProfileStorageEnabled()) {
+    res.status(503).json({ ok: false, code: 'PROFILE_STORAGE_DISABLED', message: 'Profile storage is not configured.' });
+    return;
+  }
+
+  const dataUrl = String(req.body?.dataUrl || '');
+  const match = dataUrl.match(/^data:(image\/(png|jpeg|jpg|webp));base64,(.+)$/i);
+  if (!match) {
+    res.status(400).json({ ok: false, code: 'INVALID_IMAGE', message: 'Upload a valid PNG, JPG, or WebP image.' });
+    return;
+  }
+
+  const mimeType = match[1].toLowerCase();
+  const ext = mimeType.includes('png') ? 'png' : mimeType.includes('webp') ? 'webp' : 'jpg';
+  const buffer = Buffer.from(match[3], 'base64');
+  if (buffer.length > 5 * 1024 * 1024) {
+    res.status(400).json({ ok: false, code: 'IMAGE_TOO_LARGE', message: 'Avatar must be 5MB or smaller.' });
+    return;
+  }
+
+  try {
+    fs.mkdirSync(PROFILE_MEDIA_DIR, { recursive: true });
+    const key = `${String(session.user.id).replace(/[^a-zA-Z0-9_-]/g, '_')}-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.${ext}`;
+    const outPath = path.join(PROFILE_MEDIA_DIR, key);
+    fs.writeFileSync(outPath, buffer);
+    const avatarUrl = `/profile-media/${key}`;
+    const profile = await updateProfileAvatar(session.user, avatarUrl);
+    res.json({ ok: true, profile, avatarUrl });
+  } catch (error) {
+    res.status(500).json({ ok: false, code: 'AVATAR_UPLOAD_FAILED', message: String(error?.message || error) });
+  }
+});
+
+app.delete('/profile/me/avatar', async (req, res) => {
+  const session = getSessionResponse(req);
+  if (!session.authenticated || !session.user?.id) {
+    res.status(401).json({ ok: false, code: 'UNAUTHENTICATED', message: 'Sign in to continue.' });
+    return;
+  }
+  if (!isProfileStorageEnabled()) {
+    res.status(503).json({ ok: false, code: 'PROFILE_STORAGE_DISABLED', message: 'Profile storage is not configured.' });
+    return;
+  }
+  try {
+    const current = await getOrCreateProfileForUser(session.user);
+    const currentUrl = String(current?.avatar_url || '');
+    if (currentUrl.startsWith('/profile-media/')) {
+      const filename = currentUrl.replace('/profile-media/', '');
+      const targetPath = path.join(PROFILE_MEDIA_DIR, filename);
+      if (fs.existsSync(targetPath)) fs.unlinkSync(targetPath);
+    }
+    const profile = await updateProfileAvatar(session.user, null);
+    res.json({ ok: true, profile });
+  } catch (error) {
+    res.status(500).json({ ok: false, code: 'AVATAR_REMOVE_FAILED', message: String(error?.message || error) });
+  }
 });
 
 app.post('/account/resend-verification', async (req, res) => {
