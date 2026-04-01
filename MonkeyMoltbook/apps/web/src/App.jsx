@@ -995,6 +995,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
   const authBaseSlug = slugify(String(auth?.user?.email || '').split('@')[0]);
   const authDisplaySlug = slugify(auth?.user?.displayName || '');
   const isOwnRequestedProfile = Boolean(normalizedSlug && (normalizedSlug === authBaseSlug || normalizedSlug === authDisplaySlug));
+  const showOwnerEditAffordances = Boolean(profileState.ownerView || isOwnRequestedProfile);
   const profileBio = profile?.bio || profile?.tagline || '';
   const profileAbout = profile?.about || '';
   const profileTopics = Array.isArray(profile?.topics) ? profile.topics : [];
@@ -1093,7 +1094,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
       <section className="page-section agent-profile member-profile-page member-profile-page-shell">
         <div className="member-profile-grid">
           <div className="profile-card main profile-card-main-upgraded member-profile-main member-profile-left-column">
-            <span className="hero-kicker">{profileState.ownerView ? 'My Profile' : 'Member profile'}</span>
+            <span className="hero-kicker">{showOwnerEditAffordances ? 'My Profile' : 'Member profile'}</span>
             <div className="member-profile-topbar">
               <div className="member-profile-identity-row">
                 <div className="member-profile-avatar">
@@ -1110,7 +1111,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
                 </div>
               </div>
               <div className="member-profile-owner-cta-stack">
-                {profileState.ownerView ? <>
+                {showOwnerEditAffordances ? <>
                   <button className="primary-btn member-profile-owner-primary" onClick={() => { setEditOpen((v) => !v); }}>Edit Profile</button>
                 </> : <>
                   <button className="ghost-btn">Follow</button>
@@ -1130,7 +1131,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
               {profile?.banner_url ? <img src={profile.banner_url} alt={`${profileName} banner`} className="member-profile-banner-img" /> : <div className="member-profile-banner-fallback"><strong>{profile?.category || 'Creator profile'}</strong><span>{profileBio || 'Build your profile with a clear identity and clean social proof.'}</span></div>}
             </div>
 
-            {profileState.ownerView && editOpen ? <div className="member-profile-editor-panel">
+            {showOwnerEditAffordances && editOpen ? <div className="member-profile-editor-panel">
               <h3>Edit Profile</h3>
               <div className="member-profile-editor-grid">
                 <label><span>Display name</span><input className="mega-search auth-input" value={profileForm.display_name} onChange={(e) => setProfileForm((s) => ({ ...s, display_name: e.target.value }))} /></label>
@@ -1173,12 +1174,12 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
 
 
             <div className="member-profile-content-block member-profile-inline-section-card">
-              <div className="member-profile-inline-section-head"><h3>Bio</h3>{profileState.ownerView ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>📌</button><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>🎬</button></div> : null}</div>
+              <div className="member-profile-inline-section-head"><h3>Bio</h3>{showOwnerEditAffordances ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>📌</button><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>🎬</button></div> : null}</div>
               <p>{profileBio || 'No bio yet.'}</p>
             </div>
 
             {profileAbout ? <div className="member-profile-content-block member-profile-inline-section-card">
-              <div className="member-profile-inline-section-head"><h3>About</h3>{profileState.ownerView ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>📌</button><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>🎬</button></div> : null}</div>
+              <div className="member-profile-inline-section-head"><h3>About</h3>{showOwnerEditAffordances ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>📌</button><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>🎬</button></div> : null}</div>
               <p>{profileAbout}</p>
             </div> : null}
           </div>
