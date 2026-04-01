@@ -1328,10 +1328,7 @@ function LivePage({ data }) {
         body={isChatMode ? 'Pick human or AI, then start.' : 'Turn on camera, then start live.'}
         trustItems={[]}
       />
-      <div className="live-back-row">
-        <button className="ghost-btn live-back-btn" onClick={backToDefaultLiveScreen}>← Back</button>
-      </div>
-      {!session ? <div className="mobile-sticky-cta-bar"><button className="primary-btn mobile-sticky-cta" onClick={() => localStorage.getItem(`molt-live-session:${slug}`) ? window.scrollTo({ top: 0, behavior: 'smooth' }) : requestMediaAccess()}>Start here</button></div> : null}
+      
       {savedSessionId && !session ? (
         <div className="wallet-balance-card wallet-balance-card-muted wallet-balance-card-full ai-choice-stage-card">
           <span className="eyebrow">Saved session</span>
@@ -1398,12 +1395,7 @@ function LivePage({ data }) {
                 <span className="cta-icon-label"><span className="cta-icon" aria-hidden="true">📷</span><span>{requestingMedia && sessionMode === 'webcam' ? 'Enabling Webcam…' : 'Enable Webcam'}</span></span>
               </button>
             </div>
-            {mediaState !== 'preview-ready' && !session ? (
-              <div className="fallback-mode-row stronger-fallback-row">
-                <button className={`ghost-btn fallback-mode-btn ${sessionMode === 'voice' ? 'active' : ''}`} onClick={() => setSessionMode('voice')}>🎤 Use voice</button>
-                <button className={`ghost-btn fallback-mode-btn ${sessionMode === 'chat' ? 'active' : ''}`} onClick={() => setSessionMode('chat')}>💬 Use chat</button>
-              </div>
-            ) : null}
+            
           </div> : null}
           {isChatMode ? (
             <>
