@@ -2221,10 +2221,11 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     const composedBodyText = String(overrides.bodyText ?? compose.bodyText ?? '').trim();
     const sticker = overrides.sticker || queuedSticker || null;
     const attachment = overrides.attachment || attachmentState.file || null;
-    if (!compose.recipientUserId || (!composedBodyText && !sticker && !attachment)) return;
+    const recipientUserId = overrides.recipientUserId || compose.recipientUserId || pendingRecipient?.id || selectedRecipient?.id || '';
+    if (!recipientUserId || (!composedBodyText && !sticker && !attachment)) return;
     const clientMessageId = buildClientMessageId();
     const optimisticThreadId = `pending_${clientMessageId}`;
-    const submittedCompose = { recipientUserId: compose.recipientUserId, bodyText: composedBodyText, sticker, attachment };
+    const submittedCompose = { recipientUserId, bodyText: composedBodyText, sticker, attachment };
     const recipient = pendingRecipient || recipients.find((r) => r.id === submittedCompose.recipientUserId) || selectedRecipient;
     const createdAt = new Date().toISOString();
     upsertOptimisticThread({
