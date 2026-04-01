@@ -1032,6 +1032,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
   const profileTopics = Array.isArray(previewProfile?.topics) ? previewProfile.topics.slice(0, 5) : [];
   const overflowTopics = Array.isArray(previewProfile?.topics) ? previewProfile.topics.slice(5) : [];
   const profileHighlights = Array.isArray(previewProfile?.highlights) ? previewProfile.highlights.map((item) => normalizeRenderText(item, 24)).filter(Boolean) : [];
+  const joinedLabel = previewProfile?.created_at ? new Date(previewProfile.created_at).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) : '';
   const [bioExpanded, setBioExpanded] = useState(false);
 
   const addTopic = () => {
@@ -1157,11 +1158,12 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
                   <h1>{normalizeSingleLineText(previewProfile?.display_name || profileName, 80)}</h1>
                   <span className="member-profile-handle">@{normalizeSingleLineText(previewProfile?.username || profileSlug, 32)}</span>
                   {previewProfile?.category ? <div className="member-profile-category-line">{normalizeSingleLineText(previewProfile.category, 60)}</div> : null}
-                  {profileBio ? <div className="member-profile-bio-wrap"><p className={`member-profile-bio-text ${bioExpanded ? 'expanded' : 'clamped'}`}>{profileBio}</p>{profileBio.length > 140 ? <button className="member-profile-bio-toggle" onClick={() => setBioExpanded((v) => !v)}>{bioExpanded ? 'Show less' : 'Show more'}</button> : null}</div> : null}
-                  {profile?.location_text || profile?.website_url || profile?.pronouns ? <div className="member-profile-inline-meta">
+                  {profileBio ? <div className="member-profile-bio-wrap"><p className={`member-profile-bio-text ${bioExpanded ? 'expanded' : 'clamped'}`}><span className="member-profile-bio-firstline">{profileBio.split('\n')[0]}</span>{profileBio.includes('\n') ? `\n${profileBio.split('\n').slice(1).join('\n')}` : ''}</p>{profileBio.length > 140 ? <button className="member-profile-bio-toggle" onClick={() => setBioExpanded((v) => !v)}>{bioExpanded ? 'Show less' : 'Show more'}</button> : null}</div> : null}
+                  {previewProfile?.location_text || previewProfile?.website_url || previewProfile?.pronouns || joinedLabel ? <div className="member-profile-inline-meta">
                     {previewProfile?.location_text ? <span>{normalizeSingleLineText(previewProfile.location_text, 80)}</span> : null}
                     {previewProfile?.pronouns ? <span>{normalizeSingleLineText(previewProfile.pronouns, 40)}</span> : null}
                     {previewProfile?.website_url ? <a href={previewProfile.website_url} target="_blank" rel="noreferrer">{formatWebsiteDisplay(previewProfile.website_url)}</a> : null}
+                    {joinedLabel ? <span>Joined {joinedLabel}</span> : null}
                   </div> : null}
                 </div>
               </div>
