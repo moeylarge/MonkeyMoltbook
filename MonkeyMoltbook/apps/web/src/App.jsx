@@ -914,6 +914,24 @@ function SearchPage({ auth, onOpenAuth, onTrackClick }) {
   );
 }
 
+function normalizeSingleLineText(value = '', max = 120) {
+  return String(value || '').replace(/\s+/g, ' ').replace(/([!?.,])\1{3,}/g, '$1$1').trim().slice(0, max);
+}
+
+function normalizeBioText(value = '', max = 600) {
+  return String(value || '').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').replace(/([!?.,])\1{3,}/g, '$1$1').trim().slice(0, max);
+}
+
+function normalizeRenderText(value = '', max = 280) {
+  return normalizeBioText(value, max);
+}
+
+function formatWebsiteDisplay(value = '') {
+  const raw = normalizeSingleLineText(value, 240);
+  if (!raw) return '';
+  return raw.replace(/^https?:\/\//, '').replace(/\/$/, '');
+}
+
 function AgentProfilePage({ data, auth, onOpenAuth }) {
   const { slug } = useParams();
   const top = data.report?.topSources || [];
@@ -988,7 +1006,6 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
     };
   }, [normalizedSlug]);
 
-  const normalizeRenderText = (value = '', max = 280) => String(value || '').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim().slice(0, max);
   const profile = profileState.profile;
   const profileSlug = normalizeRenderText(profile?.username || slugify(resolvedAgent.authorName), 32);
   const profileName = normalizeRenderText(profile?.display_name || resolvedAgent.authorName, 80);
@@ -996,11 +1013,25 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
   const authDisplaySlug = slugify(auth?.user?.displayName || '');
   const isOwnRequestedProfile = Boolean(normalizedSlug && (normalizedSlug === authBaseSlug || normalizedSlug === authDisplaySlug));
   const showOwnerEditAffordances = Boolean(profileState.ownerView || isOwnRequestedProfile);
-  const profileBio = normalizeRenderText(profile?.bio || '', 280);
-  const profileAbout = normalizeRenderText(profile?.about || '', 600);
-  const profileTopics = Array.isArray(profile?.topics) ? profile.topics.slice(0, 5) : [];
-  const overflowTopics = Array.isArray(profile?.topics) ? profile.topics.slice(5) : [];
-  const profileHighlights = Array.isArray(profile?.highlights) ? profile.highlights.map((item) => normalizeRenderText(item, 24)).filter(Boolean) : [];
+  const previewProfile = editOpen ? {
+    ...profile,
+    display_name: normalizeSingleLineText(profileForm.display_name || profile?.display_name || '', 80),
+    username: normalizeSingleLineText(profileForm.username || profile?.username || '', 32),
+    bio: normalizeBioText(profileForm.bio || profile?.bio || '', 280),
+    about: normalizeBioText(profileForm.about || profile?.about || '', 600),
+    category: normalizeSingleLineText(profileForm.category || profile?.category || '', 60),
+    website_url: normalizeSingleLineText(profileForm.website_url || profile?.website_url || '', 240),
+    location_text: normalizeSingleLineText(profileForm.location_text || profile?.location_text || '', 80),
+    pronouns: normalizeSingleLineText(profileForm.pronouns || profile?.pronouns || '', 40),
+    tagline: normalizeSingleLineText(profileForm.media || profile?.tagline || '', 80),
+    topics: Array.isArray(profileForm.topics) ? profileForm.topics.map((item) => normalizeSingleLineText(item, 24)).filter(Boolean) : (profile?.topics || []),
+    highlights: Array.isArray(profileForm.highlights) ? profileForm.highlights.map((item) => normalizeSingleLineText(item, 24)).filter(Boolean) : (profile?.highlights || [])
+  } : profile;
+  const profileBio = normalizeRenderText(previewProfile?.bio || '', 280);
+  const profileAbout = normalizeRenderText(previewProfile?.about || '', 600);
+  const profileTopics = Array.isArray(previewProfile?.topics) ? previewProfile.topics.slice(0, 5) : [];
+  const overflowTopics = Array.isArray(previewProfile?.topics) ? previewProfile.topics.slice(5) : [];
+  const profileHighlights = Array.isArray(previewProfile?.highlights) ? previewProfile.highlights.map((item) => normalizeRenderText(item, 24)).filter(Boolean) : [];
   const [bioExpanded, setBioExpanded] = useState(false);
 
   const addTopic = () => {
@@ -1123,13 +1154,13 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
                   {profile?.avatar_url ? <img src={profile.avatar_url} alt={profileName} className="member-profile-avatar-img" /> : String(profileName || 'M').slice(0, 1).toUpperCase()}
                 </div>
                 <div className="member-profile-identity-copy">
-                  <h1>{profileName}</h1>
-                  <span className="member-profile-handle">@{profileSlug}</span>
+                  <h1>{normalizeSingleLineText(previewProfile?.display_name || profileName, 80)}</h1>
+                  <span className="member-profile-handle">@{normalizeSingleLineText(previewProfile?.username || profileSlug, 32)}</span>
                   {profileBio ? <div className="member-profile-bio-wrap"><p className={`member-profile-bio-text ${bioExpanded ? 'expanded' : 'clamped'}`}>{profileBio}</p>{profileBio.length > 140 ? <button className="member-profile-bio-toggle" onClick={() => setBioExpanded((v) => !v)}>{bioExpanded ? 'Show less' : 'Show more'}</button> : null}</div> : null}
                   {profile?.location_text || profile?.website_url || profile?.pronouns ? <div className="member-profile-inline-meta">
-                    {profile?.location_text ? <span>{profile.location_text}</span> : null}
-                    {profile?.pronouns ? <span>{profile.pronouns}</span> : null}
-                    {profile?.website_url ? <a href={profile.website_url} target="_blank" rel="noreferrer">{profile.website_url}</a> : null}
+                    {previewProfile?.location_text ? <span>{normalizeSingleLineText(previewProfile.location_text, 80)}</span> : null}
+                    {previewProfile?.pronouns ? <span>{normalizeSingleLineText(previewProfile.pronouns, 40)}</span> : null}
+                    {previewProfile?.website_url ? <a href={previewProfile.website_url} target="_blank" rel="noreferrer">{formatWebsiteDisplay(previewProfile.website_url)}</a> : null}
                   </div> : null}
                 </div>
               </div>
@@ -1150,7 +1181,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
             </div>
 
             <div className="member-profile-hero-banner">
-              {profile?.banner_url ? <img src={profile.banner_url} alt={`${profileName} banner`} className="member-profile-banner-img" /> : <div className="member-profile-banner-fallback"><strong>{profile?.category || 'Creator profile'}</strong><span>{profileBio || 'Build your profile with a clear identity and clean social proof.'}</span></div>}
+              {previewProfile?.banner_url ? <img src={previewProfile.banner_url} alt={`${profileName} banner`} className="member-profile-banner-img" /> : <div className="member-profile-banner-fallback"><strong>{normalizeSingleLineText(previewProfile?.category || 'Creator profile', 60)}</strong><span>{profileBio || 'Build your profile with a clear identity and clean social proof.'}</span></div>}
             </div>
 
             {showOwnerEditAffordances && editOpen ? <div className="member-profile-editor-panel">
@@ -1208,10 +1239,10 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
               <div className="member-profile-inline-section-head"><h3>Details</h3>{showOwnerEditAffordances ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={(e) => { e.stopPropagation(); setEditOpen(true); }}>✏️</button></div> : null}</div>
               <div className="member-profile-detail-pills">
                 <span className="tag">@{profileSlug}</span>
-                {profile?.category ? <span className="tag">{profile.category}</span> : null}
-                {profile?.location_text ? <span className="tag">{profile.location_text}</span> : null}
-                {profile?.pronouns ? <span className="tag">{profile.pronouns}</span> : null}
-                {profile?.tagline ? <span className="tag">{profile.tagline}</span> : null}
+                {previewProfile?.category ? <span className="tag">{normalizeSingleLineText(previewProfile.category, 60)}</span> : null}
+                {previewProfile?.location_text ? <span className="tag">{normalizeSingleLineText(previewProfile.location_text, 80)}</span> : null}
+                {previewProfile?.pronouns ? <span className="tag">{normalizeSingleLineText(previewProfile.pronouns, 40)}</span> : null}
+                {previewProfile?.tagline ? <span className="tag">{normalizeSingleLineText(previewProfile.tagline, 80)}</span> : null}
               </div>
             </div>
 
