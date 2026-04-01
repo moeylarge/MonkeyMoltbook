@@ -1979,6 +1979,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   const [showGallery, setShowGallery] = useState(false);
   const [recordingVoice, setRecordingVoice] = useState(false);
   const [typingActive, setTypingActive] = useState(false);
+  const [phase4Audit, setPhase4Audit] = useState(null);
   const suppressMailboxAutoSelectRef = useRef(false);
   const mediaRecorderRef = useRef(null);
   const voiceChunksRef = useRef([]);
@@ -2038,6 +2039,16 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     } catch {
       return null;
     }
+  };
+
+  const buildFrictionAudit = () => {
+    const issues = [];
+    if (searchQuery.trim() === '') issues.push({ title: 'Search is easy to ignore', fix: 'Increase search placeholder clarity and show one hint state.', severity: 'high' });
+    if (!selectedThreadId && (activeComposeRecipient?.id || compose.recipientUserId)) issues.push({ title: 'Conversation start path depends on text-first behavior', fix: 'Make the text-first rule more explicit near the composer.', severity: 'high' });
+    if (threads.length && !threads.some((thread) => thread.unread)) issues.push({ title: 'Unread state is not obvious during first-use browsing', fix: 'Strengthen first unread affordance for fresh threads.', severity: 'medium' });
+    if (activeMessages.length && !activeMessages.some((message) => buildLinkPreview(message.bodyText))) issues.push({ title: 'Link utility may be under-discovered', fix: 'Seed or hint one supported preview example.', severity: 'medium' });
+    if (selectedThreadId && !replyTarget && !activeMessages.some((message) => message.reactions?.length)) issues.push({ title: 'Thread actions are hidden until explored', fix: 'Surface one subtle action hint for reactions/replies.', severity: 'medium' });
+    return issues.slice(0, 5);
   };
 
   const threads = useMemo(() => {
@@ -2596,7 +2607,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
               <h1>MoltMail</h1>
               <button className="moltmail-new-message" onClick={openNewMessage}>New message</button>
             </div>
-            <div className="moltmail-search-wrap"><input className="moltmail-search-input" placeholder="Search people or messages" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} /></div>
+            <div className="moltmail-search-wrap"><input className="moltmail-search-input" placeholder="Search people or messages" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} /><button className="ghost-btn moltmail-audit-btn" onClick={() => setPhase4Audit(buildFrictionAudit())}>Audit first-use friction</button></div>
             <div className="moltmail-conversation-list">{renderThreadRows()}</div>
           </aside>
           <main className={`moltmail-chat ${mobileView === 'list' ? 'mobile-hidden-chat' : ''}`}>
@@ -2644,6 +2655,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
           </main>
           {showNewMessage ? <div className="moltmail-picker-backdrop" onClick={() => setShowNewMessage(false)}><div className="moltmail-picker" onClick={(e) => e.stopPropagation()}><div className="moltmail-picker-head"><strong>New message</strong><button className="moltmail-picker-close" onClick={() => setShowNewMessage(false)}>✕</button></div><input className="mega-search auth-input" placeholder="Search people" value={recipientQuery} onChange={(e) => setRecipientQuery(e.target.value)} />{recipients.length ? <div className="moltmail-picker-results">{recipients.map((recipient) => <button key={recipient.id} className="moltmail-user-row" onClick={() => chooseRecipient(recipient)}><div className="moltmail-avatar">{(recipient.displayName || recipient.handle || '?').slice(0,1).toUpperCase()}</div><div><strong>{recipient.displayName || recipient.handle}</strong><span>@{recipient.handle}</span></div></button>)}</div> : <div className="moltmail-empty-space" />}</div></div> : null}
           {showGallery ? <div className="moltmail-picker-backdrop" onClick={() => setShowGallery(false)}><div className="moltmail-picker" onClick={(e) => e.stopPropagation()}><div className="moltmail-picker-head"><strong>Shared media & files</strong><button className="moltmail-picker-close" onClick={() => setShowGallery(false)}>✕</button></div><div className="moltmail-picker-results">{threadMedia.map((item) => <a key={item.id} className="moltmail-gallery-row" href={item.attachment.dataUrl} target="_blank" rel="noreferrer">{item.attachment.type?.startsWith('image/') ? <img className="moltmail-gallery-thumb" src={item.attachment.dataUrl} alt={item.attachment.name || 'media'} /> : <div className="moltmail-gallery-thumb moltmail-gallery-file">{item.attachment.type?.startsWith('audio/') ? '🎙️' : item.attachment.type === 'application/pdf' ? '📄' : '📎'}</div>}<div><strong>{item.attachment.name}</strong><span>{item.attachment.type}</span></div></a>)}</div></div></div> : null}
+          {phase4Audit ? <div className="moltmail-picker-backdrop" onClick={() => setPhase4Audit(null)}><div className="moltmail-picker" onClick={(e) => e.stopPropagation()}><div className="moltmail-picker-head"><strong>Top friction points</strong><button className="moltmail-picker-close" onClick={() => setPhase4Audit(null)}>✕</button></div><div className="moltmail-picker-results">{phase4Audit.map((item, index) => <div key={index} className="moltmail-audit-row"><strong>{item.title}</strong><span>{item.fix}</span></div>)}</div></div></div> : null}
         </div>
       )}
     </section>
