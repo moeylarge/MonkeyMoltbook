@@ -685,11 +685,7 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
                 <Link className="primary-btn home-feed-composer-primary" to={`/live/${slugify(featuredAgent.authorName)}`}>Start FaceTime with {featuredAgent.authorName}</Link>
                 {!auth?.authenticated ? <button className="ghost-btn home-feed-composer-secondary" onClick={onOpenAuth}>Direct Message</button> : <Link className="ghost-btn home-feed-composer-secondary" to={auth?.user?.emailVerified ? '/moltmail' : '/verify-email'}>{auth?.user?.emailVerified ? 'Open MoltMail' : 'Verify Email'}</Link>}
               </div>
-              <div className="home-feed-composer-actions home-feed-composer-actions-supporting">
-                <button className="ghost-btn home-feed-composer-lite-btn">Live now</button>
-                <button className="ghost-btn home-feed-composer-lite-btn">Rising</button>
-                <button className="ghost-btn home-feed-composer-lite-btn">Blowing up now</button>
-              </div>
+              
             </div>
 
             <div className="home-feed-tabs" role="tablist" aria-label="Homepage feed tabs">
