@@ -1174,11 +1174,6 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
                 </>}
               </div>
             </div>
-            <div className="profile-presence-row member-profile-presence-row">
-              <span className="presence-pill">Live ready</span>
-              <span className="presence-pill">{profileState.ownerView ? 'Owner view' : 'Public view'}</span>
-              <span className="presence-pill">{profile?.message_permission === 'followers' ? 'Messages: followers' : 'Open to message'}</span>
-            </div>
             <div className="member-profile-stats-row">
               <button className="listing-strip-card member-profile-stat-btn" onClick={() => setConnectionsOpen('followers')}><strong>{Number(profile?.follower_count || 0)}</strong><span>followers</span></button>
               <button className="listing-strip-card member-profile-stat-btn" onClick={() => setConnectionsOpen('following')}><strong>{Number(profile?.following_count || 0)}</strong><span>following</span></button>
@@ -1193,16 +1188,6 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
             {pinnedClips.length ? <div className="member-profile-content-block">
               <div className="member-profile-section-head"><h3>Pinned clips</h3><span>Top content</span></div>
               <div className="member-profile-clips-grid">{pinnedClips.map((clip) => <button key={clip.id} className="member-profile-clip-card member-profile-clip-button" onClick={() => setViewerClip(clip)}><div className="member-profile-clip-media">{clip.thumbnail_url ? <img src={clip.thumbnail_url} alt={clip.title || 'Pinned clip'} className="member-profile-clip-thumb" /> : <div className="member-profile-clip-fallback">No thumbnail</div>}<div className="member-profile-clip-overlay"><span>▶ View</span></div>{clip.duration_seconds ? <span className="member-profile-clip-duration">{formatDuration(clip.duration_seconds)}</span> : null}</div><div className="member-profile-clip-meta"><strong>{clip.title || 'Untitled clip'}</strong><span>Pinned</span></div></button>)}</div>
-            </div> : null}
-
-            {profileHighlights.length ? <div className="member-profile-content-block">
-              <div className="member-profile-section-head"><h3>Highlights</h3><span>Quick identity</span></div>
-              <div className="tag-row">{profileHighlights.map((item) => <span key={item} className="tag">{item}</span>)}</div>
-            </div> : null}
-
-            {profileLinks.length ? <div className="member-profile-content-block">
-              <div className="member-profile-section-head"><h3>Featured links</h3><span>Best places to go</span></div>
-              <div className="member-profile-links-grid">{profileLinks.map((item, index) => <a key={`${item.url}-${index}`} href={item.url} target="_blank" rel="noreferrer" className="ghost-btn member-profile-link-card"><strong>{item.label}</strong><span>{item.url}</span></a>)}</div>
             </div> : null}
 
             {profileState.ownerView && editOpen ? <div className="member-profile-editor-panel">
@@ -1276,7 +1261,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
               </div> : null}
               {clipState.error ? <div className="feed-note">{clipState.error}</div> : null}
               {clipState.success ? <div className="feed-note">{clipState.success}</div> : null}
-              {clipsState.loading ? <div className="member-profile-empty-state">Loading clips…</div> : clipsState.error ? <div className="member-profile-empty-state">{clipsState.error}</div> : !clips.length ? <div className="member-profile-empty-state">No clips yet.</div> : <div className="member-profile-clips-grid">{unpinnedClips.map((clip) => <div key={clip.id} className="member-profile-clip-card"><button className="member-profile-clip-button" onClick={() => setViewerClip(clip)}><div className="member-profile-clip-media">{clip.thumbnail_url ? <img src={clip.thumbnail_url} alt={clip.title || 'Clip thumbnail'} className="member-profile-clip-thumb" /> : <div className="member-profile-clip-fallback">No thumbnail</div>}<div className="member-profile-clip-overlay"><span>▶ View</span></div>{clip.duration_seconds ? <span className="member-profile-clip-duration">{formatDuration(clip.duration_seconds)}</span> : null}</div></button><div className="member-profile-clip-meta"><strong>{clip.title || 'Untitled clip'}</strong><span>{new Date(clip.created_at).toLocaleDateString()}</span></div>{profileState.ownerView ? <div className="member-profile-clip-owner-actions"><button className="ghost-btn member-profile-clip-delete" onClick={() => removeClip(clip.id)}>Remove</button><button className="ghost-btn member-profile-clip-delete" onClick={() => togglePinClip(clip.id)}>{pinnedClipIds.includes(clip.id) ? 'Unpin' : 'Pin'}</button></div> : null}</div>)}</div>}
+              {clipsState.loading ? <div className="member-profile-empty-state">Loading clips…</div> : clipsState.error ? <div className="member-profile-empty-state">{clipsState.error}</div> : !clips.length ? <div className="member-profile-empty-state"><strong>No content yet.</strong>{profileState.ownerView ? <div className="member-profile-empty-actions"><button className="primary-btn" onClick={() => setEditOpen(true)}>Upload your first clip</button></div> : null}</div> : <div className="member-profile-clips-grid">{unpinnedClips.map((clip) => <div key={clip.id} className="member-profile-clip-card"><button className="member-profile-clip-button" onClick={() => setViewerClip(clip)}><div className="member-profile-clip-media">{clip.thumbnail_url ? <img src={clip.thumbnail_url} alt={clip.title || 'Clip thumbnail'} className="member-profile-clip-thumb" /> : <div className="member-profile-clip-fallback">No thumbnail</div>}<div className="member-profile-clip-overlay"><span>▶ View</span></div>{clip.duration_seconds ? <span className="member-profile-clip-duration">{formatDuration(clip.duration_seconds)}</span> : null}</div></button><div className="member-profile-clip-meta"><strong>{clip.title || 'Untitled clip'}</strong><span>{new Date(clip.created_at).toLocaleDateString()}</span></div>{profileState.ownerView ? <div className="member-profile-clip-owner-actions"><button className="ghost-btn member-profile-clip-delete" onClick={() => removeClip(clip.id)}>Remove</button><button className="ghost-btn member-profile-clip-delete" onClick={() => togglePinClip(clip.id)}>{pinnedClipIds.includes(clip.id) ? 'Unpin' : 'Pin'}</button></div> : null}</div>)}</div>}
             </div>
 
             <div className="member-profile-content-block">
@@ -1285,20 +1270,18 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
             </div>
 
             <div className="member-profile-lower-grid">
-              <div className="profile-card side member-profile-side">
+              <div className="profile-card side member-profile-side member-profile-meta-card">
                 <h3>About</h3>
-                <p>{profileAbout || 'No about section yet.'}</p>
-              </div>
-              <div className="profile-card side member-profile-side">
-                <h3>Profile details</h3>
+                <p>{profileAbout || profileBio || 'No profile details yet.'}</p>
                 <ul>
                   <li>Username: @{profileSlug}</li>
                   <li>Category: {profile?.category || 'Not set'}</li>
-                  <li>Public profile: {profile?.is_public === false ? 'Private' : 'Public'}</li>
+                  <li>Visibility: {profile?.is_public === false ? 'Private' : 'Public'}</li>
                   <li>Theme: {profile?.theme_preference || 'system'}</li>
                 </ul>
-                <h3>Topics</h3>
-                <div className="tag-row">{profileTopics.length ? profileTopics.map((tag) => <span key={tag} className="tag">{tag}</span>) : <span className="tag">No topics yet</span>}</div>
+                {profileTopics.length ? <><h3>Topics</h3><div className="tag-row">{profileTopics.map((tag) => <span key={tag} className="tag">{tag}</span>)}</div></> : null}
+                {profileHighlights.length ? <><h3>Highlights</h3><div className="tag-row">{profileHighlights.map((item) => <span key={item} className="tag">{item}</span>)}</div></> : null}
+                {profileLinks.length ? <div className="member-profile-links-grid">{profileLinks.map((item, index) => <a key={`${item.url}-${index}`} href={item.url} target="_blank" rel="noreferrer" className="ghost-btn member-profile-link-card"><strong>{item.label}</strong><span>{item.url}</span></a>)}</div> : null}
               </div>
             </div>
 
