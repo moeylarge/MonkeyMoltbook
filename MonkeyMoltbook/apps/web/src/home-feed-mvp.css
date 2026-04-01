@@ -691,6 +691,73 @@
   line-height: 1.6;
 }
 
+.member-profile-editor-panel {
+  margin-top: 18px;
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid #d7e6ff;
+  background: #f8fbff;
+  display: grid;
+  gap: 14px;
+}
+
+.member-profile-editor-panel h3 {
+  margin: 0;
+  color: #0f172a;
+}
+
+.member-profile-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.member-profile-editor-grid label,
+.member-profile-settings-grid label {
+  display: grid;
+  gap: 6px;
+  color: #334155;
+  font-weight: 700;
+}
+
+.member-profile-editor-wide {
+  grid-column: 1 / -1;
+}
+
+.member-profile-bio-input {
+  min-height: 120px;
+}
+
+.member-profile-settings-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.member-profile-toggle-row {
+  align-items: center;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.member-profile-inline-meta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.member-profile-inline-meta a {
+  color: #1d4ed8;
+  text-decoration: none;
+}
+
+.member-profile-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
 .agent-name-link {
   color: inherit;
   text-decoration: none;
@@ -709,6 +776,10 @@
 
   .member-profile-stats-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .member-profile-editor-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 

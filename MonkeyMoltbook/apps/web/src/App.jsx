@@ -892,6 +892,13 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
   const top = data.report?.topSources || [];
   const rising = data.rising || [];
   const normalizedSlug = slugify(slug);
+  const [profileState, setProfileState] = useState({ loading: true, profile: null, ownerView: false, error: '' });
+  const [ownerProfile, setOwnerProfile] = useState(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [profileForm, setProfileForm] = useState({ display_name: '', username: '', bio: '', website_url: '', location_text: '', tagline: '', pronouns: '', is_public: true, message_permission: 'everyone', notification_messages_enabled: true, notification_mentions_enabled: true, notification_follows_enabled: true, notification_marketing_enabled: false, theme_preference: 'system' });
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileSaveState, setProfileSaveState] = useState({ error: '', success: '' });
   const fallbackAgent = {
     authorName: slug?.replace(/-/g, ' ') || 'Featured Agent',
     description: 'A live-ready AI personality built for webcam-first interaction, ranked discovery, and transcript export.',
@@ -904,31 +911,115 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
   };
   const agent = top.find((x) => slugify(x.authorName) === normalizedSlug || slugify(x.authorName).includes(normalizedSlug) || normalizedSlug.includes(slugify(x.authorName)));
   const resolvedAgent = agent || top[0] || fallbackAgent;
+
+  useEffect(() => {
+    let active = true;
+    const loadProfile = async () => {
+      try {
+        const response = await fetch(`${API}/profile/${encodeURIComponent(normalizedSlug)}`, { credentials: 'include' });
+        const payload = await response.json();
+        if (!active) return;
+        if (!response.ok) {
+          setProfileState({ loading: false, profile: null, ownerView: false, error: payload?.message || 'Could not load profile.' });
+          return;
+        }
+        setProfileState({ loading: false, profile: payload.profile || null, ownerView: Boolean(payload.ownerView), error: '' });
+        if (payload.ownerView) {
+          const meRes = await fetch(`${API}/profile/me`, { credentials: 'include' });
+          const mePayload = await meRes.json();
+          if (!active) return;
+          if (meRes.ok && mePayload?.profile) {
+            setOwnerProfile(mePayload.profile);
+            setProfileForm({
+              display_name: mePayload.profile.display_name || '',
+              username: mePayload.profile.username || '',
+              bio: mePayload.profile.bio || '',
+              website_url: mePayload.profile.website_url || '',
+              location_text: mePayload.profile.location_text || '',
+              tagline: mePayload.profile.tagline || '',
+              pronouns: mePayload.profile.pronouns || '',
+              is_public: mePayload.profile.is_public !== false,
+              message_permission: mePayload.profile.message_permission || 'everyone',
+              notification_messages_enabled: mePayload.profile.notification_messages_enabled !== false,
+              notification_mentions_enabled: mePayload.profile.notification_mentions_enabled !== false,
+              notification_follows_enabled: mePayload.profile.notification_follows_enabled !== false,
+              notification_marketing_enabled: Boolean(mePayload.profile.notification_marketing_enabled),
+              theme_preference: mePayload.profile.theme_preference || 'system'
+            });
+          }
+        }
+      } catch {
+        if (!active) return;
+        setProfileState({ loading: false, profile: null, ownerView: false, error: 'Could not load profile.' });
+      }
+    };
+    loadProfile();
+    return () => {
+      active = false;
+    };
+  }, [normalizedSlug]);
+
+  const profile = profileState.profile;
+  const profileSlug = profile?.username || slugify(resolvedAgent.authorName);
+  const profileName = profile?.display_name || resolvedAgent.authorName;
+  const profileBio = profile?.bio || profile?.tagline || resolvedAgent.description || resolvedAgent.reason;
   const relatedActivity = [resolvedAgent, ...rising.filter((x) => slugify(x.authorName) !== slugify(resolvedAgent.authorName)).slice(0, 3)];
-  const profileSlug = slugify(resolvedAgent.authorName);
+
+  const saveProfile = async () => {
+    setProfileSaving(true);
+    setProfileSaveState({ error: '', success: '' });
+    try {
+      const response = await fetch(`${API}/profile/me`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(profileForm)
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setProfileSaveState({ error: payload?.errors?.username || payload?.errors?.bio || payload?.errors?.website_url || payload?.message || 'Could not save profile.', success: '' });
+        return;
+      }
+      setOwnerProfile(payload.profile);
+      setProfileState((current) => ({ ...current, profile: payload.profile || current.profile }));
+      setProfileSaveState({ error: '', success: 'Profile saved.' });
+    } catch {
+      setProfileSaveState({ error: 'Could not save profile.', success: '' });
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
   return (
     <>
       <SeoHead
-        title={`${resolvedAgent.authorName} — Member Profile | Molt Live`}
-        description={resolvedAgent.description || resolvedAgent.reason || 'Explore this member profile, see activity and social proof, then jump into a live session or MoltMail.'}
+        title={`${profileName} — Member Profile | Molt Live`}
+        description={profileBio || 'Explore this member profile, see activity and social proof, then jump into a live session or MoltMail.'}
         canonical={`https://molt-live.com/u/${profileSlug}`}
       />
     <section className="page-section agent-profile member-profile-page">
       <div className="profile-hero member-profile-hero">
         <div className="profile-card main profile-card-main-upgraded member-profile-main">
-          <span className="hero-kicker">Member profile</span>
+          <span className="hero-kicker">{profileState.ownerView ? 'My profile' : 'Member profile'}</span>
           <div className="member-profile-identity-row">
-            <div className="member-profile-avatar">{String(resolvedAgent.authorName || 'M').slice(0, 1).toUpperCase()}</div>
+            <div className="member-profile-avatar">
+              {profile?.avatar_url ? <img src={profile.avatar_url} alt={profileName} className="member-profile-avatar-img" /> : String(profileName || 'M').slice(0, 1).toUpperCase()}
+            </div>
             <div className="member-profile-identity-copy">
-              <h1>{resolvedAgent.authorName}</h1>
+              <h1>{profileName}</h1>
               <span className="member-profile-handle">@{profileSlug}</span>
-              <p>{resolvedAgent.description || resolvedAgent.reason}</p>
+              <p>{profileBio}</p>
+              {profile?.location_text || profile?.website_url ? <div className="member-profile-inline-meta">
+                {profile?.location_text ? <span>{profile.location_text}</span> : null}
+                {profile?.website_url ? <a href={profile.website_url} target="_blank" rel="noreferrer">{profile.website_url}</a> : null}
+              </div> : null}
             </div>
           </div>
+          {profileState.error ? <div className="feed-note">{profileState.error}</div> : null}
           <div className="profile-presence-row member-profile-presence-row">
             <span className="presence-pill">Live ready</span>
-            <span className="presence-pill">Active now</span>
-            <span className="presence-pill">Open to message</span>
+            <span className="presence-pill">{profileState.ownerView ? 'Owner view' : 'Public view'}</span>
+            <span className="presence-pill">{profile?.message_permission === 'followers' ? 'Messages: followers' : 'Open to message'}</span>
           </div>
           <div className="member-profile-stats-row">
             <div className="listing-strip-card"><strong>{Math.max(12, Math.round(resolvedAgent.signalScore || 0))}</strong><span>followers</span></div>
@@ -937,15 +1028,48 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
             <div className="listing-strip-card"><strong>{relatedActivity.length}</strong><span>activity items</span></div>
           </div>
           <div className="hero-actions member-profile-actions">
-            <button className="ghost-btn">Follow</button>
-            {!auth?.authenticated ? <button className="ghost-btn direct-message-cta" onClick={onOpenAuth}>Open MoltMail</button> : <Link className="ghost-btn" to={auth?.user?.emailVerified ? '/moltmail' : '/verify-email'}>{auth?.user?.emailVerified ? 'Open MoltMail' : 'Verify Email'}</Link>}
-            <Link className="primary-btn large" to={`/live/${profileSlug}`}>Start Live Session</Link>
+            {profileState.ownerView ? <button className="ghost-btn" onClick={() => { setEditOpen((v) => !v); setSettingsOpen(false); }}>Edit Profile</button> : <button className="ghost-btn">Follow</button>}
+            {profileState.ownerView ? <button className="ghost-btn" onClick={() => { setSettingsOpen((v) => !v); setEditOpen(false); }}>Settings</button> : (!auth?.authenticated ? <button className="ghost-btn direct-message-cta" onClick={onOpenAuth}>Open MoltMail</button> : <Link className="ghost-btn" to={auth?.user?.emailVerified ? '/moltmail' : '/verify-email'}>{auth?.user?.emailVerified ? 'Open MoltMail' : 'Verify Email'}</Link>)}
+            <Link className="primary-btn large" to={`/live/${profileSlug}`}>{profileState.ownerView ? 'Preview Live Session' : 'Start Live Session'}</Link>
           </div>
           <div className="mode-selector-row member-profile-tabs">
             <button className="tab active">Posts</button>
             <button className="tab">Activity</button>
             <button className="tab">About</button>
           </div>
+          {profileState.ownerView && editOpen ? <div className="member-profile-editor-panel">
+            <h3>Edit Profile</h3>
+            <div className="member-profile-editor-grid">
+              <label><span>Display name</span><input className="mega-search auth-input" value={profileForm.display_name} onChange={(e) => setProfileForm((s) => ({ ...s, display_name: e.target.value }))} /></label>
+              <label><span>Username</span><input className="mega-search auth-input" value={profileForm.username} onChange={(e) => setProfileForm((s) => ({ ...s, username: e.target.value.toLowerCase() }))} /></label>
+              <label><span>Website</span><input className="mega-search auth-input" value={profileForm.website_url} onChange={(e) => setProfileForm((s) => ({ ...s, website_url: e.target.value }))} /></label>
+              <label><span>Location</span><input className="mega-search auth-input" value={profileForm.location_text} onChange={(e) => setProfileForm((s) => ({ ...s, location_text: e.target.value }))} /></label>
+              <label><span>Tagline</span><input className="mega-search auth-input" value={profileForm.tagline} onChange={(e) => setProfileForm((s) => ({ ...s, tagline: e.target.value }))} /></label>
+              <label><span>Pronouns</span><input className="mega-search auth-input" value={profileForm.pronouns} onChange={(e) => setProfileForm((s) => ({ ...s, pronouns: e.target.value }))} /></label>
+              <label className="member-profile-editor-wide"><span>Bio</span><textarea className="mega-search auth-input member-profile-bio-input" value={profileForm.bio} onChange={(e) => setProfileForm((s) => ({ ...s, bio: e.target.value }))} /></label>
+            </div>
+            <div className="auth-modal-actions">
+              <button className="primary-btn" disabled={profileSaving} onClick={saveProfile}>{profileSaving ? 'Saving…' : 'Save Profile'}</button>
+            </div>
+            {profileSaveState.error ? <div className="feed-note">{profileSaveState.error}</div> : null}
+            {profileSaveState.success ? <div className="feed-note">{profileSaveState.success}</div> : null}
+          </div> : null}
+          {profileState.ownerView && settingsOpen ? <div className="member-profile-editor-panel">
+            <h3>Settings</h3>
+            <div className="member-profile-settings-grid">
+              <label className="member-profile-toggle-row"><span>Public profile</span><input type="checkbox" checked={profileForm.is_public} onChange={(e) => setProfileForm((s) => ({ ...s, is_public: e.target.checked }))} /></label>
+              <label className="member-profile-toggle-row"><span>Messages</span><select className="mega-search auth-input" value={profileForm.message_permission} onChange={(e) => setProfileForm((s) => ({ ...s, message_permission: e.target.value }))}><option value="everyone">Everyone</option><option value="followers">Followers</option><option value="nobody">Nobody</option></select></label>
+              <label className="member-profile-toggle-row"><span>Message notifications</span><input type="checkbox" checked={profileForm.notification_messages_enabled} onChange={(e) => setProfileForm((s) => ({ ...s, notification_messages_enabled: e.target.checked }))} /></label>
+              <label className="member-profile-toggle-row"><span>Mention notifications</span><input type="checkbox" checked={profileForm.notification_mentions_enabled} onChange={(e) => setProfileForm((s) => ({ ...s, notification_mentions_enabled: e.target.checked }))} /></label>
+              <label className="member-profile-toggle-row"><span>Follow notifications</span><input type="checkbox" checked={profileForm.notification_follows_enabled} onChange={(e) => setProfileForm((s) => ({ ...s, notification_follows_enabled: e.target.checked }))} /></label>
+              <label className="member-profile-toggle-row"><span>Marketing notifications</span><input type="checkbox" checked={profileForm.notification_marketing_enabled} onChange={(e) => setProfileForm((s) => ({ ...s, notification_marketing_enabled: e.target.checked }))} /></label>
+            </div>
+            <div className="auth-modal-actions">
+              <button className="primary-btn" disabled={profileSaving} onClick={saveProfile}>{profileSaving ? 'Saving…' : 'Save Settings'}</button>
+            </div>
+            {profileSaveState.error ? <div className="feed-note">{profileSaveState.error}</div> : null}
+            {profileSaveState.success ? <div className="feed-note">{profileSaveState.success}</div> : null}
+          </div> : null}
           <div className="member-profile-activity-feed">
             {relatedActivity.map((item, index) => (
               <div key={`${item.authorName}-${index}`} className="member-profile-activity-card">
@@ -958,15 +1082,15 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
         </div>
         <div className="profile-card side member-profile-side">
           <h3>About</h3>
-          <p>{resolvedAgent.reason || 'This member is active across live discovery, message-ready interactions, and ranked social momentum.'}</p>
+          <p>{profile?.bio || resolvedAgent.reason || 'This member is active across live discovery, message-ready interactions, and ranked social momentum.'}</p>
+          <h3>Profile details</h3>
+          <ul>
+            <li>Username: @{profileSlug}</li>
+            <li>Public profile: {profile?.is_public === false ? 'Private' : 'Public'}</li>
+            <li>Theme: {profile?.theme_preference || 'system'}</li>
+          </ul>
           <h3>Topics</h3>
           <div className="tag-row">{(resolvedAgent.topics || ['live', 'voice', 'discovery']).map((tag) => <span key={tag} className="tag">{tag}</span>)}</div>
-          <h3>Next actions</h3>
-          <ul>
-            <li>Follow this member</li>
-            <li>Open MoltMail</li>
-            <li>Start a live session</li>
-          </ul>
         </div>
       </div>
     </section>
