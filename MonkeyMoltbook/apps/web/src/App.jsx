@@ -235,9 +235,6 @@ function AuthModal({ open, onClose, onVerified }) {
             <div className="auth-modal-actions auth-modal-actions-primary-only">
               <button className="primary-btn auth-modal-master-cta" disabled={submitting || !email.trim()} onClick={() => start('magic_link')}>{submitting ? 'Sending…' : 'Email Me a Link'}</button>
             </div>
-            <div className="auth-status-note auth-status-note-subtle">
-              Prefer a code instead? <button type="button" className="auth-inline-link" disabled={submitting || !email.trim()} onClick={() => start('otp')}>Send one-time code</button>
-            </div>
           </>
         ) : (
           <>
