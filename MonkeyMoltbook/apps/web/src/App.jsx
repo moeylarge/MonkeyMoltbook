@@ -2357,11 +2357,12 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     setReplyText('');
     setReplyState({ sending: false, error: '' });
     setAttachmentState({ uploading: false, file: null, error: '' });
+    const replyPreview = replyTarget ? { id: replyTarget.id, senderUserId: replyTarget.senderUserId, bodyText: replyTarget.bodyText || '', sticker: replyTarget.sticker || null, attachment: replyTarget.attachment ? { name: replyTarget.attachment.name, type: replyTarget.attachment.type } : null } : null;
     setQueuedSticker(null);
     setShowEmojiPicker(false);
     setShowStickerPicker(false);
     setReplyTarget(null);
-    upsertOptimisticMessage({ ...buildOptimisticMessage({ clientMessageId, threadId, bodyText, sticker, attachment }), replyToMessageId, replyPreview: replyTarget ? { id: replyTarget.id, senderUserId: replyTarget.senderUserId, bodyText: replyTarget.bodyText || '', sticker: replyTarget.sticker || null, attachment: replyTarget.attachment ? { name: replyTarget.attachment.name, type: replyTarget.attachment.type } : null } : null, reactions: [] });
+    upsertOptimisticMessage({ ...buildOptimisticMessage({ clientMessageId, threadId, bodyText, sticker, attachment }), replyToMessageId, replyPreview, reactions: [] });
     try {
       await sendReplyMessage({ threadId, bodyText, clientMessageId, sticker, attachment, replyToMessageId });
     } catch (error) {
@@ -2433,9 +2434,8 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     if (index !== latestSentIndex) return '';
     if (message.status === 'sending') return 'Sent';
     if (message.status === 'failed') return '';
-    const otherId = activeThread?.participants?.[0]?.id;
-    const threadReadAt = threads.find((thread) => thread.id === selectedThreadId)?.deliveryStatus;
-    return threadReadAt === 'Read' ? 'Read' : 'Delivered';
+    const threadSummary = threads.find((thread) => thread.id === selectedThreadId);
+    return threadSummary?.deliveryStatus === 'Read' ? 'Read' : 'Delivered';
   };
 
   const toggleReactionOnMessage = async (messageId, emoji) => {
@@ -2449,6 +2449,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     const payload = await response.json();
     if (!response.ok) return;
     setThreadData((current) => current?.data?.thread ? ({ ...current, data: { ...current.data, thread: { ...current.data.thread, messages: current.data.thread.messages.map((message) => message.id === messageId ? { ...message, reactions: payload.reactions } : message) } } }) : current);
+    try { await hydrateConfirmedThread(selectedThreadId); } catch {}
   };
 
   const sendSticker = (sticker) => {

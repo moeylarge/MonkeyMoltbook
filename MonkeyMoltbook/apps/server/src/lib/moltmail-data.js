@@ -244,7 +244,7 @@ function buildThreadSummary(store, thread, viewerId) {
   const participants = participantIds.map((id) => publicUser(getUserById(store, id))).filter(Boolean);
   const unread = Boolean(last && last.senderUserId !== viewerId && (!thread.lastReadAtByUserId?.[viewerId] || new Date(thread.lastReadAtByUserId[viewerId]) < new Date(last.createdAt)));
   const latestSent = [...messages].reverse().find((message) => message.senderUserId === viewerId);
-  const latestSentStatus = latestSent ? ((!thread.lastReadAtByUserId?.[participants[0]?.id] || new Date(thread.lastReadAtByUserId[participants[0]?.id]) < new Date(latestSent.createdAt)) ? 'Delivered' : 'Read') : null;
+  const latestSentStatus = latestSent ? ((thread.lastReadAtByUserId?.[participants[0]?.id] && new Date(thread.lastReadAtByUserId[participants[0]?.id]) >= new Date(latestSent.createdAt)) ? 'Read' : 'Delivered') : null;
   return {
     id: thread.id,
     subject: thread.subject,
