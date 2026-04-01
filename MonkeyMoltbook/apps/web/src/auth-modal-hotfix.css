@@ -1,13 +1,12 @@
 .auth-modal-actions-primary-only {
   width: 100%;
-  display: flex;
-  justify-content: center;
+  display: block;
 }
 
 .auth-modal-master-cta {
   width: 100%;
   min-height: 56px;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
