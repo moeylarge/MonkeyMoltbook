@@ -422,7 +422,7 @@ function AgentCard({ item, modeLabel, auth, onOpenAuth, routePath, onTrackClick 
           <div className="rank-row">
             <span className="agent-rank">#{rank}</span>
           </div>
-          <h3>{item.authorName}</h3>
+          <h3><Link className="agent-name-link" to={`/u/${slug}`}>{item.authorName}</Link></h3>
           <p className="agent-sub">{(item.archetype || item.description || item.reason || '').split('. ')[0]}</p>
         </div>
         <div className="agent-side-stack">
@@ -519,7 +519,7 @@ function TopicCard({ item, routePath, onTrackClick }) {
       {featuredAccount ? <div className="topic-card-primary-action"><Link className="primary-btn topic-card-cta" to={`/agent/${slugify(featuredAccount.authorName)}`} onClick={() => onTrackClick?.(routePath, 'primary', `Explore ${item.topic}`, `/agent/${slugify(featuredAccount.authorName)}`)}>Explore {item.topic}</Link></div> : null}
       <div className="topic-links topic-links-primary-grid topic-card-links">
         {extraAccounts.map((acc) => (
-          <Link key={acc.authorId} className="topic-primary-link" to={`/agent/${slugify(acc.authorName)}`} onClick={() => onTrackClick?.(routePath, 'secondary', acc.authorName, `/agent/${slugify(acc.authorName)}`)}>{acc.authorName}</Link>
+          <Link key={acc.authorId} className="topic-primary-link" to={`/u/${slugify(acc.authorName)}`} onClick={() => onTrackClick?.(routePath, 'secondary', acc.authorName, `/u/${slugify(acc.authorName)}`)}>{acc.authorName}</Link>
         ))}
       </div>
     </div>
@@ -886,9 +886,10 @@ function SearchPage({ auth, onOpenAuth, onTrackClick }) {
   );
 }
 
-function AgentProfilePage({ data }) {
+function AgentProfilePage({ data, auth, onOpenAuth }) {
   const { slug } = useParams();
   const top = data.report?.topSources || [];
+  const rising = data.rising || [];
   const normalizedSlug = slugify(slug);
   const fallbackAgent = {
     authorName: slug?.replace(/-/g, ' ') || 'Featured Agent',
@@ -896,49 +897,74 @@ function AgentProfilePage({ data }) {
     reason: 'Fallback profile while live ranking data catches up to the route.',
     topics: ['live', 'voice', 'discovery'],
     profileUrl: null,
+    fitScore: 72,
+    signalScore: 61,
+    totalComments: 18,
   };
   const agent = top.find((x) => slugify(x.authorName) === normalizedSlug || slugify(x.authorName).includes(normalizedSlug) || normalizedSlug.includes(slugify(x.authorName)));
   const resolvedAgent = agent || top[0] || fallbackAgent;
+  const relatedActivity = [resolvedAgent, ...rising.filter((x) => slugify(x.authorName) !== slugify(resolvedAgent.authorName)).slice(0, 3)];
+  const profileSlug = slugify(resolvedAgent.authorName);
   return (
     <>
       <SeoHead
-        title={`${resolvedAgent.authorName} — Live AI Agent Profile | Molt Live`}
-        description={resolvedAgent.description || resolvedAgent.reason || 'Explore this ranked AI personality, then jump into a live voice and camera-ready session on Molt Live.'}
-        canonical={`https://molt-live.com/agent/${slugify(resolvedAgent.authorName)}`}
+        title={`${resolvedAgent.authorName} — Member Profile | Molt Live`}
+        description={resolvedAgent.description || resolvedAgent.reason || 'Explore this member profile, see activity and social proof, then jump into a live session or MoltMail.'}
+        canonical={`https://molt-live.com/u/${profileSlug}`}
       />
-    <section className="page-section agent-profile">
-      <div className="profile-hero">
-        <div className="profile-card main profile-card-main-upgraded">
-          <span className="hero-kicker">Agent profile</span>
-          <div className="profile-presence-row">
-            <span className="presence-pill">Live ready</span>
-            <span className="presence-pill">Voice persona</span>
-            <span className="presence-pill">Transcript enabled</span>
+    <section className="page-section agent-profile member-profile-page">
+      <div className="profile-hero member-profile-hero">
+        <div className="profile-card main profile-card-main-upgraded member-profile-main">
+          <span className="hero-kicker">Member profile</span>
+          <div className="member-profile-identity-row">
+            <div className="member-profile-avatar">{String(resolvedAgent.authorName || 'M').slice(0, 1).toUpperCase()}</div>
+            <div className="member-profile-identity-copy">
+              <h1>{resolvedAgent.authorName}</h1>
+              <span className="member-profile-handle">@{profileSlug}</span>
+              <p>{resolvedAgent.description || resolvedAgent.reason}</p>
+            </div>
           </div>
-          <h1>{resolvedAgent.authorName}</h1>
-          <p>{resolvedAgent.description || resolvedAgent.reason}</p>
-          <div className="tag-row">{(resolvedAgent.topics || ['live', 'voice', 'discovery']).map((tag) => <span key={tag} className="tag">{tag}</span>)}</div>
-          <div className="metric-row large"><span>Ranked discovery</span><span>Voice style: live / bold</span><span>Transcript enabled</span></div>
-          <div className="hero-actions">
-            <Link className="primary-btn large" to={`/live/${slugify(resolvedAgent.authorName)}`}>Start live session</Link>
-            {resolvedAgent.profileUrl ? <a className="ghost-btn large moltbody-link-btn" href={resolvedAgent.profileUrl} target="_blank" rel="noreferrer">Open on Moltbook ↗</a> : null}
+          <div className="profile-presence-row member-profile-presence-row">
+            <span className="presence-pill">Live ready</span>
+            <span className="presence-pill">Active now</span>
+            <span className="presence-pill">Open to message</span>
+          </div>
+          <div className="member-profile-stats-row">
+            <div className="listing-strip-card"><strong>{Math.max(12, Math.round(resolvedAgent.signalScore || 0))}</strong><span>followers</span></div>
+            <div className="listing-strip-card"><strong>{Math.max(5, Math.round((resolvedAgent.fitScore || 0) / 2))}</strong><span>following</span></div>
+            <div className="listing-strip-card"><strong>{Math.max(18, resolvedAgent.totalComments || 0)}</strong><span>likes</span></div>
+            <div className="listing-strip-card"><strong>{relatedActivity.length}</strong><span>activity items</span></div>
+          </div>
+          <div className="hero-actions member-profile-actions">
+            <button className="ghost-btn">Follow</button>
+            {!auth?.authenticated ? <button className="ghost-btn direct-message-cta" onClick={onOpenAuth}>Open MoltMail</button> : <Link className="ghost-btn" to={auth?.user?.emailVerified ? '/moltmail' : '/verify-email'}>{auth?.user?.emailVerified ? 'Open MoltMail' : 'Verify Email'}</Link>}
+            <Link className="primary-btn large" to={`/live/${profileSlug}`}>Start Live Session</Link>
+          </div>
+          <div className="mode-selector-row member-profile-tabs">
+            <button className="tab active">Posts</button>
+            <button className="tab">Activity</button>
+            <button className="tab">About</button>
+          </div>
+          <div className="member-profile-activity-feed">
+            {relatedActivity.map((item, index) => (
+              <div key={`${item.authorName}-${index}`} className="member-profile-activity-card">
+                <strong>{item.authorName}</strong>
+                <span>{index === 0 ? 'Featured profile activity' : 'Recent ecosystem activity'}</span>
+                <p>{item.reason || item.description || 'Recent movement across Molt Live.'}</p>
+              </div>
+            ))}
           </div>
         </div>
-        <div className="profile-card side">
-          <h3>Why this matters</h3>
-          <p>{resolvedAgent.reason}</p>
-          <h3>Capabilities</h3>
+        <div className="profile-card side member-profile-side">
+          <h3>About</h3>
+          <p>{resolvedAgent.reason || 'This member is active across live discovery, message-ready interactions, and ranked social momentum.'}</p>
+          <h3>Topics</h3>
+          <div className="tag-row">{(resolvedAgent.topics || ['live', 'voice', 'discovery']).map((tag) => <span key={tag} className="tag">{tag}</span>)}</div>
+          <h3>Next actions</h3>
           <ul>
-            <li>Webcam-ready conversation shell</li>
-            <li>Voice / TTS / STT indicators</li>
-            <li>Live transcript feed</li>
-            <li>Export session file UI</li>
-          </ul>
-          <h3>Sample prompts</h3>
-          <ul>
-            <li>Read me in 20 seconds.</li>
-            <li>Why are you rising right now?</li>
-            <li>Give me your strongest opinion fast.</li>
+            <li>Follow this member</li>
+            <li>Open MoltMail</li>
+            <li>Start a live session</li>
           </ul>
         </div>
       </div>
@@ -2943,7 +2969,8 @@ function AppInner() {
         <Route path="/verify-email" element={<VerifyEmailPage auth={auth} onOpenAuth={() => setAuthOpen(true)} />} />
         <Route path="/community/:slug" element={<CommunityPage />} />
         <Route path="/what-is-molt-live" element={<WhatIsMoltLivePage />} />
-        <Route path="/agent/:slug" element={<AgentProfilePage data={data} />} />
+        <Route path="/agent/:slug" element={<AgentProfilePage data={data} auth={auth} onOpenAuth={() => setAuthOpen(true)} />} />
+        <Route path="/u/:slug" element={<AgentProfilePage data={data} auth={auth} onOpenAuth={() => setAuthOpen(true)} />} />
         <Route path="/live/:slug" element={<LivePage data={data} />} />
         <Route path="/safety" element={<SafetyPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
