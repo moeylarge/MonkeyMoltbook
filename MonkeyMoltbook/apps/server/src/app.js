@@ -14,7 +14,7 @@ import { addAgentReply, addLiveMessage, createLiveSession, endLiveSession, expor
 import { createCheckoutSession, creditsEnabled, ensureCreditProducts, getSpendRules, getWallet, grantCredits, listCreditProducts, listCreditTransactions, spendCredits } from './lib/credits.js';
 import { applySessionCookie, getAccountMe, getSessionResponse, logoutSession, startEmailAuth, verifyEmailAuth } from './lib/moltmail-auth.js';
 import { archiveThread, createThread, getAuditSummary, getBootstrap, getInbox, getOutbox, getThread, getUnreadCount, markThreadRead, pinMessage, replyThread, searchRecipients, togglePinThread, toggleReaction, unsendMessage } from './lib/moltmail-data.js';
-import { createClipForUser, deleteClipForUser, getOrCreateProfileForUser, getProfileByUsername, isProfileStorageEnabled, listClipsForUser, toPublicProfile, updateProfileAvatar, updateProfileForUser } from './lib/profile-storage.js';
+import { createClipForUser, deleteClipForUser, getOrCreateProfileForUser, getProfileByUsername, isProfileStorageEnabled, listClipsForUser, toPublicProfile, updateProfileAvatar, updateProfileBanner, updateProfileForUser } from './lib/profile-storage.js';
 
 const PROFILE_MEDIA_DIR = process.env.VERCEL ? '/tmp/monkeymoltbook-profile-media' : path.join(process.cwd(), 'data', 'profile-media');
 
@@ -191,6 +191,70 @@ app.delete('/profile/me/avatar', async (req, res) => {
     res.json({ ok: true, profile });
   } catch (error) {
     res.status(500).json({ ok: false, code: 'AVATAR_REMOVE_FAILED', message: String(error?.message || error) });
+  }
+});
+
+app.post('/profile/me/banner', async (req, res) => {
+  const session = getSessionResponse(req);
+  if (!session.authenticated || !session.user?.id) {
+    res.status(401).json({ ok: false, code: 'UNAUTHENTICATED', message: 'Sign in to continue.' });
+    return;
+  }
+  if (!isProfileStorageEnabled()) {
+    res.status(503).json({ ok: false, code: 'PROFILE_STORAGE_DISABLED', message: 'Profile storage is not configured.' });
+    return;
+  }
+
+  const dataUrl = String(req.body?.dataUrl || '');
+  const match = dataUrl.match(/^data:(image\/(png|jpeg|jpg|webp));base64,(.+)$/i);
+  if (!match) {
+    res.status(400).json({ ok: false, code: 'INVALID_IMAGE', message: 'Upload a valid PNG, JPG, or WebP image.' });
+    return;
+  }
+
+  const mimeType = match[1].toLowerCase();
+  const ext = mimeType.includes('png') ? 'png' : mimeType.includes('webp') ? 'webp' : 'jpg';
+  const buffer = Buffer.from(match[3], 'base64');
+  if (buffer.length > 8 * 1024 * 1024) {
+    res.status(400).json({ ok: false, code: 'IMAGE_TOO_LARGE', message: 'Banner must be 8MB or smaller.' });
+    return;
+  }
+
+  try {
+    fs.mkdirSync(PROFILE_MEDIA_DIR, { recursive: true });
+    const key = `banner-${String(session.user.id).replace(/[^a-zA-Z0-9_-]/g, '_')}-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.${ext}`;
+    const outPath = path.join(PROFILE_MEDIA_DIR, key);
+    fs.writeFileSync(outPath, buffer);
+    const bannerUrl = `/profile-media/${key}`;
+    const profile = await updateProfileBanner(session.user, bannerUrl);
+    res.json({ ok: true, profile, bannerUrl });
+  } catch (error) {
+    res.status(500).json({ ok: false, code: 'BANNER_UPLOAD_FAILED', message: String(error?.message || error) });
+  }
+});
+
+app.delete('/profile/me/banner', async (req, res) => {
+  const session = getSessionResponse(req);
+  if (!session.authenticated || !session.user?.id) {
+    res.status(401).json({ ok: false, code: 'UNAUTHENTICATED', message: 'Sign in to continue.' });
+    return;
+  }
+  if (!isProfileStorageEnabled()) {
+    res.status(503).json({ ok: false, code: 'PROFILE_STORAGE_DISABLED', message: 'Profile storage is not configured.' });
+    return;
+  }
+  try {
+    const current = await getOrCreateProfileForUser(session.user);
+    const currentUrl = String(current?.banner_url || '');
+    if (currentUrl.startsWith('/profile-media/')) {
+      const filename = currentUrl.replace('/profile-media/', '');
+      const targetPath = path.join(PROFILE_MEDIA_DIR, filename);
+      if (fs.existsSync(targetPath)) fs.unlinkSync(targetPath);
+    }
+    const profile = await updateProfileBanner(session.user, null);
+    res.json({ ok: true, profile });
+  } catch (error) {
+    res.status(500).json({ ok: false, code: 'BANNER_REMOVE_FAILED', message: String(error?.message || error) });
   }
 });
 

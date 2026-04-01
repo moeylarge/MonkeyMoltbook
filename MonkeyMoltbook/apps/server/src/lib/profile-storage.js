@@ -288,6 +288,20 @@ export async function updateProfileAvatar(user, avatarUrl = null) {
   return result.data?.[0] || null;
 }
 
+export async function updateProfileBanner(user, bannerUrl = null) {
+  await getOrCreateProfileForUser(user);
+  const result = await supabaseFetch('profiles', {
+    method: 'PATCH',
+    query: `user_id=eq.${encodeURIComponent(String(user.id))}&select=*`,
+    body: {
+      banner_url: bannerUrl,
+      updated_at: new Date().toISOString()
+    },
+    prefer: 'return=representation'
+  });
+  return result.data?.[0] || null;
+}
+
 export async function listClipsForUser(userId = '') {
   if (!userId) return [];
   const result = await supabaseFetch('profile_clips', {

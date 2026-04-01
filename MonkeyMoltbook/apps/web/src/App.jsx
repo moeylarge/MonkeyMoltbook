@@ -942,6 +942,9 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
   const [profileForm, setProfileForm] = useState({ display_name: '', username: '', bio: '', about: '', category: '', website_url: '', location_text: '', media: '', pronouns: '', topics: [], topicDraft: '', highlights: [], highlightDraft: '', is_public: true, message_permission: 'everyone', notification_messages_enabled: true, notification_mentions_enabled: true, notification_follows_enabled: true, notification_marketing_enabled: false, theme_preference: 'system' });
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSaveState, setProfileSaveState] = useState({ error: '', success: '' });
+  const [profileFieldErrors, setProfileFieldErrors] = useState({});
+  const [avatarState, setAvatarState] = useState({ error: '', busy: false });
+  const [bannerState, setBannerState] = useState({ error: '', busy: false });
   const [connectionsOpen, setConnectionsOpen] = useState('');
   const fallbackAgent = {
     authorName: slug?.replace(/-/g, ' ') || 'Featured Agent',
@@ -1038,6 +1041,11 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
   const addTopic = () => {
     const next = String(profileForm.topicDraft || '').trim().toLowerCase();
     if (!next || profileForm.topics.includes(next) || profileForm.topics.length >= 8) return;
+    if (next.length > 24) {
+      setProfileFieldErrors((s) => ({ ...s, topics: 'Topic must be 24 characters or fewer.' }));
+      return;
+    }
+    setProfileFieldErrors((s) => ({ ...s, topics: '' }));
     setProfileForm((s) => ({ ...s, topics: [...s.topics, next], topicDraft: '' }));
   };
 
@@ -1065,6 +1073,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
   const saveProfile = async () => {
     setProfileSaving(true);
     setProfileSaveState({ error: '', success: '' });
+    setProfileFieldErrors({});
     try {
       const response = await fetch(`${API}/profile/me`, {
         method: 'PATCH',
@@ -1079,7 +1088,8 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
       });
       const payload = await response.json();
       if (!response.ok) {
-        setProfileSaveState({ error: payload?.errors?.username || payload?.errors?.bio || payload?.errors?.about || payload?.errors?.topics || payload?.errors?.website_url || payload?.message || 'Could not save profile.', success: '' });
+        setProfileFieldErrors(payload?.errors || {});
+        setProfileSaveState({ error: payload?.message || '', success: '' });
         return;
       }
       setOwnerProfile(payload.profile);
@@ -1107,12 +1117,66 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
         notification_marketing_enabled: Boolean(payload.profile?.notification_marketing_enabled),
         theme_preference: payload.profile?.theme_preference || 'system'
       }));
-      setProfileSaveState({ error: '', success: 'Profile saved.' });
+      setProfileSaveState({ error: '', success: 'Saved successfully.' });
     } catch {
       setProfileSaveState({ error: 'Could not save profile.', success: '' });
     } finally {
       setProfileSaving(false);
     }
+  };
+
+  const onAvatarFileChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      setAvatarState({ error: '', busy: true });
+      try {
+        const response = await fetch(`${API}/profile/me/avatar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ dataUrl: String(reader.result || '') })
+        });
+        const payload = await response.json();
+        if (!response.ok) {
+          setAvatarState({ error: payload?.message || 'Could not upload avatar.', busy: false });
+          return;
+        }
+        setProfileState((current) => ({ ...current, profile: payload.profile || current.profile, ownerView: true }));
+        setAvatarState({ error: '', busy: false });
+      } catch {
+        setAvatarState({ error: 'Could not upload avatar.', busy: false });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const onBannerFileChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      setBannerState({ error: '', busy: true });
+      try {
+        const response = await fetch(`${API}/profile/me/banner`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ dataUrl: String(reader.result || '') })
+        });
+        const payload = await response.json();
+        if (!response.ok) {
+          setBannerState({ error: payload?.message || 'Could not upload banner.', busy: false });
+          return;
+        }
+        setProfileState((current) => ({ ...current, profile: payload.profile || current.profile, ownerView: true }));
+        setBannerState({ error: '', busy: false });
+      } catch {
+        setBannerState({ error: 'Could not upload banner.', busy: false });
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   if (isOwnRequestedProfile && !auth?.authenticated) {
@@ -1151,8 +1215,9 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
           <div className="profile-card main profile-card-main-upgraded member-profile-main member-profile-left-column">
             <div className="member-profile-topbar">
               <div className="member-profile-identity-row">
-                <div className="member-profile-avatar">
+                <div className={`member-profile-avatar ${showOwnerEditAffordances ? 'editable' : ''}`}>
                   {profile?.avatar_url ? <img src={profile.avatar_url} alt={profileName} className="member-profile-avatar-img" /> : String(profileName || 'M').slice(0, 1).toUpperCase()}
+                  {showOwnerEditAffordances ? <label className="member-profile-avatar-edit"><input type="file" accept="image/png,image/jpeg,image/webp" onChange={onAvatarFileChange} /><span>{avatarState.busy ? 'Uploading…' : 'Change photo'}</span></label> : null}
                 </div>
                 <div className="member-profile-identity-copy">
                   <h1>{normalizeSingleLineText(previewProfile?.display_name || profileName, 80)}</h1>
@@ -1162,7 +1227,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
                   {previewProfile?.location_text || previewProfile?.website_url || previewProfile?.pronouns || joinedLabel ? <div className="member-profile-inline-meta">
                     {previewProfile?.location_text ? <span>{normalizeSingleLineText(previewProfile.location_text, 80)}</span> : null}
                     {previewProfile?.pronouns ? <span>{normalizeSingleLineText(previewProfile.pronouns, 40)}</span> : null}
-                    {previewProfile?.website_url ? <a href={previewProfile.website_url} target="_blank" rel="noreferrer">{formatWebsiteDisplay(previewProfile.website_url)}</a> : null}
+                    {previewProfile?.website_url ? <a className="member-profile-website-chip" href={previewProfile.website_url} target="_blank" rel="noreferrer">↗ {formatWebsiteDisplay(previewProfile.website_url)}</a> : null}
                     {joinedLabel ? <span>Joined {joinedLabel}</span> : null}
                   </div> : null}
                 </div>
@@ -1177,25 +1242,28 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
               </div>
             </div>
             <div className="member-profile-stats-row">
-              <button className="listing-strip-card member-profile-stat-btn" onClick={() => setConnectionsOpen('followers')}><strong>{Number(profile?.follower_count || 0)}</strong><span>followers</span></button>
-              <button className="listing-strip-card member-profile-stat-btn" onClick={() => setConnectionsOpen('following')}><strong>{Number(profile?.following_count || 0)}</strong><span>following</span></button>
-              <div className="listing-strip-card"><strong>{Number(profile?.like_count || 0)}</strong><span>likes</span></div>
-              <div className="listing-strip-card"><strong>{Number(profile?.activity_item_count || 0)}</strong><span>activity items</span></div>
+              {Number(profile?.follower_count || 0) > 0 ? <button className="listing-strip-card member-profile-stat-btn" onClick={() => setConnectionsOpen('followers')}><strong>{Number(profile?.follower_count || 0)}</strong><span>followers</span></button> : null}
+              {Number(profile?.following_count || 0) > 0 ? <button className="listing-strip-card member-profile-stat-btn" onClick={() => setConnectionsOpen('following')}><strong>{Number(profile?.following_count || 0)}</strong><span>following</span></button> : null}
+              {Number(profile?.like_count || 0) > 0 ? <div className="listing-strip-card"><strong>{Number(profile?.like_count || 0)}</strong><span>likes</span></div> : null}
+              {joinedLabel ? <div className="listing-strip-card"><strong>{joinedLabel}</strong><span>joined</span></div> : null}
             </div>
 
             <div className="member-profile-hero-banner">
               {previewProfile?.banner_url ? <img src={previewProfile.banner_url} alt={`${profileName} banner`} className="member-profile-banner-img" /> : <div className="member-profile-banner-fallback"><strong>{normalizeSingleLineText(previewProfile?.category || 'Creator profile', 60)}</strong><span>{profileBio || 'Build your profile with a clear identity and clean social proof.'}</span></div>}
+              {showOwnerEditAffordances ? <div className="member-profile-banner-actions"><label className="ghost-btn member-profile-banner-btn"><input type="file" accept="image/png,image/jpeg,image/webp" onChange={onBannerFileChange} />{bannerState.busy ? 'Uploading…' : (previewProfile?.banner_url ? 'Change banner' : 'Add banner')}</label>{previewProfile?.banner_url ? <button className="ghost-btn member-profile-banner-btn" onClick={async () => { const response = await fetch(`${API}/profile/me/banner`, { method: 'DELETE', credentials: 'include' }); const payload = await response.json(); if (response.ok) setProfileState((current) => ({ ...current, profile: payload.profile || current.profile, ownerView: true })); }}>Remove banner</button> : null}</div> : null}
+              {bannerState.error ? <div className="feed-note">{bannerState.error}</div> : null}
             </div>
 
             {showOwnerEditAffordances && editOpen ? <div className="member-profile-editor-panel">
               <h3>Edit Profile</h3>
+              <div className="member-profile-completion-hints">{!profile?.avatar_url ? <span className="tag">Add an avatar</span> : null}{!previewProfile?.banner_url ? <span className="tag">Add a banner</span> : null}{!profileBio ? <span className="tag">Write a bio</span> : null}{!previewProfile?.website_url ? <span className="tag">Add a website</span> : null}{profileTopics.length < 3 ? <span className="tag">Add a few topics</span> : null}</div>
               <div className="member-profile-editor-grid">
                 <div className="member-profile-edit-group-block member-profile-editor-wide">
                   <h4>Identity</h4>
                   <p>Shape how people recognize you at a glance.</p>
                   <div className="member-profile-edit-subgrid">
                     <label><span>Display name</span><input className="mega-search auth-input" value={profileForm.display_name} onChange={(e) => setProfileForm((s) => ({ ...s, display_name: e.target.value }))} /></label>
-                    <label><span>Username</span><input className="mega-search auth-input" value={profileForm.username} onChange={(e) => setProfileForm((s) => ({ ...s, username: e.target.value.toLowerCase() }))} /></label>
+                    <label><span>Username</span><input className={`mega-search auth-input ${profileFieldErrors.username ? 'invalid' : ''}`} value={profileForm.username} onChange={(e) => setProfileForm((s) => ({ ...s, username: e.target.value.toLowerCase() }))} />{profileFieldErrors.username ? <small className="field-error">{profileFieldErrors.username}</small> : null}</label>
                     <label><span>Category</span><small>Short descriptor or role</small><input className="mega-search auth-input" value={profileForm.category} onChange={(e) => setProfileForm((s) => ({ ...s, category: e.target.value }))} /></label>
                     <label><span>Pronouns</span><input className="mega-search auth-input" value={profileForm.pronouns} onChange={(e) => setProfileForm((s) => ({ ...s, pronouns: e.target.value }))} /></label>
                   </div>
@@ -1210,7 +1278,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
                   <h4>Links & details</h4>
                   <p>Add only what improves your profile.</p>
                   <div className="member-profile-edit-subgrid">
-                    <label><span>Website</span><small>Add a valid link</small><input className="mega-search auth-input" value={profileForm.website_url} onChange={(e) => setProfileForm((s) => ({ ...s, website_url: e.target.value }))} /></label>
+                    <label><span>Website</span><small>Add a valid link</small><input className={`mega-search auth-input ${profileFieldErrors.website_url ? 'invalid' : ''}`} value={profileForm.website_url} onChange={(e) => setProfileForm((s) => ({ ...s, website_url: e.target.value }))} />{profileFieldErrors.website_url ? <small className="field-error">{profileFieldErrors.website_url}</small> : null}</label>
                     <label><span>Location</span><input className="mega-search auth-input" value={profileForm.location_text} onChange={(e) => setProfileForm((s) => ({ ...s, location_text: e.target.value }))} /></label>
                     <label><span>Media</span><small>Short media descriptor</small><input className="mega-search auth-input" value={profileForm.media} onChange={(e) => setProfileForm((s) => ({ ...s, media: e.target.value }))} /></label>
                   </div>
@@ -1222,7 +1290,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
                     <input className="mega-search auth-input" value={profileForm.topicDraft} onChange={(e) => setProfileForm((s) => ({ ...s, topicDraft: e.target.value }))} onBlur={addTopic} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTopic(); } }} placeholder="Add topic" />
                     <button className="ghost-btn" type="button" onClick={addTopic}>Add</button>
                   </div>
-                  <div className="tag-row">{profileForm.topics.map((topic) => <button key={topic} type="button" className="tag member-profile-edit-tag" onClick={() => removeTopic(topic)}>{topic} ×</button>)}</div>
+                  <div className="tag-row member-profile-topics-row">{profileForm.topics.map((topic) => <button key={topic} type="button" className="tag member-profile-edit-tag" onClick={() => removeTopic(topic)}>{topic} ×</button>)}</div>{profileFieldErrors.topics ? <small className="field-error">{profileFieldErrors.topics}</small> : null}
                 </div>
                 <div className="member-profile-editor-wide member-profile-topics-editor member-profile-edit-group-block">
                   <h4>Highlights</h4>
@@ -1239,7 +1307,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
                 <button className="primary-btn" disabled={profileSaving} onClick={async () => { await saveProfile(); setEditOpen(false); }}>{profileSaving ? 'Saving…' : 'Save changes'}</button>
               </div>
               {profileSaveState.error ? <div className="feed-note">{profileSaveState.error}</div> : null}
-              {profileSaveState.success ? <div className="feed-note">{profileSaveState.success}</div> : null}
+              {profileSaveState.success ? <div className="member-profile-save-toast">{profileSaveState.success}</div> : null}
             </div> : null}
 
 
@@ -1269,13 +1337,13 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
 
             {profileTopics.length ? <div className="member-profile-content-block member-profile-inline-section-card member-profile-metadata-card member-profile-clickable-section" onClick={() => showOwnerEditAffordances && setEditOpen(true)}>
               <div className="member-profile-inline-section-head"><h3>Topics</h3>{showOwnerEditAffordances ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={(e) => { e.stopPropagation(); setEditOpen(true); }}>✏️</button></div> : null}</div>
-              <div className="tag-row">{profileTopics.map((tag) => <span key={tag} className="tag">{normalizeRenderText(tag, 24)}</span>)}</div>
+              <div className="tag-row member-profile-topics-row">{profileTopics.map((tag) => <span key={tag} className="tag">{normalizeRenderText(tag, 24)}</span>)}</div>
               {overflowTopics.length ? <div className="tag-row">{overflowTopics.map((tag) => <span key={tag} className="tag">{normalizeRenderText(tag, 24)}</span>)}</div> : null}
             </div> : null}
 
             {profileHighlights.length ? <div className="member-profile-content-block member-profile-inline-section-card member-profile-metadata-card member-profile-clickable-section" onClick={() => showOwnerEditAffordances && setEditOpen(true)}>
               <div className="member-profile-inline-section-head"><h3>Highlights</h3>{showOwnerEditAffordances ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={(e) => { e.stopPropagation(); setEditOpen(true); }}>✏️</button></div> : null}</div>
-              <div className="tag-row">{profileHighlights.map((item) => <span key={item} className="tag">{item}</span>)}</div>
+              <div className="member-profile-highlights-list">{profileHighlights.map((item) => <span key={item} className="member-profile-highlight-chip">{item}</span>)}</div>
             </div> : null}
           </div> : null}
 
