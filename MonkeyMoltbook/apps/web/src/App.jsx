@@ -1183,29 +1183,6 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
             </div> : null}
           </div>
 
-          <div className="member-profile-right-column">
-            <div className="profile-card side member-profile-side member-profile-meta-card">
-              <div className="member-profile-inline-section-head"><h3>Details</h3>{profileState.ownerView ? <button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>✏️</button> : null}</div>
-              <div className="member-profile-detail-pills">
-                <span className="tag">@{profileSlug}</span>
-                {profile?.category ? <span className="tag">{profile.category}</span> : null}
-                <span className="tag">{profile?.is_public === false ? 'Private' : 'Public'}</span>
-                <span className="tag">{profile?.theme_preference || 'system'}</span>
-              </div>
-              {profileHighlights.length ? <div className="tag-row">{profileHighlights.map((item) => <span key={item} className="tag">{item}</span>)}</div> : null}
-              {profileLinks.length ? <div className="member-profile-links-grid">{profileLinks.map((item, index) => <a key={`${item.url}-${index}`} href={item.url} target="_blank" rel="noreferrer" className="ghost-btn member-profile-link-card"><strong>{item.label}</strong><span>{item.url}</span></a>)}</div> : null}
-            </div>
-
-            {profileTopics.length ? <div className="profile-card side member-profile-side member-profile-meta-card">
-              <div className="member-profile-inline-section-head"><h3>Topics</h3>{profileState.ownerView ? <button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>✏️</button> : null}</div>
-              <div className="tag-row">{profileTopics.map((tag) => <span key={tag} className="tag">{tag}</span>)}</div>
-            </div> : null}
-
-            <div className="member-profile-content-block">
-              <div className="member-profile-section-head"><h3>Suggested creators</h3><span>Discover more</span></div>
-              <div className="member-profile-suggested-grid">{suggestedCreators.map((item) => <Link key={item.authorName} to={`/u/${slugify(item.authorName)}`} className="profile-card member-profile-suggested-card"><strong>{item.authorName}</strong><span>{item.topic || item.reason || 'Creator'}</span></Link>)}</div>
-            </div>
-          </div>
         </div>
 
         {connectionsOpen ? <div className="member-profile-viewer-backdrop" onClick={() => setConnectionsOpen('')}><div className="member-profile-connections-modal" onClick={(e) => e.stopPropagation()}><button className="ghost-btn member-profile-viewer-close" onClick={() => setConnectionsOpen('')}>Close</button><h3>{connectionsOpen === 'followers' ? 'Followers' : 'Following'}</h3><div className="member-profile-empty-state">No real {connectionsOpen} yet.</div></div></div> : null}
