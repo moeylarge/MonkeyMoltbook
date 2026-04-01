@@ -192,11 +192,53 @@ function buildDefaultProfile(user) {
 }
 
 export async function getOrCreateProfileForUser(user) {
-  const existing = await supabaseFetch('profiles', { query: `user_id=eq.${encodeURIComponent(String(user.id))}&select=*` });
+  const userId = String(user.id);
+  const email = safeText(user?.email) || null;
+  const baseProfile = buildDefaultProfile(user);
+
+  const existing = await supabaseFetch('profiles', { query: `user_id=eq.${encodeURIComponent(userId)}&select=*` });
   if (existing.data?.[0]) return existing.data[0];
+
+  if (email) {
+    const byEmail = await supabaseFetch('profiles', { query: `email=eq.${encodeURIComponent(email)}&select=*` });
+    if (byEmail.data?.[0]) {
+      const claimed = await supabaseFetch('profiles', {
+        method: 'PATCH',
+        query: `id=eq.${encodeURIComponent(String(byEmail.data[0].id))}&select=*`,
+        body: {
+          user_id: userId,
+          email,
+          updated_at: new Date().toISOString()
+        },
+        prefer: 'return=representation'
+      });
+      return claimed.data?.[0] || byEmail.data[0];
+    }
+  }
+
+  const desiredUsername = baseProfile.username;
+  const byUsername = desiredUsername ? await supabaseFetch('profiles', { query: `username=eq.${encodeURIComponent(desiredUsername)}&select=*` }) : { data: [] };
+  if (byUsername.data?.[0]) {
+    const usernameOwner = byUsername.data[0];
+    if (email && usernameOwner.email && String(usernameOwner.email).toLowerCase() === String(email).toLowerCase()) {
+      const claimed = await supabaseFetch('profiles', {
+        method: 'PATCH',
+        query: `id=eq.${encodeURIComponent(String(usernameOwner.id))}&select=*`,
+        body: {
+          user_id: userId,
+          email,
+          updated_at: new Date().toISOString()
+        },
+        prefer: 'return=representation'
+      });
+      return claimed.data?.[0] || usernameOwner;
+    }
+    baseProfile.username = `${desiredUsername}_${userId.slice(-4)}`;
+  }
+
   const created = await supabaseFetch('profiles', {
     method: 'POST',
-    body: buildDefaultProfile(user),
+    body: baseProfile,
     prefer: 'return=representation'
   });
   return created.data?.[0] || null;
