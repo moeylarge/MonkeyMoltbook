@@ -992,6 +992,9 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
   const profile = profileState.profile;
   const profileSlug = profile?.username || slugify(resolvedAgent.authorName);
   const profileName = profile?.display_name || resolvedAgent.authorName;
+  const authBaseSlug = slugify(String(auth?.user?.email || '').split('@')[0]);
+  const authDisplaySlug = slugify(auth?.user?.displayName || '');
+  const isOwnRequestedProfile = Boolean(normalizedSlug && (normalizedSlug === authBaseSlug || normalizedSlug === authDisplaySlug));
   const profileBio = profile?.bio || profile?.tagline || '';
   const profileAbout = profile?.about || '';
   const profileTopics = Array.isArray(profile?.topics) ? profile.topics : [];
@@ -1055,6 +1058,30 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
       setProfileSaving(false);
     }
   };
+
+  if (isOwnRequestedProfile && !auth?.authenticated) {
+    return (
+      <section className="page-section narrow">
+        <div className="profile-card member-profile-gate-card">
+          <h2>Create your account</h2>
+          <p>You need to create your account before accessing your profile.</p>
+          <button className="primary-btn" onClick={onOpenAuth}>Create account</button>
+        </div>
+      </section>
+    );
+  }
+
+  if (isOwnRequestedProfile && auth?.authenticated && !auth?.user?.emailVerified) {
+    return (
+      <section className="page-section narrow">
+        <div className="profile-card member-profile-gate-card">
+          <h2>Verify your email</h2>
+          <p>Verify your email before accessing your profile.</p>
+          <Link className="primary-btn" to="/verify-email">Verify email</Link>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <>
