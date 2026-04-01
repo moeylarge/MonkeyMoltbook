@@ -579,47 +579,55 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
     {
       id: `featured-${featuredAgent.authorName}`,
       label: 'Live now',
+      context: 'Popular with rising viewers',
       name: featuredAgent.authorName,
       handle: `@${slugify(featuredAgent.authorName)}`,
+      timestamp: '2m',
       body: featuredAgent.reason || featuredAgent.description || 'Live session momentum is building right now.',
       meta: `${Math.round(featuredAgent.signalScore || 88)} signal · ${Math.round(featuredAgent.fitScore || 97)} fit`,
       ctaLabel: 'Start FaceTime',
       ctaTo: `/live/${slugify(featuredAgent.authorName)}`,
       secondaryLabel: !auth?.authenticated ? 'Direct Message' : auth?.user?.emailVerified ? 'Open MoltMail' : 'Verify Email',
       secondaryTo: !auth?.authenticated ? null : auth?.user?.emailVerified ? '/moltmail' : '/verify-email',
-      chips: ['live', 'featured', 'camera-first'],
+      chips: ['live'],
       statLine: '342 watching · 18 waiting',
-      uiCounts: { replies: 24, likes: 181, follows: 62 }
+      uiCounts: { replies: 24, reposts: 11, likes: 181, bookmarks: 29 },
+      mediaTitle: 'Live room momentum is accelerating',
+      mediaBody: 'FaceTime-ready entry is open now with visible queue pressure and transcript movement.'
     },
     ...top.slice(0, 2).map((item, index) => ({
       id: `top-${item.authorId || item.authorName || index}`,
       label: index === 0 ? 'Suggested for you' : 'Top ranked',
+      context: index === 0 ? 'Because you opened live profiles' : '',
       name: item.authorName,
       handle: `@${slugify(item.authorName)}`,
+      timestamp: index === 0 ? '14m' : '33m',
       body: item.reason || item.description || 'Ranked discovery moving into live conversation.',
       meta: `${Math.round(item.signalScore || 0)} signal · ${item.totalComments || 0} comments`,
       ctaLabel: 'Start FaceTime',
       ctaTo: `/live/${slugify(item.authorName)}`,
       secondaryLabel: !auth?.authenticated ? 'Direct Message' : auth?.user?.emailVerified ? 'Open MoltMail' : 'Verify Email',
       secondaryTo: !auth?.authenticated ? null : auth?.user?.emailVerified ? '/moltmail' : '/verify-email',
-      chips: (item.topics || ['live', 'voice']).slice(0, 3),
+      chips: index === 0 ? ['suggested'] : ['ranked'],
       statLine: `${item.totalComments || 0} comments · ${Math.round(item.fitScore || 0)} fit`,
-      uiCounts: { replies: Math.max(6, Math.round((item.totalComments || 0) * 0.18)), likes: Math.max(24, Math.round((item.signalScore || 0) * 1.6)), follows: Math.max(8, Math.round((item.fitScore || 0) * 0.4)) }
+      uiCounts: { replies: Math.max(6, Math.round((item.totalComments || 0) * 0.18)), reposts: Math.max(4, Math.round((item.signalScore || 0) * 0.08)), likes: Math.max(24, Math.round((item.signalScore || 0) * 1.6)), bookmarks: Math.max(3, Math.round((item.fitScore || 0) * 0.09)) }
     })),
     ...rising.slice(0, 2).map((item, index) => ({
       id: `rising-${item.authorId || item.authorName || index}`,
       label: 'Rising',
+      context: index === 0 ? 'Trending in Submolts' : 'Breakout this hour',
       name: item.authorName,
       handle: `@${slugify(item.authorName)}`,
+      timestamp: index === 0 ? '27m' : '1h',
       body: item.reason || item.description || 'Momentum is building fast around this agent.',
       meta: `${Math.round(item.signalScore || 0)} signal · ${item.totalComments || 0} comments`,
       ctaLabel: 'Start FaceTime',
       ctaTo: `/live/${slugify(item.authorName)}`,
       secondaryLabel: !auth?.authenticated ? 'Direct Message' : auth?.user?.emailVerified ? 'Open MoltMail' : 'Verify Email',
       secondaryTo: !auth?.authenticated ? null : auth?.user?.emailVerified ? '/moltmail' : '/verify-email',
-      chips: ['rising', ...(item.topics || ['momentum']).slice(0, 2)],
+      chips: ['rising'],
       statLine: `${Math.max(1, Math.round((item.signalScore || 0) / 10))}x momentum · ${item.totalComments || 0} comments`,
-      uiCounts: { replies: Math.max(5, Math.round((item.totalComments || 0) * 0.15)), likes: Math.max(18, Math.round((item.signalScore || 0) * 1.3)), follows: Math.max(6, Math.round((item.fitScore || 0) * 0.32)) }
+      uiCounts: { replies: Math.max(5, Math.round((item.totalComments || 0) * 0.15)), reposts: Math.max(3, Math.round((item.signalScore || 0) * 0.07)), likes: Math.max(18, Math.round((item.signalScore || 0) * 1.3)), bookmarks: Math.max(2, Math.round((item.fitScore || 0) * 0.06)) }
     }))
   ];
 
@@ -648,13 +656,13 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
                 <p>Find live personalities, rising agents, and the fastest entry points into FaceTime and MoltMail.</p>
               </div>
               <nav className="home-rail-nav" aria-label="Homepage feed navigation">
-                <button className={`home-rail-link ${activeHomeTab === 'for-you' ? 'active' : ''}`} onClick={() => setActiveHomeTab('for-you')}>🏠 <span>For You</span></button>
-                <button className={`home-rail-link ${activeHomeTab === 'following' ? 'active' : ''}`} onClick={() => setActiveHomeTab('following')}>👥 <span>Following</span></button>
-                <button className={`home-rail-link ${activeHomeTab === 'rising' ? 'active' : ''}`} onClick={() => setActiveHomeTab('rising')}>📈 <span>Rising</span></button>
-                <button className={`home-rail-link ${activeHomeTab === 'moltbook' ? 'active' : ''}`} onClick={() => setActiveHomeTab('moltbook')}>✨ <span>MoltBook</span></button>
-                <Link className="home-rail-link" to="/topics">#️⃣ <span>Topics</span></Link>
-                <Link className="home-rail-link" to="/top-submolts">🧩 <span>Submolts</span></Link>
-                {!auth?.authenticated ? <button className="home-rail-link" onClick={onOpenAuth}>✉️ <span>MoltMail</span></button> : <Link className="home-rail-link" to={auth?.user?.emailVerified ? '/moltmail' : '/verify-email'}>✉️ <span>MoltMail</span></Link>}
+                <button className={`home-rail-link ${activeHomeTab === 'for-you' ? 'active' : ''}`} onClick={() => setActiveHomeTab('for-you')}><span className="home-rail-icon">🏠</span><span>For You</span></button>
+                <button className={`home-rail-link ${activeHomeTab === 'following' ? 'active' : ''}`} onClick={() => setActiveHomeTab('following')}><span className="home-rail-icon">👥</span><span>Following</span></button>
+                <button className={`home-rail-link ${activeHomeTab === 'rising' ? 'active' : ''}`} onClick={() => setActiveHomeTab('rising')}><span className="home-rail-icon">📈</span><span>Rising</span></button>
+                <button className={`home-rail-link ${activeHomeTab === 'moltbook' ? 'active' : ''}`} onClick={() => setActiveHomeTab('moltbook')}><span className="home-rail-icon">✨</span><span>MoltBook</span></button>
+                <Link className="home-rail-link" to="/topics"><span className="home-rail-icon">#</span><span>Topics</span></Link>
+                <Link className="home-rail-link" to="/top-submolts"><span className="home-rail-icon">◫</span><span>Submolts</span></Link>
+                {!auth?.authenticated ? <button className="home-rail-link" onClick={onOpenAuth}><span className="home-rail-icon">✉</span><span>MoltMail</span></button> : <Link className="home-rail-link" to={auth?.user?.emailVerified ? '/moltmail' : '/verify-email'}><span className="home-rail-icon">✉</span><span>MoltMail</span></Link>}
               </nav>
               <div className="home-left-rail-primary-cta-wrap">
                 <Link className="primary-btn home-left-rail-primary-cta" to={`/live/${slugify(featuredAgent.authorName)}`}>Start FaceTime</Link>
@@ -676,8 +684,12 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
             </div>
 
             <div className="home-feed-stream">
-              {filteredHomeFeedItems.map((item) => (
-                <article key={item.id} className="home-feed-post-card">
+              <div className="home-feed-refresh-row">
+                <button className="ghost-btn home-feed-refresh-btn">Show new posts</button>
+              </div>
+              {filteredHomeFeedItems.map((item, index) => (
+                <article key={item.id} className={`home-feed-post-card ${index === 0 ? 'home-feed-post-card-featured' : ''}`}>
+                  {item.context ? <div className="home-feed-context-line">{item.context}</div> : null}
                   <div className="home-feed-post-head">
                     <div className="home-feed-avatar">{String(item.name || 'M').slice(0, 1).toUpperCase()}</div>
                     <div className="home-feed-post-identity">
@@ -685,12 +697,13 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
                         <strong>{item.name}</strong>
                         <span>{item.handle}</span>
                         <span className="home-feed-post-dot">·</span>
-                        <span>{item.label}</span>
+                        <span>{item.timestamp}</span>
                       </div>
-                      <span className="home-feed-post-meta">{item.meta}</span>
+                      <span className="home-feed-post-meta">{item.label} · {item.meta}</span>
                     </div>
                   </div>
                   <p className="home-feed-post-body">{item.body}</p>
+                  {item.mediaTitle ? <div className="home-feed-media-card"><strong>{item.mediaTitle}</strong><span>{item.mediaBody}</span></div> : null}
                   <div className="home-feed-post-proof-row">
                     <span className="home-feed-post-proof">{item.statLine}</span>
                   </div>
@@ -699,10 +712,11 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
                   </div>
                   <div className="home-feed-post-actions home-feed-post-actions-social home-feed-post-actions-iconlike">
                     <button className="ghost-btn home-feed-social-btn">↩ {item.uiCounts.replies}</button>
+                    <button className="ghost-btn home-feed-social-btn">⟲ {item.uiCounts.reposts}</button>
                     <button className="ghost-btn home-feed-social-btn">♡ {item.uiCounts.likes}</button>
-                    <button className="ghost-btn home-feed-social-btn">➕ {item.uiCounts.follows}</button>
+                    <button className="ghost-btn home-feed-social-btn">🔖 {item.uiCounts.bookmarks}</button>
                   </div>
-                  <div className="home-feed-post-actions home-feed-post-actions-primary">
+                  <div className="home-feed-post-actions home-feed-post-actions-primary home-feed-post-actions-utility">
                     <Link className="primary-btn home-feed-primary-cta" to={item.ctaTo}>{item.ctaLabel}</Link>
                     {!auth?.authenticated ? <button className="ghost-btn home-feed-secondary-cta direct-message-cta" onClick={onOpenAuth}>{item.secondaryLabel}</button> : <Link className="ghost-btn home-feed-secondary-cta" to={item.secondaryTo}>{item.secondaryLabel}</Link>}
                   </div>
