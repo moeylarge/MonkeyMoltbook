@@ -157,9 +157,9 @@
   position: sticky;
   top: 78px;
   z-index: 5;
-  background: rgba(247, 244, 239, 0.96);
+  background: rgba(246, 250, 255, 0.96);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(24, 33, 47, 0.08);
+  border-bottom: 1px solid rgba(37, 99, 235, 0.10);
 }
 
 .home-feed-stream {
@@ -182,7 +182,7 @@
 }
 
 .home-feed-post-card-featured {
-  border-color: rgba(255, 90, 54, 0.18);
+  border-color: rgba(37, 99, 235, 0.18);
 }
 
 .home-feed-post-head {
@@ -200,7 +200,7 @@
   background: var(--primary-bg);
   color: #fff;
   font-weight: 900;
-  box-shadow: 0 8px 16px rgba(255, 90, 54, 0.16);
+  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.16);
   flex-shrink: 0;
 }
 
@@ -222,7 +222,7 @@
   gap: 6px;
   align-items: center;
   flex-wrap: wrap;
-  color: #667085;
+  color: #64748b;
 }
 
 .home-feed-post-name-row strong {
@@ -400,7 +400,7 @@
   gap: 12px;
   align-items: flex-start;
   padding: 10px 0;
-  border-top: 1px solid rgba(24, 33, 47, 0.06);
+  border-top: 1px solid rgba(37, 99, 235, 0.08);
 }
 
 .home-rail-follow-row {
@@ -409,7 +409,7 @@
   justify-content: space-between;
   gap: 10px;
   padding: 10px 0;
-  border-top: 1px solid rgba(24, 33, 47, 0.06);
+  border-top: 1px solid rgba(37, 99, 235, 0.08);
 }
 
 .home-rail-follow-row:first-child {
@@ -445,7 +445,7 @@
 
 .home-rail-list-row strong {
   font-size: 13px;
-  color: #141c24;
+  color: #0f172a;
   line-height: 1.35;
 }
 
@@ -518,8 +518,8 @@
 }
 
 .home-feed-tabs .tab.active {
-  border-bottom-color: #141c24;
-  color: #141c24;
+  border-bottom-color: #2563eb;
+  color: #1d4ed8;
 }
 
 @media (max-width: 720px) {
