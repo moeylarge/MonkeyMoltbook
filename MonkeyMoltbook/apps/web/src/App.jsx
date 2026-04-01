@@ -2435,12 +2435,12 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   };
 
   const renderComposer = () => {
-    if (!selectedThreadId && !compose.recipientUserId) return null;
+    if (!selectedThreadId && !compose.recipientUserId && !activeComposeRecipient?.id && !optimisticSelectedThread && !activeThread) return null;
     const value = selectedThreadId ? replyText : compose.bodyText;
     const setValue = selectedThreadId ? setReplyText : (text) => setCompose((current) => ({ ...current, bodyText: text }));
     const onSend = selectedThreadId ? () => submitReply() : () => submitCompose();
     const sending = selectedThreadId ? replyState.sending : composeState.sending;
-    const recipientReady = selectedThreadId || Boolean(activeComposeRecipient?.id || compose.recipientUserId);
+    const recipientReady = selectedThreadId || Boolean(activeComposeRecipient?.id || compose.recipientUserId || optimisticSelectedThread?.id || activeThread?.id);
     const disabled = sending || attachmentState.uploading || !recipientReady || (!value.trim() && !attachmentState.file && !queuedSticker);
     return (
       <div className="moltmail-chat-composer-wrap">
