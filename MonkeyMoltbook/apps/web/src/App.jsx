@@ -2212,12 +2212,12 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     const confirmedMessageId = payload?.message?.id || clientMessageId;
     resolveOptimisticMessage(clientMessageId, { id: confirmedMessageId, threadId: confirmedThreadId, status: 'sent', error: '' });
     resolveOptimisticThread(optimisticThreadId, { status: 'sent' });
-    setSelectedThreadId(confirmedThreadId);
     setRecipientQuery('');
     setRecipients([]);
     setMobileView('chat');
     try {
       await hydrateConfirmedThread(confirmedThreadId);
+      setSelectedThreadId(confirmedThreadId);
       await loadMailbox(confirmedThreadId);
       removeOptimisticMessage(clientMessageId);
       removeOptimisticThread(optimisticThreadId);
