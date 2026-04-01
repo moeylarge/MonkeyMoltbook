@@ -1972,6 +1972,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showStickerPicker, setShowStickerPicker] = useState(false);
   const [queuedSticker, setQueuedSticker] = useState(null);
+  const [activeComposeRecipient, setActiveComposeRecipient] = useState(null);
   const [attachmentState, setAttachmentState] = useState({ uploading: false, file: null, error: '' });
   const threadFeedRef = useRef(null);
   const composerInputRef = useRef(null);
@@ -2008,7 +2009,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     participants: optimisticSelectedThread.participants || [],
     messages: []
   } : null);
-  const selectedRecipient = pendingRecipient || recipients.find((r) => r.id === compose.recipientUserId) || optimisticSelectedThread?.participants?.[0] || null;
+  const selectedRecipient = activeComposeRecipient || pendingRecipient || recipients.find((r) => r.id === compose.recipientUserId) || optimisticSelectedThread?.participants?.[0] || null;
   const activeMessages = useMemo(() => {
     const confirmed = activeThread?.messages || [];
     const scopedOptimistic = optimisticMessages.filter((message) => message.threadId === selectedThreadId);
@@ -2128,6 +2129,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     setRecipients([]);
     setCompose({ recipientUserId: '', bodyText: '' });
     setPendingRecipient(null);
+    setActiveComposeRecipient(null);
     setQueuedSticker(null);
     setAttachmentState({ uploading: false, file: null, error: '' });
   };
@@ -2159,6 +2161,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   };
 
   const chooseRecipient = (recipient) => {
+    setActiveComposeRecipient(recipient);
     setCompose({ recipientUserId: recipient.id, bodyText: '' });
     setPendingRecipient(recipient);
     setQueuedSticker(null);
@@ -2221,8 +2224,11 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     const composedBodyText = String(overrides.bodyText ?? compose.bodyText ?? '').trim();
     const sticker = overrides.sticker || queuedSticker || null;
     const attachment = overrides.attachment || attachmentState.file || null;
-    const recipientUserId = overrides.recipientUserId || compose.recipientUserId || pendingRecipient?.id || selectedRecipient?.id || '';
-    if (!recipientUserId || (!composedBodyText && !sticker && !attachment)) return;
+    const recipientUserId = overrides.recipientUserId || activeComposeRecipient?.id || compose.recipientUserId || '';
+    if (!recipientUserId || (!composedBodyText && !sticker && !attachment)) {
+      setComposeState({ sending: false, error: !recipientUserId ? 'Recipient not ready.' : '' });
+      return;
+    }
     const clientMessageId = buildClientMessageId();
     const optimisticThreadId = `pending_${clientMessageId}`;
     const submittedCompose = { recipientUserId, bodyText: composedBodyText, sticker, attachment };
@@ -2244,6 +2250,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     setThreadData({ loading: false, data: null, error: '' });
     setCompose({ recipientUserId: '', bodyText: '' });
     setPendingRecipient(null);
+    setActiveComposeRecipient(null);
     setComposeState({ sending: false, error: '' });
     setReplyText('');
     setAttachmentState({ uploading: false, file: null, error: '' });
@@ -2409,7 +2416,8 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     const setValue = selectedThreadId ? setReplyText : (text) => setCompose((current) => ({ ...current, bodyText: text }));
     const onSend = selectedThreadId ? () => submitReply() : () => submitCompose();
     const sending = selectedThreadId ? replyState.sending : composeState.sending;
-    const disabled = sending || attachmentState.uploading || (!value.trim() && !attachmentState.file && !queuedSticker);
+    const recipientReady = selectedThreadId || Boolean(activeComposeRecipient?.id || compose.recipientUserId);
+    const disabled = sending || attachmentState.uploading || !recipientReady || (!value.trim() && !attachmentState.file && !queuedSticker);
     return (
       <div className="moltmail-chat-composer-wrap">
         {queuedSticker ? <div className="moltmail-attachment-pill"><span>{queuedSticker.emoji} {queuedSticker.label}</span><button onClick={() => setQueuedSticker(null)}>✕</button></div> : null}
