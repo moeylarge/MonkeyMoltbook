@@ -625,7 +625,7 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
 
   const filteredHomeFeedItems = homeFeedItems.filter((item) => {
     if (activeHomeTab === 'for-you') return true;
-    if (activeHomeTab === 'live') return item.label === 'Live now' || item.chips.includes('live');
+    if (activeHomeTab === 'following') return item.label !== 'Suggested for you';
     if (activeHomeTab === 'rising') return item.label === 'Rising' || item.chips.includes('rising');
     if (activeHomeTab === 'moltbook') return item.label === 'Suggested for you' || item.chips.includes('featured');
     return true;
@@ -648,17 +648,16 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
                 <p>Find live personalities, rising agents, and the fastest entry points into FaceTime and MoltMail.</p>
               </div>
               <nav className="home-rail-nav" aria-label="Homepage feed navigation">
-                <button className={`home-rail-link ${activeHomeTab === 'for-you' ? 'active' : ''}`} onClick={() => setActiveHomeTab('for-you')}>For You</button>
-                <button className={`home-rail-link ${activeHomeTab === 'live' ? 'active' : ''}`} onClick={() => setActiveHomeTab('live')}>Live</button>
-                <button className={`home-rail-link ${activeHomeTab === 'rising' ? 'active' : ''}`} onClick={() => setActiveHomeTab('rising')}>Rising</button>
-                <button className={`home-rail-link ${activeHomeTab === 'moltbook' ? 'active' : ''}`} onClick={() => setActiveHomeTab('moltbook')}>MoltBook</button>
-                <Link className="home-rail-link" to="/topics">Topics</Link>
-                <Link className="home-rail-link" to="/top-submolts">Submolts</Link>
-                {!auth?.authenticated ? <button className="home-rail-link" onClick={onOpenAuth}>MoltMail</button> : <Link className="home-rail-link" to={auth?.user?.emailVerified ? '/moltmail' : '/verify-email'}>MoltMail</Link>}
+                <button className={`home-rail-link ${activeHomeTab === 'for-you' ? 'active' : ''}`} onClick={() => setActiveHomeTab('for-you')}>🏠 <span>For You</span></button>
+                <button className={`home-rail-link ${activeHomeTab === 'following' ? 'active' : ''}`} onClick={() => setActiveHomeTab('following')}>👥 <span>Following</span></button>
+                <button className={`home-rail-link ${activeHomeTab === 'rising' ? 'active' : ''}`} onClick={() => setActiveHomeTab('rising')}>📈 <span>Rising</span></button>
+                <button className={`home-rail-link ${activeHomeTab === 'moltbook' ? 'active' : ''}`} onClick={() => setActiveHomeTab('moltbook')}>✨ <span>MoltBook</span></button>
+                <Link className="home-rail-link" to="/topics">#️⃣ <span>Topics</span></Link>
+                <Link className="home-rail-link" to="/top-submolts">🧩 <span>Submolts</span></Link>
+                {!auth?.authenticated ? <button className="home-rail-link" onClick={onOpenAuth}>✉️ <span>MoltMail</span></button> : <Link className="home-rail-link" to={auth?.user?.emailVerified ? '/moltmail' : '/verify-email'}>✉️ <span>MoltMail</span></Link>}
               </nav>
-              <div className="home-left-rail-summary">
-                <span className="presence-pill">{top.length || 0} ranked</span>
-                <span className="presence-pill">{rising.length || 0} rising</span>
+              <div className="home-left-rail-primary-cta-wrap">
+                <Link className="primary-btn home-left-rail-primary-cta" to={`/live/${slugify(featuredAgent.authorName)}`}>Start FaceTime</Link>
               </div>
             </div>
           </aside>
@@ -671,7 +670,7 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
 
             <div className="home-feed-tabs" role="tablist" aria-label="Homepage feed tabs">
               <button className={`tab ${activeHomeTab === 'for-you' ? 'active' : ''}`} role="tab" aria-selected={activeHomeTab === 'for-you'} onClick={() => setActiveHomeTab('for-you')}>For You</button>
-              <button className={`tab ${activeHomeTab === 'live' ? 'active' : ''}`} role="tab" aria-selected={activeHomeTab === 'live'} onClick={() => setActiveHomeTab('live')}>Live</button>
+              <button className={`tab ${activeHomeTab === 'following' ? 'active' : ''}`} role="tab" aria-selected={activeHomeTab === 'following'} onClick={() => setActiveHomeTab('following')}>Following</button>
               <button className={`tab ${activeHomeTab === 'rising' ? 'active' : ''}`} role="tab" aria-selected={activeHomeTab === 'rising'} onClick={() => setActiveHomeTab('rising')}>Rising</button>
               <button className={`tab ${activeHomeTab === 'moltbook' ? 'active' : ''}`} role="tab" aria-selected={activeHomeTab === 'moltbook'} onClick={() => setActiveHomeTab('moltbook')}>MoltBook</button>
             </div>
@@ -695,13 +694,13 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
                   <div className="home-feed-post-proof-row">
                     <span className="home-feed-post-proof">{item.statLine}</span>
                   </div>
-                  <div className="home-feed-post-chips">
-                    {item.chips.map((chip) => <span key={`${item.id}-${chip}`} className="tag">{chip}</span>)}
+                  <div className="home-feed-post-chips home-feed-post-chips-minimal">
+                    {item.chips.map((chip) => <span key={`${item.id}-${chip}`} className="tag home-feed-minimal-tag">{chip}</span>)}
                   </div>
-                  <div className="home-feed-post-actions home-feed-post-actions-social">
-                    <button className="ghost-btn home-feed-social-btn">Reply {item.uiCounts.replies}</button>
-                    <button className="ghost-btn home-feed-social-btn">Like {item.uiCounts.likes}</button>
-                    <button className="ghost-btn home-feed-social-btn">Follow {item.uiCounts.follows}</button>
+                  <div className="home-feed-post-actions home-feed-post-actions-social home-feed-post-actions-iconlike">
+                    <button className="ghost-btn home-feed-social-btn">↩ {item.uiCounts.replies}</button>
+                    <button className="ghost-btn home-feed-social-btn">♡ {item.uiCounts.likes}</button>
+                    <button className="ghost-btn home-feed-social-btn">➕ {item.uiCounts.follows}</button>
                   </div>
                   <div className="home-feed-post-actions home-feed-post-actions-primary">
                     <Link className="primary-btn home-feed-primary-cta" to={item.ctaTo}>{item.ctaLabel}</Link>
@@ -716,7 +715,6 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
             <div className="home-rail-card">
               <span className="eyebrow">Live now</span>
               <h3>{featuredAgent.authorName}</h3>
-              <p>{featuredAgent.reason || featuredAgent.description}</p>
               <div className="home-rail-list">
                 {top.slice(0, 3).map((item) => (
                   <div key={`live-${item.authorId || item.authorName}`} className="home-rail-list-row">
@@ -730,16 +728,22 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
               <span className="eyebrow">Who to follow</span>
               <div className="home-rail-list">
                 {top.slice(0, 3).map((item) => (
-                  <div key={`follow-${item.authorId || item.authorName}`} className="home-rail-list-row">
-                    <strong>{item.authorName}</strong>
-                    <span>@{slugify(item.authorName)}</span>
+                  <div key={`follow-${item.authorId || item.authorName}`} className="home-rail-follow-row">
+                    <div className="home-rail-follow-id">
+                      <div className="home-feed-avatar home-feed-avatar-mini">{String(item.authorName || 'A').slice(0, 1).toUpperCase()}</div>
+                      <div>
+                        <strong>{item.authorName}</strong>
+                        <span>@{slugify(item.authorName)}</span>
+                      </div>
+                    </div>
+                    <button className="ghost-btn home-rail-follow-btn">Follow</button>
                   </div>
                 ))}
               </div>
             </div>
             <div className="home-rail-card">
-              <span className="eyebrow">Trending topics</span>
-              <div className="home-rail-list">
+              <span className="eyebrow">Trending</span>
+              <div className="home-rail-list home-rail-list-dense">
                 {topics.slice(0, 4).map((item, index) => (
                   <div key={`topic-${item.topic || index}`} className="home-rail-list-row">
                     <strong>{item.topic || 'Topic'}</strong>
@@ -750,7 +754,7 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
             </div>
             <div className="home-rail-card">
               <span className="eyebrow">Top submolts</span>
-              <div className="home-rail-list">
+              <div className="home-rail-list home-rail-list-dense">
                 {submolts.slice(0, 4).map((item, index) => (
                   <div key={`submolt-${item.name || index}`} className="home-rail-list-row">
                     <strong>{item.name ? `m/${item.name}` : 'Submolt'}</strong>
@@ -761,7 +765,7 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
             </div>
             <div className="home-rail-card">
               <span className="eyebrow">Blowing up now</span>
-              <div className="home-rail-list">
+              <div className="home-rail-list home-rail-list-dense">
                 {rising.slice(0, 3).map((item, index) => (
                   <div key={`rising-${item.authorId || item.authorName || index}`} className="home-rail-list-row">
                     <strong>{item.authorName}</strong>
