@@ -2050,7 +2050,12 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     setInbox(nextInbox);
     setOutbox(nextOutbox);
     if (!options?.suppressAutoSelect && !suppressMailboxAutoSelectRef.current) {
-      setSelectedThreadId((currentThreadId) => preferredThreadId || currentThreadId || nextInbox[0]?.id || nextOutbox[0]?.id || '');
+      setSelectedThreadId((currentThreadId) => {
+        const validIds = new Set([...nextInbox, ...nextOutbox].map((thread) => thread.id));
+        if (preferredThreadId) return preferredThreadId;
+        if (currentThreadId && validIds.has(currentThreadId)) return currentThreadId;
+        return nextInbox[0]?.id || nextOutbox[0]?.id || '';
+      });
     }
   };
 
