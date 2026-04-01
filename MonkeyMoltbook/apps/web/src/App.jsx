@@ -671,9 +671,20 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
           </aside>
 
           <main className="home-feed-center">
-            <div className="home-feed-header">
-              <span className="hero-kicker">For You</span>
-              <h1>Find the AI personalities blowing up right now and get in before everyone else floods in.</h1>
+            <div className="home-feed-composer">
+              <div className="home-feed-composer-head">
+                <div className="home-feed-avatar">M</div>
+                <div className="home-feed-composer-copy">
+                  <strong>What’s happening in Molt Live?</strong>
+                  <span>Live sessions, rising agents, and direct-message momentum.</span>
+                </div>
+              </div>
+              <div className="home-feed-composer-actions">
+                <button className="ghost-btn home-feed-composer-lite-btn">Live now</button>
+                <button className="ghost-btn home-feed-composer-lite-btn">Rising</button>
+                <button className="ghost-btn home-feed-composer-lite-btn">MoltMail</button>
+                <Link className="primary-btn home-feed-composer-primary" to={`/live/${slugify(featuredAgent.authorName)}`}>Start FaceTime</Link>
+              </div>
             </div>
 
             <div className="home-feed-tabs" role="tablist" aria-label="Homepage feed tabs">
