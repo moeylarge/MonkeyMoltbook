@@ -1974,6 +1974,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   const [queuedSticker, setQueuedSticker] = useState(null);
   const [activeComposeRecipient, setActiveComposeRecipient] = useState(null);
   const [attachmentState, setAttachmentState] = useState({ uploading: false, file: null, error: '' });
+  const [replyTarget, setReplyTarget] = useState(null);
   const suppressMailboxAutoSelectRef = useRef(false);
   const threadFeedRef = useRef(null);
   const composerInputRef = useRef(null);
@@ -2319,12 +2320,12 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     setOptimisticMessages((current) => current.filter((message) => message.clientMessageId !== clientMessageId));
   };
 
-  const sendReplyMessage = async ({ threadId, bodyText, clientMessageId, sticker = null, attachment = null }) => {
+  const sendReplyMessage = async ({ threadId, bodyText, clientMessageId, sticker = null, attachment = null, replyToMessageId = null }) => {
     const response = await fetch(`${API}/moltmail/thread/${threadId}/reply`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ bodyText, clientMessageId, sticker, attachment })
+      body: JSON.stringify({ bodyText, clientMessageId, sticker, attachment, replyToMessageId })
     });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload?.message || 'Could not send reply.');
@@ -2344,6 +2345,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     const bodyText = String(overrides.bodyText ?? replyText ?? '').trim();
     const sticker = overrides.sticker || queuedSticker || null;
     const attachment = overrides.attachment || attachmentState.file || null;
+    const replyToMessageId = overrides.replyToMessageId || replyTarget?.id || null;
     if (!selectedThreadId || (!bodyText && !sticker && !attachment)) return;
     const clientMessageId = buildClientMessageId();
     const threadId = selectedThreadId;
@@ -2353,9 +2355,10 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     setQueuedSticker(null);
     setShowEmojiPicker(false);
     setShowStickerPicker(false);
-    upsertOptimisticMessage(buildOptimisticMessage({ clientMessageId, threadId, bodyText, sticker, attachment }));
+    setReplyTarget(null);
+    upsertOptimisticMessage({ ...buildOptimisticMessage({ clientMessageId, threadId, bodyText, sticker, attachment }), replyToMessageId, replyPreview: replyTarget ? { id: replyTarget.id, senderUserId: replyTarget.senderUserId, bodyText: replyTarget.bodyText || '', sticker: replyTarget.sticker || null, attachment: replyTarget.attachment ? { name: replyTarget.attachment.name, type: replyTarget.attachment.type } : null } : null, reactions: [] });
     try {
-      await sendReplyMessage({ threadId, bodyText, clientMessageId, sticker, attachment });
+      await sendReplyMessage({ threadId, bodyText, clientMessageId, sticker, attachment, replyToMessageId });
     } catch (error) {
       resolveOptimisticMessage(clientMessageId, { status: 'failed', error: error.message || 'Could not send reply.' });
       setReplyState({ sending: false, error: error.message || 'Could not send reply.' });
@@ -2371,7 +2374,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
       const recipient = pendingThread.participants?.[0];
       try {
         await sendNewThreadMessage({
-          submittedCompose: { recipientUserId: recipient?.id, bodyText: message.bodyText, sticker: message.sticker || null, attachment: message.attachment || null },
+          submittedCompose: { recipientUserId: recipient?.id, bodyText: message.bodyText, sticker: message.sticker || null, attachment: message.attachment || null, replyToMessageId: message.replyToMessageId || null },
           clientMessageId: message.clientMessageId,
           optimisticThreadId: pendingThread.id
         });
@@ -2382,7 +2385,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
       return;
     }
     try {
-      await sendReplyMessage({ threadId: message.threadId, bodyText: message.bodyText, clientMessageId: message.clientMessageId, sticker: message.sticker || null, attachment: message.attachment || null });
+      await sendReplyMessage({ threadId: message.threadId, bodyText: message.bodyText, clientMessageId: message.clientMessageId, sticker: message.sticker || null, attachment: message.attachment || null, replyToMessageId: message.replyToMessageId || null });
     } catch (error) {
       resolveOptimisticMessage(message.clientMessageId, { status: 'failed', error: error.message || 'Could not send reply.' });
     }
@@ -2409,6 +2412,38 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   const formatThreadStamp = (value) => {
     if (!value) return '';
     return new Date(value).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  };
+
+  const getReplyPreviewText = (message) => {
+    if (!message) return '';
+    if (message.bodyText) return message.bodyText;
+    if (message.sticker) return `${message.sticker.emoji} ${message.sticker.label}`;
+    if (message.attachment) return message.attachment.name || 'Attachment';
+    return 'Message';
+  };
+
+  const getReceiptLabel = (message, index) => {
+    if (message.senderUserId !== auth.user?.id) return '';
+    const latestSentIndex = [...activeMessages].map((m, i) => ({ m, i })).filter(({ m }) => m.senderUserId === auth.user?.id).slice(-1)[0]?.i;
+    if (index !== latestSentIndex) return '';
+    if (message.status === 'sending') return 'Sent';
+    if (message.status === 'failed') return '';
+    const otherId = activeThread?.participants?.[0]?.id;
+    const threadReadAt = threads.find((thread) => thread.id === selectedThreadId)?.deliveryStatus;
+    return threadReadAt === 'Read' ? 'Read' : 'Delivered';
+  };
+
+  const toggleReactionOnMessage = async (messageId, emoji) => {
+    if (!selectedThreadId || !messageId) return;
+    const response = await fetch(`${API}/moltmail/thread/${selectedThreadId}/message/${messageId}/reaction`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ emoji })
+    });
+    const payload = await response.json();
+    if (!response.ok) return;
+    setThreadData((current) => current?.data?.thread ? ({ ...current, data: { ...current.data, thread: { ...current.data.thread, messages: current.data.thread.messages.map((message) => message.id === messageId ? { ...message, reactions: payload.reactions } : message) } } }) : current);
   };
 
   const sendSticker = (sticker) => {
@@ -2448,6 +2483,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
           <button className="moltmail-tool-btn" disabled={isNewMessageMode} onClick={() => { if (isNewMessageMode) return; attachmentInputRef.current?.click(); }}>{attachmentState.uploading ? '…' : '📎'}</button>
           <input ref={attachmentInputRef} type="file" className="attachment-input-hidden" accept="image/*,application/pdf,*/*" onChange={(e) => onSelectAttachment(e.target.files?.[0])} />
         </div>
+        {replyTarget ? <div className="moltmail-reply-pill"><span>Replying to {replyTarget.senderUserId === auth.user?.id ? 'yourself' : (activeThread?.participants?.[0]?.displayName || activeThread?.participants?.[0]?.handle || 'message')}</span><strong>{getReplyPreviewText(replyTarget).slice(0, 80)}</strong><button onClick={() => setReplyTarget(null)}>✕</button></div> : null}
         {isNewMessageMode ? <div className="moltmail-tool-note">Available after thread starts</div> : null}
         {showEmojiPicker ? <div className="moltmail-picker-popover">{EMOJI_SET.map((emoji) => <button key={emoji} className="moltmail-emoji-btn" onClick={() => insertEmojiAtCursor(emoji)}>{emoji}</button>)}</div> : null}
         {showStickerPicker ? <div className="moltmail-picker-popover moltmail-sticker-popover">{STICKER_SET.map((sticker) => <button key={sticker.id} className="moltmail-sticker-btn" onClick={() => sendSticker(sticker)}><span>{sticker.emoji}</span><small>{sticker.label}</small></button>)}</div> : null}
@@ -2494,9 +2530,19 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
                   <div key={message.id} className={`moltmail-bubble-row ${isSent ? 'sent' : 'received'} ${previousWasSameSide ? 'stacked' : 'group-start'} ${!nextWasSameSide ? 'group-end' : ''}`}>
                     <div className={`moltmail-bubble-shell ${isSent ? 'sent' : 'received'}`}>
                       {!previousWasSameSide ? <span className="moltmail-bubble-label">{isSent ? 'You' : (activeThread?.participants?.[0]?.displayName || activeThread?.participants?.[0]?.handle || 'MoltMail')}</span> : null}
-                      <div className={`moltmail-bubble ${isSent ? 'sent' : 'received'} ${message.status === 'failed' ? 'failed' : ''}`}>{message.sticker ? <div className="moltmail-sticker-message"><span>{message.sticker.emoji}</span><small>{message.sticker.label}</small></div> : null}{message.bodyText ? <div>{message.bodyText}</div> : null}{message.attachment ? <div className="moltmail-attachment-card">{message.attachment.type?.startsWith('image/') ? <img className="moltmail-attachment-preview" src={message.attachment.dataUrl} alt={message.attachment.name || 'attachment'} /> : <div className="moltmail-attachment-file">{message.attachment.type === 'application/pdf' ? '📄' : '📎'} {message.attachment.name}</div>}<div className="moltmail-attachment-actions"><a href={message.attachment.dataUrl} target="_blank" rel="noreferrer">Open</a><a href={message.attachment.dataUrl} download={message.attachment.name || 'attachment'}>Download</a></div></div> : null}</div>
+                      <div id={`message-${message.id}`} className={`moltmail-bubble ${isSent ? 'sent' : 'received'} ${message.status === 'failed' ? 'failed' : ''}`}>
+                        {message.replyPreview ? <button className="moltmail-reply-preview" onClick={() => document.getElementById(`message-${message.replyPreview.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>{getReplyPreviewText(message.replyPreview).slice(0, 80)}</button> : null}
+                        {message.sticker ? <div className="moltmail-sticker-message"><span>{message.sticker.emoji}</span><small>{message.sticker.label}</small></div> : null}
+                        {message.bodyText ? <div>{message.bodyText}</div> : null}
+                        {message.attachment ? <div className="moltmail-attachment-card">{message.attachment.type?.startsWith('image/') ? <img className="moltmail-attachment-preview" src={message.attachment.dataUrl} alt={message.attachment.name || 'attachment'} /> : <div className="moltmail-attachment-file">{message.attachment.type === 'application/pdf' ? '📄' : '📎'} {message.attachment.name}</div>}<div className="moltmail-attachment-actions"><a href={message.attachment.dataUrl} target="_blank" rel="noreferrer">Open</a><a href={message.attachment.dataUrl} download={message.attachment.name || 'attachment'}>Download</a></div></div> : null}
+                        {message.reactions?.length ? <div className="moltmail-reactions">{message.reactions.map((reaction) => <button key={reaction.emoji} className={`moltmail-reaction-chip ${reaction.reacted ? 'active' : ''}`} onClick={() => toggleReactionOnMessage(message.id, reaction.emoji)}>{reaction.emoji} {reaction.count}</button>)}</div> : null}
+                        <div className="moltmail-bubble-actions">
+                          {['❤️','🔥','😂','👍'].map((emoji) => <button key={emoji} className="moltmail-inline-action" onClick={() => toggleReactionOnMessage(message.id, emoji)}>{emoji}</button>)}
+                          <button className="moltmail-inline-action" onClick={() => setReplyTarget(message)}>Reply</button>
+                        </div>
+                      </div>
                       {!nextWasSameSide ? <span className="moltmail-bubble-time">{formatThreadStamp(message.createdAt)}</span> : null}
-                      {isSent && message.status ? <div className="moltmail-message-meta">{message.status === 'sending' ? <span className="moltmail-message-status">Sending…</span> : null}{message.status === 'failed' ? <button className="moltmail-retry-btn" onClick={() => retryOptimisticMessage(message)}>Retry</button> : null}</div> : null}
+                      {isSent ? <div className="moltmail-message-meta">{message.status === 'sending' ? <span className="moltmail-message-status">Sent</span> : null}{message.status === 'failed' ? <button className="moltmail-retry-btn" onClick={() => retryOptimisticMessage(message)}>Retry</button> : null}{!message.status ? <span className="moltmail-message-status">{getReceiptLabel(message, index)}</span> : null}</div> : null}
                     </div>
                   </div>
                 );

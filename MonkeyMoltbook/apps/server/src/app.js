@@ -12,7 +12,7 @@ import { scoreAuthorRisk, scoreCommunityRisk } from './lib/trust-score.js';
 import { addAgentReply, addLiveMessage, createLiveSession, endLiveSession, exportTranscriptText, getLiveSession, listTranscript, liveSessionsEnabled, updateLivePresence } from './lib/live-sessions.js';
 import { createCheckoutSession, creditsEnabled, ensureCreditProducts, getSpendRules, getWallet, grantCredits, listCreditProducts, listCreditTransactions, spendCredits } from './lib/credits.js';
 import { applySessionCookie, getAccountMe, getSessionResponse, logoutSession, startEmailAuth, verifyEmailAuth } from './lib/moltmail-auth.js';
-import { archiveThread, createThread, getAuditSummary, getBootstrap, getInbox, getOutbox, getThread, getUnreadCount, markThreadRead, replyThread, searchRecipients } from './lib/moltmail-data.js';
+import { archiveThread, createThread, getAuditSummary, getBootstrap, getInbox, getOutbox, getThread, getUnreadCount, markThreadRead, replyThread, searchRecipients, toggleReaction } from './lib/moltmail-data.js';
 
 export const app = express();
 app.use(express.json());
@@ -117,6 +117,11 @@ app.post('/moltmail/thread/:threadId/read', (req, res) => {
 
 app.post('/moltmail/thread/:threadId/archive', (req, res) => {
   const result = archiveThread(req, req.params.threadId);
+  res.status(result.ok ? 200 : result.status || 400).json(result);
+});
+
+app.post('/moltmail/thread/:threadId/message/:messageId/reaction', (req, res) => {
+  const result = toggleReaction(req, req.params.threadId, req.params.messageId, req.body || {});
   res.status(result.ok ? 200 : result.status || 400).json(result);
 });
 

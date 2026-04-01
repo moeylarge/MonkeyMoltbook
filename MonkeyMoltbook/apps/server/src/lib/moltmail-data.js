@@ -174,6 +174,32 @@ function sanitizeSticker(sticker) {
   };
 }
 
+function sanitizeReactionEmoji(value) {
+  const emoji = String(value || '').trim();
+  return emoji ? emoji.slice(0, 8) : '';
+}
+
+function summarizeReply(store, message) {
+  if (!message?.replyToMessageId) return null;
+  const target = store.messages.find((item) => item.id === message.replyToMessageId && !item.deletedAt);
+  if (!target) return null;
+  return {
+    id: target.id,
+    senderUserId: target.senderUserId,
+    bodyText: target.bodyText || '',
+    sticker: target.sticker || null,
+    attachment: target.attachment ? { name: target.attachment.name, type: target.attachment.type } : null
+  };
+}
+
+function mapReactions(reactions = [], viewerId = '') {
+  return (reactions || []).map((reaction) => ({
+    emoji: reaction.emoji,
+    count: Array.isArray(reaction.userIds) ? reaction.userIds.length : 0,
+    reacted: Boolean(viewerId && reaction.userIds?.includes(viewerId))
+  }));
+}
+
 function logAudit(store, action, metadata = {}) {
   store.audit.push({ id: randomId('aud'), action, createdAt: nowIso(), ...metadata });
 }
@@ -217,6 +243,8 @@ function buildThreadSummary(store, thread, viewerId) {
   const participantIds = (thread.participantIds || []).filter((id) => id !== viewerId);
   const participants = participantIds.map((id) => publicUser(getUserById(store, id))).filter(Boolean);
   const unread = Boolean(last && last.senderUserId !== viewerId && (!thread.lastReadAtByUserId?.[viewerId] || new Date(thread.lastReadAtByUserId[viewerId]) < new Date(last.createdAt)));
+  const latestSent = [...messages].reverse().find((message) => message.senderUserId === viewerId);
+  const latestSentStatus = latestSent ? ((!thread.lastReadAtByUserId?.[participants[0]?.id] || new Date(thread.lastReadAtByUserId[participants[0]?.id]) < new Date(latestSent.createdAt)) ? 'Delivered' : 'Read') : null;
   return {
     id: thread.id,
     subject: thread.subject,
@@ -224,7 +252,7 @@ function buildThreadSummary(store, thread, viewerId) {
     lastMessagePreview: last?.bodyText?.slice(0, 120) || last?.sticker?.label || last?.attachment?.name || '',
     lastMessageAt: thread.lastMessageAt,
     unread,
-    deliveryStatus: 'DELIVERED',
+    deliveryStatus: latestSentStatus || 'Delivered',
     participants
   };
 }
@@ -313,7 +341,7 @@ export function getThread(req, threadId) {
   const messages = store.messages
     .filter((m) => m.threadId === thread.id && !m.deletedAt)
     .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
-    .map((m) => ({ id: m.id, senderUserId: m.senderUserId, bodyText: m.bodyText, createdAt: m.createdAt, clientMessageId: m.clientMessageId || null, sticker: m.sticker || null, attachment: m.attachment || null }));
+    .map((m) => ({ id: m.id, senderUserId: m.senderUserId, bodyText: m.bodyText, createdAt: m.createdAt, clientMessageId: m.clientMessageId || null, sticker: m.sticker || null, attachment: m.attachment || null, replyToMessageId: m.replyToMessageId || null, replyPreview: summarizeReply(store, m), reactions: mapReactions(m.reactions, gate.user.id) }));
   thread.lastReadAtByUserId = thread.lastReadAtByUserId || {};
   thread.lastReadAtByUserId[gate.user.id] = nowIso();
   writeStore(store);
@@ -372,6 +400,7 @@ export function createThread(req, body) {
   const clientMessageId = String(body?.clientMessageId || '').trim();
   const sticker = sanitizeSticker(body?.sticker);
   const attachment = sanitizeAttachment(body?.attachment);
+  const replyToMessageId = String(body?.replyToMessageId || '').trim() || null;
   if (!recipientUserId || (!bodyText && !sticker && !attachment)) return { ok: false, status: 400, code: 'INVALID_PAYLOAD', message: 'Recipient and message are required.' };
   if (recipientUserId === gate.user.id) return { ok: false, status: 400, code: 'CANNOT_MESSAGE_SELF', message: 'You cannot message yourself.' };
   const store = readStore();
@@ -409,7 +438,7 @@ export function createThread(req, body) {
     createdAt,
     updatedAt: createdAt
   };
-  const message = { id: randomId('msg'), threadId: thread.id, senderUserId: sender.id, bodyText, createdAt, clientMessageId: clientMessageId || null, sticker, attachment };
+  const message = { id: randomId('msg'), threadId: thread.id, senderUserId: sender.id, bodyText, createdAt, clientMessageId: clientMessageId || null, sticker, attachment, replyToMessageId, reactions: [] };
   const delivery = { id: randomId('del'), messageId: message.id, recipientUserId: recipient.id, channel: 'EMAIL', status: 'QUEUED', attemptCount: 0, createdAt, updatedAt: createdAt };
   store.threads.unshift(thread);
   store.messages.push(message);
@@ -443,6 +472,7 @@ export function replyThread(req, threadId, body) {
   const clientMessageId = String(body?.clientMessageId || '').trim();
   const sticker = sanitizeSticker(body?.sticker);
   const attachment = sanitizeAttachment(body?.attachment);
+  const replyToMessageId = String(body?.replyToMessageId || '').trim() || null;
   if (!bodyText && !sticker && !attachment) return { ok: false, status: 400, code: 'INVALID_PAYLOAD', message: 'Reply cannot be empty.' };
   const store = readStore();
   const thread = store.threads.find((item) => item.id === threadId);
@@ -467,7 +497,7 @@ export function replyThread(req, threadId, body) {
   }
   if (!debitWallet(sender, SEND_COST)) return { ok: false, status: 400, code: 'INSUFFICIENT_CREDITS', message: 'You need more credits to send MoltMail.' };
   const createdAt = nowIso();
-  const message = { id: randomId('msg'), threadId: thread.id, senderUserId: sender.id, bodyText, createdAt, clientMessageId: clientMessageId || null, sticker, attachment };
+  const message = { id: randomId('msg'), threadId: thread.id, senderUserId: sender.id, bodyText, createdAt, clientMessageId: clientMessageId || null, sticker, attachment, replyToMessageId, reactions: [] };
   const delivery = { id: randomId('del'), messageId: message.id, recipientUserId: recipient.id, channel: 'EMAIL', status: 'QUEUED', attemptCount: 0, createdAt, updatedAt: createdAt };
   thread.lastMessageAt = message.createdAt;
   thread.updatedAt = message.createdAt;
@@ -488,6 +518,30 @@ export function getUnreadCount(req) {
   const inbox = getInbox(req);
   if (!inbox.ok) return inbox;
   return { ok: true, unreadCount: inbox.threads.filter((item) => item.unread).length };
+}
+
+export function toggleReaction(req, threadId, messageId, body) {
+  const gate = requireVerifiedUser(req);
+  if (!gate.ok) return gate;
+  const emoji = sanitizeReactionEmoji(body?.emoji);
+  if (!emoji) return { ok: false, status: 400, code: 'INVALID_REACTION', message: 'Reaction emoji required.' };
+  const store = readStore();
+  const thread = store.threads.find((item) => item.id === threadId);
+  if (!thread || !thread.participantIds?.includes(gate.user.id)) return { ok: false, status: 404, code: 'THREAD_NOT_FOUND', message: 'Thread not found.' };
+  const message = store.messages.find((item) => item.id === messageId && item.threadId === threadId && !item.deletedAt);
+  if (!message) return { ok: false, status: 404, code: 'MESSAGE_NOT_FOUND', message: 'Message not found.' };
+  message.reactions = Array.isArray(message.reactions) ? message.reactions : [];
+  let reaction = message.reactions.find((item) => item.emoji === emoji);
+  if (!reaction) {
+    reaction = { emoji, userIds: [] };
+    message.reactions.push(reaction);
+  }
+  reaction.userIds = Array.isArray(reaction.userIds) ? reaction.userIds : [];
+  if (reaction.userIds.includes(gate.user.id)) reaction.userIds = reaction.userIds.filter((id) => id !== gate.user.id);
+  else reaction.userIds.push(gate.user.id);
+  message.reactions = message.reactions.filter((item) => item.userIds?.length);
+  writeStore(store);
+  return { ok: true, reactions: mapReactions(message.reactions, gate.user.id) };
 }
 
 export function getAuditSummary(req) {
