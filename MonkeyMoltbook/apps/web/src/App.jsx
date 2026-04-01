@@ -1232,9 +1232,11 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
                   {showOwnerEditAffordances ? <label className="member-profile-avatar-edit"><input type="file" accept="image/png,image/jpeg,image/webp" onChange={onAvatarFileChange} /><span className="member-profile-avatar-edit-icon">📷</span><span className="member-profile-avatar-edit-text">{avatarState.busy ? 'Uploading…' : 'Change photo'}</span></label> : null}
                 </div>
                 <div className="member-profile-identity-copy">
-                  <h1>{normalizeSingleLineText(previewProfile?.display_name || profileName, 80)}</h1>
-                  <div className="member-profile-identity-stack">
+                  <div className="member-profile-name-block">
+                    <h1>{normalizeSingleLineText(previewProfile?.display_name || profileName, 80)}</h1>
                     <span className="member-profile-handle">@{normalizeSingleLineText(previewProfile?.username || profileSlug, 32)}</span>
+                  </div>
+                  <div className="member-profile-identity-stack">
                     {previewProfile?.category ? <div className="member-profile-category-line">{normalizeSingleLineText(previewProfile.category, 60)}</div> : null}
                     {profileBio ? <div className="member-profile-bio-wrap"><p className={`member-profile-bio-text ${bioExpanded ? 'expanded' : 'clamped'}`}><span className="member-profile-bio-firstline">{profileBio.split('\n')[0]}</span>{profileBio.includes('\n') ? `\n${profileBio.split('\n').slice(1).join('\n')}` : ''}</p>{profileBio.length > 140 ? <button className="member-profile-bio-toggle" onClick={() => setBioExpanded((v) => !v)}>{bioExpanded ? 'Show less' : 'Show more'}</button> : null}</div> : null}
                   </div>
