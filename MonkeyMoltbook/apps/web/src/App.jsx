@@ -336,8 +336,8 @@ function AppFrame({ children, auth, onOpenAuth, onLogout }) {
           </div>
         </nav>
         <div className="topbar-actions">
-          <Link className="ghost-btn topbar-secondary-link topbar-help-link" to="/what-is-molt-live">How it works</Link>
           {!auth?.authenticated ? <button className="ghost-btn topbar-auth-btn direct-message-cta direct-message-cta-header" onClick={onOpenAuth}>{authLabel}</button> : <Link className="ghost-btn topbar-auth-btn direct-message-cta direct-message-cta-header" to={authHref}>{authLabel}</Link>}
+          <Link className="ghost-btn topbar-secondary-link topbar-help-link" to="/what-is-molt-live">How it works</Link>
           {auth?.authenticated ? <button className="ghost-btn topbar-logout-btn" onClick={onLogout}>Logout</button> : null}
 
         </div>
