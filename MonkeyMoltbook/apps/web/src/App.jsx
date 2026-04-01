@@ -2220,7 +2220,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     return { payload, confirmedThreadId, confirmedMessageId };
   };
 
-  const submitCompose = async (overrides = {}) => {
+  const startNewThreadSend = async (overrides = {}) => {
     const composedBodyText = String(overrides.bodyText ?? compose.bodyText ?? '').trim();
     const sticker = overrides.sticker || queuedSticker || null;
     const attachment = overrides.attachment || attachmentState.file || null;
@@ -2232,7 +2232,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     const clientMessageId = buildClientMessageId();
     const optimisticThreadId = `pending_${clientMessageId}`;
     const submittedCompose = { recipientUserId, bodyText: composedBodyText, sticker, attachment };
-    const recipient = pendingRecipient || recipients.find((r) => r.id === submittedCompose.recipientUserId) || selectedRecipient;
+    const recipient = activeComposeRecipient || pendingRecipient || recipients.find((r) => r.id === submittedCompose.recipientUserId) || selectedRecipient;
     const createdAt = new Date().toISOString();
     upsertOptimisticThread({
       id: optimisticThreadId,
@@ -2266,6 +2266,10 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
       resolveOptimisticMessage(clientMessageId, { status: 'failed', error: error.message || 'Could not send message.' });
       setComposeState({ sending: false, error: error.message || 'Could not send message.' });
     }
+  };
+
+  const submitCompose = async (overrides = {}) => {
+    await startNewThreadSend(overrides);
   };
 
   const upsertOptimisticThread = (thread) => {
@@ -2395,7 +2399,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   const sendSticker = (sticker) => {
     setQueuedSticker(sticker);
     if (selectedThreadId) submitReply({ sticker, bodyText: '' });
-    else submitCompose({ sticker, bodyText: '' });
+    else startNewThreadSend({ sticker, bodyText: '', recipientUserId: activeComposeRecipient?.id || compose.recipientUserId || '' });
     setShowStickerPicker(false);
   };
 
@@ -2404,7 +2408,12 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     setAttachmentState({ uploading: true, file: null, error: '' });
     try {
       const attachment = await buildAttachmentPayload(file);
-      setAttachmentState({ uploading: false, file: attachment, error: '' });
+      if (selectedThreadId) {
+        setAttachmentState({ uploading: false, file: attachment, error: '' });
+      } else {
+        setAttachmentState({ uploading: false, file: attachment, error: '' });
+        await startNewThreadSend({ attachment, bodyText: '', recipientUserId: activeComposeRecipient?.id || compose.recipientUserId || '' });
+      }
     } catch (error) {
       setAttachmentState({ uploading: false, file: null, error: error.message || 'Could not read attachment.' });
     }
