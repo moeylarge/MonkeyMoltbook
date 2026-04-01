@@ -53,10 +53,12 @@
 
 .open-moltmail-cta {
   min-width: 160px;
+  min-height: 46px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 10px 18px 8px;
-  line-height: 1.1;
+  vertical-align: middle;
+  padding: 0 18px !important;
+  line-height: 1;
 }
