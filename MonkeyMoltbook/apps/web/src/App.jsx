@@ -921,7 +921,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
   const [profileState, setProfileState] = useState({ loading: true, profile: null, ownerView: false, error: '' });
   const [ownerProfile, setOwnerProfile] = useState(null);
   const [editOpen, setEditOpen] = useState(false);
-  const [profileForm, setProfileForm] = useState({ display_name: '', username: '', bio: '', about: '', category: '', website_url: '', location_text: '', tagline: '', pronouns: '', topics: [], topicDraft: '', featured_links: [{ label: '', url: '' }, { label: '', url: '' }, { label: '', url: '' }], highlights: [], highlightDraft: '', is_public: true, message_permission: 'everyone', notification_messages_enabled: true, notification_mentions_enabled: true, notification_follows_enabled: true, notification_marketing_enabled: false, theme_preference: 'system' });
+  const [profileForm, setProfileForm] = useState({ display_name: '', username: '', bio: '', about: '', category: '', website_url: '', location_text: '', media: '', pronouns: '', topics: [], topicDraft: '', highlights: [], highlightDraft: '', is_public: true, message_permission: 'everyone', notification_messages_enabled: true, notification_mentions_enabled: true, notification_follows_enabled: true, notification_marketing_enabled: false, theme_preference: 'system' });
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSaveState, setProfileSaveState] = useState({ error: '', success: '' });
   const [connectionsOpen, setConnectionsOpen] = useState('');
@@ -961,11 +961,10 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
               category: mePayload.profile.category || '',
               website_url: mePayload.profile.website_url || '',
               location_text: mePayload.profile.location_text || '',
-              tagline: mePayload.profile.tagline || '',
+              media: mePayload.profile.tagline || '',
               pronouns: mePayload.profile.pronouns || '',
               topics: Array.isArray(mePayload.profile.topics) ? mePayload.profile.topics : [],
               topicDraft: '',
-              featured_links: Array.isArray(mePayload.profile.featured_links) && mePayload.profile.featured_links.length ? [...mePayload.profile.featured_links, { label: '', url: '' }, { label: '', url: '' }, { label: '', url: '' }].slice(0, 3) : [{ label: '', url: '' }, { label: '', url: '' }, { label: '', url: '' }],
               highlights: Array.isArray(mePayload.profile.highlights) ? mePayload.profile.highlights : [],
               highlightDraft: '',
               is_public: mePayload.profile.is_public !== false,
@@ -1000,7 +999,6 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
   const profileAbout = profile?.about || '';
   const profileTopics = Array.isArray(profile?.topics) ? profile.topics : [];
   const profileHighlights = Array.isArray(profile?.highlights) ? profile.highlights : [];
-  const profileLinks = Array.isArray(profile?.featured_links) ? profile.featured_links.filter((item) => item?.label && item?.url) : [];
   const suggestedCreators = top.filter((item) => slugify(item.authorName) !== normalizedSlug).slice(0, 4);
 
   const addTopic = () => {
@@ -1042,7 +1040,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
           ...profileForm,
           topics: profileForm.topics,
           highlights: profileForm.highlights,
-          featured_links: (profileForm.featured_links || []).filter((item) => item?.label && item?.url)
+          media: profileForm.media
         })
       });
       const payload = await response.json();
@@ -1061,10 +1059,9 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
         category: payload.profile?.category || '',
         website_url: payload.profile?.website_url || '',
         location_text: payload.profile?.location_text || '',
-        tagline: payload.profile?.tagline || '',
+        media: payload.profile?.tagline || '',
         pronouns: payload.profile?.pronouns || '',
         topics: Array.isArray(payload.profile?.topics) ? payload.profile.topics : [],
-        featured_links: Array.isArray(payload.profile?.featured_links) && payload.profile.featured_links.length ? [...payload.profile.featured_links, { label: '', url: '' }, { label: '', url: '' }, { label: '', url: '' }].slice(0, 3) : [{ label: '', url: '' }, { label: '', url: '' }, { label: '', url: '' }],
         highlights: Array.isArray(payload.profile?.highlights) ? payload.profile.highlights : [],
         highlightDraft: '',
         topicDraft: '',
@@ -1133,7 +1130,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
                 <div className="member-profile-identity-copy">
                   <h1>{profileName}</h1>
                   <span className="member-profile-handle">@{profileSlug}</span>
-                  <p>{profileBio || profile?.tagline || 'No bio yet.'}</p>
+                  <p>{profileBio || 'No bio yet.'}</p>
                   {profile?.location_text || profile?.website_url || profile?.pronouns ? <div className="member-profile-inline-meta">
                     {profile?.location_text ? <span>{profile.location_text}</span> : null}
                     {profile?.pronouns ? <span>{profile.pronouns}</span> : null}
@@ -1170,7 +1167,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
                 <label><span>Category</span><input className="mega-search auth-input" value={profileForm.category} onChange={(e) => setProfileForm((s) => ({ ...s, category: e.target.value }))} /></label>
                 <label><span>Website</span><input className="mega-search auth-input" value={profileForm.website_url} onChange={(e) => setProfileForm((s) => ({ ...s, website_url: e.target.value }))} /></label>
                 <label><span>Location</span><input className="mega-search auth-input" value={profileForm.location_text} onChange={(e) => setProfileForm((s) => ({ ...s, location_text: e.target.value }))} /></label>
-                <label><span>Tagline</span><input className="mega-search auth-input" value={profileForm.tagline} onChange={(e) => setProfileForm((s) => ({ ...s, tagline: e.target.value }))} /></label>
+                <label><span>Media</span><input className="mega-search auth-input" value={profileForm.media} onChange={(e) => setProfileForm((s) => ({ ...s, media: e.target.value }))} /></label>
                 <label><span>Pronouns</span><input className="mega-search auth-input" value={profileForm.pronouns} onChange={(e) => setProfileForm((s) => ({ ...s, pronouns: e.target.value }))} /></label>
                 <label className="member-profile-editor-wide"><span>Bio</span><textarea className="mega-search auth-input member-profile-bio-input" value={profileForm.bio} onChange={(e) => setProfileForm((s) => ({ ...s, bio: e.target.value }))} /></label>
                 <label className="member-profile-editor-wide"><span>About</span><textarea className="mega-search auth-input member-profile-bio-input" value={profileForm.about} onChange={(e) => setProfileForm((s) => ({ ...s, about: e.target.value }))} /></label>
@@ -1190,10 +1187,6 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
                   </div>
                   <div className="tag-row">{profileForm.highlights.map((item) => <button key={item} type="button" className="tag member-profile-edit-tag" onClick={() => removeHighlight(item)}>{item} ×</button>)}</div>
                 </div>
-                <div className="member-profile-editor-wide member-profile-featured-links-editor">
-                  <span>Featured links</span>
-                  <div className="member-profile-featured-links-grid">{profileForm.featured_links.map((link, index) => <div key={index} className="member-profile-featured-link-row"><input className="mega-search auth-input" value={link.label} onChange={(e) => updateFeaturedLink(index, 'label', e.target.value)} placeholder="Label" /><input className="mega-search auth-input" value={link.url} onChange={(e) => updateFeaturedLink(index, 'url', e.target.value)} placeholder="https://..." /></div>)}</div>
-                </div>
               </div>
               <div className="auth-modal-actions member-profile-savebar">
                 <button className="ghost-btn" type="button" onClick={() => setEditOpen(false)}>Cancel</button>
@@ -1206,7 +1199,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
 
             <div className="member-profile-content-block member-profile-inline-section-card">
               <div className="member-profile-inline-section-head"><h3>Bio</h3>{showOwnerEditAffordances ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>📌</button><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>🎬</button></div> : null}</div>
-              <p>{profileBio || profile?.tagline || 'No bio yet.'}</p>
+              <p>{profileBio || 'No bio yet.'}</p>
             </div>
 
             {profileAbout ? <div className="member-profile-content-block member-profile-inline-section-card">
@@ -1214,17 +1207,17 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
               <p>{profileAbout}</p>
             </div> : null}
 
-            {(profile?.category || profile?.website_url || profile?.location_text || profile?.pronouns || profileTopics.length || profileHighlights.length || profileLinks.length) ? <div className="member-profile-content-block member-profile-inline-section-card">
+            {(profile?.category || profile?.website_url || profile?.location_text || profile?.pronouns || profile?.tagline || profileTopics.length || profileHighlights.length) ? <div className="member-profile-content-block member-profile-inline-section-card">
               <div className="member-profile-inline-section-head"><h3>Profile details</h3>{showOwnerEditAffordances ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>📌</button><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>🎬</button></div> : null}</div>
               <div className="member-profile-detail-pills">
                 <span className="tag">@{profileSlug}</span>
                 {profile?.category ? <span className="tag">{profile.category}</span> : null}
                 {profile?.location_text ? <span className="tag">{profile.location_text}</span> : null}
                 {profile?.pronouns ? <span className="tag">{profile.pronouns}</span> : null}
+                {profile?.tagline ? <span className="tag">{profile.tagline}</span> : null}
               </div>
               {profileTopics.length ? <div className="tag-row">{profileTopics.map((tag) => <span key={tag} className="tag">{tag}</span>)}</div> : null}
               {profileHighlights.length ? <div className="tag-row">{profileHighlights.map((item) => <span key={item} className="tag">{item}</span>)}</div> : null}
-              {profileLinks.length ? <div className="member-profile-links-grid">{profileLinks.map((item, index) => <a key={`${item.url}-${index}`} href={item.url} target="_blank" rel="noreferrer" className="ghost-btn member-profile-link-card"><strong>{item.label}</strong><span>{item.url}</span></a>)}</div> : null}
             </div> : null}
           </div>
 

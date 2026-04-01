@@ -85,8 +85,8 @@ export function validateProfilePatch(input = {}) {
   if ('location_text' in input) {
     patch.location_text = (safeText(input.location_text) || '').slice(0, 80) || null;
   }
-  if ('tagline' in input) {
-    patch.tagline = (safeText(input.tagline) || '').slice(0, 80) || null;
+  if ('media' in input) {
+    patch.tagline = (safeText(input.media) || '').slice(0, 80) || null;
   }
   if ('pronouns' in input) {
     patch.pronouns = (safeText(input.pronouns) || '').slice(0, 40) || null;
@@ -114,14 +114,6 @@ export function validateProfilePatch(input = {}) {
     if (topics.length > 8) errors.topics = 'Choose up to 8 topics.';
     if (topics.some((topic) => topic.length > 24)) errors.topics = 'Each topic must be 24 characters or fewer.';
     patch.topics = topics;
-  }
-
-  if ('featured_links' in input) {
-    const links = Array.isArray(input.featured_links) ? input.featured_links.slice(0, 3).map((item) => ({
-      label: String(item?.label || '').trim().slice(0, 30),
-      url: String(item?.url || '').trim().slice(0, 240)
-    })).filter((item) => item.label && item.url) : [];
-    patch.featured_links = links;
   }
 
   if ('highlights' in input) {
