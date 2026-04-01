@@ -1051,7 +1051,37 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
         return;
       }
       setOwnerProfile(payload.profile);
-      setProfileState((current) => ({ ...current, profile: payload.profile || current.profile }));
+      setProfileState((current) => ({ ...current, profile: payload.profile || current.profile, ownerView: true }));
+      setProfileForm((s) => ({
+        ...s,
+        display_name: payload.profile?.display_name || '',
+        username: payload.profile?.username || '',
+        bio: payload.profile?.bio || '',
+        about: payload.profile?.about || '',
+        category: payload.profile?.category || '',
+        website_url: payload.profile?.website_url || '',
+        location_text: payload.profile?.location_text || '',
+        tagline: payload.profile?.tagline || '',
+        pronouns: payload.profile?.pronouns || '',
+        topics: Array.isArray(payload.profile?.topics) ? payload.profile.topics : [],
+        featured_links: Array.isArray(payload.profile?.featured_links) && payload.profile.featured_links.length ? [...payload.profile.featured_links, { label: '', url: '' }, { label: '', url: '' }, { label: '', url: '' }].slice(0, 3) : [{ label: '', url: '' }, { label: '', url: '' }, { label: '', url: '' }],
+        highlights: Array.isArray(payload.profile?.highlights) ? payload.profile.highlights : [],
+        highlightDraft: '',
+        topicDraft: '',
+        is_public: payload.profile?.is_public !== false,
+        message_permission: payload.profile?.message_permission || 'everyone',
+        notification_messages_enabled: payload.profile?.notification_messages_enabled !== false,
+        notification_mentions_enabled: payload.profile?.notification_mentions_enabled !== false,
+        notification_follows_enabled: payload.profile?.notification_follows_enabled !== false,
+        notification_marketing_enabled: Boolean(payload.profile?.notification_marketing_enabled),
+        theme_preference: payload.profile?.theme_preference || 'system'
+      }));
+      if (payload.profile?.username) {
+        const nextSlug = slugify(payload.profile.username);
+        if (nextSlug && nextSlug !== normalizedSlug) {
+          window.history.replaceState({}, '', `/u/${nextSlug}`);
+        }
+      }
       setProfileSaveState({ error: '', success: 'Profile saved.' });
     } catch {
       setProfileSaveState({ error: 'Could not save profile.', success: '' });
