@@ -260,7 +260,7 @@ function AppFrame({ children, auth, onOpenAuth, onLogout }) {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [profileHref, setProfileHref] = useState('/u/jimmythelizard');
+  const [profileHref, setProfileHref] = useState('/profile');
   const authLabel = !auth?.authenticated ? 'Direct Message' : auth?.user?.emailVerified ? 'Direct Message' : 'Verify Email';
   const authHref = !auth?.authenticated ? '/moltmail' : auth?.user?.emailVerified ? '/moltmail' : '/verify-email';
 
@@ -272,7 +272,7 @@ function AppFrame({ children, auth, onOpenAuth, onLogout }) {
     let active = true;
     const loadProfileHref = async () => {
       if (!auth?.authenticated) {
-        setProfileHref('/u/jimmythelizard');
+        setProfileHref('/profile');
         return;
       }
       try {
@@ -285,7 +285,7 @@ function AppFrame({ children, auth, onOpenAuth, onLogout }) {
         }
       } catch {}
       if (active) {
-        const fallback = auth?.user?.email ? `/u/${slugify(auth.user.email.split('@')[0])}` : '/u/jimmythelizard';
+        const fallback = auth?.user?.email ? `/u/${slugify(auth.user.email.split('@')[0])}` : '/profile';
         setProfileHref(fallback);
       }
     };
@@ -947,27 +947,31 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
   const [bannerState, setBannerState] = useState({ error: '', busy: false });
   const [connectionsOpen, setConnectionsOpen] = useState('');
   const fallbackAgent = {
-    authorName: slug?.replace(/-/g, ' ') || 'Featured Agent',
+    authorName: slug?.replace(/-/g, ' ') || 'Member',
     description: '',
     reason: '',
-    topics: ['live', 'voice', 'discovery'],
+    topics: [],
     profileUrl: null,
   };
-  const agent = top.find((x) => slugify(x.authorName) === normalizedSlug || slugify(x.authorName).includes(normalizedSlug) || normalizedSlug.includes(slugify(x.authorName)));
-  const resolvedAgent = agent || top[0] || fallbackAgent;
 
   useEffect(() => {
     let active = true;
     const loadProfile = async () => {
+      setProfileState({ loading: true, profile: null, ownerView: false, error: '' });
       try {
-        const response = await fetch(`${API}/profile/${encodeURIComponent(normalizedSlug)}`, { credentials: 'include' });
+        const response = await fetch(`${API}/profile/${encodeURIComponent(normalizedSlug)}`, { credentials: 'include', cache: 'no-store' });
         const payload = await response.json();
         if (!active) return;
         if (!response.ok) {
           setProfileState({ loading: false, profile: null, ownerView: false, error: payload?.message || 'Could not load profile.' });
-            return;
+          return;
         }
-        setProfileState({ loading: false, profile: payload.profile || null, ownerView: Boolean(payload.ownerView), error: '' });
+        const fetchedProfile = payload.profile || null;
+        if (!fetchedProfile || slugify(fetchedProfile.username) !== normalizedSlug) {
+          setProfileState({ loading: false, profile: null, ownerView: false, error: 'Profile route mismatch.' });
+          return;
+        }
+        setProfileState({ loading: false, profile: fetchedProfile, ownerView: Boolean(payload.ownerView), error: '' });
         if (payload.ownerView) {
           const meRes = await fetch(`${API}/profile/me`, { credentials: 'include' });
           const mePayload = await meRes.json();
@@ -1010,12 +1014,12 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
   }, [normalizedSlug]);
 
   const profile = profileState.profile;
-  const profileSlug = normalizeRenderText(profile?.username || slugify(resolvedAgent.authorName), 32);
-  const profileName = normalizeRenderText(profile?.display_name || resolvedAgent.authorName, 80);
+  const profileSlug = normalizeRenderText(profile?.username || normalizedSlug, 32);
+  const profileName = normalizeRenderText(profile?.display_name || fallbackAgent.authorName, 80);
   const authBaseSlug = slugify(String(auth?.user?.email || '').split('@')[0]);
   const authDisplaySlug = slugify(auth?.user?.displayName || '');
   const isOwnRequestedProfile = Boolean(normalizedSlug && (normalizedSlug === authBaseSlug || normalizedSlug === authDisplaySlug));
-  const showOwnerEditAffordances = Boolean(profileState.ownerView || isOwnRequestedProfile);
+  const showOwnerEditAffordances = Boolean(profileState.profile && profileState.ownerView);
   const previewProfile = editOpen ? {
     ...profile,
     display_name: normalizeSingleLineText(profileForm.display_name || profile?.display_name || '', 80),
@@ -1201,6 +1205,14 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
         </div>
       </section>
     );
+  }
+
+  if (profileState.loading) {
+    return <section className="page-section narrow"><div className="profile-card member-profile-gate-card"><h2>Loading profile…</h2></div></section>;
+  }
+
+  if (profileState.error || !profile) {
+    return <section className="page-section narrow"><div className="profile-card member-profile-gate-card"><h2>Profile not found</h2><p>{profileState.error || 'This profile could not be loaded.'}</p></div></section>;
   }
 
   return (
