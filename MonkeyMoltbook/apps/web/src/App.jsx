@@ -1958,7 +1958,10 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   const [pendingRecipient, setPendingRecipient] = useState(null);
   const [showNewMessage, setShowNewMessage] = useState(false);
   const [mobileView, setMobileView] = useState('list');
+  const [optimisticMessages, setOptimisticMessages] = useState([]);
   const threadFeedRef = useRef(null);
+
+  const buildClientMessageId = () => `client_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 
   const threads = useMemo(() => {
     const merged = [...inbox, ...outbox];
@@ -1971,6 +1974,22 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   }, [inbox, outbox]);
   const activeThread = threadData.data?.thread || null;
   const selectedRecipient = pendingRecipient || recipients.find((r) => r.id === compose.recipientUserId) || null;
+  const activeMessages = useMemo(() => {
+    const confirmed = activeThread?.messages || [];
+    const scopedOptimistic = optimisticMessages.filter((message) => message.threadId === selectedThreadId);
+    const optimisticIds = new Set(scopedOptimistic.map((message) => message.clientMessageId));
+    return [
+      ...confirmed.filter((message) => !message.clientMessageId || !optimisticIds.has(message.clientMessageId)),
+      ...scopedOptimistic
+    ].sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+  }, [activeThread?.messages, optimisticMessages, selectedThreadId]);
+
+  const markThreadReadLocal = (threadId) => {
+    if (!threadId) return;
+    const applyRead = (items) => items.map((thread) => thread.id === threadId ? { ...thread, unread: false } : thread);
+    setInbox((current) => applyRead(current));
+    setOutbox((current) => applyRead(current));
+  };
 
   const loadMailbox = async (preferredThreadId = '') => {
     const [bootstrapRes, inboxRes, outboxRes] = await Promise.all([
@@ -2011,6 +2030,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
         else {
           setThreadData({ loading: false, data: json, error: '' });
           setMobileView('chat');
+          markThreadReadLocal(selectedThreadId);
         }
       })
       .catch(() => active && setThreadData({ loading: false, data: null, error: 'Could not load thread.' }));
@@ -2034,7 +2054,27 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     const node = threadFeedRef.current;
     if (!node) return;
     node.scrollTop = node.scrollHeight;
-  }, [activeThread?.messages?.length, selectedThreadId]);
+  }, [activeMessages.length, selectedThreadId]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = window.localStorage.getItem(`moltmail-optimistic:${auth?.user?.id || 'anon'}`);
+      if (!raw) return;
+      const restored = JSON.parse(raw).map((message) => ({
+        ...message,
+        status: message.status === 'sending' ? 'failed' : message.status
+      }));
+      setOptimisticMessages(restored);
+    } catch {}
+  }, [auth?.user?.id]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !auth?.user?.id) return;
+    try {
+      window.localStorage.setItem(`moltmail-optimistic:${auth.user.id}`, JSON.stringify(optimisticMessages));
+    } catch {}
+  }, [optimisticMessages, auth?.user?.id]);
 
   const openNewMessage = () => {
     setShowNewMessage(true);
@@ -2055,24 +2095,24 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
 
   const submitCompose = async () => {
     if (!compose.recipientUserId || !compose.bodyText.trim()) return;
-    const optimisticText = compose.bodyText;
-    setComposeState({ sending: true, error: '' });
+    const clientMessageId = buildClientMessageId();
+    const submittedCompose = { ...compose, bodyText: compose.bodyText.trim() };
+    setCompose({ recipientUserId: '', bodyText: '' });
+    setPendingRecipient(null);
+    setComposeState({ sending: false, error: '' });
+    setReplyText('');
     try {
       const response = await fetch(`${API}/moltmail/thread`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(compose)
+        body: JSON.stringify({ ...submittedCompose, clientMessageId })
       });
       const payload = await response.json();
       if (!response.ok) {
         setComposeState({ sending: false, error: payload?.message || 'Could not send message.' });
         return;
       }
-      setCompose({ recipientUserId: '', bodyText: '' });
-    setPendingRecipient(null);
-      setComposeState({ sending: false, error: '' });
-      setReplyText('');
       await loadMailbox(payload?.thread?.id || '');
       setSelectedThreadId(payload?.thread?.id || '');
       setRecipientQuery('');
@@ -2080,31 +2120,74 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
       setMobileView('chat');
     } catch {
       setComposeState({ sending: false, error: 'Could not send message.' });
-      setCompose((current) => ({ ...current, bodyText: optimisticText }));
+      setCompose(submittedCompose);
     }
+  };
+
+  const upsertOptimisticMessage = (message) => {
+    setOptimisticMessages((current) => {
+      const next = current.filter((item) => item.clientMessageId !== message.clientMessageId);
+      next.push(message);
+      return next;
+    });
+  };
+
+  const resolveOptimisticMessage = (clientMessageId, patch = {}) => {
+    setOptimisticMessages((current) => current.map((message) => message.clientMessageId === clientMessageId ? { ...message, ...patch } : message));
+  };
+
+  const removeOptimisticMessage = (clientMessageId) => {
+    setOptimisticMessages((current) => current.filter((message) => message.clientMessageId !== clientMessageId));
+  };
+
+  const sendReplyMessage = async ({ threadId, bodyText, clientMessageId }) => {
+    const response = await fetch(`${API}/moltmail/thread/${threadId}/reply`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ bodyText, clientMessageId })
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload?.message || 'Could not send reply.');
+    resolveOptimisticMessage(clientMessageId, { id: payload?.message?.id || clientMessageId, status: 'sent' });
+    await loadMailbox(threadId);
+    markThreadReadLocal(threadId);
+    setSelectedThreadId(threadId);
+    removeOptimisticMessage(clientMessageId);
   };
 
   const submitReply = async () => {
     if (!selectedThreadId || !replyText.trim()) return;
-    setReplyState({ sending: true, error: '' });
+    const clientMessageId = buildClientMessageId();
+    const bodyText = replyText.trim();
+    const threadId = selectedThreadId;
+    setReplyText('');
+    setReplyState({ sending: false, error: '' });
+    upsertOptimisticMessage({
+      id: clientMessageId,
+      clientMessageId,
+      threadId,
+      senderUserId: auth.user?.id,
+      bodyText,
+      createdAt: new Date().toISOString(),
+      status: 'sending',
+      optimistic: true
+    });
     try {
-      const response = await fetch(`${API}/moltmail/thread/${selectedThreadId}/reply`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ bodyText: replyText })
-      });
-      const payload = await response.json();
-      if (!response.ok) {
-        setReplyState({ sending: false, error: payload?.message || 'Could not send reply.' });
-        return;
-      }
-      setReplyText('');
-      setReplyState({ sending: false, error: '' });
-      await loadMailbox(selectedThreadId);
-      setSelectedThreadId(selectedThreadId);
-    } catch {
-      setReplyState({ sending: false, error: 'Could not send reply.' });
+      await sendReplyMessage({ threadId, bodyText, clientMessageId });
+    } catch (error) {
+      resolveOptimisticMessage(clientMessageId, { status: 'failed', error: error.message || 'Could not send reply.' });
+      setReplyState({ sending: false, error: error.message || 'Could not send reply.' });
+    }
+  };
+
+  const retryOptimisticMessage = async (message) => {
+    if (!message?.threadId || !message?.bodyText || !message?.clientMessageId) return;
+    resolveOptimisticMessage(message.clientMessageId, { status: 'sending', error: '' });
+    try {
+      await sendReplyMessage({ threadId: message.threadId, bodyText: message.bodyText, clientMessageId: message.clientMessageId });
+    } catch (error) {
+      resolveOptimisticMessage(message.clientMessageId, { status: 'failed', error: error.message || 'Could not send reply.' });
     }
   };
 
@@ -2166,22 +2249,23 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
               <button className="moltmail-mobile-back" onClick={() => setMobileView('list')}>←</button>
               <div className="moltmail-chat-identity">
                 <strong>{activeThread?.participants?.[0]?.displayName || activeThread?.participants?.[0]?.handle || selectedRecipient?.displayName || selectedRecipient?.handle || 'New message'}</strong>
-                {activeThread?.messages?.length ? <span>{`${activeThread.messages.length} messages`}</span> : null}
+                {activeMessages.length ? <span>{`${activeMessages.length} messages`}</span> : null}
               </div>
             </div>
             <div className="moltmail-chat-feed" ref={threadFeedRef}>
-              {threadData.loading ? <div className="moltmail-thread-loading">Loading…</div> : activeThread ? activeThread.messages.map((message, index) => {
+              {threadData.loading ? <div className="moltmail-thread-loading">Loading…</div> : activeThread ? activeMessages.map((message, index) => {
                 const isSent = message.senderUserId === auth.user?.id;
-                const previousMessage = activeThread.messages[index - 1];
+                const previousMessage = activeMessages[index - 1];
                 const previousWasSameSide = previousMessage && previousMessage.senderUserId === message.senderUserId;
-                const nextMessage = activeThread.messages[index + 1];
+                const nextMessage = activeMessages[index + 1];
                 const nextWasSameSide = nextMessage && nextMessage.senderUserId === message.senderUserId;
                 return (
                   <div key={message.id} className={`moltmail-bubble-row ${isSent ? 'sent' : 'received'} ${previousWasSameSide ? 'stacked' : 'group-start'} ${!nextWasSameSide ? 'group-end' : ''}`}>
                     <div className={`moltmail-bubble-shell ${isSent ? 'sent' : 'received'}`}>
                       {!previousWasSameSide ? <span className="moltmail-bubble-label">{isSent ? 'You' : (activeThread?.participants?.[0]?.displayName || activeThread?.participants?.[0]?.handle || 'MoltMail')}</span> : null}
-                      <div className={`moltmail-bubble ${isSent ? 'sent' : 'received'}`}>{message.bodyText}</div>
+                      <div className={`moltmail-bubble ${isSent ? 'sent' : 'received'} ${message.status === 'failed' ? 'failed' : ''}`}>{message.bodyText}</div>
                       {!nextWasSameSide ? <span className="moltmail-bubble-time">{formatThreadStamp(message.createdAt)}</span> : null}
+                      {isSent && message.status ? <div className="moltmail-message-meta">{message.status === 'sending' ? <span className="moltmail-message-status">Sending…</span> : null}{message.status === 'failed' ? <button className="moltmail-retry-btn" onClick={() => retryOptimisticMessage(message)}>Retry</button> : null}</div> : null}
                     </div>
                   </div>
                 );

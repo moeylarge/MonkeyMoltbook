@@ -167,9 +167,19 @@ function checkRateLimit(store, req, userId, action, maxCount = 5, windowMs = 600
   return true;
 }
 
-function hasRecentDuplicate(store, threadId, senderUserId, bodyText, windowMs = 30000) {
+function hasRecentDuplicate(store, threadId, senderUserId, bodyText, windowMs = 30000, clientMessageId = '') {
+  const normalizedClientMessageId = String(clientMessageId || '').trim();
+  if (normalizedClientMessageId) {
+    return store.messages.some((message) => message.threadId === threadId && message.senderUserId === senderUserId && String(message.clientMessageId || '') === normalizedClientMessageId);
+  }
   const now = Date.now();
   return store.messages.some((message) => message.threadId === threadId && message.senderUserId === senderUserId && message.bodyText === bodyText && now - new Date(message.createdAt).getTime() < windowMs);
+}
+
+function findMessageByClientMessageId(store, senderUserId, clientMessageId) {
+  const normalizedClientMessageId = String(clientMessageId || '').trim();
+  if (!normalizedClientMessageId) return null;
+  return store.messages.find((message) => message.senderUserId === senderUserId && String(message.clientMessageId || '') === normalizedClientMessageId && !message.deletedAt) || null;
 }
 
 function getUserById(store, id) {
@@ -278,7 +288,10 @@ export function getThread(req, threadId) {
   const messages = store.messages
     .filter((m) => m.threadId === thread.id && !m.deletedAt)
     .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
-    .map((m) => ({ id: m.id, senderUserId: m.senderUserId, bodyText: m.bodyText, createdAt: m.createdAt }));
+    .map((m) => ({ id: m.id, senderUserId: m.senderUserId, bodyText: m.bodyText, createdAt: m.createdAt, clientMessageId: m.clientMessageId || null }));
+  thread.lastReadAtByUserId = thread.lastReadAtByUserId || {};
+  thread.lastReadAtByUserId[gate.user.id] = nowIso();
+  writeStore(store);
   return {
     ok: true,
     thread: {
@@ -331,6 +344,7 @@ export function createThread(req, body) {
   syncVerifiedUser(gate.user);
   const recipientUserId = String(body?.recipientUserId || '').trim();
   const bodyText = String(body?.bodyText || '').trim();
+  const clientMessageId = String(body?.clientMessageId || '').trim();
   if (!recipientUserId || !bodyText) return { ok: false, status: 400, code: 'INVALID_PAYLOAD', message: 'Recipient and message are required.' };
   if (recipientUserId === gate.user.id) return { ok: false, status: 400, code: 'CANNOT_MESSAGE_SELF', message: 'You cannot message yourself.' };
   const store = readStore();
@@ -338,6 +352,10 @@ export function createThread(req, body) {
   const sender = getUserById(store, gate.user.id);
   const recipient = getUserById(store, recipientUserId);
   if (!recipient) return { ok: false, status: 404, code: 'RECIPIENT_NOT_FOUND', message: 'Recipient not found.' };
+  const existingByClientMessageId = findMessageByClientMessageId(store, gate.user.id, clientMessageId);
+  if (existingByClientMessageId) {
+    return { ok: true, thread: { id: existingByClientMessageId.threadId }, message: { id: existingByClientMessageId.id, clientMessageId }, wallet: { balance: sender?.walletBalance || 0, debited: 0 } };
+  }
   if (sender?.status !== 'ACTIVE' || recipient?.status === 'BANNED') return { ok: false, status: 403, code: 'USER_RESTRICTED', message: 'This message cannot be sent right now.' };
   if (!checkRateLimit(store, req, gate.user.id, 'thread_create', 4, 60000)) {
     logAudit(store, 'RATE_LIMIT_HIT', { actorUserId: gate.user.id, entityType: 'thread_create', entityId: recipientUserId });
@@ -345,35 +363,40 @@ export function createThread(req, body) {
     return { ok: false, status: 429, code: 'RATE_LIMITED', message: 'Please wait before sending another message.' };
   }
   const duplicateThread = store.threads.find((thread) => thread.participantIds?.length === 2 && thread.participantIds.includes(sender.id) && thread.participantIds.includes(recipient.id));
-  if (duplicateThread && hasRecentDuplicate(store, duplicateThread.id, sender.id, bodyText)) {
+  if (duplicateThread && hasRecentDuplicate(store, duplicateThread.id, sender.id, bodyText, 30000, clientMessageId)) {
+    const existingMessage = clientMessageId ? findMessageByClientMessageId(store, gate.user.id, clientMessageId) : null;
+    if (existingMessage) return { ok: true, thread: { id: duplicateThread.id }, message: { id: existingMessage.id, clientMessageId }, wallet: { balance: sender.walletBalance, debited: 0 } };
     return { ok: false, status: 409, code: 'DUPLICATE_MESSAGE', message: 'That message was already sent recently.' };
   }
   if (!debitWallet(sender, SEND_COST)) return { ok: false, status: 400, code: 'INSUFFICIENT_CREDITS', message: 'You need more credits to send MoltMail.' };
+  const createdAt = nowIso();
   const thread = {
     id: randomId('thr'),
     subject: recipient.displayName || recipient.handle || 'Conversation',
     createdByUserId: sender.id,
     participantIds: [sender.id, recipient.id],
     status: 'OPEN',
-    lastMessageAt: nowIso(),
-    lastReadAtByUserId: { [sender.id]: nowIso() },
+    lastMessageAt: createdAt,
+    lastReadAtByUserId: { [sender.id]: createdAt },
     archivedAtByUserId: {},
-    createdAt: nowIso(),
-    updatedAt: nowIso()
+    createdAt,
+    updatedAt: createdAt
   };
-  const message = { id: randomId('msg'), threadId: thread.id, senderUserId: sender.id, bodyText, createdAt: nowIso() };
-  const delivery = { id: randomId('del'), messageId: message.id, recipientUserId: recipient.id, channel: 'EMAIL', status: 'QUEUED', attemptCount: 0, createdAt: nowIso(), updatedAt: nowIso() };
+  const message = { id: randomId('msg'), threadId: thread.id, senderUserId: sender.id, bodyText, createdAt, clientMessageId: clientMessageId || null };
+  const delivery = { id: randomId('del'), messageId: message.id, recipientUserId: recipient.id, channel: 'EMAIL', status: 'QUEUED', attemptCount: 0, createdAt, updatedAt: createdAt };
   store.threads.unshift(thread);
   store.messages.push(message);
   store.delivery.push(delivery);
   if (recipient.id === SYSTEM_USER_ID) {
-    const autoReply = { id: randomId('msg'), threadId: thread.id, senderUserId: SYSTEM_USER_ID, bodyText: 'Got it — MoltMail is working.', createdAt: nowIso() };
+    const autoReplyAt = nowIso();
+    const autoReply = { id: randomId('msg'), threadId: thread.id, senderUserId: SYSTEM_USER_ID, bodyText: 'Got it — MoltMail is working.', createdAt: autoReplyAt };
     thread.lastMessageAt = autoReply.createdAt;
     thread.updatedAt = autoReply.createdAt;
     store.messages.push(autoReply);
   }
   if (recipient.id === SYSTEM_USER_ID) {
-    const autoReply = { id: randomId('msg'), threadId: thread.id, senderUserId: SYSTEM_USER_ID, bodyText: 'Welcome to MoltMail. This thread is live and ready.', createdAt: nowIso() };
+    const autoReplyAt = nowIso();
+    const autoReply = { id: randomId('msg'), threadId: thread.id, senderUserId: SYSTEM_USER_ID, bodyText: 'Welcome to MoltMail. This thread is live and ready.', createdAt: autoReplyAt };
     thread.lastMessageAt = autoReply.createdAt;
     thread.updatedAt = autoReply.createdAt;
     store.messages.push(autoReply);
@@ -382,7 +405,7 @@ export function createThread(req, body) {
   logAudit(store, 'CREDIT_DEBITED', { actorUserId: sender.id, entityType: 'message', entityId: message.id, metadataJson: { debited: SEND_COST } });
   logAudit(store, 'MESSAGE_DELIVERY_QUEUED', { actorUserId: sender.id, entityType: 'delivery', entityId: delivery.id, threadId: thread.id, messageId: message.id });
   writeStore(store);
-  return { ok: true, thread: { id: thread.id }, message: { id: message.id }, wallet: { balance: sender.walletBalance, debited: SEND_COST } };
+  return { ok: true, thread: { id: thread.id }, message: { id: message.id, clientMessageId }, wallet: { balance: sender.walletBalance, debited: SEND_COST } };
 }
 
 export function replyThread(req, threadId, body) {
@@ -390,11 +413,16 @@ export function replyThread(req, threadId, body) {
   if (!gate.ok) return gate;
   syncVerifiedUser(gate.user);
   const bodyText = String(body?.bodyText || '').trim();
+  const clientMessageId = String(body?.clientMessageId || '').trim();
   if (!bodyText) return { ok: false, status: 400, code: 'INVALID_PAYLOAD', message: 'Reply cannot be empty.' };
   const store = readStore();
   const thread = store.threads.find((item) => item.id === threadId);
   if (!thread || !thread.participantIds?.includes(gate.user.id)) return { ok: false, status: 404, code: 'THREAD_NOT_FOUND', message: 'Thread not found.' };
   const sender = getUserById(store, gate.user.id);
+  const existingByClientMessageId = findMessageByClientMessageId(store, gate.user.id, clientMessageId);
+  if (existingByClientMessageId) {
+    return { ok: true, message: { id: existingByClientMessageId.id, clientMessageId }, wallet: { balance: sender?.walletBalance || 0, debited: 0 } };
+  }
   const recipientId = (thread.participantIds || []).find((id) => id !== sender.id);
   const recipient = getUserById(store, recipientId);
   if (sender?.status !== 'ACTIVE' || recipient?.status === 'BANNED' || thread.status !== 'OPEN') return { ok: false, status: 403, code: 'USER_RESTRICTED', message: 'This reply cannot be sent right now.' };
@@ -403,12 +431,15 @@ export function replyThread(req, threadId, body) {
     writeStore(store);
     return { ok: false, status: 429, code: 'RATE_LIMITED', message: 'Please wait before sending another reply.' };
   }
-  if (hasRecentDuplicate(store, thread.id, sender.id, bodyText)) {
+  if (hasRecentDuplicate(store, thread.id, sender.id, bodyText, 30000, clientMessageId)) {
+    const existingMessage = clientMessageId ? findMessageByClientMessageId(store, gate.user.id, clientMessageId) : null;
+    if (existingMessage) return { ok: true, message: { id: existingMessage.id, clientMessageId }, wallet: { balance: sender.walletBalance, debited: 0 } };
     return { ok: false, status: 409, code: 'DUPLICATE_MESSAGE', message: 'That reply was already sent recently.' };
   }
   if (!debitWallet(sender, SEND_COST)) return { ok: false, status: 400, code: 'INSUFFICIENT_CREDITS', message: 'You need more credits to send MoltMail.' };
-  const message = { id: randomId('msg'), threadId: thread.id, senderUserId: sender.id, bodyText, createdAt: nowIso() };
-  const delivery = { id: randomId('del'), messageId: message.id, recipientUserId: recipient.id, channel: 'EMAIL', status: 'QUEUED', attemptCount: 0, createdAt: nowIso(), updatedAt: nowIso() };
+  const createdAt = nowIso();
+  const message = { id: randomId('msg'), threadId: thread.id, senderUserId: sender.id, bodyText, createdAt, clientMessageId: clientMessageId || null };
+  const delivery = { id: randomId('del'), messageId: message.id, recipientUserId: recipient.id, channel: 'EMAIL', status: 'QUEUED', attemptCount: 0, createdAt, updatedAt: createdAt };
   thread.lastMessageAt = message.createdAt;
   thread.updatedAt = message.createdAt;
   thread.lastReadAtByUserId = thread.lastReadAtByUserId || {};
@@ -419,7 +450,7 @@ export function replyThread(req, threadId, body) {
   logAudit(store, 'CREDIT_DEBITED', { actorUserId: sender.id, entityType: 'message', entityId: message.id, metadataJson: { debited: SEND_COST } });
   logAudit(store, 'MESSAGE_DELIVERY_QUEUED', { actorUserId: sender.id, entityType: 'delivery', entityId: delivery.id, threadId: thread.id, messageId: message.id });
   writeStore(store);
-  return { ok: true, message: { id: message.id }, wallet: { balance: sender.walletBalance, debited: SEND_COST } };
+  return { ok: true, message: { id: message.id, clientMessageId }, wallet: { balance: sender.walletBalance, debited: SEND_COST } };
 }
 
 export function getUnreadCount(req) {
