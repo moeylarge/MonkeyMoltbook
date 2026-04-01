@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { BrowserRouter, Link, NavLink, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import './auth-modal-hotfix.css';
 import './home-feed-mvp.css';
+import './home-header-blue.css';
 
 function SeoHead({ title, description, canonical }) {
   useEffect(() => {
