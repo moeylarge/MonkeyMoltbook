@@ -1976,7 +1976,12 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   const [attachmentState, setAttachmentState] = useState({ uploading: false, file: null, error: '' });
   const [replyTarget, setReplyTarget] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showGallery, setShowGallery] = useState(false);
+  const [recordingVoice, setRecordingVoice] = useState(false);
+  const [typingActive, setTypingActive] = useState(false);
   const suppressMailboxAutoSelectRef = useRef(false);
+  const mediaRecorderRef = useRef(null);
+  const voiceChunksRef = useRef([]);
   const threadFeedRef = useRef(null);
   const composerInputRef = useRef(null);
   const attachmentInputRef = useRef(null);
@@ -1994,6 +1999,18 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     });
     reader.onerror = () => reject(new Error('Could not read attachment.'));
     reader.readAsDataURL(file);
+  });
+
+  const buildAudioAttachmentFromBlob = (blob) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve({
+      name: `voice-note-${Date.now()}.webm`,
+      type: blob.type || 'audio/webm',
+      size: blob.size,
+      dataUrl: String(reader.result || '')
+    });
+    reader.onerror = () => reject(new Error('Could not read voice note.'));
+    reader.readAsDataURL(blob);
   });
 
   const formatPresence = (value) => {
@@ -2495,6 +2512,31 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     setShowStickerPicker(false);
   };
 
+  const toggleVoiceRecording = async () => {
+    if (!selectedThreadId) return;
+    if (recordingVoice && mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      setRecordingVoice(false);
+      return;
+    }
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const recorder = new MediaRecorder(stream);
+    voiceChunksRef.current = [];
+    recorder.ondataavailable = (event) => {
+      if (event.data?.size) voiceChunksRef.current.push(event.data);
+    };
+    recorder.onstop = async () => {
+      const blob = new Blob(voiceChunksRef.current, { type: recorder.mimeType || 'audio/webm' });
+      stream.getTracks().forEach((track) => track.stop());
+      const attachment = await buildAudioAttachmentFromBlob(blob);
+      setAttachmentState({ uploading: false, file: null, error: '' });
+      await submitReply({ attachment, bodyText: '' });
+    };
+    mediaRecorderRef.current = recorder;
+    recorder.start();
+    setRecordingVoice(true);
+  };
+
   const onSelectAttachment = async (file) => {
     if (!file || !selectedThreadId) return;
     setAttachmentState({ uploading: true, file: null, error: '' });
@@ -2509,6 +2551,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   const renderComposer = () => {
     if (!selectedThreadId && !compose.recipientUserId && !activeComposeRecipient?.id && !optimisticSelectedThread && !activeThread) return null;
     const value = selectedThreadId ? replyText : compose.bodyText;
+    const threadMedia = activeMessages.filter((message) => message.attachment).map((message) => ({ id: message.id, attachment: message.attachment }));
     const setValue = selectedThreadId ? setReplyText : (text) => setCompose((current) => ({ ...current, bodyText: text }));
     const onSend = selectedThreadId ? () => submitReply() : () => submitCompose();
     const sending = selectedThreadId ? replyState.sending : composeState.sending;
@@ -2523,6 +2566,8 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
           <button className="moltmail-tool-btn" onClick={() => { setShowEmojiPicker((v) => !v); setShowStickerPicker(false); }}>😊</button>
           <button className="moltmail-tool-btn" disabled={isNewMessageMode} onClick={() => { if (isNewMessageMode) return; setShowStickerPicker((v) => !v); setShowEmojiPicker(false); }}>🪄</button>
           <button className="moltmail-tool-btn" disabled={isNewMessageMode} onClick={() => { if (isNewMessageMode) return; attachmentInputRef.current?.click(); }}>{attachmentState.uploading ? '…' : '📎'}</button>
+          <button className="moltmail-tool-btn" disabled={isNewMessageMode} onClick={toggleVoiceRecording}>{recordingVoice ? '⏹' : '🎙️'}</button>
+          <button className="moltmail-tool-btn" disabled={!selectedThreadId || !threadMedia.length} onClick={() => setShowGallery(true)}>🖼️</button>
           <input ref={attachmentInputRef} type="file" className="attachment-input-hidden" accept="image/*,application/pdf,*/*" onChange={(e) => onSelectAttachment(e.target.files?.[0])} />
         </div>
         {replyTarget ? <div className="moltmail-reply-pill"><span>Replying to {replyTarget.senderUserId === auth.user?.id ? 'yourself' : (activeThread?.participants?.[0]?.displayName || activeThread?.participants?.[0]?.handle || 'message')}</span><strong>{getReplyPreviewText(replyTarget).slice(0, 80)}</strong><button onClick={() => setReplyTarget(null)}>✕</button></div> : null}
@@ -2530,7 +2575,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
         {showEmojiPicker ? <div className="moltmail-picker-popover">{EMOJI_SET.map((emoji) => <button key={emoji} className="moltmail-emoji-btn" onClick={() => insertEmojiAtCursor(emoji)}>{emoji}</button>)}</div> : null}
         {showStickerPicker ? <div className="moltmail-picker-popover moltmail-sticker-popover">{STICKER_SET.map((sticker) => <button key={sticker.id} className="moltmail-sticker-btn" onClick={() => sendSticker(sticker)}><span>{sticker.emoji}</span><small>{sticker.label}</small></button>)}</div> : null}
         <div className="moltmail-chat-composer">
-          <textarea ref={composerInputRef} className="moltmail-message-input" rows={1} placeholder="Message…" value={value} onChange={(e) => setValue(e.target.value)} />
+          <textarea ref={composerInputRef} className="moltmail-message-input" rows={1} placeholder="Message…" value={value} onChange={(e) => { setValue(e.target.value); setTypingActive(Boolean(e.target.value.trim())); }} />
           <button className="moltmail-send-icon" disabled={disabled} onClick={onSend}>{sending ? '…' : '➤'}</button>
         </div>
       </div>
@@ -2560,7 +2605,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
               <div className="moltmail-chat-identity">
                 <strong>{activeThread?.participants?.[0]?.displayName || activeThread?.participants?.[0]?.handle || selectedRecipient?.displayName || selectedRecipient?.handle || 'New message'}</strong>
                 {activeMessages.length ? <span>{`${activeMessages.length} messages`}</span> : null}
-                {selectedThreadId ? <span className="moltmail-presence-chip">{formatPresence(threads.find((thread) => thread.id === selectedThreadId)?.lastMessageAt || activeMessages[activeMessages.length - 1]?.createdAt)}</span> : null}
+                {selectedThreadId ? <span className="moltmail-presence-chip">{typingActive ? 'typing…' : formatPresence(threads.find((thread) => thread.id === selectedThreadId)?.lastMessageAt || activeMessages[activeMessages.length - 1]?.createdAt)}</span> : null}
               </div>
             </div>
             <div className="moltmail-chat-feed" ref={threadFeedRef}>
@@ -2579,7 +2624,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
                         {message.sticker ? <div className="moltmail-sticker-message"><span>{message.sticker.emoji}</span><small>{message.sticker.label}</small></div> : null}
                         {message.bodyText ? <div>{message.bodyText}</div> : null}
                         {buildLinkPreview(message.bodyText) ? <a className="moltmail-link-preview" href={buildLinkPreview(message.bodyText).url} target="_blank" rel="noreferrer"><strong>{buildLinkPreview(message.bodyText).title}</strong><span>{buildLinkPreview(message.bodyText).domain}</span></a> : null}
-                        {message.attachment ? <div className="moltmail-attachment-card">{message.attachment.type?.startsWith('image/') ? <img className="moltmail-attachment-preview" src={message.attachment.dataUrl} alt={message.attachment.name || 'attachment'} /> : <div className="moltmail-attachment-file">{message.attachment.type === 'application/pdf' ? '📄' : '📎'} {message.attachment.name}</div>}<div className="moltmail-attachment-actions"><a href={message.attachment.dataUrl} target="_blank" rel="noreferrer">Open</a><a href={message.attachment.dataUrl} download={message.attachment.name || 'attachment'}>Download</a></div></div> : null}
+                        {message.attachment ? <div className="moltmail-attachment-card">{message.attachment.type?.startsWith('image/') ? <img className="moltmail-attachment-preview" src={message.attachment.dataUrl} alt={message.attachment.name || 'attachment'} /> : message.attachment.type?.startsWith('audio/') ? <audio className="moltmail-audio-note" controls src={message.attachment.dataUrl} /> : <div className="moltmail-attachment-file">{message.attachment.type === 'application/pdf' ? '📄' : '📎'} {message.attachment.name}</div>}<div className="moltmail-attachment-actions"><a href={message.attachment.dataUrl} target="_blank" rel="noreferrer">Open</a><a href={message.attachment.dataUrl} download={message.attachment.name || 'attachment'}>Download</a></div></div> : null}
                         {message.reactions?.length ? <div className="moltmail-reactions">{message.reactions.map((reaction) => <button key={reaction.emoji} className={`moltmail-reaction-chip ${reaction.reacted ? 'active' : ''}`} onClick={() => toggleReactionOnMessage(message.id, reaction.emoji)}>{reaction.emoji} {reaction.count}</button>)}</div> : null}
                         <div className="moltmail-bubble-actions">
                           {['❤️','🔥','😂','👍'].map((emoji) => <button key={emoji} className="moltmail-inline-action" onClick={() => toggleReactionOnMessage(message.id, emoji)}>{emoji}</button>)}
@@ -2598,6 +2643,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
             {replyState.error ? <div className="moltmail-inline-error">{replyState.error}</div> : null}
           </main>
           {showNewMessage ? <div className="moltmail-picker-backdrop" onClick={() => setShowNewMessage(false)}><div className="moltmail-picker" onClick={(e) => e.stopPropagation()}><div className="moltmail-picker-head"><strong>New message</strong><button className="moltmail-picker-close" onClick={() => setShowNewMessage(false)}>✕</button></div><input className="mega-search auth-input" placeholder="Search people" value={recipientQuery} onChange={(e) => setRecipientQuery(e.target.value)} />{recipients.length ? <div className="moltmail-picker-results">{recipients.map((recipient) => <button key={recipient.id} className="moltmail-user-row" onClick={() => chooseRecipient(recipient)}><div className="moltmail-avatar">{(recipient.displayName || recipient.handle || '?').slice(0,1).toUpperCase()}</div><div><strong>{recipient.displayName || recipient.handle}</strong><span>@{recipient.handle}</span></div></button>)}</div> : <div className="moltmail-empty-space" />}</div></div> : null}
+          {showGallery ? <div className="moltmail-picker-backdrop" onClick={() => setShowGallery(false)}><div className="moltmail-picker" onClick={(e) => e.stopPropagation()}><div className="moltmail-picker-head"><strong>Shared media & files</strong><button className="moltmail-picker-close" onClick={() => setShowGallery(false)}>✕</button></div><div className="moltmail-picker-results">{threadMedia.map((item) => <a key={item.id} className="moltmail-gallery-row" href={item.attachment.dataUrl} target="_blank" rel="noreferrer">{item.attachment.type?.startsWith('image/') ? <img className="moltmail-gallery-thumb" src={item.attachment.dataUrl} alt={item.attachment.name || 'media'} /> : <div className="moltmail-gallery-thumb moltmail-gallery-file">{item.attachment.type?.startsWith('audio/') ? '🎙️' : item.attachment.type === 'application/pdf' ? '📄' : '📎'}</div>}<div><strong>{item.attachment.name}</strong><span>{item.attachment.type}</span></div></a>)}</div></div></div> : null}
         </div>
       )}
     </section>
