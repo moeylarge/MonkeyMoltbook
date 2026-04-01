@@ -245,7 +245,24 @@ export async function getProfileByUsername(username) {
   const byEmailPrefix = await supabaseFetch('profiles', {
     query: `email=ilike.${encodeURIComponent(normalized + '@%')}&select=*`
   });
-  return byEmailPrefix.data?.[0] || null;
+  if (byEmailPrefix.data?.[0]) {
+    const row = byEmailPrefix.data[0];
+    if (row.username !== normalized) {
+      const claimed = await supabaseFetch('profiles', {
+        method: 'PATCH',
+        query: `id=eq.${encodeURIComponent(String(row.id))}&select=*`,
+        body: {
+          username: normalized,
+          updated_at: new Date().toISOString()
+        },
+        prefer: 'return=representation'
+      });
+      return claimed.data?.[0] || row;
+    }
+    return row;
+  }
+
+  return null;
 }
 
 export async function isUsernameAvailable(username, userId = '') {
