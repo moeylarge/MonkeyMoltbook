@@ -1977,6 +1977,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   const threadFeedRef = useRef(null);
   const composerInputRef = useRef(null);
   const attachmentInputRef = useRef(null);
+  const activeComposeRecipientIdRef = useRef('');
 
   const buildClientMessageId = () => `client_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 
@@ -2130,6 +2131,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     setCompose({ recipientUserId: '', bodyText: '' });
     setPendingRecipient(null);
     setActiveComposeRecipient(null);
+    activeComposeRecipientIdRef.current = '';
     setQueuedSticker(null);
     setAttachmentState({ uploading: false, file: null, error: '' });
   };
@@ -2161,6 +2163,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   };
 
   const chooseRecipient = (recipient) => {
+    activeComposeRecipientIdRef.current = recipient.id;
     setActiveComposeRecipient(recipient);
     setCompose({ recipientUserId: recipient.id, bodyText: '' });
     setPendingRecipient(recipient);
@@ -2224,7 +2227,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     const composedBodyText = String(overrides.bodyText ?? compose.bodyText ?? '').trim();
     const sticker = overrides.sticker || queuedSticker || null;
     const attachment = overrides.attachment || attachmentState.file || null;
-    const recipientUserId = overrides.recipientUserId || activeComposeRecipient?.id || compose.recipientUserId || '';
+    const recipientUserId = overrides.recipientUserId || activeComposeRecipientIdRef.current || activeComposeRecipient?.id || compose.recipientUserId || '';
     if (!recipientUserId || (!composedBodyText && !sticker && !attachment)) {
       setComposeState({ sending: false, error: !recipientUserId ? 'Recipient not ready.' : '' });
       return;
@@ -2251,6 +2254,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     setCompose({ recipientUserId: '', bodyText: '' });
     setPendingRecipient(null);
     setActiveComposeRecipient(null);
+    activeComposeRecipientIdRef.current = '';
     setComposeState({ sending: false, error: '' });
     setReplyText('');
     setAttachmentState({ uploading: false, file: null, error: '' });
@@ -2399,7 +2403,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   const sendSticker = (sticker) => {
     setQueuedSticker(sticker);
     if (selectedThreadId) submitReply({ sticker, bodyText: '' });
-    else startNewThreadSend({ sticker, bodyText: '', recipientUserId: activeComposeRecipient?.id || compose.recipientUserId || '' });
+    else startNewThreadSend({ sticker, bodyText: '', recipientUserId: activeComposeRecipientIdRef.current || activeComposeRecipient?.id || compose.recipientUserId || '' });
     setShowStickerPicker(false);
   };
 
@@ -2412,7 +2416,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
         setAttachmentState({ uploading: false, file: attachment, error: '' });
       } else {
         setAttachmentState({ uploading: false, file: attachment, error: '' });
-        await startNewThreadSend({ attachment, bodyText: '', recipientUserId: activeComposeRecipient?.id || compose.recipientUserId || '' });
+        await startNewThreadSend({ attachment, bodyText: '', recipientUserId: activeComposeRecipientIdRef.current || activeComposeRecipient?.id || compose.recipientUserId || '' });
       }
     } catch (error) {
       setAttachmentState({ uploading: false, file: null, error: error.message || 'Could not read attachment.' });
