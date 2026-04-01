@@ -1036,6 +1036,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
   } : profile;
   const profileBio = normalizeRenderText(previewProfile?.bio || '', 280);
   const profileAbout = normalizeRenderText(previewProfile?.about || '', 600);
+  const shouldShowAbout = Boolean(profileAbout && normalizeRenderText(profileAbout, 600).toLowerCase() !== normalizeRenderText(profileBio, 280).toLowerCase());
   const profileTopics = Array.isArray(previewProfile?.topics) ? previewProfile.topics.slice(0, 5) : [];
   const overflowTopics = Array.isArray(previewProfile?.topics) ? previewProfile.topics.slice(5) : [];
   const profileHighlights = Array.isArray(previewProfile?.highlights) ? previewProfile.highlights.map((item) => normalizeRenderText(item, 24)).filter(Boolean) : [];
@@ -1327,7 +1328,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
             </div> : null}
 
 
-            {profileAbout ? <div className="member-profile-content-block member-profile-inline-section-card member-profile-about-section">
+            {shouldShowAbout ? <div className="member-profile-content-block member-profile-inline-section-card member-profile-about-section">
               <div className="member-profile-inline-section-head"><h3>About</h3>{showOwnerEditAffordances ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>📌</button><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>🎬</button></div> : null}</div>
               <p className="member-profile-about-copy">{profileAbout}</p>
             </div> : null}
