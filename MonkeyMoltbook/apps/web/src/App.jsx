@@ -2237,7 +2237,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     const submittedCompose = { recipientUserId, bodyText: composedBodyText, sticker, attachment };
     const recipient = activeComposeRecipient || pendingRecipient || recipients.find((r) => r.id === submittedCompose.recipientUserId) || selectedRecipient;
     const createdAt = new Date().toISOString();
-    upsertOptimisticThread({
+    const optimisticThread = {
       id: optimisticThreadId,
       clientMessageId,
       subject: recipient?.displayName || recipient?.handle || 'Conversation',
@@ -2247,10 +2247,12 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
       unread: false,
       participants: recipient ? [recipient] : [],
       status: 'sending'
-    });
-    upsertOptimisticMessage(buildOptimisticMessage({ clientMessageId, threadId: optimisticThreadId, bodyText: composedBodyText, sticker, attachment }));
+    };
+    const optimisticMessage = buildOptimisticMessage({ clientMessageId, threadId: optimisticThreadId, bodyText: composedBodyText, sticker, attachment });
+    upsertOptimisticThread(optimisticThread);
+    upsertOptimisticMessage(optimisticMessage);
     setSelectedThreadId(optimisticThreadId);
-    setThreadData({ loading: false, data: null, error: '' });
+    setThreadData({ loading: false, data: { thread: { id: optimisticThreadId, subject: optimisticThread.subject, status: 'OPEN', participants: optimisticThread.participants || [], messages: [optimisticMessage] } }, error: '' });
     setCompose({ recipientUserId: '', bodyText: '' });
     setPendingRecipient(null);
     setActiveComposeRecipient(null);
