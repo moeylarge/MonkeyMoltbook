@@ -57,6 +57,6 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding-left: 18px;
-  padding-right: 18px;
+  padding: 10px 18px 8px;
+  line-height: 1.1;
 }
