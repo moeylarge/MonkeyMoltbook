@@ -149,6 +149,27 @@ function publicUser(user) {
   };
 }
 
+function sanitizeAttachment(attachment) {
+  if (!attachment || typeof attachment !== 'object') return null;
+  if (!attachment.name || !attachment.dataUrl) return null;
+  return {
+    name: String(attachment.name || 'file'),
+    type: String(attachment.type || 'application/octet-stream'),
+    size: Number(attachment.size || 0),
+    dataUrl: String(attachment.dataUrl || '')
+  };
+}
+
+function sanitizeSticker(sticker) {
+  if (!sticker || typeof sticker !== 'object') return null;
+  if (!sticker.id || !sticker.emoji) return null;
+  return {
+    id: String(sticker.id),
+    emoji: String(sticker.emoji),
+    label: String(sticker.label || sticker.emoji)
+  };
+}
+
 function logAudit(store, action, metadata = {}) {
   store.audit.push({ id: randomId('aud'), action, createdAt: nowIso(), ...metadata });
 }
@@ -196,7 +217,7 @@ function buildThreadSummary(store, thread, viewerId) {
     id: thread.id,
     subject: thread.subject,
     displayTitle: participants[0]?.displayName || participants[0]?.handle || thread.subject || 'Conversation',
-    lastMessagePreview: last?.bodyText?.slice(0, 120) || '',
+    lastMessagePreview: last?.bodyText?.slice(0, 120) || last?.sticker?.label || last?.attachment?.name || '',
     lastMessageAt: thread.lastMessageAt,
     unread,
     deliveryStatus: 'DELIVERED',
@@ -288,7 +309,7 @@ export function getThread(req, threadId) {
   const messages = store.messages
     .filter((m) => m.threadId === thread.id && !m.deletedAt)
     .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
-    .map((m) => ({ id: m.id, senderUserId: m.senderUserId, bodyText: m.bodyText, createdAt: m.createdAt, clientMessageId: m.clientMessageId || null }));
+    .map((m) => ({ id: m.id, senderUserId: m.senderUserId, bodyText: m.bodyText, createdAt: m.createdAt, clientMessageId: m.clientMessageId || null, sticker: m.sticker || null, attachment: m.attachment || null }));
   thread.lastReadAtByUserId = thread.lastReadAtByUserId || {};
   thread.lastReadAtByUserId[gate.user.id] = nowIso();
   writeStore(store);
@@ -345,7 +366,9 @@ export function createThread(req, body) {
   const recipientUserId = String(body?.recipientUserId || '').trim();
   const bodyText = String(body?.bodyText || '').trim();
   const clientMessageId = String(body?.clientMessageId || '').trim();
-  if (!recipientUserId || !bodyText) return { ok: false, status: 400, code: 'INVALID_PAYLOAD', message: 'Recipient and message are required.' };
+  const sticker = sanitizeSticker(body?.sticker);
+  const attachment = sanitizeAttachment(body?.attachment);
+  if (!recipientUserId || (!bodyText && !sticker && !attachment)) return { ok: false, status: 400, code: 'INVALID_PAYLOAD', message: 'Recipient and message are required.' };
   if (recipientUserId === gate.user.id) return { ok: false, status: 400, code: 'CANNOT_MESSAGE_SELF', message: 'You cannot message yourself.' };
   const store = readStore();
   ensureSystemUser(store);
@@ -382,7 +405,7 @@ export function createThread(req, body) {
     createdAt,
     updatedAt: createdAt
   };
-  const message = { id: randomId('msg'), threadId: thread.id, senderUserId: sender.id, bodyText, createdAt, clientMessageId: clientMessageId || null };
+  const message = { id: randomId('msg'), threadId: thread.id, senderUserId: sender.id, bodyText, createdAt, clientMessageId: clientMessageId || null, sticker, attachment };
   const delivery = { id: randomId('del'), messageId: message.id, recipientUserId: recipient.id, channel: 'EMAIL', status: 'QUEUED', attemptCount: 0, createdAt, updatedAt: createdAt };
   store.threads.unshift(thread);
   store.messages.push(message);
@@ -414,7 +437,9 @@ export function replyThread(req, threadId, body) {
   syncVerifiedUser(gate.user);
   const bodyText = String(body?.bodyText || '').trim();
   const clientMessageId = String(body?.clientMessageId || '').trim();
-  if (!bodyText) return { ok: false, status: 400, code: 'INVALID_PAYLOAD', message: 'Reply cannot be empty.' };
+  const sticker = sanitizeSticker(body?.sticker);
+  const attachment = sanitizeAttachment(body?.attachment);
+  if (!bodyText && !sticker && !attachment) return { ok: false, status: 400, code: 'INVALID_PAYLOAD', message: 'Reply cannot be empty.' };
   const store = readStore();
   const thread = store.threads.find((item) => item.id === threadId);
   if (!thread || !thread.participantIds?.includes(gate.user.id)) return { ok: false, status: 404, code: 'THREAD_NOT_FOUND', message: 'Thread not found.' };
@@ -438,7 +463,7 @@ export function replyThread(req, threadId, body) {
   }
   if (!debitWallet(sender, SEND_COST)) return { ok: false, status: 400, code: 'INSUFFICIENT_CREDITS', message: 'You need more credits to send MoltMail.' };
   const createdAt = nowIso();
-  const message = { id: randomId('msg'), threadId: thread.id, senderUserId: sender.id, bodyText, createdAt, clientMessageId: clientMessageId || null };
+  const message = { id: randomId('msg'), threadId: thread.id, senderUserId: sender.id, bodyText, createdAt, clientMessageId: clientMessageId || null, sticker, attachment };
   const delivery = { id: randomId('del'), messageId: message.id, recipientUserId: recipient.id, channel: 'EMAIL', status: 'QUEUED', attemptCount: 0, createdAt, updatedAt: createdAt };
   thread.lastMessageAt = message.createdAt;
   thread.updatedAt = message.createdAt;
