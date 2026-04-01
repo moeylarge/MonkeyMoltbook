@@ -240,7 +240,12 @@ export async function getProfileByUsername(username) {
   const normalized = normalizeUsername(username);
   if (!normalized) return null;
   const result = await supabaseFetch('profiles', { query: `username=eq.${encodeURIComponent(normalized)}&select=*` });
-  return result.data?.[0] || null;
+  if (result.data?.[0]) return result.data[0];
+
+  const byEmailPrefix = await supabaseFetch('profiles', {
+    query: `email=ilike.${encodeURIComponent(normalized + '@%')}&select=*`
+  });
+  return byEmailPrefix.data?.[0] || null;
 }
 
 export async function isUsernameAvailable(username, userId = '') {
