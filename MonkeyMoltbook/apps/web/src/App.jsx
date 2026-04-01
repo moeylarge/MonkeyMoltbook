@@ -1133,9 +1133,10 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
                 <div className="member-profile-identity-copy">
                   <h1>{profileName}</h1>
                   <span className="member-profile-handle">@{profileSlug}</span>
-                  <p>{profileBio || 'No bio yet.'}</p>
-                  {profile?.location_text || profile?.website_url ? <div className="member-profile-inline-meta">
+                  <p>{profileBio || profile?.tagline || 'No bio yet.'}</p>
+                  {profile?.location_text || profile?.website_url || profile?.pronouns ? <div className="member-profile-inline-meta">
                     {profile?.location_text ? <span>{profile.location_text}</span> : null}
+                    {profile?.pronouns ? <span>{profile.pronouns}</span> : null}
                     {profile?.website_url ? <a href={profile.website_url} target="_blank" rel="noreferrer">{profile.website_url}</a> : null}
                   </div> : null}
                 </div>
@@ -1205,12 +1206,25 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
 
             <div className="member-profile-content-block member-profile-inline-section-card">
               <div className="member-profile-inline-section-head"><h3>Bio</h3>{showOwnerEditAffordances ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>📌</button><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>🎬</button></div> : null}</div>
-              <p>{profileBio || 'No bio yet.'}</p>
+              <p>{profileBio || profile?.tagline || 'No bio yet.'}</p>
             </div>
 
             {profileAbout ? <div className="member-profile-content-block member-profile-inline-section-card">
               <div className="member-profile-inline-section-head"><h3>About</h3>{showOwnerEditAffordances ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>📌</button><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>🎬</button></div> : null}</div>
               <p>{profileAbout}</p>
+            </div> : null}
+
+            {(profile?.category || profile?.website_url || profile?.location_text || profile?.pronouns || profileTopics.length || profileHighlights.length || profileLinks.length) ? <div className="member-profile-content-block member-profile-inline-section-card">
+              <div className="member-profile-inline-section-head"><h3>Profile details</h3>{showOwnerEditAffordances ? <div className="member-profile-inline-edit-group"><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>📌</button><button className="member-profile-inline-edit" onClick={() => setEditOpen(true)}>🎬</button></div> : null}</div>
+              <div className="member-profile-detail-pills">
+                <span className="tag">@{profileSlug}</span>
+                {profile?.category ? <span className="tag">{profile.category}</span> : null}
+                {profile?.location_text ? <span className="tag">{profile.location_text}</span> : null}
+                {profile?.pronouns ? <span className="tag">{profile.pronouns}</span> : null}
+              </div>
+              {profileTopics.length ? <div className="tag-row">{profileTopics.map((tag) => <span key={tag} className="tag">{tag}</span>)}</div> : null}
+              {profileHighlights.length ? <div className="tag-row">{profileHighlights.map((item) => <span key={item} className="tag">{item}</span>)}</div> : null}
+              {profileLinks.length ? <div className="member-profile-links-grid">{profileLinks.map((item, index) => <a key={`${item.url}-${index}`} href={item.url} target="_blank" rel="noreferrer" className="ghost-btn member-profile-link-card"><strong>{item.label}</strong><span>{item.url}</span></a>)}</div> : null}
             </div> : null}
           </div>
 
