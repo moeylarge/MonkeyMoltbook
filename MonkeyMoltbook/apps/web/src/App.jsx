@@ -3122,7 +3122,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
       body: JSON.stringify({ ...submittedCompose, clientMessageId })
     });
     const payload = await response.json();
-    if (!response.ok) throw new Error(payload?.message || 'Could not send message.');
+    if (!response.ok) throw new Error(payload?.message || payload?.code || 'Could not send message.');
     const confirmedThreadId = payload?.thread?.id || optimisticThreadId;
     const confirmedMessageId = payload?.message?.id || clientMessageId;
     resolveOptimisticMessage(clientMessageId, { id: confirmedMessageId, threadId: confirmedThreadId, status: 'sent', error: '' });
@@ -3199,6 +3199,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
       setCompose({ recipientUserId: '', bodyText: '' });
       setComposeState({ sending: false, error: '' });
     } catch (error) {
+      console.error('[moltmail-ui][startNewThreadSend][failed]', error);
       resolveOptimisticThread(optimisticThreadId, { status: 'failed', lastMessagePreview: buildPendingPreview(submittedCompose) });
       resolveOptimisticMessage(clientMessageId, { status: 'failed', error: error.message || 'Could not send message.' });
       setComposeState({ sending: false, error: error.message || 'Could not send message.' });
@@ -3249,7 +3250,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
       body: JSON.stringify({ bodyText, clientMessageId, sticker, attachment, replyToMessageId })
     });
     const payload = await response.json();
-    if (!response.ok) throw new Error(payload?.message || 'Could not send reply.');
+    if (!response.ok) throw new Error(payload?.message || payload?.code || 'Could not send reply.');
     const confirmedMessageId = payload?.message?.id || clientMessageId;
     resolveOptimisticMessage(clientMessageId, { id: confirmedMessageId, threadId, status: 'sent', error: '' });
     markThreadReadLocal(threadId);
@@ -3282,6 +3283,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     try {
       await sendReplyMessage({ threadId, bodyText, clientMessageId, sticker, attachment, replyToMessageId });
     } catch (error) {
+      console.error('[moltmail-ui][submitReply][failed]', error);
       resolveOptimisticMessage(clientMessageId, { status: 'failed', error: error.message || 'Could not send reply.' });
       setReplyState({ sending: false, error: error.message || 'Could not send reply.' });
     }
@@ -3302,6 +3304,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
           optimisticThreadId: pendingThread.id
         });
       } catch (error) {
+        console.error('[moltmail-ui][retryOptimisticMessage][new-thread][failed]', error);
         resolveOptimisticThread(pendingThread.id, { status: 'failed', lastMessagePreview: buildPendingPreview(message) });
         resolveOptimisticMessage(message.clientMessageId, { status: 'failed', error: error.message || 'Could not send message.' });
       }
