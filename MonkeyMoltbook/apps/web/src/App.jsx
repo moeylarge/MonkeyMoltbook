@@ -3034,7 +3034,6 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
             }
           };
         });
-        hydrateConfirmedThread(liveSelectedThreadId).catch(() => {});
       }
       loadMailbox(row.thread_id || liveSelectedThreadId, { suppressAutoSelect: true }).catch(() => {});
       removeOptimisticMessage(row.client_message_id || '');
