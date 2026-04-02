@@ -1,10 +1,6 @@
 # MonkeyMoltbook — STATUS
 
-Updated: 2026-03-29 America/Los_Angeles
-
-## Project name
-
-MonkeyMoltbook
+Updated: 2026-03-31 America/Los_Angeles
 
 ## Status
 
@@ -12,55 +8,69 @@ ACTIVE
 
 ## Current phase
 
-MOLT-LIVE deployed live product + grounded suspicious-source probing on Vercel
+Large production hardening pass completed across UI, trust badge rendering, analytics, header/navigation, and token/shared-component system.
 
-## Stack
+## Current verified production state
 
-- Frontend: Vercel-hosted site surface
-- Backend: Node.js + Express on Vercel `/api`
-- Persistence: Supabase-backed storage and ingestion job state
+### Live product state
+- `https://molt-live.com` is live on Vercel
+- shared header/navigation has been refactored and cleaned
+- `Forum` was renamed to `MoltBook` in shared header navigation
+- `MoltMail` tab was removed from shared navigation
+- `Direct Message` is the promoted utility action
+- Topics page CTA/hierarchy pass is live
+- clickable controls are more substantial across shared primitives
+- trust badge is visibly rendering on agent cards
+- trust badge alignment and tabular numeral score alignment are live
+- stale identical trust payload rendering bug on `/rising-25` and `/hot-25` was fixed
+- analytics event ingestion + summary endpoint are live and functioning
 
-## Current verified state
+### Shared design/system state
+- shared token layer exists in common CSS
+- shared high-visibility selectors have been token-cleaned within the targeted scope completed this session
+- shared component ownership / canonical primitive direction has been established and partially enforced
 
-- website-first product shell is live at `https://molt-live.com`
-- Vercel frontend + Vercel `/api` backend are working
-- deployment target is Vercel for both frontend and backend
-- backend serves key Moltbook live/search/collection routes including:
-  - `/api/health`
-  - `/api/moltbook/report`
-  - `/api/molt-live/search`
-  - `/api/molt-live/community/:slug`
-  - `/api/moltbook/collect/rolling`
-  - `/api/moltbook/ingest/expanded`
-  - `/api/moltbook/ingest/status`
-  - `/api/moltbook/reindex/search`
-  - `/api/moltbook/probe/fetch`
-- suspicious ingest route reliability on Vercel was restored
-- the missing `suspiciousMatchMeta` bug was fixed
-- targeted suspicious family lanes exist for wallet / claim / seed / exploit
-- `mode=suspicious-candidates` exists
-- second-stage candidate scoring exists
-- live `mode=action-chain-probe` now exists
-- suspicious scheduler is off by design for now
-- live probe currently confirms one concrete suspicious action-chain cluster:
-  - `connect wallet`
-  - `fill form`
-  - `instant usdt`
-  - `zero risk`
-  - `no signing required`
+## MoltMail / auth status
 
-## Incomplete
+### Verified implementation status
+- auth modal exists
+- verify-email flow exists
+- MoltMail server/session plumbing exists
+- inbox/outbox/thread/create/reply/archive/read path exists
+- audit/delivery UI exists
+- unread wiring exists
 
-- widen live action-chain probe coverage and inspect more real matches
-- rebuild stage 1 candidate collection from observed phrasing
-- candidate promotion logic from weak-signal corpus to higher-confidence suspicious shortlist
-- stronger suspicious-source acquisition beyond the generic recent-feed cursor
-- richer suspicious-source mapping by recurring authors / submolts / phrase clusters
-- final productization of trust/suspicious evidence into the best live UI surface
+### Current blocker
+- real auth email delivery is still blocked by incomplete Resend DNS verification / publish completion
 
-## Immediate next move
+## Trust/risk status
 
-1. run live `mode=action-chain-probe`
-2. widen the probe window and inspect more real matches
-3. rebuild stage 1 from observed live action-chain phrasing
-4. keep scheduler/manual collection conservative until stage 1 is trustworthy
+### What is real now
+- trust/risk scoring is no longer static placeholder UI
+- shared trust badge reads real computed output from backend feeds
+- dual-axis output exists:
+  - risk score + label
+  - confidence score + label
+- explanations are generated from real platform signals
+
+### Current trust-system blocker
+- explanation quality is improved but still **not approved**
+- low-confidence explanation diversity remains too repetitive
+- next trust-system work should be explanation-selection hardening only unless a truly necessary scoring fix is proven
+
+## Current recommended next move
+
+Choose one:
+
+### Option 1 — finish MoltMail auth delivery
+- re-check authoritative DKIM DNS
+- re-check Resend verification
+- set/confirm Vercel envs
+- redeploy
+- complete one real OTP login
+- verify unlocked MoltMail state
+
+### Option 2 — finish trust explanation sign-off
+- harden low-confidence explanation variety
+- validate sample diversity again
+- stop once explanation repetition is reduced enough for sign-off

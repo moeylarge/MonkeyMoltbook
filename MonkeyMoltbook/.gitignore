@@ -11,3 +11,4 @@ apps/mobile/.expo
 apps/mobile/.expo-shared
 apps/mobile/node_modules
 apps/server/node_modules
+.vercel

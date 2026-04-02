@@ -345,14 +345,18 @@ export function searchRecipients(req, query) {
       };
     });
 
-    console.log('[moltmail][searchRecipients]', JSON.stringify({
+    const debugPayload = {
       query: q,
       requester: {
         id: gate.user.id,
         email: gate.user.email || null,
         handle: gate.user.handle || null
       },
-      totalAuthCandidates: authUsers.length,
+      authSource: {
+        totalUsers: authUsers.length,
+        hasMoeylarge: authUsers.some((user) => String(user.email || '').toLowerCase() === 'moeylarge@gmail.com' || String(user.handle || '').toLowerCase() === 'moeylarge'),
+        hasRnewman: authUsers.some((user) => String(user.email || '').toLowerCase() === 'rnewman1229@gmail.com' || String(user.handle || '').toLowerCase() === 'rnewman1229')
+      },
       hasRnewmanCandidate: Boolean(targetUser),
       rnewmanCandidate: targetUser ? {
         id: targetUser.id,
@@ -363,7 +367,9 @@ export function searchRecipients(req, query) {
         status: targetUser.status || null
       } : null,
       rnewmanDiagnostic: candidateDiagnostics.find((user) => String(user.email || '').toLowerCase() === 'rnewman1229@gmail.com' || String(user.handle || '').toLowerCase() === 'rnewman1229') || null
-    }));
+    };
+
+    console.log('[moltmail][searchRecipients]', JSON.stringify(debugPayload));
 
     const results = candidateDiagnostics
       .filter((user) => user.included)
@@ -377,6 +383,9 @@ export function searchRecipients(req, query) {
         email: user.email || null
       }));
 
+    if (req.query?.debug === '1') {
+      return { ok: true, results, debug: debugPayload };
+    }
     return { ok: true, results };
   });
 }

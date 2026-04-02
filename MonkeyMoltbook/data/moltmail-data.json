@@ -1,0 +1,21 @@
+{
+  "users": [
+    {
+      "id": "usr_proof_recipient",
+      "email": "proof-recipient@molt.live",
+      "emailVerifiedAt": "2026-04-01T04:50:00.000Z",
+      "displayName": "Proof Recipient",
+      "handle": "proofrecipient",
+      "status": "ACTIVE",
+      "createdAt": "2026-04-01T04:50:00.000Z",
+      "updatedAt": "2026-04-01T04:50:00.000Z",
+      "lastLoginAt": "2026-04-01T04:50:00.000Z",
+      "walletBalance": 100
+    }
+  ],
+  "threads": [],
+  "messages": [],
+  "audit": [],
+  "delivery": [],
+  "rateLimits": []
+}

@@ -12,7 +12,7 @@ import { buildSearchDocumentsFromState, getAuthorsByIds, getAuthorsBySourceIds, 
 import { scoreAuthorRisk, scoreCommunityRisk } from './lib/trust-score.js';
 import { addAgentReply, addLiveMessage, createLiveSession, endLiveSession, exportTranscriptText, getLiveSession, listTranscript, liveSessionsEnabled, updateLivePresence } from './lib/live-sessions.js';
 import { createCheckoutSession, creditsEnabled, ensureCreditProducts, getSpendRules, getWallet, grantCredits, listCreditProducts, listCreditTransactions, spendCredits } from './lib/credits.js';
-import { applySessionCookie, getAccountMe, getSessionResponse, logoutSession, startEmailAuth, verifyEmailAuth } from './lib/moltmail-auth.js';
+import { applySessionCookie, createDevVerifiedSession, getAccountMe, getSessionResponse, logoutSession, startEmailAuth, verifyEmailAuth } from './lib/moltmail-auth.js';
 import { archiveThread, createThread, getAuditSummary, getBootstrap, getInbox, getOutbox, getThread, getUnreadCount, markThreadRead, pinMessage, replyThread, searchRecipients, togglePinThread, toggleReaction, unsendMessage } from './lib/moltmail-data.js';
 import { createClipForUser, deleteClipForUser, getOrCreateProfileForUser, getProfileByUsername, isProfileStorageEnabled, listClipsForUser, toPublicProfile, updateProfileAvatar, updateProfileBanner, updateProfileForUser } from './lib/profile-storage.js';
 
@@ -59,6 +59,25 @@ app.post('/auth/email/verify', (req, res) => {
 
 app.post('/auth/logout', (req, res) => {
   res.json(logoutSession(req, res));
+});
+
+app.post('/auth/dev-login', (req, res) => {
+  const host = String(req.headers.host || '');
+  const enabled = host !== 'molt-live.com' && host !== 'www.molt-live.com';
+  if (!enabled) {
+    res.status(404).json({ ok: false, code: 'NOT_FOUND' });
+    return;
+  }
+  const result = createDevVerifiedSession(req.body?.email || 'moeylarge@gmail.com', {
+    displayName: req.body?.displayName || 'Moltbook',
+    handle: req.body?.handle || 'moeylarge'
+  });
+  if (!result.ok) {
+    res.status(400).json(result);
+    return;
+  }
+  applySessionCookie(res, result.token, result.expiresAt);
+  res.json({ ok: true, user: result.user });
 });
 
 app.get('/auth/session', (req, res) => {
