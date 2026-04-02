@@ -1,6 +1,6 @@
 const SUPABASE_URL = process.env.SUPABASE_URL || '';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-const SEND_COST = Number(process.env.MOLTMAIL_SEND_COST || 5);
+const SEND_COST = Number(process.env.MOLTMAIL_SEND_COST || 0);
 const SYSTEM_USER_ID = 'usr_moltmail_system';
 
 function isEnabled() {
@@ -329,7 +329,7 @@ export async function createThreadSupabase(user, body) {
   if (recipient.messagePermission === 'nobody') return { ok: false, status: 403, code: 'USER_RESTRICTED', message: 'This message cannot be sent right now.' };
 
   const senderWallet = await getWallet(user.id);
-  if (Number(senderWallet?.balance || 0) < SEND_COST) return { ok: false, status: 400, code: 'INSUFFICIENT_CREDITS', message: 'You need more credits to send MoltMail.' };
+  if (SEND_COST > 0 && Number(senderWallet?.balance || 0) < SEND_COST) return { ok: false, status: 400, code: 'INSUFFICIENT_CREDITS', message: 'You need more credits to send MoltMail.' };
 
   const existingParticipants = await rest('mail_participants', {
     query: `user_id=in.${encodeURIComponent(`("${String(user.id).replace(/"/g, '')}","${String(recipientUserId).replace(/"/g, '')}")`)}&select=thread_id,user_id`
@@ -418,8 +418,10 @@ export async function createThreadSupabase(user, body) {
     prefer: 'return=minimal'
   }).catch(() => null);
 
-  const debit = await debitWallet(user.id, SEND_COST, 'MESSAGE_SEND', message.id, { threadId, recipientUserId });
-  return { ok: true, thread: { id: threadId }, message: { id: message.id, clientMessageId }, wallet: { balance: Number(debit.wallet?.balance || 0), debited: SEND_COST } };
+  const debit = SEND_COST > 0
+    ? await debitWallet(user.id, SEND_COST, 'MESSAGE_SEND', message.id, { threadId, recipientUserId })
+    : { ok: true, wallet: senderWallet };
+  return { ok: true, thread: { id: threadId }, message: { id: message.id, clientMessageId }, wallet: { balance: Number(debit.wallet?.balance || senderWallet?.balance || 0), debited: SEND_COST } };
 }
 
 export async function replyThreadSupabase(user, threadId, body) {
@@ -441,7 +443,7 @@ export async function replyThreadSupabase(user, threadId, body) {
   if (!recipientParticipant) return { ok: false, status: 404, code: 'THREAD_NOT_FOUND', message: 'Thread not found.' };
 
   const senderWallet = await getWallet(user.id);
-  if (Number(senderWallet?.balance || 0) < SEND_COST) return { ok: false, status: 400, code: 'INSUFFICIENT_CREDITS', message: 'You need more credits to send MoltMail.' };
+  if (SEND_COST > 0 && Number(senderWallet?.balance || 0) < SEND_COST) return { ok: false, status: 400, code: 'INSUFFICIENT_CREDITS', message: 'You need more credits to send MoltMail.' };
 
   const createdAt = nowIso();
   const createdMessages = await rest('mail_messages', {
@@ -485,8 +487,10 @@ export async function replyThreadSupabase(user, threadId, body) {
     }],
     prefer: 'return=minimal'
   }).catch(() => null);
-  const debit = await debitWallet(user.id, SEND_COST, 'MESSAGE_REPLY', message.id, { threadId, recipientUserId: recipientParticipant.user_id });
-  return { ok: true, message: { id: message.id, clientMessageId }, wallet: { balance: Number(debit.wallet?.balance || 0), debited: SEND_COST } };
+  const debit = SEND_COST > 0
+    ? await debitWallet(user.id, SEND_COST, 'MESSAGE_REPLY', message.id, { threadId, recipientUserId: recipientParticipant.user_id })
+    : { ok: true, wallet: senderWallet };
+  return { ok: true, message: { id: message.id, clientMessageId }, wallet: { balance: Number(debit.wallet?.balance || senderWallet?.balance || 0), debited: SEND_COST } };
 }
 
 export async function markThreadReadSupabase(user, threadId) {
