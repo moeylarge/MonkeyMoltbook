@@ -14,6 +14,7 @@ import { addAgentReply, addLiveMessage, createLiveSession, endLiveSession, expor
 import { createCheckoutSession, creditsEnabled, ensureCreditProducts, getSpendRules, getWallet, grantCredits, listCreditProducts, listCreditTransactions, spendCredits } from './lib/credits.js';
 import { applySessionCookie, createDevVerifiedSession, getAccountMe, getSessionResponse, logoutSession, startEmailAuth, verifyEmailAuth } from './lib/moltmail-auth.js';
 import { archiveThread, createThread, getAuditSummary, getBootstrap, getInbox, getOutbox, getThread, getUnreadCount, markThreadRead, pinMessage, replyThread, searchRecipients, syncVerifiedUser, togglePinThread, toggleReaction, unsendMessage } from './lib/moltmail-data.js';
+import { archiveThreadSupabase, createThreadSupabase, getBootstrapSupabase, getMailboxSupabase, getThreadSupabase, getUnreadCountSupabase, markThreadReadSupabase, moltmailSupabaseEnabled, replyThreadSupabase, searchRecipientsSupabase } from './lib/moltmail-supabase.js';
 import { createClipForUser, deleteClipForUser, getOrCreateProfileForUser, getProfileByUsername, isProfileStorageEnabled, listClipsForUser, toPublicProfile, updateProfileAvatar, updateProfileBanner, updateProfileForUser } from './lib/profile-storage.js';
 
 const PROFILE_MEDIA_DIR = process.env.VERCEL ? '/tmp/monkeymoltbook-profile-media' : path.join(process.cwd(), 'data', 'profile-media');
@@ -365,51 +366,176 @@ app.post('/account/resend-verification', async (req, res) => {
   res.status(result.ok ? 200 : 400).json({ ok: result.ok });
 });
 
-app.get('/moltmail/bootstrap', (req, res) => {
+app.get('/moltmail/bootstrap', async (req, res) => {
+  if (moltmailSupabaseEnabled()) {
+    const session = getSessionResponse(req);
+    if (!session.authenticated || !session.user?.id || !session.user?.emailVerified) {
+      res.status(!session.authenticated ? 401 : 403).json({ ok: false, code: !session.authenticated ? 'UNAUTHENTICATED' : 'EMAIL_NOT_VERIFIED', message: !session.authenticated ? 'Sign in to continue.' : 'Verify email to unlock MoltMail.' });
+      return;
+    }
+    try {
+      const result = await getBootstrapSupabase(session.user);
+      res.status(result.ok ? 200 : result.status || 400).json(result);
+    } catch (error) {
+      res.status(500).json({ ok: false, code: 'MOLTMAIL_BOOTSTRAP_FAILED', message: String(error?.message || error) });
+    }
+    return;
+  }
   const result = getBootstrap(req);
   res.status(result.ok ? 200 : result.status || 400).json(result);
 });
 
-app.get('/moltmail/recipients/search', (req, res) => {
+app.get('/moltmail/recipients/search', async (req, res) => {
+  if (moltmailSupabaseEnabled()) {
+    const session = getSessionResponse(req);
+    if (!session.authenticated || !session.user?.id || !session.user?.emailVerified) {
+      res.status(!session.authenticated ? 401 : 403).json({ ok: false, code: !session.authenticated ? 'UNAUTHENTICATED' : 'EMAIL_NOT_VERIFIED', message: !session.authenticated ? 'Sign in to continue.' : 'Verify email to unlock MoltMail.' });
+      return;
+    }
+    try {
+      const result = await searchRecipientsSupabase(session.user, req.query?.q);
+      res.status(result.ok ? 200 : result.status || 400).json(result);
+    } catch (error) {
+      res.status(500).json({ ok: false, code: 'MOLTMAIL_RECIPIENT_SEARCH_FAILED', message: String(error?.message || error) });
+    }
+    return;
+  }
   const result = searchRecipients(req, req.query?.q);
   res.status(result.ok ? 200 : result.status || 400).json(result);
 });
 
-app.get('/moltmail/inbox', (req, res) => {
+app.get('/moltmail/inbox', async (req, res) => {
+  if (moltmailSupabaseEnabled()) {
+    const session = getSessionResponse(req);
+    if (!session.authenticated || !session.user?.id || !session.user?.emailVerified) {
+      res.status(!session.authenticated ? 401 : 403).json({ ok: false, code: !session.authenticated ? 'UNAUTHENTICATED' : 'EMAIL_NOT_VERIFIED', message: !session.authenticated ? 'Sign in to continue.' : 'Verify email to unlock MoltMail.' });
+      return;
+    }
+    try {
+      const result = await getMailboxSupabase(session.user, 'inbox');
+      res.status(result.ok ? 200 : result.status || 400).json(result);
+    } catch (error) {
+      res.status(500).json({ ok: false, code: 'MOLTMAIL_INBOX_FAILED', message: String(error?.message || error) });
+    }
+    return;
+  }
   const result = getInbox(req);
   res.status(result.ok ? 200 : result.status || 400).json(result);
 });
 
-app.get('/moltmail/outbox', (req, res) => {
+app.get('/moltmail/outbox', async (req, res) => {
+  if (moltmailSupabaseEnabled()) {
+    const session = getSessionResponse(req);
+    if (!session.authenticated || !session.user?.id || !session.user?.emailVerified) {
+      res.status(!session.authenticated ? 401 : 403).json({ ok: false, code: !session.authenticated ? 'UNAUTHENTICATED' : 'EMAIL_NOT_VERIFIED', message: !session.authenticated ? 'Sign in to continue.' : 'Verify email to unlock MoltMail.' });
+      return;
+    }
+    try {
+      const result = await getMailboxSupabase(session.user, 'outbox');
+      res.status(result.ok ? 200 : result.status || 400).json(result);
+    } catch (error) {
+      res.status(500).json({ ok: false, code: 'MOLTMAIL_OUTBOX_FAILED', message: String(error?.message || error) });
+    }
+    return;
+  }
   const result = getOutbox(req);
   res.status(result.ok ? 200 : result.status || 400).json(result);
 });
 
-app.get('/moltmail/thread/:threadId', (req, res) => {
+app.get('/moltmail/thread/:threadId', async (req, res) => {
+  if (moltmailSupabaseEnabled()) {
+    const session = getSessionResponse(req);
+    if (!session.authenticated || !session.user?.id || !session.user?.emailVerified) {
+      res.status(!session.authenticated ? 401 : 403).json({ ok: false, code: !session.authenticated ? 'UNAUTHENTICATED' : 'EMAIL_NOT_VERIFIED', message: !session.authenticated ? 'Sign in to continue.' : 'Verify email to unlock MoltMail.' });
+      return;
+    }
+    try {
+      const result = await getThreadSupabase(session.user, req.params.threadId);
+      res.status(result.ok ? 200 : result.status || 400).json(result);
+    } catch (error) {
+      res.status(500).json({ ok: false, code: 'MOLTMAIL_THREAD_FAILED', message: String(error?.message || error) });
+    }
+    return;
+  }
   const result = getThread(req, req.params.threadId);
   res.status(result.ok ? 200 : result.status || 400).json(result);
 });
 
-app.post('/moltmail/thread', (req, res) => {
+app.post('/moltmail/thread', async (req, res) => {
+  if (moltmailSupabaseEnabled()) {
+    const session = getSessionResponse(req);
+    if (!session.authenticated || !session.user?.id || !session.user?.emailVerified) {
+      res.status(!session.authenticated ? 401 : 403).json({ ok: false, code: !session.authenticated ? 'UNAUTHENTICATED' : 'EMAIL_NOT_VERIFIED', message: !session.authenticated ? 'Sign in to continue.' : 'Verify email to unlock MoltMail.' });
+      return;
+    }
+    try {
+      const result = await createThreadSupabase(session.user, req.body || {});
+      res.status(result.ok ? 200 : result.status || 400).json(result);
+    } catch (error) {
+      res.status(500).json({ ok: false, code: 'MOLTMAIL_THREAD_CREATE_FAILED', message: String(error?.message || error) });
+    }
+    return;
+  }
   const result = createThread(req, req.body || {});
   res.status(result.ok ? 200 : result.status || 400).json(result);
 });
 
-app.post('/moltmail/thread/:threadId/reply', (req, res) => {
+app.post('/moltmail/thread/:threadId/reply', async (req, res) => {
+  if (moltmailSupabaseEnabled()) {
+    const session = getSessionResponse(req);
+    if (!session.authenticated || !session.user?.id || !session.user?.emailVerified) {
+      res.status(!session.authenticated ? 401 : 403).json({ ok: false, code: !session.authenticated ? 'UNAUTHENTICATED' : 'EMAIL_NOT_VERIFIED', message: !session.authenticated ? 'Sign in to continue.' : 'Verify email to unlock MoltMail.' });
+      return;
+    }
+    try {
+      const result = await replyThreadSupabase(session.user, req.params.threadId, req.body || {});
+      res.status(result.ok ? 200 : result.status || 400).json(result);
+    } catch (error) {
+      res.status(500).json({ ok: false, code: 'MOLTMAIL_REPLY_FAILED', message: String(error?.message || error) });
+    }
+    return;
+  }
   const result = replyThread(req, req.params.threadId, req.body || {});
   res.status(result.ok ? 200 : result.status || 400).json(result);
 });
 
-app.post('/moltmail/thread/:threadId/read', (req, res) => {
+app.post('/moltmail/thread/:threadId/read', async (req, res) => {
+  if (moltmailSupabaseEnabled()) {
+    const session = getSessionResponse(req);
+    if (!session.authenticated || !session.user?.id || !session.user?.emailVerified) {
+      res.status(!session.authenticated ? 401 : 403).json({ ok: false, code: !session.authenticated ? 'UNAUTHENTICATED' : 'EMAIL_NOT_VERIFIED', message: !session.authenticated ? 'Sign in to continue.' : 'Verify email to unlock MoltMail.' });
+      return;
+    }
+    try {
+      const result = await markThreadReadSupabase(session.user, req.params.threadId);
+      res.status(result.ok ? 200 : result.status || 400).json(result);
+    } catch (error) {
+      res.status(500).json({ ok: false, code: 'MOLTMAIL_READ_FAILED', message: String(error?.message || error) });
+    }
+    return;
+  }
   const result = markThreadRead(req, req.params.threadId);
   res.status(result.ok ? 200 : result.status || 400).json(result);
 });
 
-app.post('/moltmail/thread/:threadId/archive', (req, res) => {
+app.post('/moltmail/thread/:threadId/archive', async (req, res) => {
+  if (moltmailSupabaseEnabled()) {
+    const session = getSessionResponse(req);
+    if (!session.authenticated || !session.user?.id || !session.user?.emailVerified) {
+      res.status(!session.authenticated ? 401 : 403).json({ ok: false, code: !session.authenticated ? 'UNAUTHENTICATED' : 'EMAIL_NOT_VERIFIED', message: !session.authenticated ? 'Sign in to continue.' : 'Verify email to unlock MoltMail.' });
+      return;
+    }
+    try {
+      const result = await archiveThreadSupabase(session.user, req.params.threadId);
+      res.status(result.ok ? 200 : result.status || 400).json(result);
+    } catch (error) {
+      res.status(500).json({ ok: false, code: 'MOLTMAIL_ARCHIVE_FAILED', message: String(error?.message || error) });
+    }
+    return;
+  }
   const result = archiveThread(req, req.params.threadId);
   res.status(result.ok ? 200 : result.status || 400).json(result);
 });
-
 app.post('/moltmail/thread/:threadId/message/:messageId/reaction', (req, res) => {
   const result = toggleReaction(req, req.params.threadId, req.params.messageId, req.body || {});
   res.status(result.ok ? 200 : result.status || 400).json(result);
@@ -430,7 +556,21 @@ app.post('/moltmail/thread/:threadId/message/:messageId/pin', (req, res) => {
   res.status(result.ok ? 200 : result.status || 400).json(result);
 });
 
-app.get('/moltmail/unread-count', (req, res) => {
+app.get('/moltmail/unread-count', async (req, res) => {
+  if (moltmailSupabaseEnabled()) {
+    const session = getSessionResponse(req);
+    if (!session.authenticated || !session.user?.id || !session.user?.emailVerified) {
+      res.status(!session.authenticated ? 401 : 403).json({ ok: false, code: !session.authenticated ? 'UNAUTHENTICATED' : 'EMAIL_NOT_VERIFIED', message: !session.authenticated ? 'Sign in to continue.' : 'Verify email to unlock MoltMail.' });
+      return;
+    }
+    try {
+      const result = await getUnreadCountSupabase(session.user);
+      res.status(result.ok ? 200 : result.status || 400).json(result);
+    } catch (error) {
+      res.status(500).json({ ok: false, code: 'MOLTMAIL_UNREAD_FAILED', message: String(error?.message || error) });
+    }
+    return;
+  }
   const result = getUnreadCount(req);
   res.status(result.ok ? 200 : result.status || 400).json(result);
 });
