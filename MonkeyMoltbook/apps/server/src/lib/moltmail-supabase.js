@@ -126,30 +126,41 @@ async function getRecentRecipients(userId, limit = 6) {
 
 async function listDefaultRecipients(user) {
   const relationshipMaps = await getRelationshipMaps(user.id);
-  const profiles = await rest('profiles', {
-    query: 'select=user_id,email,username,display_name,avatar_url,category,message_permission,is_public,allow_search_indexing,is_discoverable,is_message_enabled,last_active_at,updated_at,created_at&order=updated_at.desc.nullslast'
+  const recentIds = await getRecentRecipients(user.id, 6);
+  const recentProfiles = recentIds.length ? await rest('profiles', {
+    query: `user_id=in.${encodeURIComponent(`(${recentIds.map((id) => `"${String(id).replace(/"/g, '')}"`).join(',')})`)}&select=user_id,email,username,display_name,avatar_url,category,message_permission,is_public,allow_search_indexing,is_discoverable,is_message_enabled,last_active_at,updated_at,created_at`
+  }).catch(() => []) : [];
+  const recent = (Array.isArray(recentProfiles) ? recentProfiles : [])
+    .map((profile) => applyRelationshipMeta(normalizeProfileUser(profile), profile.user_id, relationshipMaps, 'Messaged recently'))
+    .slice(0, 8);
+
+  const onlineProfiles = await rest('profiles', {
+    query: 'select=user_id,email,username,display_name,avatar_url,category,message_permission,is_public,allow_search_indexing,is_discoverable,is_message_enabled,last_active_at,updated_at,created_at&is_discoverable=eq.true&is_message_enabled=eq.true&order=last_active_at.desc.nullslast&limit=8'
   }).catch(() => []);
-  const eligible = (Array.isArray(profiles) ? profiles : [])
+  const online = (Array.isArray(onlineProfiles) ? onlineProfiles : [])
     .filter((profile) => String(profile.user_id || '') !== String(user.id))
     .filter((profile) => profile.is_public !== false)
     .filter((profile) => profile.allow_search_indexing !== false)
-    .filter((profile) => profile.is_discoverable !== false)
-    .filter((profile) => profile.is_message_enabled !== false)
     .filter((profile) => (profile.message_permission || 'everyone') !== 'nobody')
-    .map((profile) => applyRelationshipMeta(normalizeProfileUser(profile), profile.user_id, relationshipMaps));
+    .map((profile) => applyRelationshipMeta(normalizeProfileUser(profile), profile.user_id, relationshipMaps, 'Online now'))
+    .slice(0, 8);
 
-  const recentIds = await getRecentRecipients(user.id, 6);
-  const byId = new Map(eligible.map((item) => [item.id, item]));
-  const recent = recentIds.map((id) => byId.get(String(id))).filter(Boolean).map((item) => ({ ...item, reason: 'Messaged recently' }));
-  const friends = eligible.filter((item) => item.relationship.isFriend).slice(0, 8);
-  const online = eligible.filter((item) => item.isOnline).slice(0, 8);
-  const mutuals = eligible.filter((item) => item.relationship.isMutual && !item.relationship.isFriend).slice(0, 8);
-  const following = eligible.filter((item) => item.relationship.isFollowing && !item.relationship.isMutual && !item.relationship.isFriend).slice(0, 8);
-  const shown = new Set([...friends, ...recent, ...online, ...mutuals, ...following].map((item) => item.id));
-  const suggested = eligible.filter((item) => !shown.has(item.id)).slice(0, 8);
+  const suggestedProfiles = await rest('profiles', {
+    query: 'select=user_id,email,username,display_name,avatar_url,category,message_permission,is_public,allow_search_indexing,is_discoverable,is_message_enabled,last_active_at,updated_at,created_at&is_discoverable=eq.true&is_message_enabled=eq.true&order=updated_at.desc.nullslast&limit=12'
+  }).catch(() => []);
+  const shown = new Set([...recent, ...online].map((item) => item.id));
+  const suggested = (Array.isArray(suggestedProfiles) ? suggestedProfiles : [])
+    .filter((profile) => String(profile.user_id || '') !== String(user.id))
+    .filter((profile) => profile.is_public !== false)
+    .filter((profile) => profile.allow_search_indexing !== false)
+    .filter((profile) => (profile.message_permission || 'everyone') !== 'nobody')
+    .map((profile) => applyRelationshipMeta(normalizeProfileUser(profile), profile.user_id, relationshipMaps, 'Suggested'))
+    .filter((item) => !shown.has(item.id))
+    .slice(0, 8);
+
   return {
     ok: true,
-    sections: { friends, recent, online, mutuals, following, suggested }
+    sections: { friends: [], recent, online, mutuals: [], following: [], suggested }
   };
 }
 
