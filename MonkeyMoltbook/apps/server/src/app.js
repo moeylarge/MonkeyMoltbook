@@ -455,6 +455,12 @@ app.get('/moltmail/inbox', async (req, res) => {
       console.log('[moltmail-inbox-timing]', { step: 'route:getMailboxSupabase:after', userId: user.id, totalElapsedMs: Date.now() - inboxStartedAt });
       res.status(result.ok ? 200 : result.status || 400).json(result);
     } catch (error) {
+      console.error('[moltmail-inbox-error]', {
+        message: String(error?.message || error),
+        stack: error?.stack || null,
+        userId: user?.id || null,
+        timestamp: new Date().toISOString()
+      });
       res.status(500).json({ ok: false, code: 'MOLTMAIL_INBOX_FAILED', message: String(error?.message || error) });
     }
     return;
