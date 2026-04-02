@@ -2792,13 +2792,13 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     return false;
   }), [optimisticMessages, liveSelectedThreadId, selectedThreadId]);
   const confirmedLiveThread = threadData.data?.thread?.id === liveSelectedThreadId ? threadData.data.thread : null;
-  const activeThread = (optimisticSelectedThread ? {
+  const activeThread = confirmedLiveThread || (optimisticSelectedThread ? {
     id: optimisticSelectedThread.id,
     subject: optimisticSelectedThread.subject,
     status: 'OPEN',
     participants: optimisticSelectedThread.participants || [],
     messages: []
-  } : null) || confirmedLiveThread || null;
+  } : null) || null;
   const selectedRecipient = activeComposeRecipient || pendingRecipient || recipients.find((r) => r.id === compose.recipientUserId) || optimisticSelectedThread?.participants?.[0] || null;
   const recentRecipients = useMemo(() => {
     const seen = new Set();
@@ -2984,6 +2984,61 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     const shouldStick = distanceFromBottom < 120;
     if (shouldStick) node.scrollTop = node.scrollHeight;
   }, [visibleMessages.length, selectedThreadId]);
+
+  useEffect(() => {
+    if (!auth?.authenticated || !auth?.user?.emailVerified || !liveSelectedThreadId) return;
+    let cancelled = false;
+
+    const poll = async () => {
+      if (cancelled) return;
+      if (typeof document !== 'undefined' && document.hidden) return;
+      try {
+        const response = await fetch(`${API}/moltmail/thread/${liveSelectedThreadId}`, { credentials: 'include' });
+        const payload = await response.json();
+        if (!response.ok || cancelled || !payload?.thread) return;
+        setThreadData((current) => {
+          if (!current?.data?.thread) return current;
+          if (current.data.thread.id !== liveSelectedThreadId) return current;
+          const existing = current.data.thread.messages || [];
+          const incoming = payload.thread.messages || [];
+          const map = new Map();
+          existing.forEach((m) => map.set(m.id || m.clientMessageId, m));
+          incoming.forEach((m) => map.set(m.id || m.clientMessageId, m));
+          const merged = Array.from(map.values()).sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+          return {
+            ...current,
+            data: {
+              ...current.data,
+              thread: {
+                ...current.data.thread,
+                ...payload.thread,
+                messages: merged
+              }
+            }
+          };
+        });
+        loadMailbox(liveSelectedThreadId, { suppressAutoSelect: true }).catch(() => {});
+      } catch {}
+    };
+
+    poll();
+    const intervalId = setInterval(poll, 15000);
+    const onVisibilityChange = () => {
+      if (typeof document !== 'undefined' && !document.hidden) {
+        poll();
+      }
+    };
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', onVisibilityChange);
+    }
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', onVisibilityChange);
+      }
+    };
+  }, [auth?.authenticated, auth?.user?.emailVerified, liveSelectedThreadId, loadMailbox]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -3651,7 +3706,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
               </div>
             </div>
             <div className="moltmail-chat-feed" ref={threadFeedRef}>
-              {threadData.loading ? <div className="moltmail-thread-loading">Loading…</div> : activeThread ? (visibleMessages.length ? visibleMessages.map((message, index) => {
+              {threadData.loading ? <div className="moltmail-thread-loading">Loading…</div> : (confirmedLiveThread || activeThread) ? (visibleMessages.length ? visibleMessages.map((message, index) => {
                 const isSent = message.senderUserId === auth.user?.id;
                 const previousMessage = visibleMessages[index - 1];
                 const previousWasSameSide = previousMessage && previousMessage.senderUserId === message.senderUserId;
