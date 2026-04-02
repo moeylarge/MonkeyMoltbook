@@ -91,6 +91,7 @@ function getDemoThreadId(userId) {
 }
 
 function ensureDemoThreadForUser(store, userId) {
+  if (process.env.MOLTMAIL_DISABLE_DEMO_THREADS !== '0') return null;
   const systemUser = ensureSystemUser(store);
   const threadId = getDemoThreadId(userId);
   const baseTime = Date.now() - (1000 * 60 * 18);
@@ -295,7 +296,7 @@ export function getBootstrap(req) {
   ensureDemoThreadForUser(store, gate.user.id);
   writeStore(store);
   const user = getUserById(store, gate.user.id);
-  const threads = store.threads.filter((thread) => thread.participantIds?.includes(gate.user.id));
+  const threads = store.threads.filter((thread) => thread.participantIds?.includes(gate.user.id) && !String(thread.id || '').startsWith('thr_demo_'));
   const unreadCount = threads.filter((thread) => buildThreadSummary(store, thread, gate.user.id).unread).length;
   return {
     ok: true,
@@ -419,7 +420,7 @@ export function getInbox(req) {
   ensureDemoThreadForUser(store, gate.user.id);
   writeStore(store);
   const threads = store.threads
-    .filter((thread) => thread.participantIds?.includes(gate.user.id) && !thread.archivedAtByUserId?.[gate.user.id])
+    .filter((thread) => thread.participantIds?.includes(gate.user.id) && !thread.archivedAtByUserId?.[gate.user.id] && !String(thread.id || '').startsWith('thr_demo_'))
     .sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt))
     .map((thread) => buildThreadSummary(store, thread, gate.user.id));
   return { ok: true, threads, nextCursor: null };
@@ -431,7 +432,7 @@ export function getOutbox(req) {
   syncVerifiedUser(gate.user);
   const store = readStore();
   ensureSystemUser(store);
-  const threadIds = new Set(store.messages.filter((m) => m.senderUserId === gate.user.id).map((m) => m.threadId));
+  const threadIds = new Set(store.messages.filter((m) => m.senderUserId === gate.user.id && !String(m.threadId || '').startsWith('thr_demo_')).map((m) => m.threadId));
   const threads = store.threads
     .filter((thread) => threadIds.has(thread.id))
     .sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt))
@@ -445,7 +446,7 @@ export function getThread(req, threadId) {
   syncVerifiedUser(gate.user);
   const store = readStore();
   ensureSystemUser(store);
-  const thread = store.threads.find((item) => item.id === threadId);
+  const thread = store.threads.find((item) => item.id === threadId && !String(item.id || '').startsWith('thr_demo_'));
   if (!thread || !thread.participantIds?.includes(gate.user.id)) return { ok: false, status: 404, code: 'THREAD_NOT_FOUND', message: 'Thread not found.' };
   const messages = store.messages
     .filter((m) => m.threadId === thread.id)
