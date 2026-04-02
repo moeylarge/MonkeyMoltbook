@@ -350,9 +350,13 @@ export async function getBootstrapSupabase(user) {
 }
 
 export async function getMailboxSupabase(user, mode = 'inbox') {
+  const mailboxStartedAt = Date.now();
+  console.log('[moltmail-inbox-timing]', { step: 'participants:before', userId: user.id, mode, at: new Date().toISOString() });
+  const participantFetchStartedAt = Date.now();
   const participantRows = await rest('mail_participants', {
     query: `user_id=eq.${encodeURIComponent(String(user.id))}&select=*&order=created_at.desc`
   });
+  console.log('[moltmail-inbox-timing]', { step: 'participants:after', userId: user.id, mode, elapsedMs: Date.now() - participantFetchStartedAt, count: Array.isArray(participantRows) ? participantRows.length : null });
   const myParticipants = Array.isArray(participantRows) ? participantRows : [];
   const visibleParticipants = mode === 'inbox'
     ? myParticipants.filter((participant) => !participant.archived_at)
@@ -360,16 +364,31 @@ export async function getMailboxSupabase(user, mode = 'inbox') {
   const threadIds = [...new Set(visibleParticipants.map((participant) => String(participant.thread_id)).filter(Boolean))];
   if (!threadIds.length) return { ok: true, threads: [], nextCursor: null };
   const inClause = `(${threadIds.map((id) => `"${id.replace(/"/g, '')}"`).join(',')})`;
+  console.log('[moltmail-inbox-timing]', { step: 'threads:before', userId: user.id, mode, threadCount: threadIds.length });
+  const threadsFetchStartedAt = Date.now();
   const threads = await rest('mail_threads', {
     query: `id=in.${encodeURIComponent(inClause)}&select=*&order=last_message_at.desc`
   });
+  console.log('[moltmail-inbox-timing]', { step: 'threads:after', userId: user.id, mode, elapsedMs: Date.now() - threadsFetchStartedAt, count: Array.isArray(threads) ? threads.length : null });
+  console.log('[moltmail-inbox-timing]', { step: 'allParticipants:before', userId: user.id, mode, threadCount: threadIds.length });
+  const allParticipantsFetchStartedAt = Date.now();
   const allParticipants = await fetchThreadParticipants(threadIds);
+  console.log('[moltmail-inbox-timing]', { step: 'allParticipants:after', userId: user.id, mode, elapsedMs: Date.now() - allParticipantsFetchStartedAt, count: Array.isArray(allParticipants) ? allParticipants.length : null });
+  console.log('[moltmail-inbox-timing]', { step: 'messages:before', userId: user.id, mode, threadCount: threadIds.length });
+  const messagesFetchStartedAt = Date.now();
   const messages = await fetchMessagesByThreadIds(threadIds);
+  console.log('[moltmail-inbox-timing]', { step: 'messages:after', userId: user.id, mode, elapsedMs: Date.now() - messagesFetchStartedAt, count: Array.isArray(messages) ? messages.length : null });
   const userIds = [...new Set(allParticipants.map((participant) => String(participant.user_id)).filter(Boolean))];
+  console.log('[moltmail-inbox-timing]', { step: 'profiles:before', userId: user.id, mode, userCount: userIds.length });
+  const profilesFetchStartedAt = Date.now();
   const profilesByUserId = await getProfilesByUserIds(userIds);
+  console.log('[moltmail-inbox-timing]', { step: 'profiles:after', userId: user.id, mode, elapsedMs: Date.now() - profilesFetchStartedAt, count: profilesByUserId?.size || 0 });
+  console.log('[moltmail-inbox-timing]', { step: 'assembly:before', userId: user.id, mode, threadCount: Array.isArray(threads) ? threads.length : 0 });
+  const assemblyStartedAt = Date.now();
   const summaries = (Array.isArray(threads) ? threads : [])
     .map((thread) => buildThreadSummary(thread, user.id, messages, allParticipants, profilesByUserId))
     .filter((thread) => mode === 'outbox' ? messages.some((message) => String(message.thread_id) === String(thread.id) && String(message.sender_user_id) === String(user.id)) : true);
+  console.log('[moltmail-inbox-timing]', { step: 'assembly:after', userId: user.id, mode, elapsedMs: Date.now() - assemblyStartedAt, count: summaries.length, totalElapsedMs: Date.now() - mailboxStartedAt });
   return { ok: true, threads: summaries, nextCursor: null };
 }
 

@@ -449,7 +449,10 @@ app.get('/moltmail/inbox', async (req, res) => {
     const user = requireMoltmailSession(req, res);
     if (!user) return;
     try {
+      const inboxStartedAt = Date.now();
+      console.log('[moltmail-inbox-timing]', { step: 'route:getMailboxSupabase:before', userId: user.id, at: new Date().toISOString() });
       const result = await getMailboxSupabase(user, 'inbox');
+      console.log('[moltmail-inbox-timing]', { step: 'route:getMailboxSupabase:after', userId: user.id, totalElapsedMs: Date.now() - inboxStartedAt });
       res.status(result.ok ? 200 : result.status || 400).json(result);
     } catch (error) {
       res.status(500).json({ ok: false, code: 'MOLTMAIL_INBOX_FAILED', message: String(error?.message || error) });
