@@ -2792,6 +2792,9 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     participants: optimisticSelectedThread.participants || [],
     messages: optimisticSelectedMessages
   } : null) || confirmedSelectedThread || null;
+  const liveSelectedThreadId = !String(selectedThreadId || '').startsWith('pending_')
+    ? selectedThreadId
+    : (threadData.data?.thread?.id && !String(threadData.data.thread.id).startsWith('pending_') ? threadData.data.thread.id : '');
   const selectedRecipient = activeComposeRecipient || pendingRecipient || recipients.find((r) => r.id === compose.recipientUserId) || optimisticSelectedThread?.participants?.[0] || null;
   const recentRecipients = useMemo(() => {
     const seen = new Set();
@@ -2855,14 +2858,14 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   }, [auth?.authenticated, auth?.user?.emailVerified]);
 
   useEffect(() => {
-    if (!auth?.authenticated || !auth?.user?.emailVerified || !selectedThreadId) return;
+    if (!auth?.authenticated || !auth?.user?.emailVerified || !liveSelectedThreadId) return;
     if (optimisticThreads.some((thread) => thread.id === selectedThreadId)) {
       setMobileView('chat');
       return;
     }
     let active = true;
-    setThreadData({ loading: true, data: null, error: '' });
-    fetch(`${API}/moltmail/thread/${selectedThreadId}`, { credentials: 'include' })
+    setThreadData((current) => current?.data?.thread?.id === liveSelectedThreadId ? current : { loading: true, data: null, error: '' });
+    fetch(`${API}/moltmail/thread/${liveSelectedThreadId}`, { credentials: 'include' })
       .then((res) => res.json().then((json) => ({ ok: res.ok, json })))
       .then(({ ok, json }) => {
         if (!active) return;
@@ -2875,13 +2878,13 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
           } : null;
           setThreadData({ loading: false, data: safeThread ? { ...json, thread: safeThread } : null, error: '' });
           setMobileView('chat');
-          markThreadReadLocal(selectedThreadId);
-          loadMailbox(selectedThreadId, { suppressAutoSelect: true }).catch(() => {});
+          markThreadReadLocal(liveSelectedThreadId);
+          loadMailbox(liveSelectedThreadId, { suppressAutoSelect: true }).catch(() => {});
         }
       })
       .catch(() => active && setThreadData({ loading: false, data: null, error: 'Could not load thread.' }));
     return () => { active = false; };
-  }, [auth?.authenticated, auth?.user?.emailVerified, selectedThreadId, optimisticThreads]);
+  }, [auth?.authenticated, auth?.user?.emailVerified, selectedThreadId, liveSelectedThreadId, optimisticThreads, loadMailbox, markThreadReadLocal]);
 
   useEffect(() => {
     if (!showNewMessage || !auth?.authenticated || !auth?.user?.emailVerified) {
@@ -2969,14 +2972,14 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   useMoltmailRealtime({
     enabled: realtimeEnabled,
     userId: auth?.user?.id,
-    selectedThreadId: selectedThreadId && !String(selectedThreadId).startsWith('pending_') ? selectedThreadId : '',
+    selectedThreadId: liveSelectedThreadId,
     onThreadEvent: ({ kind, payload }) => {
       const row = payload?.new || payload?.old || null;
       if (!row) return;
       if (kind === 'participant') {
-        const nextThreadId = String(row.thread_id || selectedThreadId || '');
+        const nextThreadId = String(row.thread_id || liveSelectedThreadId || '');
         loadMailbox(nextThreadId, { suppressAutoSelect: Boolean(nextThreadId) }).catch(() => {});
-        if (nextThreadId && nextThreadId === selectedThreadId) {
+        if (nextThreadId && nextThreadId === liveSelectedThreadId) {
           hydrateConfirmedThread(nextThreadId).catch(() => {});
         }
         return;
@@ -2984,7 +2987,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
       if (kind === 'thread') {
         setInbox((current) => current.map((thread) => thread.id === row.id ? { ...thread, lastMessageAt: row.last_message_at || thread.lastMessageAt } : thread));
         setOutbox((current) => current.map((thread) => thread.id === row.id ? { ...thread, lastMessageAt: row.last_message_at || thread.lastMessageAt } : thread));
-        if (selectedThreadId === row.id) {
+        if (liveSelectedThreadId === row.id) {
           setThreadData((current) => current?.data?.thread ? ({ ...current, data: { ...current.data, thread: { ...current.data.thread, id: row.id, subject: row.subject || current.data.thread.subject, status: row.status || current.data.thread.status, pinnedMessageId: row.pinned_message_id || current.data.thread.pinnedMessageId || null } } }) : current);
           hydrateConfirmedThread(row.id).catch(() => {});
         }
@@ -2993,7 +2996,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     onMessageEvent: ({ payload }) => {
       const row = payload?.new || null;
       if (!row) return;
-      if (row.thread_id === selectedThreadId) {
+      if (row.thread_id === liveSelectedThreadId) {
         setThreadData((current) => {
           if (!current?.data?.thread) return current;
           const existing = current.data.thread.messages || [];
@@ -3021,9 +3024,9 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
             }
           };
         });
-        hydrateConfirmedThread(selectedThreadId).catch(() => {});
+        hydrateConfirmedThread(liveSelectedThreadId).catch(() => {});
       }
-      loadMailbox(row.thread_id || selectedThreadId, { suppressAutoSelect: true }).catch(() => {});
+      loadMailbox(row.thread_id || liveSelectedThreadId, { suppressAutoSelect: true }).catch(() => {});
       removeOptimisticMessage(row.client_message_id || '');
     },
     onPresenceSync: (state) => {
