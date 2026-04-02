@@ -2887,8 +2887,20 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
             messages: Array.isArray(json.thread.messages) ? json.thread.messages : []
           } : null;
           setThreadData((current) => {
-            const previousLength = current?.data?.thread?.messages?.length || 0;
-            const nextLength = safeThread?.messages?.length || 0;
+            const currentThread = current?.data?.thread || null;
+            const currentMessages = currentThread?.messages || [];
+            const fetchedMessages = safeThread?.messages || [];
+            const previousLength = currentMessages.length;
+            const nextLength = fetchedMessages.length;
+            const currentLast = currentMessages[currentMessages.length - 1] || null;
+            const fetchedLast = fetchedMessages[fetchedMessages.length - 1] || null;
+            const currentLastTime = currentLast?.createdAt ? new Date(currentLast.createdAt).getTime() : 0;
+            const fetchedLastTime = fetchedLast?.createdAt ? new Date(fetchedLast.createdAt).getTime() : 0;
+            const sameThread = currentThread?.id === liveSelectedThreadId;
+            const shouldKeepCurrent = sameThread && (
+              currentMessages.length > fetchedMessages.length ||
+              (currentMessages.length === fetchedMessages.length && currentLastTime >= fetchedLastTime)
+            );
             console.log('[moltmail-threaddata-writer]', {
               writer: 'threadFetchEffect',
               reason: 'selected-thread-effect',
@@ -2896,9 +2908,12 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
               targetThreadId: liveSelectedThreadId,
               previousMessagesLength: previousLength,
               nextMessagesLength: nextLength,
+              currentLastMessageId: currentLast?.id || currentLast?.clientMessageId || null,
+              fetchedLastMessageId: fetchedLast?.id || fetchedLast?.clientMessageId || null,
               timestamp: new Date().toISOString(),
-              mode: 'REPLACE'
+              mode: shouldKeepCurrent ? 'SKIP_REPLACE' : 'REPLACE'
             });
+            if (shouldKeepCurrent) return current;
             return { loading: false, data: safeThread ? { ...json, thread: safeThread } : null, error: '' };
           });
           setMobileView('chat');
