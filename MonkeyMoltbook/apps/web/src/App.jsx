@@ -3256,7 +3256,18 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     if (bootstrap.loading) return <div className="moltmail-thread-loading">Loading…</div>;
     if (!threads.length) return <div className="moltmail-empty-space" />;
     return threads.map((thread) => (
-      <button key={thread.id} className={`moltmail-thread-row ${selectedThreadId === thread.id ? 'active' : ''} ${thread.unread ? 'unread' : ''}`} onClick={() => { setSelectedThreadId(thread.id); setPendingRecipient(thread.participants?.[0] || null); }}>
+      <button key={thread.id} className={`moltmail-thread-row ${selectedThreadId === thread.id ? 'active' : ''} ${thread.unread ? 'unread' : ''}`} onClick={() => {
+        setShowNewMessage(false);
+        setActiveComposeRecipient(null);
+        activeComposeRecipientIdRef.current = '';
+        setCompose((current) => ({ ...current, recipientUserId: '', bodyText: '' }));
+        setQueuedSticker(null);
+        setAttachmentState({ uploading: false, file: null, error: '' });
+        setThreadData({ loading: false, data: null, error: '' });
+        setPendingRecipient(thread.participants?.[0] || null);
+        setSelectedThreadId(thread.id);
+        setMobileView('chat');
+      }}>
         <div className="moltmail-avatar">{(thread.displayTitle || thread.subject || '?').slice(0,1).toUpperCase()}</div>
         <div className="moltmail-thread-copy">
           <div className="moltmail-thread-topline">
