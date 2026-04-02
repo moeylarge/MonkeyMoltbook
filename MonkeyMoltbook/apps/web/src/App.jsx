@@ -1,5 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BrowserRouter, Link, NavLink, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { supabaseBrowserEnabled } from './lib/supabase-browser';
+import { useMoltmailRealtime } from './lib/useMoltmailRealtime';
 import './auth-modal-hotfix.css';
 import './home-feed-mvp.css';
 import './home-header-blue.css';
@@ -2686,6 +2688,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   const [showGallery, setShowGallery] = useState(false);
   const [recordingVoice, setRecordingVoice] = useState(false);
   const [typingActive, setTypingActive] = useState(false);
+  const [threadPresence, setThreadPresence] = useState({});
   const [phase4Audit, setPhase4Audit] = useState(null);
   const suppressMailboxAutoSelectRef = useRef(false);
   const mediaRecorderRef = useRef(null);
@@ -2694,6 +2697,8 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   const composerInputRef = useRef(null);
   const attachmentInputRef = useRef(null);
   const activeComposeRecipientIdRef = useRef('');
+
+  const realtimeEnabled = Boolean(auth?.authenticated && auth?.user?.emailVerified && auth?.user?.id && supabaseBrowserEnabled());
 
   const buildClientMessageId = () => `client_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 
@@ -2808,14 +2813,14 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     ].sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
   }, [activeThread?.messages, optimisticSelectedMessages, optimisticSelectedThread, confirmedSelectedThread]);
 
-  const markThreadReadLocal = (threadId) => {
+  const markThreadReadLocal = useCallback((threadId) => {
     if (!threadId) return;
     const applyRead = (items) => items.map((thread) => thread.id === threadId ? { ...thread, unread: false } : thread);
     setInbox((current) => applyRead(current));
     setOutbox((current) => applyRead(current));
-  };
+  }, []);
 
-  const loadMailbox = async (preferredThreadId = '', options = {}) => {
+  const loadMailbox = useCallback(async (preferredThreadId = '', options = {}) => {
     const [bootstrapRes, inboxRes, outboxRes] = await Promise.all([
       fetch(`${API}/moltmail/bootstrap`, { credentials: 'include' }).then((res) => res.json().then((json) => ({ ok: res.ok, json }))),
       fetch(`${API}/moltmail/inbox`, { credentials: 'include' }).then((res) => res.json().then((json) => ({ ok: res.ok, json }))),
@@ -2839,7 +2844,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
         return nextInbox[0]?.id || nextOutbox[0]?.id || '';
       });
     }
-  };
+  }, [compose.recipientUserId, showNewMessage]);
 
   useEffect(() => {
     if (!auth?.authenticated || !auth?.user?.emailVerified) return;
@@ -2959,6 +2964,63 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     } catch {}
   }, [optimisticThreads, optimisticMessages, auth?.user?.id]);
 
+  useMoltmailRealtime({
+    enabled: realtimeEnabled,
+    userId: auth?.user?.id,
+    selectedThreadId: selectedThreadId && !String(selectedThreadId).startsWith('pending_') ? selectedThreadId : '',
+    onThreadEvent: ({ kind, payload }) => {
+      const row = payload?.new || payload?.old || null;
+      if (!row) return;
+      if (kind === 'participant') {
+        loadMailbox(selectedThreadId, { suppressAutoSelect: Boolean(selectedThreadId) }).catch(() => {});
+        return;
+      }
+      if (kind === 'thread') {
+        setInbox((current) => current.map((thread) => thread.id === row.id ? { ...thread, lastMessageAt: row.last_message_at || thread.lastMessageAt } : thread));
+        setOutbox((current) => current.map((thread) => thread.id === row.id ? { ...thread, lastMessageAt: row.last_message_at || thread.lastMessageAt } : thread));
+        if (selectedThreadId === row.id) {
+          setThreadData((current) => current?.data?.thread ? ({ ...current, data: { ...current.data, thread: { ...current.data.thread, id: row.id, subject: row.subject || current.data.thread.subject, status: row.status || current.data.thread.status, pinnedMessageId: row.pinned_message_id || current.data.thread.pinnedMessageId || null } } }) : current);
+        }
+      }
+    },
+    onMessageEvent: ({ payload }) => {
+      const row = payload?.new || null;
+      if (!row || row.thread_id !== selectedThreadId) return;
+      setThreadData((current) => {
+        if (!current?.data?.thread) return current;
+        const existing = current.data.thread.messages || [];
+        if (existing.some((message) => message.id === row.id)) return current;
+        return {
+          ...current,
+          data: {
+            ...current.data,
+            thread: {
+              ...current.data.thread,
+              messages: [...existing, {
+                id: row.id,
+                senderUserId: row.sender_user_id,
+                bodyText: row.deleted_at ? 'Message removed' : row.body_text,
+                createdAt: row.created_at,
+                clientMessageId: row.client_message_id || null,
+                sticker: row.deleted_at ? null : (row.sticker || null),
+                attachment: row.deleted_at ? null : (row.attachment || null),
+                replyToMessageId: row.deleted_at ? null : (row.reply_to_message_id || null),
+                replyPreview: null,
+                reactions: [],
+                deletedAt: row.deleted_at || null
+              }]
+            }
+          }
+        };
+      });
+      loadMailbox(selectedThreadId, { suppressAutoSelect: true }).catch(() => {});
+      removeOptimisticMessage(row.client_message_id || '');
+    },
+    onPresenceSync: (state) => {
+      setThreadPresence(state || {});
+    }
+  });
+
   const openNewMessage = () => {
     setShowNewMessage(true);
     setRecipientQuery('');
@@ -3044,13 +3106,13 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     optimistic: true
   });
 
-  const hydrateConfirmedThread = async (threadId) => {
+  const hydrateConfirmedThread = useCallback(async (threadId) => {
     const response = await fetch(`${API}/moltmail/thread/${threadId}`, { credentials: 'include' });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload?.message || 'Could not load thread.');
     setThreadData({ loading: false, data: payload, error: '' });
     return payload;
-  };
+  }, []);
 
   const sendNewThreadMessage = async ({ submittedCompose, clientMessageId, optimisticThreadId }) => {
     const response = await fetch(`${API}/moltmail/thread`, {
@@ -3476,7 +3538,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
                 <strong>{activeThread?.participants?.[0]?.displayName || activeThread?.participants?.[0]?.handle || selectedRecipient?.displayName || selectedRecipient?.handle || 'New message'}</strong>
                 {activeMessages.length ? <span>{`${activeMessages.length} messages`}</span> : null}
                 {activeThread?.pinnedMessageId ? <button className="moltmail-pinned-chip" onClick={() => document.getElementById(`message-${activeThread.pinnedMessageId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>Pinned message</button> : null}
-                {selectedThreadId ? <span className="moltmail-presence-chip">{typingActive && !activeMessages.length ? 'typing…' : formatPresence(threads.find((thread) => thread.id === selectedThreadId)?.lastMessageAt || activeMessages[activeMessages.length - 1]?.createdAt)}</span> : null}
+                {selectedThreadId ? <span className="moltmail-presence-chip">{typingActive && !activeMessages.length ? 'typing…' : (Object.keys(threadPresence || {}).length > 1 ? 'online now' : formatPresence(threads.find((thread) => thread.id === selectedThreadId)?.lastMessageAt || activeMessages[activeMessages.length - 1]?.createdAt))}</span> : null}
               </div>
             </div>
             <div className="moltmail-chat-feed" ref={threadFeedRef}>
