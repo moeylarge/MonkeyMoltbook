@@ -13,7 +13,7 @@ import { scoreAuthorRisk, scoreCommunityRisk } from './lib/trust-score.js';
 import { addAgentReply, addLiveMessage, createLiveSession, endLiveSession, exportTranscriptText, getLiveSession, listTranscript, liveSessionsEnabled, updateLivePresence } from './lib/live-sessions.js';
 import { createCheckoutSession, creditsEnabled, ensureCreditProducts, getSpendRules, getWallet, grantCredits, listCreditProducts, listCreditTransactions, spendCredits } from './lib/credits.js';
 import { applySessionCookie, createDevVerifiedSession, getAccountMe, getSessionResponse, logoutSession, startEmailAuth, verifyEmailAuth } from './lib/moltmail-auth.js';
-import { archiveThread, createThread, getAuditSummary, getBootstrap, getInbox, getOutbox, getThread, getUnreadCount, markThreadRead, pinMessage, replyThread, searchRecipients, togglePinThread, toggleReaction, unsendMessage } from './lib/moltmail-data.js';
+import { archiveThread, createThread, getAuditSummary, getBootstrap, getInbox, getOutbox, getThread, getUnreadCount, markThreadRead, pinMessage, replyThread, searchRecipients, syncVerifiedUser, togglePinThread, toggleReaction, unsendMessage } from './lib/moltmail-data.js';
 import { createClipForUser, deleteClipForUser, getOrCreateProfileForUser, getProfileByUsername, isProfileStorageEnabled, listClipsForUser, toPublicProfile, updateProfileAvatar, updateProfileBanner, updateProfileForUser } from './lib/profile-storage.js';
 
 const PROFILE_MEDIA_DIR = process.env.VERCEL ? '/tmp/monkeymoltbook-profile-media' : path.join(process.cwd(), 'data', 'profile-media');
@@ -53,6 +53,10 @@ app.post('/auth/email/verify', (req, res) => {
     res.status(400).json(result);
     return;
   }
+  syncVerifiedUser({
+    ...result.user,
+    emailVerifiedAt: new Date().toISOString()
+  });
   applySessionCookie(res, result.token, result.session.expiresAt);
   res.json({ ok: true, user: result.user, session: result.session });
 });
@@ -76,6 +80,10 @@ app.post('/auth/dev-login', (req, res) => {
     res.status(400).json(result);
     return;
   }
+  syncVerifiedUser({
+    ...result.user,
+    emailVerifiedAt: new Date().toISOString()
+  });
   applySessionCookie(res, result.token, result.expiresAt);
   res.json({ ok: true, user: result.user });
 });
@@ -105,6 +113,14 @@ app.get('/profile/me', async (req, res) => {
   }
   try {
     const profile = await getOrCreateProfileForUser(session.user);
+    syncVerifiedUser({
+      id: session.user.id,
+      email: session.user.email,
+      emailVerifiedAt: session.user.emailVerified ? new Date().toISOString() : null,
+      displayName: profile?.display_name || session.user.displayName || null,
+      handle: profile?.username || session.user.handle || null,
+      status: session.user.status || 'ACTIVE'
+    });
     const clips = await listClipsForUser(session.user.id);
     res.json({ ok: true, profile, clips });
   } catch (error) {
@@ -128,6 +144,14 @@ app.patch('/profile/me', async (req, res) => {
       res.status(400).json({ ok: false, code: 'VALIDATION_FAILED', errors: result.errors || {} });
       return;
     }
+    syncVerifiedUser({
+      id: session.user.id,
+      email: session.user.email,
+      emailVerifiedAt: session.user.emailVerified ? new Date().toISOString() : null,
+      displayName: result.profile?.display_name || session.user.displayName || null,
+      handle: result.profile?.username || session.user.handle || null,
+      status: session.user.status || 'ACTIVE'
+    });
     res.json({ ok: true, profile: result.profile });
   } catch (error) {
     res.status(500).json({ ok: false, code: 'PROFILE_UPDATE_FAILED', message: String(error?.message || error) });
