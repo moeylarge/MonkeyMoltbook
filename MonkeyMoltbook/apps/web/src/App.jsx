@@ -2886,7 +2886,21 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
             participants: Array.isArray(json.thread.participants) ? json.thread.participants : [],
             messages: Array.isArray(json.thread.messages) ? json.thread.messages : []
           } : null;
-          setThreadData({ loading: false, data: safeThread ? { ...json, thread: safeThread } : null, error: '' });
+          setThreadData((current) => {
+            const previousLength = current?.data?.thread?.messages?.length || 0;
+            const nextLength = safeThread?.messages?.length || 0;
+            console.log('[moltmail-threaddata-writer]', {
+              writer: 'threadFetchEffect',
+              reason: 'selected-thread-effect',
+              liveSelectedThreadId,
+              targetThreadId: liveSelectedThreadId,
+              previousMessagesLength: previousLength,
+              nextMessagesLength: nextLength,
+              timestamp: new Date().toISOString(),
+              mode: 'REPLACE'
+            });
+            return { loading: false, data: safeThread ? { ...json, thread: safeThread } : null, error: '' };
+          });
           setMobileView('chat');
           markThreadReadLocal(liveSelectedThreadId);
           loadMailbox(liveSelectedThreadId, { suppressAutoSelect: true }).catch(() => {});
@@ -3011,25 +3025,36 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
           if (!current?.data?.thread) return current;
           const existing = current.data.thread.messages || [];
           if (existing.some((message) => message.id === row.id)) return current;
+          const nextMessages = [...existing, {
+            id: row.id,
+            senderUserId: row.sender_user_id,
+            bodyText: row.deleted_at ? 'Message removed' : row.body_text,
+            createdAt: row.created_at,
+            clientMessageId: row.client_message_id || null,
+            sticker: row.deleted_at ? null : (row.sticker || null),
+            attachment: row.deleted_at ? null : (row.attachment || null),
+            replyToMessageId: row.deleted_at ? null : (row.reply_to_message_id || null),
+            replyPreview: null,
+            reactions: [],
+            deletedAt: row.deleted_at || null
+          }];
+          console.log('[moltmail-threaddata-writer]', {
+            writer: 'onMessageEventAppend',
+            reason: 'realtime-message-event',
+            liveSelectedThreadId,
+            targetThreadId: row.thread_id,
+            previousMessagesLength: existing.length,
+            nextMessagesLength: nextMessages.length,
+            timestamp: new Date().toISOString(),
+            mode: 'APPEND'
+          });
           return {
             ...current,
             data: {
               ...current.data,
               thread: {
                 ...current.data.thread,
-                messages: [...existing, {
-                  id: row.id,
-                  senderUserId: row.sender_user_id,
-                  bodyText: row.deleted_at ? 'Message removed' : row.body_text,
-                  createdAt: row.created_at,
-                  clientMessageId: row.client_message_id || null,
-                  sticker: row.deleted_at ? null : (row.sticker || null),
-                  attachment: row.deleted_at ? null : (row.attachment || null),
-                  replyToMessageId: row.deleted_at ? null : (row.reply_to_message_id || null),
-                  replyPreview: null,
-                  reactions: [],
-                  deletedAt: row.deleted_at || null
-                }]
+                messages: nextMessages
               }
             }
           };
@@ -3128,13 +3153,27 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     optimistic: true
   });
 
-  const hydrateConfirmedThread = useCallback(async (threadId) => {
+  const hydrateConfirmedThread = useCallback(async (threadId, reason = 'manual-hydrate') => {
     const response = await fetch(`${API}/moltmail/thread/${threadId}`, { credentials: 'include' });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload?.message || 'Could not load thread.');
-    setThreadData({ loading: false, data: payload, error: '' });
+    setThreadData((current) => {
+      const previousLength = current?.data?.thread?.messages?.length || 0;
+      const nextLength = payload?.thread?.messages?.length || 0;
+      console.log('[moltmail-threaddata-writer]', {
+        writer: 'hydrateConfirmedThread',
+        reason,
+        liveSelectedThreadId,
+        targetThreadId: threadId,
+        previousMessagesLength: previousLength,
+        nextMessagesLength: nextLength,
+        timestamp: new Date().toISOString(),
+        mode: 'REPLACE'
+      });
+      return { loading: false, data: payload, error: '' };
+    });
     return payload;
-  }, []);
+  }, [liveSelectedThreadId]);
 
   const sendNewThreadMessage = async ({ submittedCompose, clientMessageId, optimisticThreadId }) => {
     const response = await fetch(`${API}/moltmail/thread`, {
