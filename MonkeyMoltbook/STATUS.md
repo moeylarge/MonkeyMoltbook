@@ -1,6 +1,6 @@
 # MonkeyMoltbook — STATUS
 
-Updated: 2026-03-31 America/Los_Angeles
+Updated: 2026-04-02 America/Los_Angeles
 
 ## Status
 
@@ -8,7 +8,7 @@ ACTIVE
 
 ## Current phase
 
-Large production hardening pass completed across UI, trust badge rendering, analytics, header/navigation, and token/shared-component system.
+MoltMail production messaging baseline restored and validated on live `molt-live.com`.
 
 ## Current verified production state
 
@@ -37,11 +37,16 @@ Large production hardening pass completed across UI, trust badge rendering, anal
 - verify-email flow exists
 - MoltMail server/session plumbing exists
 - inbox/outbox/thread/create/reply/archive/read path exists
-- audit/delivery UI exists
-- unread wiring exists
+- real member search works live
+- real user-to-user thread creation works live
+- sender-side message render works live
+- recipient-side message render works live
+- reply loop works live in the same thread
 
-### Current blocker
-- real auth email delivery is still blocked by incomplete Resend DNS verification / publish completion
+### Important current infra/runtime truth
+- live production behavior was confirmed to depend on manual `vercel --prod` deployment, not assumed Git auto-deploy parity
+- Supabase messaging runtime required manual creation of live tables before the working path became real
+- preview deployments caused repeated false debugging signals; validate on `https://molt-live.com` only when testing live MoltMail behavior
 
 ## Trust/risk status
 

@@ -1,10 +1,10 @@
 # MonkeyMoltbook — HANDOFF
 
-Updated: 2026-03-31 America/Los_Angeles
+Updated: 2026-04-02 America/Los_Angeles
 
 ## Current phase
 
-**MOLT-LIVE production polish with MoltMail accepted as the DM baseline.**
+**MOLT-LIVE production MoltMail cutover stabilized on real user-to-user messaging.**
 
 The project moved through multiple sub-phases in this session:
 1. DNS / Vercel / Resend / auth setup
@@ -20,6 +20,8 @@ The project moved through multiple sub-phases in this session:
 - use **Vercel** for frontend + backend
 - do **not** use Railway
 - `molt-live.com` is the live production domain
+- current live production source of truth is a manual **`vercel --prod`** deploy path, not Git-integrated auto-deploy from commit history
+- when production behavior does not match pushed commits, verify the active Vercel deployment source/commit before debugging app logic
 
 ### Product / nav decisions
 - remove `Hot 25`
@@ -93,27 +95,43 @@ Core visible changes achieved:
 - added mobile back navigation
 - reduced topbar/footer clutter in immersive unlocked MoltMail route
 
-## Current critical blocker
+## Current critical state
 
-### MoltMail is still not fully finished
-The session moved MoltMail from:
-- broken auth + dashboard form
-into:
-- working auth + conversation-oriented shell
+### MoltMail real-thread baseline is now working
+As of 2026-04-02 live production testing on `molt-live.com`:
+- real user search works
+- sender-side real thread creation works
+- sender-side message rendering works
+- recipient-side thread opening works
+- recipient-side message rendering works
+- reply loop works in the same visible thread
 
-But the final 20% is still missing:
-- MoltMail still needs to feel like a **real, lived-in messaging product**
-- not just a shell
+### Root causes resolved in this pass
+- production/preview environment confusion caused repeated false signals
+- live production was being served from manual `vercel deploy` flow rather than Git-based deployment assumptions
+- Supabase mail runtime tables did not exist and had to be created manually in SQL Editor
+- legacy demo/file-backed MoltMail path was contaminating live behavior
+- live route handling needed a hard cutover toward the Supabase-backed path
+- compose-mode / selected-thread UI state caused false "New message" pane states during thread-open flows
 
-## Latest live-data / seeding work
-To make proof possible, a built-in system DM target was added in:
-- `apps/server/src/lib/moltmail-data.js`
+### Immediate caution
+Do not assume future `git push` alone changes `molt-live.com`.
+If production is still sourced from manual Vercel deploys, deploy the current local code with `vercel --prod` and verify the production deployment source before testing.
 
-What was added:
-- system user:
-  - `MoltMail` / `@moltmail`
-- demo-thread seeding helper
-- seeding wired into bootstrap/inbox path so authenticated users should get a starter thread
+## Latest live-data / cutover work
+Production MoltMail was moved away from the legacy seeded-demo path toward real Supabase-backed messaging runtime.
+
+Critical implementation/result notes:
+- missing runtime tables were created in Supabase manually:
+  - `wallets`
+  - `mail_threads`
+  - `mail_participants`
+  - `mail_messages`
+  - `mail_deliveries`
+  - `credit_ledger`
+- live MoltMail routes were hard-cut toward the Supabase path
+- legacy demo-thread contamination was disabled for live views
+- manual `vercel --prod` deployment was required to get the actual current code live
 
 ## Latest proof state
 Latest proof screenshots captured:
@@ -142,33 +160,16 @@ Latest conclusion from proof:
    - convincing mobile list → chat flow
 
 ## Best next resume path
-The DM shell and messaging reliability baseline are both accepted and locked.
-Do **not** reopen layout, visual system, or core send/retry/unread architecture unless fixing a specific bug.
+Now that the real DM baseline is working again, future work should be stabilization/quality only.
 
-Future work should be scoped improvements only.
+Priority order:
+1. remove or quarantine remaining dead legacy MoltMail fallback/demo code carefully, without disturbing the live working path
+2. write a short deployment/operator note for future production deploys so Git state and live Vercel state do not drift silently
+3. message timestamps + grouping polish
+4. keyboard/composer quality
+5. presence / last active later
 
-Best next priorities in locked order:
-1. message timestamps + grouping polish
-   - goal: make threads feel more natural and less noisy
-   - implement:
-     - group consecutive messages from same sender
-     - reduce repeated labels/metadata
-     - show timestamps at sensible intervals, not on every message
-     - improve visual spacing between message groups
-     - keep sent/received distinction strong
-2. keyboard/composer quality
-   - goal: make sending feel faster and more native
-   - implement:
-     - Enter = send
-     - Shift+Enter = newline
-     - autosizing composer
-     - preserve focus after send on desktop
-     - clean disabled state when input empty
-     - no jitter while composer grows
-3. presence / last active
-4. replace demo thread with real user activity later
-
-Do not work on #3 or #4 until #1 and #2 are complete.
+Do not reopen major MoltMail architecture or redesign work unless John explicitly asks.
 
 ## Current frozen baseline
 MoltMail is now feature-frozen at an 80–90% baseline across three phases.
