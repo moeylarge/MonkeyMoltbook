@@ -2758,8 +2758,8 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     if (searchQuery.trim() === '') issues.push({ title: 'Search is easy to ignore', fix: 'Increase search placeholder clarity and show one hint state.', severity: 'high' });
     if (!selectedThreadId && (activeComposeRecipient?.id || compose.recipientUserId)) issues.push({ title: 'Conversation start path depends on text-first behavior', fix: 'Make the text-first rule more explicit near the composer.', severity: 'high' });
     if (threads.length && !threads.some((thread) => thread.unread)) issues.push({ title: 'Unread state is not obvious during first-use browsing', fix: 'Strengthen first unread affordance for fresh threads.', severity: 'medium' });
-    if (activeMessages.length && !activeMessages.some((message) => buildLinkPreview(message.bodyText))) issues.push({ title: 'Link utility may be under-discovered', fix: 'Seed or hint one supported preview example.', severity: 'medium' });
-    if (selectedThreadId && !replyTarget && !activeMessages.some((message) => message.reactions?.length)) issues.push({ title: 'Thread actions are hidden until explored', fix: 'Surface one subtle action hint for reactions/replies.', severity: 'medium' });
+    if (visibleMessages.length && !visibleMessages.some((message) => buildLinkPreview(message.bodyText))) issues.push({ title: 'Link utility may be under-discovered', fix: 'Seed or hint one supported preview example.', severity: 'medium' });
+    if (selectedThreadId && !replyTarget && !visibleMessages.some((message) => message.reactions?.length)) issues.push({ title: 'Thread actions are hidden until explored', fix: 'Surface one subtle action hint for reactions/replies.', severity: 'medium' });
     return issues.slice(0, 5);
   };
 
@@ -3642,7 +3642,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   const renderComposer = () => {
     if (!selectedThreadId && !compose.recipientUserId && !activeComposeRecipient?.id && !optimisticSelectedThread && !activeThread) return null;
     const value = selectedThreadId ? replyText : compose.bodyText;
-    const threadMedia = activeMessages.filter((message) => message.attachment).map((message) => ({ id: message.id, attachment: message.attachment }));
+    const threadMedia = visibleMessages.filter((message) => message.attachment).map((message) => ({ id: message.id, attachment: message.attachment }));
     const setValue = selectedThreadId ? setReplyText : (text) => setCompose((current) => ({ ...current, bodyText: text }));
     const onSend = selectedThreadId ? () => submitReply() : () => submitCompose();
     const sending = selectedThreadId ? replyState.sending : composeState.sending;
