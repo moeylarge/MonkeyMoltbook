@@ -2935,7 +2935,9 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   useEffect(() => {
     const node = threadFeedRef.current;
     if (!node) return;
-    node.scrollTop = node.scrollHeight;
+    const distanceFromBottom = node.scrollHeight - node.scrollTop - node.clientHeight;
+    const shouldStick = distanceFromBottom < 120;
+    if (shouldStick) node.scrollTop = node.scrollHeight;
   }, [activeMessages.length, selectedThreadId]);
 
   useEffect(() => {
@@ -2972,7 +2974,11 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
       const row = payload?.new || payload?.old || null;
       if (!row) return;
       if (kind === 'participant') {
-        loadMailbox(selectedThreadId, { suppressAutoSelect: Boolean(selectedThreadId) }).catch(() => {});
+        const nextThreadId = String(row.thread_id || selectedThreadId || '');
+        loadMailbox(nextThreadId, { suppressAutoSelect: Boolean(nextThreadId) }).catch(() => {});
+        if (nextThreadId && nextThreadId === selectedThreadId) {
+          hydrateConfirmedThread(nextThreadId).catch(() => {});
+        }
         return;
       }
       if (kind === 'thread') {
@@ -2980,40 +2986,44 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
         setOutbox((current) => current.map((thread) => thread.id === row.id ? { ...thread, lastMessageAt: row.last_message_at || thread.lastMessageAt } : thread));
         if (selectedThreadId === row.id) {
           setThreadData((current) => current?.data?.thread ? ({ ...current, data: { ...current.data, thread: { ...current.data.thread, id: row.id, subject: row.subject || current.data.thread.subject, status: row.status || current.data.thread.status, pinnedMessageId: row.pinned_message_id || current.data.thread.pinnedMessageId || null } } }) : current);
+          hydrateConfirmedThread(row.id).catch(() => {});
         }
       }
     },
     onMessageEvent: ({ payload }) => {
       const row = payload?.new || null;
-      if (!row || row.thread_id !== selectedThreadId) return;
-      setThreadData((current) => {
-        if (!current?.data?.thread) return current;
-        const existing = current.data.thread.messages || [];
-        if (existing.some((message) => message.id === row.id)) return current;
-        return {
-          ...current,
-          data: {
-            ...current.data,
-            thread: {
-              ...current.data.thread,
-              messages: [...existing, {
-                id: row.id,
-                senderUserId: row.sender_user_id,
-                bodyText: row.deleted_at ? 'Message removed' : row.body_text,
-                createdAt: row.created_at,
-                clientMessageId: row.client_message_id || null,
-                sticker: row.deleted_at ? null : (row.sticker || null),
-                attachment: row.deleted_at ? null : (row.attachment || null),
-                replyToMessageId: row.deleted_at ? null : (row.reply_to_message_id || null),
-                replyPreview: null,
-                reactions: [],
-                deletedAt: row.deleted_at || null
-              }]
+      if (!row) return;
+      if (row.thread_id === selectedThreadId) {
+        setThreadData((current) => {
+          if (!current?.data?.thread) return current;
+          const existing = current.data.thread.messages || [];
+          if (existing.some((message) => message.id === row.id)) return current;
+          return {
+            ...current,
+            data: {
+              ...current.data,
+              thread: {
+                ...current.data.thread,
+                messages: [...existing, {
+                  id: row.id,
+                  senderUserId: row.sender_user_id,
+                  bodyText: row.deleted_at ? 'Message removed' : row.body_text,
+                  createdAt: row.created_at,
+                  clientMessageId: row.client_message_id || null,
+                  sticker: row.deleted_at ? null : (row.sticker || null),
+                  attachment: row.deleted_at ? null : (row.attachment || null),
+                  replyToMessageId: row.deleted_at ? null : (row.reply_to_message_id || null),
+                  replyPreview: null,
+                  reactions: [],
+                  deletedAt: row.deleted_at || null
+                }]
+              }
             }
-          }
-        };
-      });
-      loadMailbox(selectedThreadId, { suppressAutoSelect: true }).catch(() => {});
+          };
+        });
+        hydrateConfirmedThread(selectedThreadId).catch(() => {});
+      }
+      loadMailbox(row.thread_id || selectedThreadId, { suppressAutoSelect: true }).catch(() => {});
       removeOptimisticMessage(row.client_message_id || '');
     },
     onPresenceSync: (state) => {
