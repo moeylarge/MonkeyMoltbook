@@ -32,7 +32,11 @@ async function rest(table, { method = 'GET', query = '', body, prefer = '' } = {
   const text = await response.text();
   let data = null;
   try { data = text ? JSON.parse(text) : null; } catch { data = text || null; }
-  if (!response.ok) throw new Error(`moltmail_${table}_${response.status}: ${typeof data === 'string' ? data : JSON.stringify(data)}`);
+  if (!response.ok) {
+    const bodyText = typeof data === 'string' ? data : JSON.stringify(data);
+    console.error(`[moltmail-supabase-rest-error] table=${table} status=${response.status} body=${bodyText} timestamp=${new Date().toISOString()}`);
+    throw new Error(`moltmail_${table}_${response.status}: ${bodyText}`);
+  }
   return data;
 }
 
