@@ -2890,30 +2890,32 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
             const currentThread = current?.data?.thread || null;
             const currentMessages = currentThread?.messages || [];
             const fetchedMessages = safeThread?.messages || [];
-            const previousLength = currentMessages.length;
-            const nextLength = fetchedMessages.length;
             const currentLast = currentMessages[currentMessages.length - 1] || null;
             const fetchedLast = fetchedMessages[fetchedMessages.length - 1] || null;
+            const currentLastId = currentLast?.id || currentLast?.clientMessageId || null;
+            const fetchedLastId = fetchedLast?.id || fetchedLast?.clientMessageId || null;
             const currentLastTime = currentLast?.createdAt ? new Date(currentLast.createdAt).getTime() : 0;
             const fetchedLastTime = fetchedLast?.createdAt ? new Date(fetchedLast.createdAt).getTime() : 0;
             const sameThread = currentThread?.id === liveSelectedThreadId;
-            const shouldKeepCurrent = sameThread && (
-              currentMessages.length > fetchedMessages.length ||
-              (currentMessages.length === fetchedMessages.length && currentLastTime >= fetchedLastTime)
+            const currentContainsFetchedNewest = fetchedLastId ? currentMessages.some((message) => (message.id || message.clientMessageId) === fetchedLastId) : false;
+            const currentIsEqualOrNewer = sameThread && (
+              currentLastTime > fetchedLastTime ||
+              ((currentLastTime === fetchedLastTime || !currentLastTime || !fetchedLastTime) && currentContainsFetchedNewest && currentMessages.length >= fetchedMessages.length)
             );
+            const decision = currentIsEqualOrNewer ? 'KEEP_CURRENT' : 'APPLY_FETCHED';
             console.log('[moltmail-threaddata-writer]', {
               writer: 'threadFetchEffect',
               reason: 'selected-thread-effect',
               liveSelectedThreadId,
               targetThreadId: liveSelectedThreadId,
-              previousMessagesLength: previousLength,
-              nextMessagesLength: nextLength,
-              currentLastMessageId: currentLast?.id || currentLast?.clientMessageId || null,
-              fetchedLastMessageId: fetchedLast?.id || fetchedLast?.clientMessageId || null,
-              timestamp: new Date().toISOString(),
-              mode: shouldKeepCurrent ? 'SKIP_REPLACE' : 'REPLACE'
+              currentNewestMessageId: currentLastId,
+              currentNewestCreatedAt: currentLast?.createdAt || null,
+              fetchedNewestMessageId: fetchedLastId,
+              fetchedNewestCreatedAt: fetchedLast?.createdAt || null,
+              decision,
+              timestamp: new Date().toISOString()
             });
-            if (shouldKeepCurrent) return current;
+            if (currentIsEqualOrNewer) return current;
             return { loading: false, data: safeThread ? { ...json, thread: safeThread } : null, error: '' };
           });
           setMobileView('chat');
