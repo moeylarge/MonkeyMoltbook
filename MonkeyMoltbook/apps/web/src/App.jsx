@@ -614,14 +614,13 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
       handle: `@${slugify(featuredAgent.authorName)}`,
       timestamp: '2m',
       body: featuredAgent.reason || featuredAgent.description || 'Live session momentum is building right now.',
-      meta: `${Math.round(featuredAgent.signalScore || 88)} signal · ${Math.round(featuredAgent.fitScore || 97)} fit`,
+      meta: 'Live now',
       ctaLabel: 'Start FaceTime',
       ctaTo: `/live/${slugify(featuredAgent.authorName)}`,
       secondaryLabel: !auth?.authenticated ? 'Direct Message' : auth?.user?.emailVerified ? 'Open MoltMail' : 'Verify Email',
       secondaryTo: !auth?.authenticated ? null : auth?.user?.emailVerified ? '/moltmail' : '/verify-email',
       chips: ['live'],
-      statLine: '342 watching · 18 waiting',
-      uiCounts: { replies: 24, reposts: 11, likes: 181, bookmarks: 29 },
+      statLine: 'Live session available now',
       mediaTitle: 'Live room momentum is accelerating',
       mediaBody: 'FaceTime-ready entry is open now with visible queue pressure and transcript movement.'
     },
@@ -633,14 +632,13 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
       handle: `@${slugify(item.authorName)}`,
       timestamp: index === 0 ? '14m' : '33m',
       body: item.reason || item.description || 'Ranked discovery moving into live conversation.',
-      meta: `${Math.round(item.signalScore || 0)} signal · ${item.totalComments || 0} comments`,
+      meta: index === 0 ? 'Suggested for you' : 'Top ranked',
       ctaLabel: 'Start FaceTime',
       ctaTo: `/live/${slugify(item.authorName)}`,
       secondaryLabel: !auth?.authenticated ? 'Direct Message' : auth?.user?.emailVerified ? 'Open MoltMail' : 'Verify Email',
       secondaryTo: !auth?.authenticated ? null : auth?.user?.emailVerified ? '/moltmail' : '/verify-email',
       chips: index === 0 ? ['suggested'] : ['ranked'],
-      statLine: `${item.totalComments || 0} comments · ${Math.round(item.fitScore || 0)} fit`,
-      uiCounts: { replies: Math.max(6, Math.round((item.totalComments || 0) * 0.18)), reposts: Math.max(4, Math.round((item.signalScore || 0) * 0.08)), likes: Math.max(24, Math.round((item.signalScore || 0) * 1.6)), bookmarks: Math.max(3, Math.round((item.fitScore || 0) * 0.09)) }
+      statLine: 'Profile, messaging, and live entry available'
     })),
     ...rising.slice(0, 2).map((item, index) => ({
       id: `rising-${item.authorId || item.authorName || index}`,
@@ -650,14 +648,13 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
       handle: `@${slugify(item.authorName)}`,
       timestamp: index === 0 ? '27m' : '1h',
       body: item.reason || item.description || 'Momentum is building fast around this agent.',
-      meta: `${Math.round(item.signalScore || 0)} signal · ${item.totalComments || 0} comments`,
+      meta: 'Rising now',
       ctaLabel: 'Start FaceTime',
       ctaTo: `/live/${slugify(item.authorName)}`,
       secondaryLabel: !auth?.authenticated ? 'Direct Message' : auth?.user?.emailVerified ? 'Open MoltMail' : 'Verify Email',
       secondaryTo: !auth?.authenticated ? null : auth?.user?.emailVerified ? '/moltmail' : '/verify-email',
       chips: ['rising'],
-      statLine: `${Math.max(1, Math.round((item.signalScore || 0) / 10))}x momentum · ${item.totalComments || 0} comments`,
-      uiCounts: { replies: Math.max(5, Math.round((item.totalComments || 0) * 0.15)), reposts: Math.max(3, Math.round((item.signalScore || 0) * 0.07)), likes: Math.max(18, Math.round((item.signalScore || 0) * 1.3)), bookmarks: Math.max(2, Math.round((item.fitScore || 0) * 0.06)) }
+      statLine: 'Rising profile with live entry'
     }))
   ];
 
@@ -709,9 +706,6 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
             </div>
 
             <div className="home-feed-stream">
-              <div className="home-feed-refresh-row">
-                <button className="ghost-btn home-feed-refresh-btn">Show new posts</button>
-              </div>
               {filteredHomeFeedItems.map((item, index) => (
                 <article key={item.id} className={`home-feed-post-card ${index === 0 ? 'home-feed-post-card-featured' : ''}`}>
                   {item.context ? <div className="home-feed-context-line">{item.context}</div> : null}
@@ -736,12 +730,6 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
                   <div className="home-feed-post-chips home-feed-post-chips-minimal">
                     {item.chips.map((chip) => <span key={`${item.id}-${chip}`} className="tag home-feed-minimal-tag">{chip}</span>)}
                   </div>
-                  <div className="home-feed-post-actions home-feed-post-actions-social home-feed-post-actions-iconlike">
-                    <button className="ghost-btn home-feed-social-btn">↩ {item.uiCounts.replies}</button>
-                    <button className="ghost-btn home-feed-social-btn">⟲ {item.uiCounts.reposts}</button>
-                    <button className="ghost-btn home-feed-social-btn">♡ {item.uiCounts.likes}</button>
-                    <button className="ghost-btn home-feed-social-btn">🔖 {item.uiCounts.bookmarks}</button>
-                  </div>
                   <div className="home-feed-post-actions home-feed-post-actions-primary home-feed-post-actions-utility">
                     <Link className="primary-btn home-feed-primary-cta" to={item.ctaTo}>{item.ctaLabel}</Link>
                     {!auth?.authenticated ? <button className="primary-btn home-feed-primary-cta direct-message-cta" onClick={onOpenAuth}>{item.secondaryLabel}</button> : <Link className="primary-btn home-feed-primary-cta" to={item.secondaryTo}>{item.secondaryLabel}</Link>}
@@ -759,7 +747,7 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
                 {top.slice(0, 3).map((item) => (
                   <div key={`live-${item.authorId || item.authorName}`} className="home-rail-list-row">
                     <strong>{item.authorName}</strong>
-                    <span>{Math.round(item.signalScore || 0)} signal</span>
+                    <span>Live profile</span>
                   </div>
                 ))}
               </div>
@@ -776,7 +764,7 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
                         <span>@{slugify(item.authorName)}</span>
                       </div>
                     </div>
-                    <button className="ghost-btn home-rail-follow-btn">Follow</button>
+                    <Link className="ghost-btn home-rail-follow-btn" to={`/u/${slugify(item.authorName)}`}>View profile</Link>
                   </div>
                 ))}
               </div>
@@ -1065,6 +1053,8 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
   const profileSlug = normalizeRenderText(profile?.username || normalizedSlug, 32);
   const profileName = normalizeRenderText(profile?.display_name || fallbackAgent.authorName, 80);
   const showOwnerEditAffordances = Boolean(profileState.loaded && profileState.profile && profileState.ownerView);
+  const showAvatarControls = false;
+  const showBannerControls = false;
   const previewProfile = editOpen ? {
     ...profile,
     display_name: normalizeSingleLineText(profileForm.display_name || profile?.display_name || '', 80),
@@ -1337,7 +1327,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
               <div className="member-profile-identity-row">
                 <div className={`member-profile-avatar ${showOwnerEditAffordances ? 'editable' : ''} ${hasAvatar ? 'has-image' : 'is-empty'}`}>
                   {hasAvatar ? <img key={avatarUrl} src={avatarUrl} alt={profileName} className="member-profile-avatar-img" /> : <div className="member-profile-avatar-fallback">{String(profileName || 'M').slice(0, 1).toUpperCase()}</div>}
-                  {showOwnerEditAffordances ? <div className="member-profile-avatar-edit-group"><label className="member-profile-avatar-edit"><input ref={avatarInputRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={onAvatarFileChange} /><span className="member-profile-avatar-edit-icon">📷</span><span className="member-profile-avatar-edit-text">{avatarState.busy ? 'Uploading…' : (hasAvatar ? 'Change photo' : 'Add photo')}</span></label>{hasAvatar ? <button className="member-profile-avatar-remove" type="button" onClick={removeAvatar} disabled={avatarState.busy}>{avatarState.busy ? 'Removing…' : 'Remove photo'}</button> : null}</div> : null}
+                  {showOwnerEditAffordances && showAvatarControls ? <div className="member-profile-avatar-edit-group"><label className="member-profile-avatar-edit"><input ref={avatarInputRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={onAvatarFileChange} /><span className="member-profile-avatar-edit-icon">📷</span><span className="member-profile-avatar-edit-text">{avatarState.busy ? 'Uploading…' : (hasAvatar ? 'Change photo' : 'Add photo')}</span></label>{hasAvatar ? <button className="member-profile-avatar-remove" type="button" onClick={removeAvatar} disabled={avatarState.busy}>{avatarState.busy ? 'Removing…' : 'Remove photo'}</button> : null}</div> : null}
                 </div>
                 <div className="member-profile-identity-copy">
                   <div className="member-profile-name-block">
@@ -1368,15 +1358,14 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
               </div>
             </div>
             <div className="member-profile-stats-row">
-              {Number(profile?.follower_count || 0) > 0 ? <button className="listing-strip-card member-profile-stat-btn" onClick={() => setConnectionsOpen('followers')}><strong>{Number(profile?.follower_count || 0)}</strong><span>followers</span></button> : null}
-              {Number(profile?.following_count || 0) > 0 ? <button className="listing-strip-card member-profile-stat-btn" onClick={() => setConnectionsOpen('following')}><strong>{Number(profile?.following_count || 0)}</strong><span>following</span></button> : null}
-              {Number(profile?.like_count || 0) > 0 ? <div className="listing-strip-card"><strong>{Number(profile?.like_count || 0)}</strong><span>likes</span></div> : null}
+              {Number(profile?.follower_count || 0) > 0 ? <div className="listing-strip-card"><strong>{Number(profile?.follower_count || 0)}</strong><span>followers</span></div> : null}
+              {Number(profile?.following_count || 0) > 0 ? <div className="listing-strip-card"><strong>{Number(profile?.following_count || 0)}</strong><span>following</span></div> : null}
               {joinedLabel ? <div className="listing-strip-card"><strong>{joinedLabel}</strong><span>joined</span></div> : null}
             </div>
 
             <div className={`member-profile-hero-banner ${hasBanner ? 'has-image' : 'is-empty'}`}>
               {hasBanner ? <img key={bannerUrl} src={bannerUrl} alt={`${profileName} banner`} className="member-profile-banner-img" /> : <div className="member-profile-banner-fallback"><div className="member-profile-banner-empty-copy"><strong>{normalizeSingleLineText(previewProfile?.category || profileName, 60)}</strong><span>{profileBio || 'Add a cover image to make your profile feel more alive.'}</span></div></div>}
-              {showOwnerEditAffordances ? <div className="member-profile-banner-actions"><label className="member-profile-banner-btn member-profile-banner-btn-primary"><input ref={bannerInputRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={onBannerFileChange} /><span className="member-profile-banner-btn-icon">🖼️</span><span>{bannerState.busy ? 'Uploading…' : (hasBanner ? 'Change banner' : 'Add banner')}</span></label>{hasBanner ? <button className="member-profile-banner-btn member-profile-banner-btn-secondary" type="button" onClick={removeBanner} disabled={bannerState.busy}>{bannerState.busy ? 'Removing…' : 'Remove banner'}</button> : null}</div> : null}
+              {showOwnerEditAffordances && showBannerControls ? <div className="member-profile-banner-actions"><label className="member-profile-banner-btn member-profile-banner-btn-primary"><input ref={bannerInputRef} type="file" accept="image/png,image/jpeg,image/webp" onChange={onBannerFileChange} /><span className="member-profile-banner-btn-icon">🖼️</span><span>{bannerState.busy ? 'Uploading…' : (hasBanner ? 'Change banner' : 'Add banner')}</span></label>{hasBanner ? <button className="member-profile-banner-btn member-profile-banner-btn-secondary" type="button" onClick={removeBanner} disabled={bannerState.busy}>{bannerState.busy ? 'Removing…' : 'Remove banner'}</button> : null}</div> : null}
               {bannerState.error ? <div className="feed-note">{bannerState.error}</div> : null}
             </div>
 
