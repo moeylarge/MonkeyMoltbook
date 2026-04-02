@@ -2902,20 +2902,21 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
               currentLastTime > fetchedLastTime ||
               ((currentLastTime === fetchedLastTime || !currentLastTime || !fetchedLastTime) && currentContainsFetchedNewest && currentMessages.length >= fetchedMessages.length)
             );
-            const decision = currentIsEqualOrNewer ? 'KEEP_CURRENT' : 'APPLY_FETCHED';
-            console.log('[moltmail-threaddata-writer]', {
-              writer: 'threadFetchEffect',
-              reason: 'selected-thread-effect',
-              liveSelectedThreadId,
+            if (currentIsEqualOrNewer) {
+              traceThreadDataWriter('threadFetchEffect', {
+                targetThreadId: liveSelectedThreadId,
+                previousMessages: currentMessages,
+                nextMessages: fetchedMessages,
+                action: 'KEEP_CURRENT'
+              });
+              return current;
+            }
+            traceThreadDataWriter('threadFetchEffect', {
               targetThreadId: liveSelectedThreadId,
-              currentNewestMessageId: currentLastId,
-              currentNewestCreatedAt: currentLast?.createdAt || null,
-              fetchedNewestMessageId: fetchedLastId,
-              fetchedNewestCreatedAt: fetchedLast?.createdAt || null,
-              decision,
-              timestamp: new Date().toISOString()
+              previousMessages: currentMessages,
+              nextMessages: fetchedMessages,
+              action: 'APPLY_FETCHED'
             });
-            if (currentIsEqualOrNewer) return current;
             return { loading: false, data: safeThread ? { ...json, thread: safeThread } : null, error: '' };
           });
           setMobileView('chat');
@@ -3021,7 +3022,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
         const nextThreadId = String(row.thread_id || liveSelectedThreadId || '');
         loadMailbox(nextThreadId, { suppressAutoSelect: Boolean(nextThreadId) }).catch(() => {});
         if (nextThreadId && nextThreadId === liveSelectedThreadId) {
-          hydrateConfirmedThread(nextThreadId).catch(() => {});
+          hydrateConfirmedThread(nextThreadId, 'onThreadEvent-participant').catch(() => {});
         }
         return;
       }
@@ -3029,8 +3030,17 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
         setInbox((current) => current.map((thread) => thread.id === row.id ? { ...thread, lastMessageAt: row.last_message_at || thread.lastMessageAt } : thread));
         setOutbox((current) => current.map((thread) => thread.id === row.id ? { ...thread, lastMessageAt: row.last_message_at || thread.lastMessageAt } : thread));
         if (liveSelectedThreadId === row.id) {
-          setThreadData((current) => current?.data?.thread ? ({ ...current, data: { ...current.data, thread: { ...current.data.thread, id: row.id, subject: row.subject || current.data.thread.subject, status: row.status || current.data.thread.status, pinnedMessageId: row.pinned_message_id || current.data.thread.pinnedMessageId || null } } }) : current);
-          hydrateConfirmedThread(row.id).catch(() => {});
+          setThreadData((current) => {
+            const previousMessages = current?.data?.thread?.messages || [];
+            traceThreadDataWriter('onThreadEventMerge', {
+              targetThreadId: row.id,
+              previousMessages,
+              nextMessages: previousMessages,
+              action: 'MERGE'
+            });
+            return current?.data?.thread ? ({ ...current, data: { ...current.data, thread: { ...current.data.thread, id: row.id, subject: row.subject || current.data.thread.subject, status: row.status || current.data.thread.status, pinnedMessageId: row.pinned_message_id || current.data.thread.pinnedMessageId || null } } }) : current;
+          });
+          hydrateConfirmedThread(row.id, 'onThreadEvent-thread').catch(() => {});
         }
       }
     },
@@ -3055,15 +3065,11 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
             reactions: [],
             deletedAt: row.deleted_at || null
           }];
-          console.log('[moltmail-threaddata-writer]', {
-            writer: 'onMessageEventAppend',
-            reason: 'realtime-message-event',
-            liveSelectedThreadId,
+          traceThreadDataWriter('onMessageEventAppend', {
             targetThreadId: row.thread_id,
-            previousMessagesLength: existing.length,
-            nextMessagesLength: nextMessages.length,
-            timestamp: new Date().toISOString(),
-            mode: 'APPEND'
+            previousMessages: existing,
+            nextMessages,
+            action: 'APPEND'
           });
           return {
             ...current,
@@ -3157,6 +3163,22 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
 
   const buildPendingPreview = ({ bodyText, sticker, attachment }) => bodyText || sticker?.label || attachment?.name || 'Attachment';
 
+  const traceThreadDataWriter = useCallback((writer, { targetThreadId = null, previousMessages = [], nextMessages = [], action = 'REPLACE' } = {}) => {
+    const previousLast = previousMessages[previousMessages.length - 1] || null;
+    const nextLast = nextMessages[nextMessages.length - 1] || null;
+    console.log('[moltmail-thread-trace]', {
+      writer,
+      timestamp: new Date().toISOString(),
+      liveSelectedThreadId,
+      targetThreadId,
+      previousMessageCount: previousMessages.length,
+      nextMessageCount: nextMessages.length,
+      newestPreviousMessageId: previousLast?.id || previousLast?.clientMessageId || null,
+      newestNextMessageId: nextLast?.id || nextLast?.clientMessageId || null,
+      action
+    });
+  }, [liveSelectedThreadId]);
+
   const buildOptimisticMessage = ({ clientMessageId, threadId, bodyText = '', sticker = null, attachment = null }) => ({
     id: clientMessageId,
     clientMessageId,
@@ -3175,22 +3197,16 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     const payload = await response.json();
     if (!response.ok) throw new Error(payload?.message || 'Could not load thread.');
     setThreadData((current) => {
-      const previousLength = current?.data?.thread?.messages?.length || 0;
-      const nextLength = payload?.thread?.messages?.length || 0;
-      console.log('[moltmail-threaddata-writer]', {
-        writer: 'hydrateConfirmedThread',
-        reason,
-        liveSelectedThreadId,
+      traceThreadDataWriter('hydrateConfirmedThread', {
         targetThreadId: threadId,
-        previousMessagesLength: previousLength,
-        nextMessagesLength: nextLength,
-        timestamp: new Date().toISOString(),
-        mode: 'REPLACE'
+        previousMessages: current?.data?.thread?.messages || [],
+        nextMessages: payload?.thread?.messages || [],
+        action: 'REPLACE'
       });
       return { loading: false, data: payload, error: '' };
     });
     return payload;
-  }, [liveSelectedThreadId]);
+  }, [liveSelectedThreadId, traceThreadDataWriter]);
 
   const sendNewThreadMessage = async ({ submittedCompose, clientMessageId, optimisticThreadId }) => {
     const response = await fetch(`${API}/moltmail/thread`, {
@@ -3216,7 +3232,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
       setCompose({ recipientUserId: '', bodyText: '' });
       setShowNewMessage(false);
       setSelectedThreadId(confirmedThreadId);
-      const confirmedThreadPayload = await hydrateConfirmedThread(confirmedThreadId);
+      const confirmedThreadPayload = await hydrateConfirmedThread(confirmedThreadId, 'sendNewThreadMessage-success');
       await loadMailbox(confirmedThreadId, { suppressAutoSelect: true });
       if (confirmedThreadPayload?.thread?.messages?.length) {
         removeOptimisticMessage(clientMessageId);
@@ -3260,6 +3276,12 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     upsertOptimisticThread(optimisticThread);
     upsertOptimisticMessage(optimisticMessage);
     setSelectedThreadId(optimisticThreadId);
+    traceThreadDataWriter('startNewThreadSend-optimistic', {
+      targetThreadId: optimisticThreadId,
+      previousMessages: threadData.data?.thread?.messages || [],
+      nextMessages: [optimisticMessage],
+      action: 'REPLACE'
+    });
     setThreadData({ loading: false, data: { thread: { id: optimisticThreadId, subject: optimisticThread.subject, status: 'OPEN', participants: optimisticThread.participants || [], messages: [optimisticMessage] } }, error: '' });
     setComposeState({ sending: true, error: '' });
     setPendingRecipient(null);
@@ -3334,7 +3356,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     markThreadReadLocal(threadId);
     setSelectedThreadId(threadId);
     try {
-      await hydrateConfirmedThread(threadId);
+      await hydrateConfirmedThread(threadId, 'sendReplyMessage-success');
       await loadMailbox(threadId);
       removeOptimisticMessage(clientMessageId);
     } catch {}
@@ -3406,6 +3428,12 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
         setCompose((current) => ({ ...current, recipientUserId: '', bodyText: '' }));
         setQueuedSticker(null);
         setAttachmentState({ uploading: false, file: null, error: '' });
+        traceThreadDataWriter('threadRowClick-reset', {
+          targetThreadId: thread.id,
+          previousMessages: threadData.data?.thread?.messages || [],
+          nextMessages: [],
+          action: 'REPLACE'
+        });
         setThreadData({ loading: false, data: null, error: '' });
         setPendingRecipient(thread.participants?.[0] || null);
         setSelectedThreadId(thread.id);
