@@ -239,13 +239,17 @@ export async function getMailboxSupabase(user, mode = 'inbox') {
 }
 
 export async function getThreadSupabase(user, threadId) {
+  const myParticipantRows = await rest('mail_participants', {
+    query: `thread_id=eq.${encodeURIComponent(String(threadId))}&user_id=eq.${encodeURIComponent(String(user.id))}&select=*`
+  });
+  const myParticipant = Array.isArray(myParticipantRows) ? myParticipantRows[0] : null;
+  if (!myParticipant) {
+    return { ok: false, status: 404, code: 'THREAD_NOT_FOUND', message: 'Thread not found.' };
+  }
   const participants = await rest('mail_participants', {
     query: `thread_id=eq.${encodeURIComponent(String(threadId))}&select=*`
   });
   const threadParticipants = Array.isArray(participants) ? participants : [];
-  if (!threadParticipants.some((participant) => String(participant.user_id) === String(user.id))) {
-    return { ok: false, status: 404, code: 'THREAD_NOT_FOUND', message: 'Thread not found.' };
-  }
   const threads = await rest('mail_threads', {
     query: `id=eq.${encodeURIComponent(String(threadId))}&select=*`
   });
@@ -259,7 +263,7 @@ export async function getThreadSupabase(user, threadId) {
   await rest('mail_participants', {
     method: 'PATCH',
     query: `thread_id=eq.${encodeURIComponent(String(threadId))}&user_id=eq.${encodeURIComponent(String(user.id))}`,
-    body: { last_read_at: nowIso() },
+    body: { last_read_at: nowIso(), archived_at: null },
     prefer: 'return=minimal'
   });
   const wallet = await getWallet(user.id);
