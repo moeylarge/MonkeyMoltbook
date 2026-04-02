@@ -54,8 +54,123 @@ function normalizeProfileUser(profile) {
     category: profile.category || null,
     email: profile.email || null,
     updatedAt: profile.updated_at || profile.created_at || null,
+    lastActiveAt: profile.last_active_at || null,
+    isOnline: false,
+    relationship: {
+      isFriend: false,
+      isFollowing: false,
+      isFollowedBy: false,
+      isMutual: false,
+      friendRequestSent: false,
+      friendRequestReceived: false
+    },
+    reason: profile.reason || 'Member',
     messagePermission: profile.message_permission || 'everyone'
   };
+}
+
+async function getRelationshipMaps(userId) {
+  const outgoing = await rest('member_relationships', {
+    query: `source_user_id=eq.${encodeURIComponent(String(userId))}&select=target_user_id,relationship_type,status`
+  }).catch(() => []);
+  const incoming = await rest('member_relationships', {
+    query: `target_user_id=eq.${encodeURIComponent(String(userId))}&select=source_user_id,relationship_type,status`
+  }).catch(() => []);
+  return {
+    outgoing: Array.isArray(outgoing) ? outgoing : [],
+    incoming: Array.isArray(incoming) ? incoming : []
+  };
+}
+
+function applyRelationshipMeta(baseUser, targetUserId, relationshipMaps, reasonFallback = 'Member') {
+  const outgoing = relationshipMaps.outgoing.filter((row) => String(row.target_user_id) === String(targetUserId));
+  const incoming = relationshipMaps.incoming.filter((row) => String(row.source_user_id) === String(targetUserId));
+  const isFollowing = outgoing.some((row) => row.relationship_type === 'follow' && row.status === 'active');
+  const isFollowedBy = incoming.some((row) => row.relationship_type === 'follow' && row.status === 'active');
+  const isFriend = outgoing.some((row) => row.relationship_type === 'friend' && row.status === 'accepted') || incoming.some((row) => row.relationship_type === 'friend' && row.status === 'accepted');
+  const friendRequestSent = outgoing.some((row) => row.relationship_type === 'friend_request' && row.status === 'pending');
+  const friendRequestReceived = incoming.some((row) => row.relationship_type === 'friend_request' && row.status === 'pending');
+  const isMutual = isFollowing && isFollowedBy;
+  let reason = reasonFallback;
+  if (isFriend) reason = 'Friend';
+  else if (friendRequestReceived) reason = 'Wants to connect';
+  else if (friendRequestSent) reason = 'Friend request sent';
+  else if (isMutual) reason = 'Mutual';
+  else if (isFollowing) reason = 'Following';
+  return {
+    ...baseUser,
+    isOnline: Boolean(baseUser.lastActiveAt && (Date.now() - new Date(baseUser.lastActiveAt).getTime()) < (1000 * 60 * 10)),
+    relationship: {
+      isFriend,
+      isFollowing,
+      isFollowedBy,
+      isMutual,
+      friendRequestSent,
+      friendRequestReceived
+    },
+    reason
+  };
+}
+
+async function getRecentRecipients(userId, limit = 6) {
+  const mailbox = await getMailboxSupabase({ id: userId }, 'inbox').catch(() => ({ threads: [] }));
+  const ids = [];
+  for (const thread of mailbox.threads || []) {
+    for (const participant of thread.participants || []) {
+      if (participant?.id && !ids.includes(participant.id)) ids.push(participant.id);
+      if (ids.length >= limit) return ids;
+    }
+  }
+  return ids;
+}
+
+async function listDefaultRecipients(user) {
+  const relationshipMaps = await getRelationshipMaps(user.id);
+  const profiles = await rest('profiles', {
+    query: 'select=user_id,email,username,display_name,avatar_url,category,message_permission,is_public,allow_search_indexing,is_discoverable,is_message_enabled,last_active_at,updated_at,created_at&order=updated_at.desc.nullslast'
+  }).catch(() => []);
+  const eligible = (Array.isArray(profiles) ? profiles : [])
+    .filter((profile) => String(profile.user_id || '') !== String(user.id))
+    .filter((profile) => profile.is_public !== false)
+    .filter((profile) => profile.allow_search_indexing !== false)
+    .filter((profile) => profile.is_discoverable !== false)
+    .filter((profile) => profile.is_message_enabled !== false)
+    .filter((profile) => (profile.message_permission || 'everyone') !== 'nobody')
+    .map((profile) => applyRelationshipMeta(normalizeProfileUser(profile), profile.user_id, relationshipMaps));
+
+  const recentIds = await getRecentRecipients(user.id, 6);
+  const byId = new Map(eligible.map((item) => [item.id, item]));
+  const recent = recentIds.map((id) => byId.get(String(id))).filter(Boolean).map((item) => ({ ...item, reason: 'Messaged recently' }));
+  const friends = eligible.filter((item) => item.relationship.isFriend).slice(0, 8);
+  const online = eligible.filter((item) => item.isOnline).slice(0, 8);
+  const mutuals = eligible.filter((item) => item.relationship.isMutual && !item.relationship.isFriend).slice(0, 8);
+  const following = eligible.filter((item) => item.relationship.isFollowing && !item.relationship.isMutual && !item.relationship.isFriend).slice(0, 8);
+  const shown = new Set([...friends, ...recent, ...online, ...mutuals, ...following].map((item) => item.id));
+  const suggested = eligible.filter((item) => !shown.has(item.id)).slice(0, 8);
+  return {
+    ok: true,
+    sections: { friends, recent, online, mutuals, following, suggested }
+  };
+}
+
+async function getExistingThreadForRecipient(user, recipientUserId) {
+  const existingParticipants = await rest('mail_participants', {
+    query: `user_id=in.${encodeURIComponent(`("${String(user.id).replace(/"/g, '')}","${String(recipientUserId).replace(/"/g, '')}")`)}&select=thread_id,user_id`
+  }).catch(() => []);
+  const byThread = new Map();
+  for (const row of Array.isArray(existingParticipants) ? existingParticipants : []) {
+    const key = String(row.thread_id);
+    const list = byThread.get(key) || [];
+    list.push(String(row.user_id));
+    byThread.set(key, list);
+  }
+  for (const [threadId, members] of byThread.entries()) {
+    const set = new Set(members);
+    if (set.has(String(user.id)) && set.has(String(recipientUserId)) && set.size === 2) {
+      return { ok: true, thread: { id: threadId } };
+    }
+  }
+  return { ok: true, thread: null };
 }
 
 async function listProfilesByQuery(query, excludeUserId = '') {
@@ -198,8 +313,17 @@ function buildThreadSummary(thread, viewerId, messages, participants, profilesBy
 }
 
 export async function searchRecipientsSupabase(user, query) {
-  const results = await listProfilesByQuery(query, user.id);
+  const relationshipMaps = await getRelationshipMaps(user.id);
+  const results = (await listProfilesByQuery(query, user.id)).map((item) => applyRelationshipMeta(item, item.id, relationshipMaps));
   return { ok: true, results };
+}
+
+export async function getDefaultRecipientsSupabase(user) {
+  return listDefaultRecipients(user);
+}
+
+export async function getRecipientThreadSupabase(user, recipientUserId) {
+  return getExistingThreadForRecipient(user, recipientUserId);
 }
 
 export async function getBootstrapSupabase(user) {

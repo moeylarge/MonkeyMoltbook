@@ -14,7 +14,7 @@ import { addAgentReply, addLiveMessage, createLiveSession, endLiveSession, expor
 import { createCheckoutSession, creditsEnabled, ensureCreditProducts, getSpendRules, getWallet, grantCredits, listCreditProducts, listCreditTransactions, spendCredits } from './lib/credits.js';
 import { applySessionCookie, createDevVerifiedSession, getAccountMe, getSessionResponse, logoutSession, startEmailAuth, verifyEmailAuth } from './lib/moltmail-auth.js';
 import { archiveThread, createThread, getAuditSummary, getBootstrap, getInbox, getOutbox, getThread, getUnreadCount, markThreadRead, pinMessage, replyThread, searchRecipients, syncVerifiedUser, togglePinThread, toggleReaction, unsendMessage } from './lib/moltmail-data.js';
-import { archiveThreadSupabase, createThreadSupabase, getBootstrapSupabase, getMailboxSupabase, getThreadSupabase, getUnreadCountSupabase, markThreadReadSupabase, moltmailSupabaseEnabled, replyThreadSupabase, searchRecipientsSupabase } from './lib/moltmail-supabase.js';
+import { archiveThreadSupabase, createThreadSupabase, getBootstrapSupabase, getDefaultRecipientsSupabase, getMailboxSupabase, getRecipientThreadSupabase, getThreadSupabase, getUnreadCountSupabase, markThreadReadSupabase, moltmailSupabaseEnabled, replyThreadSupabase, searchRecipientsSupabase } from './lib/moltmail-supabase.js';
 import { createClipForUser, deleteClipForUser, getOrCreateProfileForUser, getProfileByUsername, isProfileStorageEnabled, listClipsForUser, toPublicProfile, updateProfileAvatar, updateProfileBanner, updateProfileForUser } from './lib/profile-storage.js';
 
 const PROFILE_MEDIA_DIR = process.env.VERCEL ? '/tmp/monkeymoltbook-profile-media' : path.join(process.cwd(), 'data', 'profile-media');
@@ -398,6 +398,21 @@ app.get('/moltmail/bootstrap', async (req, res) => {
   res.status(result.ok ? 200 : result.status || 400).json(result);
 });
 
+app.get('/moltmail/recipients/default', async (req, res) => {
+  if (moltmailMode() === 'supabase') {
+    const user = requireMoltmailSession(req, res);
+    if (!user) return;
+    try {
+      const result = await getDefaultRecipientsSupabase(user);
+      res.status(result.ok ? 200 : result.status || 400).json(result);
+    } catch (error) {
+      res.status(500).json({ ok: false, code: 'MOLTMAIL_RECIPIENT_DEFAULT_FAILED', message: String(error?.message || error) });
+    }
+    return;
+  }
+  res.status(501).json({ ok: false, code: 'LEGACY_UNSUPPORTED', message: 'Default recipients unavailable in legacy mode.' });
+});
+
 app.get('/moltmail/recipients/search', async (req, res) => {
   if (moltmailMode() === 'supabase') {
     const user = requireMoltmailSession(req, res);
@@ -412,6 +427,21 @@ app.get('/moltmail/recipients/search', async (req, res) => {
   }
   const result = searchRecipients(req, req.query?.q);
   res.status(result.ok ? 200 : result.status || 400).json(result);
+});
+
+app.get('/moltmail/recipient/:userId/thread', async (req, res) => {
+  if (moltmailMode() === 'supabase') {
+    const user = requireMoltmailSession(req, res);
+    if (!user) return;
+    try {
+      const result = await getRecipientThreadSupabase(user, req.params.userId);
+      res.status(result.ok ? 200 : result.status || 400).json(result);
+    } catch (error) {
+      res.status(500).json({ ok: false, code: 'MOLTMAIL_RECIPIENT_THREAD_FAILED', message: String(error?.message || error) });
+    }
+    return;
+  }
+  res.status(501).json({ ok: false, code: 'LEGACY_UNSUPPORTED', message: 'Recipient thread lookup unavailable in legacy mode.' });
 });
 
 app.get('/moltmail/inbox', async (req, res) => {
