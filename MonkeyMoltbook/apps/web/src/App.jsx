@@ -2783,18 +2783,22 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     });
   }, [optimisticThreads, inbox, outbox, searchQuery]);
   const optimisticSelectedThread = optimisticThreads.find((thread) => thread.id === selectedThreadId) || null;
-  const optimisticSelectedMessages = useMemo(() => optimisticMessages.filter((message) => message.threadId === selectedThreadId), [optimisticMessages, selectedThreadId]);
-  const confirmedSelectedThread = threadData.data?.thread?.id === selectedThreadId ? threadData.data.thread : null;
+  const liveSelectedThreadId = !String(selectedThreadId || '').startsWith('pending_')
+    ? selectedThreadId
+    : (threadData.data?.thread?.id && !String(threadData.data.thread.id).startsWith('pending_') ? threadData.data.thread.id : '');
+  const optimisticVisibleMessages = useMemo(() => optimisticMessages.filter((message) => {
+    if (message.threadId === liveSelectedThreadId) return true;
+    if (message.threadId === selectedThreadId && String(selectedThreadId || '').startsWith('pending_') && liveSelectedThreadId) return true;
+    return false;
+  }), [optimisticMessages, liveSelectedThreadId, selectedThreadId]);
+  const confirmedLiveThread = threadData.data?.thread?.id === liveSelectedThreadId ? threadData.data.thread : null;
   const activeThread = (optimisticSelectedThread ? {
     id: optimisticSelectedThread.id,
     subject: optimisticSelectedThread.subject,
     status: 'OPEN',
     participants: optimisticSelectedThread.participants || [],
-    messages: optimisticSelectedMessages
-  } : null) || confirmedSelectedThread || null;
-  const liveSelectedThreadId = !String(selectedThreadId || '').startsWith('pending_')
-    ? selectedThreadId
-    : (threadData.data?.thread?.id && !String(threadData.data.thread.id).startsWith('pending_') ? threadData.data.thread.id : '');
+    messages: []
+  } : null) || confirmedLiveThread || null;
   const selectedRecipient = activeComposeRecipient || pendingRecipient || recipients.find((r) => r.id === compose.recipientUserId) || optimisticSelectedThread?.participants?.[0] || null;
   const recentRecipients = useMemo(() => {
     const seen = new Set();
@@ -2804,17 +2808,23 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
       return true;
     }).slice(0, 6);
   }, [threads]);
-  const activeMessages = useMemo(() => {
-    if (optimisticSelectedThread && !confirmedSelectedThread) {
-      return optimisticSelectedMessages.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+  const visibleMessages = useMemo(() => {
+    const confirmed = confirmedLiveThread?.messages || [];
+    const optimistic = optimisticVisibleMessages || [];
+    const byKey = new Map();
+    for (const message of confirmed) {
+      const key = message.id || message.clientMessageId;
+      if (!key) continue;
+      byKey.set(key, message);
     }
-    const confirmed = activeThread?.messages || [];
-    const optimisticIds = new Set(optimisticSelectedMessages.map((message) => message.clientMessageId));
-    return [
-      ...confirmed.filter((message) => !message.clientMessageId || !optimisticIds.has(message.clientMessageId)),
-      ...optimisticSelectedMessages
-    ].sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
-  }, [activeThread?.messages, optimisticSelectedMessages, optimisticSelectedThread, confirmedSelectedThread]);
+    for (const message of optimistic) {
+      const key = message.id || message.clientMessageId;
+      if (!key) continue;
+      if (message.clientMessageId && [...byKey.values()].some((existing) => existing.clientMessageId === message.clientMessageId)) continue;
+      byKey.set(key, message);
+    }
+    return [...byKey.values()].sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+  }, [liveSelectedThreadId, confirmedLiveThread?.messages, optimisticVisibleMessages]);
 
   const markThreadReadLocal = useCallback((threadId) => {
     if (!threadId) return;
@@ -2941,7 +2951,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     const distanceFromBottom = node.scrollHeight - node.scrollTop - node.clientHeight;
     const shouldStick = distanceFromBottom < 120;
     if (shouldStick) node.scrollTop = node.scrollHeight;
-  }, [activeMessages.length, selectedThreadId]);
+  }, [visibleMessages.length, selectedThreadId]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -3375,7 +3385,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
 
   const getReceiptLabel = (message, index) => {
     if (message.senderUserId !== auth.user?.id) return '';
-    const latestSentIndex = [...activeMessages].map((m, i) => ({ m, i })).filter(({ m }) => m.senderUserId === auth.user?.id).slice(-1)[0]?.i;
+    const latestSentIndex = [...visibleMessages].map((m, i) => ({ m, i })).filter(({ m }) => m.senderUserId === auth.user?.id).slice(-1)[0]?.i;
     if (index !== latestSentIndex) return '';
     if (message.status === 'sending') return 'Sent';
     if (message.status === 'failed') return '';
@@ -3552,17 +3562,17 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
               <button className="moltmail-mobile-back" onClick={() => setMobileView('list')}>←</button>
               <div className="moltmail-chat-identity">
                 <strong>{activeThread?.participants?.[0]?.displayName || activeThread?.participants?.[0]?.handle || selectedRecipient?.displayName || selectedRecipient?.handle || 'New message'}</strong>
-                {activeMessages.length ? <span>{`${activeMessages.length} messages`}</span> : null}
+                {visibleMessages.length ? <span>{`${visibleMessages.length} messages`}</span> : null}
                 {activeThread?.pinnedMessageId ? <button className="moltmail-pinned-chip" onClick={() => document.getElementById(`message-${activeThread.pinnedMessageId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>Pinned message</button> : null}
-                {selectedThreadId ? <span className="moltmail-presence-chip">{typingActive && !activeMessages.length ? 'typing…' : (Object.keys(threadPresence || {}).length > 1 ? 'online now' : formatPresence(threads.find((thread) => thread.id === selectedThreadId)?.lastMessageAt || activeMessages[activeMessages.length - 1]?.createdAt))}</span> : null}
+                {selectedThreadId ? <span className="moltmail-presence-chip">{typingActive && !visibleMessages.length ? 'typing…' : (Object.keys(threadPresence || {}).length > 1 ? 'online now' : formatPresence(threads.find((thread) => thread.id === selectedThreadId)?.lastMessageAt || visibleMessages[visibleMessages.length - 1]?.createdAt))}</span> : null}
               </div>
             </div>
             <div className="moltmail-chat-feed" ref={threadFeedRef}>
-              {threadData.loading ? <div className="moltmail-thread-loading">Loading…</div> : activeThread ? (activeMessages.length ? activeMessages.map((message, index) => {
+              {threadData.loading ? <div className="moltmail-thread-loading">Loading…</div> : activeThread ? (visibleMessages.length ? visibleMessages.map((message, index) => {
                 const isSent = message.senderUserId === auth.user?.id;
-                const previousMessage = activeMessages[index - 1];
+                const previousMessage = visibleMessages[index - 1];
                 const previousWasSameSide = previousMessage && previousMessage.senderUserId === message.senderUserId;
-                const nextMessage = activeMessages[index + 1];
+                const nextMessage = visibleMessages[index + 1];
                 const nextWasSameSide = nextMessage && nextMessage.senderUserId === message.senderUserId;
                 return (
                   <div key={message.id} className={`moltmail-bubble-row ${isSent ? 'sent' : 'received'} ${previousWasSameSide ? 'stacked' : 'group-start'} ${!nextWasSameSide ? 'group-end' : ''}`}>
