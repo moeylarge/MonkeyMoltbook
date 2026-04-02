@@ -253,11 +253,20 @@ export async function getThreadSupabase(user, threadId) {
   const threads = await rest('mail_threads', {
     query: `id=eq.${encodeURIComponent(String(threadId))}&select=*`
   });
-  const thread = threads?.[0];
-  if (!thread) return { ok: false, status: 404, code: 'THREAD_NOT_FOUND', message: 'Thread not found.' };
+  let thread = threads?.[0] || null;
   const messages = await rest('mail_messages', {
     query: `thread_id=eq.${encodeURIComponent(String(threadId))}&select=*&order=created_at.asc`
   });
+  if (!thread) {
+    const fallbackLastMessageAt = Array.isArray(messages) && messages.length ? messages[messages.length - 1].created_at : nowIso();
+    thread = {
+      id: String(threadId),
+      subject: 'Conversation',
+      status: 'OPEN',
+      pinned_message_id: null,
+      last_message_at: fallbackLastMessageAt
+    };
+  }
   const userIds = [...new Set(threadParticipants.map((participant) => String(participant.user_id)).filter(Boolean))];
   const profilesByUserId = await getProfilesByUserIds(userIds);
   await rest('mail_participants', {
@@ -276,8 +285,13 @@ export async function getThreadSupabase(user, threadId) {
       pinnedMessageId: thread.pinned_message_id || null,
       participants: threadParticipants
         .filter((participant) => String(participant.user_id) !== String(user.id))
-        .map((participant) => profilesByUserId.get(String(participant.user_id)))
-        .filter(Boolean)
+        .map((participant) => profilesByUserId.get(String(participant.user_id)) || {
+          id: String(participant.user_id),
+          displayName: 'Member',
+          handle: String(participant.user_id),
+          avatarUrl: null,
+          category: null
+        })
         .map((participant) => ({ id: participant.id, displayName: participant.displayName, handle: participant.handle, avatarUrl: participant.avatarUrl || null, category: participant.category || null })),
       messages: (Array.isArray(messages) ? messages : []).map((message) => ({
         id: message.id,

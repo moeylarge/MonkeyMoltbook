@@ -144,15 +144,40 @@ function useIntelData(enabled = true, options = {}) {
 }
 
 function useAuthSession() {
-  const [session, setSession] = useState({ loading: true, authenticated: false, user: null });
+  const [session, setSessionState] = useState({ loading: true, authenticated: false, user: null });
+
+  const setSession = (nextSession) => {
+    console.log('[moltmail-ui][setSession:called]', nextSession);
+    setSessionState(nextSession);
+  };
+
+  useEffect(() => {
+    console.log('[moltmail-ui][useAuthSession:render]', session);
+  }, [session]);
 
   const refreshSession = async () => {
     try {
       const response = await fetch(`${API}/auth/session`, { credentials: 'include' });
       const payload = await response.json();
-      setSession({ loading: false, authenticated: Boolean(payload?.authenticated), user: payload?.user || null });
+      console.log('[moltmail-ui][refreshSession:rawPayload]', JSON.stringify(payload));
+      const rawUser = payload && typeof payload === 'object' ? (payload.user ?? payload.session?.user ?? null) : null;
+      const normalizedUser = rawUser ? {
+        ...rawUser,
+        emailVerified: rawUser.emailVerified ?? Boolean(rawUser.emailVerifiedAt)
+      } : null;
+      const authenticated = payload?.authenticated === true || payload?.ok === true || Boolean(normalizedUser && (payload?.authenticated !== false));
+      const nextSession = {
+        loading: false,
+        authenticated,
+        user: normalizedUser
+      };
+      console.log('[moltmail-ui][refreshSession:response]', { ok: response.ok, payload, nextSession });
+      console.log('[moltmail-ui][refreshSession:beforeSetSession]', nextSession);
+      setSession(nextSession);
+      console.log('[moltmail-ui][refreshSession:setSession]', nextSession);
       return payload;
     } catch {
+      console.log('[moltmail-ui][refreshSession:error]');
       setSession({ loading: false, authenticated: false, user: null });
       return { authenticated: false };
     }
@@ -222,7 +247,11 @@ function AuthModal({ open, onClose, onVerified }) {
       if (!response.ok) {
         setStatus(payload?.message || 'Verification failed.');
       } else {
-        onVerified?.(payload?.user || null);
+        await onVerified?.(payload?.user || null);
+        if (typeof window !== 'undefined') {
+          window.location.reload();
+          return;
+        }
         onClose?.();
       }
     } catch {
@@ -2834,9 +2863,15 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
         if (!active) return;
         if (!ok) setThreadData({ loading: false, data: null, error: json?.message || 'Could not load thread.' });
         else {
-          setThreadData({ loading: false, data: json, error: '' });
+          const safeThread = json?.thread ? {
+            ...json.thread,
+            participants: Array.isArray(json.thread.participants) ? json.thread.participants : [],
+            messages: Array.isArray(json.thread.messages) ? json.thread.messages : []
+          } : null;
+          setThreadData({ loading: false, data: safeThread ? { ...json, thread: safeThread } : null, error: '' });
           setMobileView('chat');
           markThreadReadLocal(selectedThreadId);
+          loadMailbox(selectedThreadId, { suppressAutoSelect: true }).catch(() => {});
         }
       })
       .catch(() => active && setThreadData({ loading: false, data: null, error: 'Could not load thread.' }));
@@ -3035,11 +3070,19 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     setMobileView('chat');
     try {
       suppressMailboxAutoSelectRef.current = true;
+      activeComposeRecipientIdRef.current = '';
+      setPendingRecipient(null);
+      setActiveComposeRecipient(null);
+      setCompose({ recipientUserId: '', bodyText: '' });
+      setShowNewMessage(false);
       setSelectedThreadId(confirmedThreadId);
-      await hydrateConfirmedThread(confirmedThreadId);
+      const confirmedThreadPayload = await hydrateConfirmedThread(confirmedThreadId);
       await loadMailbox(confirmedThreadId, { suppressAutoSelect: true });
-      removeOptimisticMessage(clientMessageId);
-      removeOptimisticThread(optimisticThreadId);
+      if (confirmedThreadPayload?.thread?.messages?.length) {
+        removeOptimisticMessage(clientMessageId);
+        removeOptimisticThread(optimisticThreadId);
+        setTypingActive(false);
+      }
     } catch {}
     finally {
       suppressMailboxAutoSelectRef.current = false;
@@ -3368,7 +3411,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     const sending = selectedThreadId ? replyState.sending : composeState.sending;
     const recipientReady = selectedThreadId || Boolean(activeComposeRecipient?.id || compose.recipientUserId || optimisticSelectedThread?.id || activeThread?.id);
     const disabled = sending || composeState.sending || attachmentState.uploading || !recipientReady || (!value.trim() && !attachmentState.file && !queuedSticker);
-    const isNewMessageMode = Boolean(!selectedThreadId && (activeComposeRecipient?.id || compose.recipientUserId || optimisticSelectedThread?.id));
+    const isNewMessageMode = Boolean(!selectedThreadId && !activeThread?.id && (activeComposeRecipient?.id || compose.recipientUserId || optimisticSelectedThread?.id));
     return (
       <div className="moltmail-chat-composer-wrap">
         {queuedSticker ? <div className="moltmail-attachment-pill"><span>{queuedSticker.emoji} {queuedSticker.label}</span><button onClick={() => setQueuedSticker(null)}>✕</button></div> : null}
@@ -3398,6 +3441,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   return (
     <section className="moltmail-screen">
       <SeoHead title="MoltMail — Molt Live" description="Direct messages on Molt Live." canonical="https://molt-live.com/moltmail" />
+      {console.log('[moltmail-ui][moltmail-gate-render]', { loading: auth?.loading, authenticated: auth?.authenticated, emailVerified: auth?.user?.emailVerified, user: auth?.user || null })}
       {auth?.loading ? (
         <div className="moltmail-gate"><button className="primary-btn" disabled>Loading MoltMail…</button></div>
       ) : !auth?.authenticated ? (
@@ -3421,7 +3465,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
                 <strong>{activeThread?.participants?.[0]?.displayName || activeThread?.participants?.[0]?.handle || selectedRecipient?.displayName || selectedRecipient?.handle || 'New message'}</strong>
                 {activeMessages.length ? <span>{`${activeMessages.length} messages`}</span> : null}
                 {activeThread?.pinnedMessageId ? <button className="moltmail-pinned-chip" onClick={() => document.getElementById(`message-${activeThread.pinnedMessageId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>Pinned message</button> : null}
-                {selectedThreadId ? <span className="moltmail-presence-chip">{typingActive ? 'typing…' : formatPresence(threads.find((thread) => thread.id === selectedThreadId)?.lastMessageAt || activeMessages[activeMessages.length - 1]?.createdAt)}</span> : null}
+                {selectedThreadId ? <span className="moltmail-presence-chip">{typingActive && !activeMessages.length ? 'typing…' : formatPresence(threads.find((thread) => thread.id === selectedThreadId)?.lastMessageAt || activeMessages[activeMessages.length - 1]?.createdAt)}</span> : null}
               </div>
             </div>
             <div className="moltmail-chat-feed" ref={threadFeedRef}>
@@ -3647,7 +3691,7 @@ function AppInner() {
         <Route path="/faq" element={<FAQPage />} />
       </Routes>
     </AppFrame>
-    <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} onVerified={() => auth.refreshSession()} />
+    <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} onVerified={async () => { await auth.refreshSession(); }} />
     </>
   );
 }
