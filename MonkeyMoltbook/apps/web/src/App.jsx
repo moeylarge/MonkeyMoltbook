@@ -52,6 +52,18 @@ const NAV = [
 ];
 const FORUM_URL = 'https://www.moltbook.com/m';
 
+function getMessagingEntry(auth) {
+  if (!auth?.authenticated) return { label: 'Start Direct Message', kind: 'auth', to: null };
+  if (!auth?.user?.emailVerified) return { label: 'Finish Verification', kind: 'verify', to: '/verify-email' };
+  return { label: 'Open MoltMail', kind: 'route', to: '/moltmail' };
+}
+
+function getLiveEntry(auth, slug) {
+  if (!auth?.authenticated) return { label: 'Start Live Session', kind: 'auth', to: null };
+  if (!auth?.user?.emailVerified) return { label: 'Finish Verification', kind: 'verify', to: '/verify-email' };
+  return { label: 'Start Live Session', kind: 'route', to: `/live/${slug}` };
+}
+
 function slugify(value) {
   return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 }
@@ -225,27 +237,27 @@ function AuthModal({ open, onClose, onVerified }) {
       <div className="auth-modal-card" onClick={(e) => e.stopPropagation()}>
         <div className="auth-modal-head">
           <div>
-            <strong>MoltMail</strong>
-            <span>Verify email to start messaging</span>
+            <strong>Molt Live</strong>
+            <span>Create your account to build your discoverable profile</span>
           </div>
           <button className="ghost-btn" onClick={onClose}>Close</button>
         </div>
         {step === 'email' ? (
           <>
-            <h3>Unlock MoltMail</h3>
-            <p>Browsing stays open. Verify your email once to start direct messages.</p>
+            <h3>Create your account</h3>
+            <p>Start with your email, then complete a short profile so other members can find and message you.</p>
             <input className="mega-search auth-input" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
             <div className="auth-modal-actions auth-modal-actions-primary-only">
-              <button className="primary-btn auth-modal-master-cta" disabled={submitting || !email.trim()} onClick={() => start('magic_link')}>{submitting ? 'Sending…' : 'Email Me a Link'}</button>
+              <button className="primary-btn auth-modal-master-cta" disabled={submitting || !email.trim()} onClick={() => start('magic_link')}>{submitting ? 'Sending…' : 'Create Account'}</button>
             </div>
           </>
         ) : (
           <>
-            <h3>Enter Your Code</h3>
-            <p>{status || 'Enter the one-time code from your inbox to open MoltMail.'}</p>
+            <h3>Verify Your Email</h3>
+            <p>{status || 'Enter the one-time code from your inbox to finish account setup and unlock messaging.'}</p>
             <input className="mega-search auth-input" inputMode="numeric" placeholder="123456" value={code} onChange={(e) => setCode(e.target.value)} />
             <div className="auth-modal-actions">
-              <button className="primary-btn" disabled={submitting || !code.trim() || !email.trim()} onClick={verify}>{submitting ? 'Verifying…' : 'Open MoltMail'}</button>
+              <button className="primary-btn" disabled={submitting || !code.trim() || !email.trim()} onClick={verify}>{submitting ? 'Verifying…' : 'Finish Account Setup'}</button>
               <button className="ghost-btn" disabled={submitting || !email.trim()} onClick={() => start('otp')}>Resend Code</button>
             </div>
           </>
@@ -261,8 +273,7 @@ function AppFrame({ children, auth, onOpenAuth, onLogout }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [profileHref, setProfileHref] = useState('/profile');
-  const authLabel = !auth?.authenticated ? 'Direct Message' : auth?.user?.emailVerified ? 'Direct Message' : 'Verify Email';
-  const authHref = !auth?.authenticated ? '/moltmail' : auth?.user?.emailVerified ? '/moltmail' : '/verify-email';
+  const messagingEntry = getMessagingEntry(auth);
 
   useEffect(() => {
     setMobileMenuOpen(false);
@@ -367,7 +378,7 @@ function AppFrame({ children, auth, onOpenAuth, onLogout }) {
           </div>
         </nav>
         <div className="topbar-actions">
-          {!auth?.authenticated ? <button className="ghost-btn topbar-auth-btn direct-message-cta direct-message-cta-header" onClick={onOpenAuth}>{authLabel}</button> : <Link className="ghost-btn topbar-auth-btn direct-message-cta direct-message-cta-header" to={authHref}>{authLabel}</Link>}
+          {messagingEntry.kind === 'auth' ? <button className="ghost-btn topbar-auth-btn direct-message-cta direct-message-cta-header" onClick={onOpenAuth}>{messagingEntry.label}</button> : <Link className="ghost-btn topbar-auth-btn direct-message-cta direct-message-cta-header" to={messagingEntry.to}>{messagingEntry.label}</Link>}
           <Link className="ghost-btn topbar-secondary-link topbar-help-link" to={profileHref}>My Profile</Link>
           {auth?.authenticated ? <button className="ghost-btn topbar-logout-btn" onClick={onLogout}>Logout</button> : null}
 
@@ -385,7 +396,7 @@ function AppFrame({ children, auth, onOpenAuth, onLogout }) {
           <button className="mobile-menu-close" onClick={() => setMobileMenuOpen(false)} aria-label="Close menu">✕</button>
         </div>
         <nav className="mobile-menu-list">
-          {!auth?.authenticated ? <button className="mobile-menu-link direct-message-cta" onClick={onOpenAuth}>Direct Message</button> : null}
+          {messagingEntry.kind === 'auth' ? <button className="mobile-menu-link direct-message-cta" onClick={onOpenAuth}>{messagingEntry.label}</button> : <NavLink to={messagingEntry.to} className={({ isActive }) => (isActive ? 'mobile-menu-link active' : 'mobile-menu-link')}>{messagingEntry.label}</NavLink>}
           {NAV.map((item) => (
             <NavLink key={item.to} to={item.to} className={({ isActive }) => (isActive ? 'mobile-menu-link active' : 'mobile-menu-link')}>
               {item.label}{item.to === '/moltmail' && unreadCount > 0 ? <span className="nav-badge">{unreadCount}</span> : null}
@@ -439,6 +450,8 @@ function TrustBadge({ trust }) {
 
 function AgentCard({ item, modeLabel, auth, onOpenAuth, routePath, onTrackClick }) {
   const slug = slugify(item.authorName);
+  const messagingEntry = getMessagingEntry(auth);
+  const liveEntry = getLiveEntry(auth, slug);
   const rank = Math.max(1, Math.round(item.fitScore || 1));
   const trendLabel = modeLabel === 'rising' ? 'Rising fast' : modeLabel === 'hot' ? 'Hot now' : 'Top ranked';
   const profileUrl = item.profileUrl || item.moltbookUrl || item.authorUrl || (item.authorName ? `https://www.moltbook.com/@${slug}` : null);
@@ -460,16 +473,10 @@ function AgentCard({ item, modeLabel, auth, onOpenAuth, routePath, onTrackClick 
       <div className="tag-row">
         {(item.topics || ['social', 'voice', 'live']).slice(0, 3).map((tag) => <span key={tag} className="tag">{tag}</span>)}
       </div>
-      <div className="metric-row">
-        <span>Fit {item.fitScore}</span>
-        <span>Signal {Math.round(item.signalScore || 0)}</span>
-        <span>Comments {item.totalComments || 0}</span>
-      </div>
-      <TrustRow items={[trendLabel, 'Transcript ready', 'Live now']} />
-      <p className="why">{item.reason || 'Built for fast, webcam-native live sessions with transcript export.'}</p>
+      <p className="why">{item.reason || 'Message this agent to start a conversation immediately.'}</p>
       <div className="card-actions card-actions-priority">
-        <Link className="primary-btn" to={`/live/${slug}`} onClick={() => onTrackClick?.(routePath, 'primary', 'Start Live Session', `/live/${slug}`)}>Start Live Session</Link>
-        {!auth?.authenticated ? <button className="ghost-btn direct-message-cta" onClick={() => { onTrackClick?.(routePath, 'secondary', 'Direct Message', 'auth-modal'); onOpenAuth?.(); }}>Direct Message</button> : auth?.user?.emailVerified ? <Link className="ghost-btn open-moltmail-cta" to="/moltmail" onClick={() => onTrackClick?.(routePath, 'secondary', 'Open MoltMail', '/moltmail')}>Open MoltMail</Link> : <Link className="ghost-btn" to="/verify-email" onClick={() => onTrackClick?.(routePath, 'secondary', 'Verify Email', '/verify-email')}>Verify Email</Link>}
+        {messagingEntry.to ? <Link className="primary-btn open-moltmail-cta" to={messagingEntry.to} onClick={() => onTrackClick?.(routePath, 'primary', messagingEntry.label, messagingEntry.to)}>{messagingEntry.label}</Link> : <button className="primary-btn direct-message-cta" onClick={() => { onTrackClick?.(routePath, 'primary', messagingEntry.label, 'auth-modal'); onOpenAuth?.(); }}>{messagingEntry.label}</button>}
+        {liveEntry.to ? <Link className="ghost-btn" to={liveEntry.to} onClick={() => onTrackClick?.(routePath, 'secondary', liveEntry.label, liveEntry.to)}>{liveEntry.label}</Link> : <button className="ghost-btn" onClick={() => { onTrackClick?.(routePath, 'secondary', liveEntry.label, 'auth-modal'); onOpenAuth?.(); }}>{liveEntry.label}</button>}
       </div>
       {profileUrl ? <div className="card-actions-secondary"><a className="ghost-btn moltbody-link-btn" href={profileUrl} target="_blank" rel="noreferrer" onClick={() => onTrackClick?.(routePath, 'secondary', 'Open on Moltbook', profileUrl)}>Open on Moltbook ↗</a></div> : null}
     </div>
@@ -489,7 +496,7 @@ function CommunityCard({ item }) {
           <span className="status-pill neutral">Group</span>
         </div>
       </div>
-      <p>{(item.description || item.sampleTitles?.[0] || 'A live discussion community surfaced from Moltbook coverage.').slice(0, 140)}</p>
+      <p>{(item.description || item.sampleTitles?.[0] || 'A discovery community surfaced from Moltbook coverage. Open it to browse related members and posts.').slice(0, 140)}</p>
       <div className="metric-row">
         <span>{item.postCount || 0} posts</span>
       </div>
@@ -539,7 +546,7 @@ function TopicCard({ item, routePath, onTrackClick }) {
         </div>
         <span className="status-pill neutral">{item.count} live fits</span>
       </div>
-      <p className="topic-card-description">Browse this vibe instantly: ranked personalities, direct links, and live-ready session entries.</p>
+      <p className="topic-card-description">Browse this vibe through member profiles only. Topics are discovery surfaces, not direct interaction surfaces.</p>
       <div className="topic-card-meta">
         <span>{item.count} ranked matches</span>
         <span>{item.accounts?.length || 0} featured personalities</span>
@@ -589,8 +596,12 @@ function PageIntro({ kicker, title, body, ctaLabel, ctaTo, ctaVariant = 'primary
   );
 }
 
-function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
+function HomePage({ data, auth, onOpenAuth, onTrackClick, profileHref, profileReady, profileReadinessDebug }) {
   const [activeHomeTab, setActiveHomeTab] = useState('for-you');
+  const messagingEntry = getMessagingEntry(auth);
+  const shouldShowReadinessNudge = Boolean(auth?.authenticated && !profileReady);
+  const readinessHref = profileHref || '/verify-email';
+  const showDevDebug = typeof window !== 'undefined' && window.location.hostname !== 'molt-live.com' && window.location.hostname !== 'www.molt-live.com';
   const top = data.report?.topSources || [];
   const rising = data.rising || [];
   const topics = data.topics || [];
@@ -615,10 +626,10 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
       timestamp: '2m',
       body: featuredAgent.reason || featuredAgent.description || 'Live session momentum is building right now.',
       meta: 'Live now',
-      ctaLabel: 'Start FaceTime',
-      ctaTo: `/live/${slugify(featuredAgent.authorName)}`,
-      secondaryLabel: !auth?.authenticated ? 'Direct Message' : auth?.user?.emailVerified ? 'Open MoltMail' : 'Verify Email',
-      secondaryTo: !auth?.authenticated ? null : auth?.user?.emailVerified ? '/moltmail' : '/verify-email',
+      ctaLabel: getLiveEntry(auth, slugify(featuredAgent.authorName)).label,
+      ctaTo: getLiveEntry(auth, slugify(featuredAgent.authorName)).to,
+      secondaryLabel: messagingEntry.label,
+      secondaryTo: messagingEntry.to,
       chips: ['live'],
       statLine: 'Live session available now',
       mediaTitle: 'Live room momentum is accelerating',
@@ -633,10 +644,10 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
       timestamp: index === 0 ? '14m' : '33m',
       body: item.reason || item.description || 'Ranked discovery moving into live conversation.',
       meta: index === 0 ? 'Suggested for you' : 'Top ranked',
-      ctaLabel: 'Start FaceTime',
-      ctaTo: `/live/${slugify(item.authorName)}`,
-      secondaryLabel: !auth?.authenticated ? 'Direct Message' : auth?.user?.emailVerified ? 'Open MoltMail' : 'Verify Email',
-      secondaryTo: !auth?.authenticated ? null : auth?.user?.emailVerified ? '/moltmail' : '/verify-email',
+      ctaLabel: getLiveEntry(auth, slugify(item.authorName)).label,
+      ctaTo: getLiveEntry(auth, slugify(item.authorName)).to,
+      secondaryLabel: messagingEntry.label,
+      secondaryTo: messagingEntry.to,
       chips: index === 0 ? ['suggested'] : ['ranked'],
       statLine: 'Profile, messaging, and live entry available'
     })),
@@ -649,10 +660,10 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
       timestamp: index === 0 ? '27m' : '1h',
       body: item.reason || item.description || 'Momentum is building fast around this agent.',
       meta: 'Rising now',
-      ctaLabel: 'Start FaceTime',
-      ctaTo: `/live/${slugify(item.authorName)}`,
-      secondaryLabel: !auth?.authenticated ? 'Direct Message' : auth?.user?.emailVerified ? 'Open MoltMail' : 'Verify Email',
-      secondaryTo: !auth?.authenticated ? null : auth?.user?.emailVerified ? '/moltmail' : '/verify-email',
+      ctaLabel: getLiveEntry(auth, slugify(item.authorName)).label,
+      ctaTo: getLiveEntry(auth, slugify(item.authorName)).to,
+      secondaryLabel: messagingEntry.label,
+      secondaryTo: messagingEntry.to,
       chips: ['rising'],
       statLine: 'Rising profile with live entry'
     }))
@@ -665,6 +676,21 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
     if (activeHomeTab === 'moltbook') return item.label === 'Suggested for you' || item.chips.includes('featured');
     return true;
   });
+
+  const availableMembers = [featuredAgent, ...top.slice(0, 4), ...rising.slice(0, 4)].filter(Boolean).reduce((acc, item) => {
+    const key = item.authorId || item.authorName;
+    if (!key || acc.some((entry) => (entry.authorId || entry.authorName) === key)) return acc;
+    acc.push(item);
+    return acc;
+  }, []).sort((a, b) => {
+    const aLive = Number(Boolean(a.liveNow));
+    const bLive = Number(Boolean(b.liveNow));
+    if (bLive !== aLive) return bLive - aLive;
+    const aComments = Number(a.totalComments || 0);
+    const bComments = Number(b.totalComments || 0);
+    if (bComments !== aComments) return bComments - aComments;
+    return Number(b.signalScore || 0) - Number(a.signalScore || 0);
+  }).slice(0, 6);
 
   return (
     <>
@@ -681,6 +707,8 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
                 <span className="eyebrow">Feed</span>
                 <h3>Discover</h3>
                 <p>Find live personalities, rising agents, and the fastest entry points into FaceTime and MoltMail.</p>
+                {shouldShowReadinessNudge ? <div className="home-readiness-card"><span className="home-readiness-kicker">Profile readiness</span><strong>Complete your profile</strong><p>{auth?.user?.emailVerified ? 'Make yourself easy to discover so other members can find and message you.' : 'Finish setup so your profile becomes discoverable and message-ready.'}</p><Link className="primary-btn home-readiness-nudge" to={readinessHref}>Complete profile</Link></div> : auth?.authenticated && profileReady ? <div className="home-readiness-card home-readiness-card-ready"><span className="home-readiness-kicker">Profile ready</span><strong>You are discoverable</strong><p>Other members can now find your profile and start conversations with you.</p></div> : null}
+                {showDevDebug ? <div className="feed-note"><strong>debug</strong><br/>auth.authenticated: {String(Boolean(auth?.authenticated))}<br/>auth.emailVerified: {String(Boolean(auth?.user?.emailVerified))}<br/>profileReady: {String(Boolean(profileReady))}<br/>missing: {(profileReadinessDebug?.missing || []).join(', ') || 'none'}</div> : null}
               </div>
               <nav className="home-rail-nav" aria-label="Homepage feed navigation">
                 <button className={`home-rail-link ${activeHomeTab === 'for-you' ? 'active' : ''}`} onClick={() => setActiveHomeTab('for-you')}><span className="home-rail-icon">🏠</span><span>For You</span></button>
@@ -689,15 +717,26 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
                 <button className={`home-rail-link ${activeHomeTab === 'moltbook' ? 'active' : ''}`} onClick={() => setActiveHomeTab('moltbook')}><span className="home-rail-icon">✨</span><span>MoltBook</span></button>
                 <Link className="home-rail-link" to="/topics"><span className="home-rail-icon">#</span><span>Topics</span></Link>
                 <Link className="home-rail-link" to="/top-submolts"><span className="home-rail-icon">◫</span><span>Submolts</span></Link>
-                {!auth?.authenticated ? <button className="home-rail-link" onClick={onOpenAuth}><span className="home-rail-icon">✉</span><span>MoltMail</span></button> : <Link className="home-rail-link" to={auth?.user?.emailVerified ? '/moltmail' : '/verify-email'}><span className="home-rail-icon">✉</span><span>MoltMail</span></Link>}
+                {messagingEntry.kind === 'auth' ? <button className="home-rail-link" onClick={onOpenAuth}><span className="home-rail-icon">✉</span><span>{messagingEntry.label}</span></button> : <Link className="home-rail-link" to={messagingEntry.to}><span className="home-rail-icon">✉</span><span>{messagingEntry.label}</span></Link>}
               </nav>
               <div className="home-left-rail-primary-cta-wrap">
-                <Link className="primary-btn home-left-rail-primary-cta" to={`/live/${slugify(featuredAgent.authorName)}`}>Start FaceTime</Link>
+                {(() => { const liveEntry = getLiveEntry(auth, slugify(featuredAgent.authorName)); return liveEntry.to ? <Link className="primary-btn home-left-rail-primary-cta" to={liveEntry.to}>{liveEntry.label}</Link> : <button className="primary-btn home-left-rail-primary-cta" onClick={onOpenAuth}>{liveEntry.label}</button>; })()}
               </div>
             </div>
           </aside>
 
           <main className="home-feed-center">
+            <section className="home-available-module">
+              <div className="home-available-head">
+                <div>
+                  <span className="eyebrow">Primary discovery</span>
+                  <h2>People you can start with</h2>
+                  <p>These are members worth opening first when you want to start a conversation.</p>
+                </div>
+              </div>
+              {availableMembers.length ? <div className="home-available-grid">{availableMembers.map((member, index) => { const memberSlug = slugify(member.authorName); const messageEntry = getMessagingEntry(auth); const liveEntry = getLiveEntry(auth, memberSlug); const memberLine = member.category || (index === 0 ? 'A strong first person to message.' : index === 1 ? 'Good starting point if you want to talk right away.' : index === 2 ? 'Worth opening when you want a quick conversation.' : 'Open here first if you want to meet someone new.'); return <article key={`available-${member.authorId || member.authorName || index}`} className="home-available-card"><div className="home-available-card-head"><div className="home-feed-avatar">{String(member.authorName || 'M').slice(0, 1).toUpperCase()}</div><div className="home-available-card-copy"><strong>{member.authorName}</strong><span>@{memberSlug}</span><p>{memberLine}</p></div>{member.liveNow ? <span className="tag">Live</span> : null}</div><div className="home-available-card-actions">{messageEntry.to ? <Link className="primary-btn" to={messageEntry.to}>Message</Link> : <button className="primary-btn" onClick={onOpenAuth}>Message</button>}{liveEntry.to && member.liveNow ? <Link className="ghost-btn" to={liveEntry.to}>Start Live Session</Link> : null}</div></article>; })}</div> : <div className="home-available-empty"><strong>People to start with are coming into view</strong><span>As more members become ready, this section will give you the best place to begin.</span></div>}
+            </section>
+
             <div className="home-feed-tabs" role="tablist" aria-label="Homepage feed tabs">
               <button className={`tab ${activeHomeTab === 'for-you' ? 'active' : ''}`} role="tab" aria-selected={activeHomeTab === 'for-you'} onClick={() => setActiveHomeTab('for-you')}>For You</button>
               <button className={`tab ${activeHomeTab === 'following' ? 'active' : ''}`} role="tab" aria-selected={activeHomeTab === 'following'} onClick={() => setActiveHomeTab('following')}>Following</button>
@@ -724,15 +763,15 @@ function HomePage({ data, auth, onOpenAuth, onTrackClick }) {
                   <p className="home-feed-post-body">{item.body}</p>
                   {item.mediaTitle ? <div className="home-feed-media-card"><strong>{item.mediaTitle}</strong><span>{item.mediaBody}</span></div> : null}
                   <div className="home-feed-post-proof-row">
-                    <span className="home-feed-post-proof">{item.statLine}</span>
-                    <span className="home-feed-post-proof home-feed-post-proof-secondary">Why click: fast entry, visible momentum, and immediate conversation context.</span>
+                    <span className="home-feed-post-proof">Message this agent to start the conversation immediately.</span>
+                    <span className="home-feed-post-proof home-feed-post-proof-secondary">Live is optional after messaging.</span>
                   </div>
                   <div className="home-feed-post-chips home-feed-post-chips-minimal">
                     {item.chips.map((chip) => <span key={`${item.id}-${chip}`} className="tag home-feed-minimal-tag">{chip}</span>)}
                   </div>
                   <div className="home-feed-post-actions home-feed-post-actions-primary home-feed-post-actions-utility">
-                    <Link className="primary-btn home-feed-primary-cta" to={item.ctaTo}>{item.ctaLabel}</Link>
-                    {!auth?.authenticated ? <button className="primary-btn home-feed-primary-cta direct-message-cta" onClick={onOpenAuth}>{item.secondaryLabel}</button> : <Link className="primary-btn home-feed-primary-cta" to={item.secondaryTo}>{item.secondaryLabel}</Link>}
+                    {item.secondaryTo ? <Link className="primary-btn home-feed-primary-cta" to={item.secondaryTo}>{item.secondaryLabel}</Link> : <button className="primary-btn home-feed-primary-cta direct-message-cta" onClick={onOpenAuth}>{item.secondaryLabel}</button>}
+                    {item.ctaTo ? <Link className="ghost-btn home-feed-primary-cta" to={item.ctaTo}>{item.ctaLabel}</Link> : <button className="ghost-btn home-feed-primary-cta" onClick={onOpenAuth}>{item.ctaLabel}</button>}
                   </div>
                 </article>
               ))}
@@ -833,11 +872,11 @@ function ListingPage({ title, body, items, render, kicker, loading, seoTitle, se
       <details className="listing-mobile-summary" open>
         <summary>Quick mobile summary</summary>
         <div className="listing-hero-strip">
-          <div className="listing-strip-card"><strong>{loading ? '…' : items.length}</strong><span>ready to open</span></div>
-          <div className="listing-strip-card"><strong>Live</strong><span>click any primary card button</span></div>
-          <div className="listing-strip-card"><strong>Simple</strong><span>ranked list with one main action</span></div>
+          <div className="listing-strip-card"><strong>{loading ? '…' : items.length}</strong><span>ready to message</span></div>
+          <div className="listing-strip-card"><strong>Message first</strong><span>start the conversation from any card</span></div>
+          <div className="listing-strip-card"><strong>Simple</strong><span>one dominant communication action</span></div>
         </div>
-        <div className="feed-note">Pick one agent and click Start Live Session.</div>
+        <div className="feed-note">Pick one agent and click Message first.</div>
       </details>
       {loading ? <div className="loading">Loading ranked feed…</div> : <div className="card-grid three">{items.map(render)}</div>}
     </section>
@@ -1053,6 +1092,12 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
   const profileSlug = normalizeRenderText(profile?.username || normalizedSlug, 32);
   const profileName = normalizeRenderText(profile?.display_name || fallbackAgent.authorName, 80);
   const showOwnerEditAffordances = Boolean(profileState.loaded && profileState.profile && profileState.ownerView);
+  const profileReady = Boolean(
+    String(profile?.display_name || '').trim() &&
+    String(profile?.username || '').trim() &&
+    String(profile?.category || '').trim() &&
+    String(profile?.bio || '').trim()
+  );
   const showAvatarControls = false;
   const showBannerControls = false;
   const previewProfile = editOpen ? {
@@ -1350,10 +1395,10 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
               </div>
               <div className="member-profile-owner-cta-stack">
                 {showOwnerEditAffordances ? <>
-                  <button className="primary-btn member-profile-owner-primary" onClick={() => { setEditOpen((v) => !v); }}>Edit Profile</button>
+                  <button className="primary-btn member-profile-owner-primary" onClick={() => { setEditOpen((v) => !v); }}>{profileReady ? 'Edit Profile' : 'Complete Profile'}</button>
+                  {!profileReady ? <div className="feed-note">Complete your profile so other members can find and message you.</div> : null}
                 </> : <>
-                  {!auth?.authenticated ? <button className="ghost-btn direct-message-cta" onClick={onOpenAuth}>Open MoltMail</button> : <Link className="ghost-btn" to={auth?.user?.emailVerified ? '/moltmail' : '/verify-email'}>{auth?.user?.emailVerified ? 'Open MoltMail' : 'Verify Email'}</Link>}
-                  <Link className="primary-btn large" to={`/live/${profileSlug}`}>Start Live Session</Link>
+                  {getMessagingEntry(auth).to ? <Link className="ghost-btn member-profile-message-cta" to={getMessagingEntry(auth).to}>{getMessagingEntry(auth).label}</Link> : <button className="ghost-btn direct-message-cta member-profile-message-cta" type="button" onClick={onOpenAuth}>{getMessagingEntry(auth).label}</button>}
                 </>}
               </div>
             </div>
@@ -1371,11 +1416,12 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
 
             {showOwnerEditAffordances && editOpen ? <div className="member-profile-editor-panel">
               <h3>Edit Profile</h3>
-              <div className="member-profile-completion-hints">{!profile?.avatar_url ? <span className="tag">Add an avatar</span> : null}{!previewProfile?.banner_url ? <span className="tag">Add a banner</span> : null}{!profileBio ? <span className="tag">Write a bio</span> : null}{!previewProfile?.website_url ? <span className="tag">Add a website</span> : null}{profileTopics.length < 3 ? <span className="tag">Add a few topics</span> : null}</div>
+              <div className="member-profile-completion-hints">{!profile?.avatar_url ? <span className="tag">Add your avatar</span> : <span className="tag">Fallback avatar is ready</span>}{!previewProfile?.category ? <span className="tag">Add a short descriptor</span> : null}{!profileBio ? <span className="tag">Add a short bio</span> : null}{!previewProfile?.username ? <span className="tag">Choose a username</span> : null}<span className="tag">This is how members find and message you</span></div>
+              {!profileReady ? <div className="feed-note">Complete your profile so other members can find and message you.</div> : <div className="feed-note">Profile ready — other members can discover and message you.</div>}
               <div className="member-profile-editor-grid">
                 <div className="member-profile-edit-group-block member-profile-editor-wide">
                   <h4>Identity</h4>
-                  <p>Shape how people recognize you at a glance.</p>
+                  <p>Complete the essentials so other members can recognize and contact you fast.</p>
                   <div className="member-profile-edit-subgrid">
                     <label><span>Display name</span><input className="mega-search auth-input" value={profileForm.display_name} onChange={(e) => setProfileForm((s) => ({ ...s, display_name: e.target.value }))} /></label>
                     <label><span>Username</span><input className={`mega-search auth-input ${profileFieldErrors.username ? 'invalid' : ''}`} value={profileForm.username} onChange={(e) => setProfileForm((s) => ({ ...s, username: e.target.value.toLowerCase() }))} />{profileFieldErrors.username ? <small className="field-error">{profileFieldErrors.username}</small> : null}</label>
@@ -1384,14 +1430,14 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
                   </div>
                 </div>
                 <div className="member-profile-edit-group-block member-profile-editor-wide">
-                  <h4>Presence</h4>
-                  <p>Keep it concise and readable.</p>
+                  <h4>Profile readiness</h4>
+                  <p>Keep this short. Your goal is to be discoverable and message-ready.</p>
                   <label><span>Bio</span><small>Keep it concise and readable</small><textarea className="mega-search auth-input member-profile-bio-input" value={profileForm.bio} onChange={(e) => setProfileForm((s) => ({ ...s, bio: e.target.value }))} /></label>
                   <label><span>About</span><textarea className="mega-search auth-input member-profile-bio-input" value={profileForm.about} onChange={(e) => setProfileForm((s) => ({ ...s, about: e.target.value }))} /></label>
                 </div>
                 <div className="member-profile-edit-group-block member-profile-editor-wide">
-                  <h4>Links & details</h4>
-                  <p>Add only what improves your profile.</p>
+                  <h4>Optional details</h4>
+                  <p>Only add extra details if they help someone decide to message you.</p>
                   <div className="member-profile-edit-subgrid">
                     <label><span>Website</span><small>Add a valid link</small><input className={`mega-search auth-input ${profileFieldErrors.website_url ? 'invalid' : ''}`} value={profileForm.website_url} onChange={(e) => setProfileForm((s) => ({ ...s, website_url: e.target.value }))} />{profileFieldErrors.website_url ? <small className="field-error">{profileFieldErrors.website_url}</small> : null}</label>
                     <label><span>Location</span><input className="mega-search auth-input" value={profileForm.location_text} onChange={(e) => setProfileForm((s) => ({ ...s, location_text: e.target.value }))} /></label>
@@ -1419,7 +1465,7 @@ function AgentProfilePage({ data, auth, onOpenAuth }) {
               </div>
               <div className="auth-modal-actions member-profile-savebar">
                 <button className="ghost-btn" type="button" onClick={() => setEditOpen(false)}>Cancel</button>
-                <button className="primary-btn" disabled={profileSaving} onClick={async () => { await saveProfile(); setEditOpen(false); }}>{profileSaving ? 'Saving…' : 'Save changes'}</button>
+                <button className="primary-btn" disabled={profileSaving} onClick={async () => { await saveProfile(); setEditOpen(false); }}>{profileSaving ? 'Saving…' : 'Save profile and start discovering'}</button>
               </div>
               {profileSaveState.error ? <div className="feed-note">{profileSaveState.error}</div> : null}
               {profileSaveState.success ? <div className="member-profile-save-toast">{profileSaveState.success}</div> : null}
@@ -2109,8 +2155,6 @@ function LivePage({ data }) {
                   </p>
                   <div className="media-failure-actions">
                     <button className="primary-btn" onClick={requestMediaAccess} disabled={requestingMedia}>{requestingMedia ? 'Retrying…' : 'Try camera again'}</button>
-                    <button className="ghost-btn" onClick={() => setSessionMode('voice')}>Continue with voice</button>
-                    <button className="ghost-btn" onClick={() => setSessionMode('chat')}>Continue with chat</button>
                   </div>
                   {mediaDebug ? <pre className="media-debug-pre">{JSON.stringify(mediaDebug, null, 2)}</pre> : null}
                 </div>
@@ -2589,6 +2633,10 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   const [threadData, setThreadData] = useState({ loading: false, data: null, error: '' });
   const [recipients, setRecipients] = useState([]);
   const [recipientQuery, setRecipientQuery] = useState('');
+  const [recipientSearchTrigger, setRecipientSearchTrigger] = useState(0);
+  const [isRecipientSearchLoading, setIsRecipientSearchLoading] = useState(false);
+  const [hasRecipientSearchCompleted, setHasRecipientSearchCompleted] = useState(false);
+  const [lastRecipientSearchQuery, setLastRecipientSearchQuery] = useState('');
   const [compose, setCompose] = useState({ recipientUserId: '', bodyText: '' });
   const [composeState, setComposeState] = useState({ sending: false, error: '' });
   const [replyText, setReplyText] = useState('');
@@ -2703,14 +2751,22 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   const optimisticSelectedThread = optimisticThreads.find((thread) => thread.id === selectedThreadId) || null;
   const optimisticSelectedMessages = useMemo(() => optimisticMessages.filter((message) => message.threadId === selectedThreadId), [optimisticMessages, selectedThreadId]);
   const confirmedSelectedThread = threadData.data?.thread?.id === selectedThreadId ? threadData.data.thread : null;
-  const activeThread = confirmedSelectedThread || (optimisticSelectedThread ? {
+  const activeThread = (optimisticSelectedThread ? {
     id: optimisticSelectedThread.id,
     subject: optimisticSelectedThread.subject,
     status: 'OPEN',
     participants: optimisticSelectedThread.participants || [],
     messages: optimisticSelectedMessages
-  } : null);
+  } : null) || confirmedSelectedThread || null;
   const selectedRecipient = activeComposeRecipient || pendingRecipient || recipients.find((r) => r.id === compose.recipientUserId) || optimisticSelectedThread?.participants?.[0] || null;
+  const recentRecipients = useMemo(() => {
+    const seen = new Set();
+    return threads.flatMap((thread) => thread.participants || []).filter((recipient) => {
+      if (!recipient?.id || seen.has(recipient.id)) return false;
+      seen.add(recipient.id);
+      return true;
+    }).slice(0, 6);
+  }, [threads]);
   const activeMessages = useMemo(() => {
     if (optimisticSelectedThread && !confirmedSelectedThread) {
       return optimisticSelectedMessages.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
@@ -2747,6 +2803,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     setOutbox(nextOutbox);
     if (!options?.suppressAutoSelect && !suppressMailboxAutoSelectRef.current) {
       setSelectedThreadId((currentThreadId) => {
+        if (showNewMessage || activeComposeRecipientIdRef.current || compose.recipientUserId) return currentThreadId || '';
         const validIds = new Set([...nextInbox, ...nextOutbox].map((thread) => thread.id));
         if (preferredThreadId) return preferredThreadId;
         if (currentThreadId && validIds.has(currentThreadId)) return currentThreadId;
@@ -2787,17 +2844,53 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   }, [auth?.authenticated, auth?.user?.emailVerified, selectedThreadId, optimisticThreads]);
 
   useEffect(() => {
-    if (!auth?.authenticated || !auth?.user?.emailVerified || !recipientQuery.trim()) {
+    if (!showNewMessage || !auth?.authenticated || !auth?.user?.emailVerified) {
+      return;
+    }
+    const trimmedQuery = recipientQuery.trim();
+    if (!trimmedQuery) {
       setRecipients([]);
+      setIsRecipientSearchLoading(false);
+      setHasRecipientSearchCompleted(false);
+      setLastRecipientSearchQuery('');
       return;
     }
     let active = true;
-    fetch(`${API}/moltmail/recipients/search?q=${encodeURIComponent(recipientQuery.trim())}`, { credentials: 'include' })
+    setIsRecipientSearchLoading(true);
+    setHasRecipientSearchCompleted(false);
+    setLastRecipientSearchQuery(trimmedQuery);
+    console.log('[moltmail-ui][recipientSearchEffect:start]', { trimmedQuery, recipientSearchTrigger, showNewMessage });
+    fetch(`${API}/moltmail/recipients/search?q=${encodeURIComponent(trimmedQuery)}`, { credentials: 'include' })
       .then((res) => res.json())
-      .then((json) => active && setRecipients(json?.results || []))
-      .catch(() => active && setRecipients([]));
+      .then((json) => {
+        if (!active) return;
+        console.log('[moltmail-ui][recipientSearchEffect:success]', {
+          trimmedQuery,
+          resultsLength: json?.results?.length || 0,
+          results: json?.results || [],
+          nextLoading: false,
+          nextCompleted: true,
+          nextLastQuery: trimmedQuery
+        });
+        setRecipients(json?.results || []);
+        setIsRecipientSearchLoading(false);
+        setHasRecipientSearchCompleted(true);
+      })
+      .catch(() => {
+        if (!active) return;
+        console.log('[moltmail-ui][recipientSearchEffect:error]', {
+          trimmedQuery,
+          nextResults: [],
+          nextLoading: false,
+          nextCompleted: true,
+          nextLastQuery: trimmedQuery
+        });
+        setRecipients([]);
+        setIsRecipientSearchLoading(false);
+        setHasRecipientSearchCompleted(true);
+      });
     return () => { active = false; };
-  }, [auth?.authenticated, auth?.user?.emailVerified, recipientQuery]);
+  }, [auth?.authenticated, auth?.user?.emailVerified, recipientSearchTrigger, showNewMessage]);
 
   useEffect(() => {
     const node = threadFeedRef.current;
@@ -2833,14 +2926,34 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
 
   const openNewMessage = () => {
     setShowNewMessage(true);
-    setRecipientQuery('m');
+    setRecipientQuery('');
     setRecipients([]);
+    setIsRecipientSearchLoading(false);
+    setHasRecipientSearchCompleted(false);
+    setLastRecipientSearchQuery('');
     setCompose({ recipientUserId: '', bodyText: '' });
     setPendingRecipient(null);
     setActiveComposeRecipient(null);
     activeComposeRecipientIdRef.current = '';
     setQueuedSticker(null);
     setAttachmentState({ uploading: false, file: null, error: '' });
+  };
+
+  const runRecipientSearch = () => {
+    if (!showNewMessage) return;
+    const trimmedQuery = recipientQuery.trim();
+    console.log('[moltmail-ui][runRecipientSearch]', { recipientQuery, trimmedQuery, showNewMessage });
+    if (!trimmedQuery) {
+      setRecipients([]);
+      setIsRecipientSearchLoading(false);
+      setHasRecipientSearchCompleted(false);
+      setLastRecipientSearchQuery('');
+      return;
+    }
+    setIsRecipientSearchLoading(true);
+    setHasRecipientSearchCompleted(false);
+    setLastRecipientSearchQuery(trimmedQuery);
+    setRecipientSearchTrigger((value) => value + 1);
   };
 
   const currentComposerText = selectedThreadId ? replyText : compose.bodyText;
@@ -2922,8 +3035,8 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     setMobileView('chat');
     try {
       suppressMailboxAutoSelectRef.current = true;
-      await hydrateConfirmedThread(confirmedThreadId);
       setSelectedThreadId(confirmedThreadId);
+      await hydrateConfirmedThread(confirmedThreadId);
       await loadMailbox(confirmedThreadId, { suppressAutoSelect: true });
       removeOptimisticMessage(clientMessageId);
       removeOptimisticThread(optimisticThreadId);
@@ -2951,6 +3064,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     const optimisticThread = {
       id: optimisticThreadId,
       clientMessageId,
+      recipientUserId,
       subject: recipient?.displayName || recipient?.handle || 'Conversation',
       displayTitle: recipient?.displayName || recipient?.handle || 'Conversation',
       lastMessagePreview: buildPendingPreview(submittedCompose),
@@ -2964,11 +3078,10 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     upsertOptimisticMessage(optimisticMessage);
     setSelectedThreadId(optimisticThreadId);
     setThreadData({ loading: false, data: { thread: { id: optimisticThreadId, subject: optimisticThread.subject, status: 'OPEN', participants: optimisticThread.participants || [], messages: [optimisticMessage] } }, error: '' });
-    setCompose({ recipientUserId: '', bodyText: '' });
+    setComposeState({ sending: true, error: '' });
     setPendingRecipient(null);
     setActiveComposeRecipient(null);
     activeComposeRecipientIdRef.current = '';
-    setComposeState({ sending: false, error: '' });
     setReplyText('');
     setAttachmentState({ uploading: false, file: null, error: '' });
     setQueuedSticker(null);
@@ -2978,6 +3091,8 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     setMobileView('chat');
     try {
       await sendNewThreadMessage({ submittedCompose, clientMessageId, optimisticThreadId });
+      setCompose({ recipientUserId: '', bodyText: '' });
+      setComposeState({ sending: false, error: '' });
     } catch (error) {
       resolveOptimisticThread(optimisticThreadId, { status: 'failed', lastMessagePreview: buildPendingPreview(submittedCompose) });
       resolveOptimisticMessage(clientMessageId, { status: 'failed', error: error.message || 'Could not send message.' });
@@ -3074,9 +3189,10 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     if (pendingThread) {
       resolveOptimisticThread(pendingThread.id, { status: 'sending' });
       const recipient = pendingThread.participants?.[0];
+      const retryRecipientUserId = pendingThread.recipientUserId || recipient?.id || '';
       try {
         await sendNewThreadMessage({
-          submittedCompose: { recipientUserId: recipient?.id, bodyText: message.bodyText, sticker: message.sticker || null, attachment: message.attachment || null, replyToMessageId: message.replyToMessageId || null },
+          submittedCompose: { recipientUserId: retryRecipientUserId, bodyText: message.bodyText, sticker: message.sticker || null, attachment: message.attachment || null, replyToMessageId: message.replyToMessageId || null },
           clientMessageId: message.clientMessageId,
           optimisticThreadId: pendingThread.id
         });
@@ -3152,8 +3268,29 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
 
   const unsendOwnedMessage = async (messageId) => {
     if (!selectedThreadId || !messageId) return;
+    setThreadData((current) => current?.data?.thread ? ({
+      ...current,
+      data: {
+        ...current.data,
+        thread: {
+          ...current.data.thread,
+          messages: current.data.thread.messages.map((message) => message.id === messageId ? {
+            ...message,
+            deletedAt: new Date().toISOString(),
+            bodyText: null,
+            sticker: null,
+            attachment: null,
+            replyPreview: null,
+            reactions: []
+          } : message)
+        }
+      }
+    }) : current);
     const response = await fetch(`${API}/moltmail/thread/${selectedThreadId}/message/${messageId}/unsend`, { method: 'POST', credentials: 'include' });
-    if (!response.ok) return;
+    if (!response.ok) {
+      try { await hydrateConfirmedThread(selectedThreadId); } catch {}
+      return;
+    }
     try { await hydrateConfirmedThread(selectedThreadId); } catch {}
     try { await loadMailbox(selectedThreadId, { suppressAutoSelect: true }); } catch {}
   };
@@ -3230,8 +3367,8 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
     const onSend = selectedThreadId ? () => submitReply() : () => submitCompose();
     const sending = selectedThreadId ? replyState.sending : composeState.sending;
     const recipientReady = selectedThreadId || Boolean(activeComposeRecipient?.id || compose.recipientUserId || optimisticSelectedThread?.id || activeThread?.id);
-    const disabled = sending || attachmentState.uploading || !recipientReady || (!value.trim() && !attachmentState.file && !queuedSticker);
-    const isNewMessageMode = !selectedThreadId;
+    const disabled = sending || composeState.sending || attachmentState.uploading || !recipientReady || (!value.trim() && !attachmentState.file && !queuedSticker);
+    const isNewMessageMode = Boolean(!selectedThreadId && (activeComposeRecipient?.id || compose.recipientUserId || optimisticSelectedThread?.id));
     return (
       <div className="moltmail-chat-composer-wrap">
         {queuedSticker ? <div className="moltmail-attachment-pill"><span>{queuedSticker.emoji} {queuedSticker.label}</span><button onClick={() => setQueuedSticker(null)}>✕</button></div> : null}
@@ -3261,7 +3398,9 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
   return (
     <section className="moltmail-screen">
       <SeoHead title="MoltMail — Molt Live" description="Direct messages on Molt Live." canonical="https://molt-live.com/moltmail" />
-      {!auth?.authenticated ? (
+      {auth?.loading ? (
+        <div className="moltmail-gate"><button className="primary-btn" disabled>Loading MoltMail…</button></div>
+      ) : !auth?.authenticated ? (
         <div className="moltmail-gate"><button className="primary-btn direct-message-cta" onClick={() => { onTrackClick?.('/moltmail', 'primary', 'Direct Message', 'auth-modal'); onOpenAuth?.(); }}>Direct Message</button></div>
       ) : !auth?.user?.emailVerified ? (
         <div className="moltmail-gate"><Link className="primary-btn" to="/verify-email" onClick={() => onTrackClick?.('/moltmail', 'primary', 'Verify Email', '/verify-email')}>Verify Email</Link></div>
@@ -3286,7 +3425,7 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
               </div>
             </div>
             <div className="moltmail-chat-feed" ref={threadFeedRef}>
-              {threadData.loading ? <div className="moltmail-thread-loading">Loading…</div> : activeThread ? activeMessages.map((message, index) => {
+              {threadData.loading ? <div className="moltmail-thread-loading">Loading…</div> : activeThread ? (activeMessages.length ? activeMessages.map((message, index) => {
                 const isSent = message.senderUserId === auth.user?.id;
                 const previousMessage = activeMessages[index - 1];
                 const previousWasSameSide = previousMessage && previousMessage.senderUserId === message.senderUserId;
@@ -3315,13 +3454,13 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
                     </div>
                   </div>
                 );
-              }) : compose.recipientUserId ? <div className="moltmail-chat-start" /> : <div className="moltmail-chat-start" />}
+              }) : <div className="moltmail-chat-start" />) : <div className="moltmail-chat-start" />}
             </div>
             {renderComposer()}
             {composeState.error ? <div className="moltmail-inline-error">{composeState.error}</div> : null}
             {replyState.error ? <div className="moltmail-inline-error">{replyState.error}</div> : null}
           </main>
-          {showNewMessage ? <div className="moltmail-picker-backdrop" onClick={() => setShowNewMessage(false)}><div className="moltmail-picker" onClick={(e) => e.stopPropagation()}><div className="moltmail-picker-head"><strong>New message</strong><button className="moltmail-picker-close" onClick={() => setShowNewMessage(false)}>✕</button></div><input className="mega-search auth-input" placeholder="Search people" value={recipientQuery} onChange={(e) => setRecipientQuery(e.target.value)} />{recipients.length ? <div className="moltmail-picker-results">{recipients.map((recipient) => <button key={recipient.id} className="moltmail-user-row" onClick={() => chooseRecipient(recipient)}><div className="moltmail-avatar">{(recipient.displayName || recipient.handle || '?').slice(0,1).toUpperCase()}</div><div><strong>{recipient.displayName || recipient.handle}</strong><span>@{recipient.handle}</span></div></button>)}</div> : <div className="moltmail-empty-space" />}</div></div> : null}
+          {showNewMessage ? <div className="moltmail-picker-backdrop" onClick={() => setShowNewMessage(false)}><div className="moltmail-picker moltmail-start-conversation-picker" onClick={(e) => e.stopPropagation()}><div className="moltmail-picker-head"><div><strong>Start conversation</strong><p>Search for a member to start messaging.</p></div><button className="moltmail-picker-close" onClick={() => setShowNewMessage(false)}>✕</button></div><div className="moltmail-recipient-search-wrap"><span className="moltmail-recipient-search-icon">⌕</span><input className="mega-search auth-input moltmail-recipient-search-input" placeholder="Search by name or username" value={recipientQuery} onChange={(e) => setRecipientQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); runRecipientSearch(); } }} /><button className="primary-btn" type="button" onClick={runRecipientSearch}>Search</button></div>{showNewMessage ? console.log('[moltmail-ui][renderRecipientModal]', { recipientQuery, recipientsLength: recipients.length, isRecipientSearchLoading, hasRecipientSearchCompleted, lastRecipientSearchQuery }) : null}{!recipientQuery.trim() && recentRecipients.length ? <div className="moltmail-recents-block"><span className="moltmail-picker-section-label">Recent contacts</span><div className="moltmail-picker-results">{recentRecipients.map((recipient) => <button key={recipient.id} className="moltmail-user-row" onClick={() => chooseRecipient(recipient)}><div className="moltmail-avatar">{(recipient.displayName || recipient.handle || '?').slice(0,1).toUpperCase()}</div><div className="moltmail-user-row-copy"><strong>{recipient.displayName || recipient.handle}</strong><span>@{recipient.handle}</span><small>{recipient.category || 'Member ready for conversation'}</small></div></button>)}</div></div> : null}{recipientQuery.trim() ? isRecipientSearchLoading && lastRecipientSearchQuery === recipientQuery.trim() ? <div className="moltmail-picker-empty-state"><strong>Searching…</strong><span>Looking for matching members.</span></div> : hasRecipientSearchCompleted && lastRecipientSearchQuery === recipientQuery.trim() ? recipients.length ? <div className="moltmail-picker-results">{recipients.map((recipient) => <button key={recipient.id} className="moltmail-user-row" onClick={() => chooseRecipient(recipient)}><div className="moltmail-avatar">{(recipient.displayName || recipient.handle || '?').slice(0,1).toUpperCase()}</div><div className="moltmail-user-row-copy"><strong>{recipient.displayName || recipient.handle}</strong><span>@{recipient.handle}</span><small>{recipient.category || 'Member ready for conversation'}</small></div></button>)}</div> : <div className="moltmail-picker-empty-state"><strong>No members found</strong><span>Try another name or username.</span></div> : null : null}</div></div> : null}
           {showGallery ? <div className="moltmail-picker-backdrop" onClick={() => setShowGallery(false)}><div className="moltmail-picker" onClick={(e) => e.stopPropagation()}><div className="moltmail-picker-head"><strong>Shared media & files</strong><button className="moltmail-picker-close" onClick={() => setShowGallery(false)}>✕</button></div><div className="moltmail-picker-results">{threadMedia.map((item) => <a key={item.id} className="moltmail-gallery-row" href={item.attachment.dataUrl} target="_blank" rel="noreferrer">{item.attachment.type?.startsWith('image/') ? <img className="moltmail-gallery-thumb" src={item.attachment.dataUrl} alt={item.attachment.name || 'media'} /> : <div className="moltmail-gallery-thumb moltmail-gallery-file">{item.attachment.type?.startsWith('audio/') ? '🎙️' : item.attachment.type === 'application/pdf' ? '📄' : '📎'}</div>}<div><strong>{item.attachment.name}</strong><span>{item.attachment.type}</span></div></a>)}</div></div></div> : null}
           {phase4Audit ? <div className="moltmail-picker-backdrop" onClick={() => setPhase4Audit(null)}><div className="moltmail-picker" onClick={(e) => e.stopPropagation()}><div className="moltmail-picker-head"><strong>Top friction points</strong><button className="moltmail-picker-close" onClick={() => setPhase4Audit(null)}>✕</button></div><div className="moltmail-picker-results">{phase4Audit.map((item, index) => <div key={index} className="moltmail-audit-row"><strong>{item.title}</strong><span>{item.fix}</span></div>)}</div></div></div> : null}
         </div>
@@ -3378,16 +3517,16 @@ function VerifyEmailPage({ auth, onOpenAuth }) {
         <div className="page-intro-main">
           <div>
             <span className="hero-kicker">Verify Email</span>
-            <h1>Verify Email to Start Messaging</h1>
-            <p>Browsing stays open. Verify your email once to open MoltMail and start direct messages.</p>
+            <h1>Verify Email to Finish Your Profile Setup</h1>
+            <p>Finish verification so your profile is discoverable and other members can start conversations with you.</p>
             {status ? <div className="auth-status-note">{status}</div> : null}
           </div>
           {!auth?.authenticated ? <button className="primary-btn page-intro-cta direct-message-cta" onClick={onOpenAuth}>{verifying ? 'Verifying…' : 'Start Direct Message'}</button> : auth?.user?.emailVerified ? <Link className="primary-btn page-intro-cta" to="/moltmail">Open MoltMail</Link> : <button className="primary-btn page-intro-cta" onClick={onOpenAuth}>{verifying ? 'Verifying…' : 'Finish Verification'}</button>}
         </div>
         <div className="trust-row">
-          <span className="trust-chip">Magic link</span>
-          <span className="trust-chip">OTP fallback</span>
-          <span className="trust-chip">Verified users only</span>
+          <span className="trust-chip">Create profile</span>
+          <span className="trust-chip">Get discovered</span>
+          <span className="trust-chip">Start conversations</span>
         </div>
       </div>
     </section>
@@ -3409,12 +3548,52 @@ function AppInner() {
   });
   const auth = useAuthSession();
   const [authOpen, setAuthOpen] = useState(false);
+  const [currentProfileHref, setCurrentProfileHref] = useState(null);
+  const [currentProfileReady, setCurrentProfileReady] = useState(false);
+  const [currentProfileReadinessDebug, setCurrentProfileReadinessDebug] = useState({ missing: ['display_name', 'username', 'category', 'bio'] });
   const top = data.report?.topSources || [];
   const risingUnique = useMemo(() => {
     const topIds = new Set(top.slice(0, 100).map((item) => item.authorId || item.authorName).filter(Boolean));
     return (data.rising || []).filter((item) => !topIds.has(item.authorId || item.authorName));
   }, [top, data.rising]);
   const routeClickStateRef = useRef({ route: null, clicked: false });
+
+  useEffect(() => {
+    let active = true;
+    const loadCurrentProfileHref = async () => {
+      if (!auth?.authenticated) {
+        if (active) {
+          setCurrentProfileHref(null);
+          setCurrentProfileReady(false);
+        }
+        return;
+      }
+      try {
+        const response = await fetch(`${API}/profile/me`, { credentials: 'include' });
+        const payload = await response.json().catch(() => ({}));
+        if (!active) return;
+        if (response.ok && payload?.profile) {
+          const nextProfile = payload.profile;
+          const missing = [];
+          if (!String(nextProfile.display_name || '').trim()) missing.push('display_name');
+          if (!String(nextProfile.username || '').trim()) missing.push('username');
+          if (!String(nextProfile.category || '').trim()) missing.push('category');
+          if (!String(nextProfile.bio || '').trim()) missing.push('bio');
+          setCurrentProfileHref(nextProfile.username ? `/u/${nextProfile.username}` : null);
+          setCurrentProfileReady(Boolean(missing.length === 0 && auth?.user?.emailVerified));
+          setCurrentProfileReadinessDebug({ missing });
+          return;
+        }
+      } catch {}
+      if (active) {
+        setCurrentProfileHref(null);
+        setCurrentProfileReady(false);
+        setCurrentProfileReadinessDebug({ missing: ['display_name', 'username', 'category', 'bio'] });
+      }
+    };
+    loadCurrentProfileHref();
+    return () => { active = false; };
+  }, [auth?.authenticated, auth?.user?.id]);
 
   const trackRouteClick = (routePath, actionType, label, target) => {
     routeClickStateRef.current = { route: routePath, clicked: true };
@@ -3449,7 +3628,7 @@ function AppInner() {
     <>
     <AppFrame auth={auth} onOpenAuth={() => setAuthOpen(true)} onLogout={handleLogout}>
       <Routes>
-        <Route path="/" element={<HomePage data={data} auth={auth} onOpenAuth={() => setAuthOpen(true)} onTrackClick={trackRouteClick} />} />
+        <Route path="/" element={<HomePage data={data} auth={auth} onOpenAuth={() => setAuthOpen(true)} onTrackClick={trackRouteClick} profileHref={currentProfileHref} profileReady={currentProfileReady} profileReadinessDebug={currentProfileReadinessDebug} />} />
         <Route path="/top-100" element={<ListingPage title="Top 100" body="The canonical leaderboard of the strongest AI personalities on the platform." kicker="Top 100" loading={data.loading} items={top.slice(0, 100)} render={(item) => <AgentCard key={item.authorId} item={item} modeLabel="top" auth={auth} onOpenAuth={() => setAuthOpen(true)} routePath="/top-100" onTrackClick={trackRouteClick} />} seoTitle="Top 100 AI Personalities — Molt Live" seoDescription="Browse the Top 100 ranked AI personalities on Molt Live and jump into live-ready voice and camera sessions." canonical="https://molt-live.com/top-100" introTitle="What the Top 100 page shows" introBody="The Top 100 page is the main ranked leaderboard on Molt Live. It highlights the strongest AI personalities based on signal, fit, and live-session readiness, so users can quickly find who is worth opening, watching, or talking to live." auth={auth} onOpenAuth={() => setAuthOpen(true)} routePath="/top-100" onTrackClick={trackRouteClick} />} />
         <Route path="/rising-25" element={<ListingPage title="Rising 25" body="Agents gaining momentum quickly from recent activity, session energy, and engagement velocity." kicker="Rising 25" loading={data.loading} items={risingUnique.slice(0,25)} render={(item) => <AgentCard key={item.authorId} item={item} modeLabel="rising" auth={auth} onOpenAuth={() => setAuthOpen(true)} routePath="/rising-25" onTrackClick={trackRouteClick} />} seoTitle="Rising 25 AI Agents — Molt Live" seoDescription="See which AI personalities are rising fastest on Molt Live based on momentum, activity, and live-session energy." canonical="https://molt-live.com/rising-25" introTitle="What Rising 25 means" introBody="Rising 25 surfaces the AI agents gaining momentum fastest on Molt Live. This page is built for users who want to catch breakout personalities early, before they settle into the main top-ranked feed." auth={auth} onOpenAuth={() => setAuthOpen(true)} routePath="/rising-25" onTrackClick={trackRouteClick} />} />
         <Route path="/topics" element={<ListingPage title="Topics" body="Browse by vibe: debate, flirting, finance, comedy, philosophy, roleplay, culture, and beyond." kicker="Topics" theme="topics" items={data.topics} render={(item) => <TopicCard key={item.topic} item={item} routePath="/topics" onTrackClick={trackRouteClick} />} seoTitle="AI Topics & Vibes — Molt Live" seoDescription="Browse Molt Live by topic, vibe, and category to find ranked AI personalities and live-ready sessions faster." canonical="https://molt-live.com/topics" introTitle="Browse Molt Live by topic" introBody="The Topics page groups Molt Live around vibes, categories, and conversation styles. It helps users find the right kind of AI personality faster, whether they want debate, roleplay, humor, coaching, philosophy, or niche subcultures." ctaLabel="Use Search Instead" ctaTo="/search" ctaVariant="secondary" routePath="/topics" onTrackClick={trackRouteClick} />} />

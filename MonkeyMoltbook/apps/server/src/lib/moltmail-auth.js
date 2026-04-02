@@ -11,6 +11,7 @@ const VERIFY_TTL_MS = 1000 * 60 * 15;
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
 const AUTH_FROM_EMAIL = process.env.MOLTMAIL_FROM_EMAIL || 'MoltMail <auth@molt-live.com>';
 const APP_ORIGIN = process.env.APP_ORIGIN || process.env.VITE_APP_ORIGIN || 'https://molt-live.com';
+const SESSION_SECRET = process.env.MOLTMAIL_SESSION_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.OPENAI_API_KEY || 'moltmail-dev-secret';
 
 function ensureDataDir() {
   fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -51,6 +52,30 @@ function createOtp() {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
+function base64url(input) {
+  return Buffer.from(input).toString('base64url');
+}
+
+function signSessionPayload(payload) {
+  const body = base64url(JSON.stringify(payload));
+  const sig = crypto.createHmac('sha256', SESSION_SECRET).update(body).digest('base64url');
+  return `${body}.${sig}`;
+}
+
+function verifySignedSession(token) {
+  const [body, sig] = String(token || '').split('.');
+  if (!body || !sig) return null;
+  const expected = crypto.createHmac('sha256', SESSION_SECRET).update(body).digest('base64url');
+  if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return null;
+  try {
+    const payload = JSON.parse(Buffer.from(body, 'base64url').toString('utf8'));
+    if (!payload?.exp || payload.exp <= Date.now()) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
 function buildUserResponse(user) {
   return {
     id: user.id,
@@ -73,7 +98,7 @@ function getCookie(req, name) {
 
 function setSessionCookie(res, token, expiresAt) {
   const secure = APP_ORIGIN.startsWith('https://');
-  res.setHeader('Set-Cookie', `${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; ${secure ? 'Secure; ' : ''}Expires=${new Date(expiresAt).toUTCString()}`);
+  res.setHeader('Set-Cookie', `${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; ${secure ? 'Secure; ' : ''}Max-Age=${Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000))}; Expires=${new Date(expiresAt).toUTCString()}`);
 }
 
 function clearSessionCookie(res) {
@@ -83,12 +108,27 @@ function clearSessionCookie(res) {
 function getSessionFromRequest(req) {
   const token = getCookie(req, SESSION_COOKIE);
   if (!token) return null;
+  const payload = verifySignedSession(token);
+  if (!payload?.userId || !payload?.email) return null;
   const store = readStore();
-  const session = store.sessions.find((item) => item.token === token && new Date(item.expiresAt).getTime() > Date.now());
-  if (!session) return null;
-  const user = store.users.find((item) => item.id === session.userId);
-  if (!user) return null;
-  return { session, user };
+  let user = store.users.find((item) => item.id === payload.userId || item.email === payload.email);
+  if (!user) {
+    user = {
+      id: payload.userId,
+      email: payload.email,
+      emailVerifiedAt: payload.emailVerifiedAt || nowIso(),
+      displayName: payload.displayName || null,
+      handle: payload.handle || null,
+      status: payload.status || 'ACTIVE',
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+      lastLoginAt: nowIso(),
+      wallet: { balance: 0, updatedAt: nowIso() }
+    };
+    store.users.push(user);
+    writeStore(store);
+  }
+  return { session: { token, expiresAt: new Date(payload.exp).toISOString(), userId: user.id }, user };
 }
 
 async function sendAuthEmail({ email, magicLink, code }) {
@@ -176,10 +216,16 @@ export function verifyEmailAuth({ token, email, code, ipHash = null, userAgent =
     user.wallet = user.wallet || { balance: 0, updatedAt: nowIso() };
   }
 
-  const sessionToken = randomToken(24);
   const expiresAt = new Date(Date.now() + SESSION_TTL_MS).toISOString();
-  store.sessions = store.sessions.filter((item) => item.userId !== user.id || new Date(item.expiresAt).getTime() > Date.now());
-  store.sessions.push({ id: `ses_${randomToken(8)}`, token: sessionToken, userId: user.id, createdAt: nowIso(), lastSeenAt: nowIso(), expiresAt, ipHash, userAgent });
+  const sessionToken = signSessionPayload({
+    userId: user.id,
+    email: user.email,
+    emailVerifiedAt: user.emailVerifiedAt,
+    displayName: user.displayName || null,
+    handle: user.handle || null,
+    status: user.status || 'ACTIVE',
+    exp: new Date(expiresAt).getTime()
+  });
   store.challenges = store.challenges.filter((item) => item.id !== challenge.id);
   store.audit.push({ id: randomToken(10), action: 'AUTH_VERIFIED', entityType: 'user', entityId: user.id, actorUserId: user.id, ipHash, userAgent, metadataJson: { email: user.email }, createdAt: nowIso() });
   writeStore(store);
@@ -194,11 +240,10 @@ export function verifyEmailAuth({ token, email, code, ipHash = null, userAgent =
 
 export function logoutSession(req, res) {
   const token = getCookie(req, SESSION_COOKIE);
+  const payload = verifySignedSession(token);
   const store = readStore();
-  const session = store.sessions.find((item) => item.token === token);
-  if (session) {
-    store.sessions = store.sessions.filter((item) => item.token !== token);
-    store.audit.push({ id: randomToken(10), action: 'LOGOUT', entityType: 'session', entityId: session.id, actorUserId: session.userId, ipHash: null, userAgent: req.headers['user-agent'] || null, metadataJson: {}, createdAt: nowIso() });
+  if (payload?.userId) {
+    store.audit.push({ id: randomToken(10), action: 'LOGOUT', entityType: 'session', entityId: null, actorUserId: payload.userId, ipHash: null, userAgent: req.headers['user-agent'] || null, metadataJson: {}, createdAt: nowIso() });
     writeStore(store);
   }
   clearSessionCookie(res);
@@ -235,4 +280,60 @@ export function requireVerifiedUser(req) {
 
 export function applySessionCookie(res, token, expiresAt) {
   setSessionCookie(res, token, expiresAt);
+}
+
+export function getAllAuthUsers() {
+  const store = readStore();
+  const users = (store.users || []).map((user) => ({ ...user }));
+  console.log('[moltmail][getAllAuthUsers]', JSON.stringify({
+    authFile: AUTH_FILE,
+    totalUsers: users.length,
+    hasMoeylarge: users.some((user) => String(user.email || '').toLowerCase() === 'moeylarge@gmail.com' || String(user.handle || '').toLowerCase() === 'moeylarge'),
+    hasRnewman: users.some((user) => String(user.email || '').toLowerCase() === 'rnewman1229@gmail.com' || String(user.handle || '').toLowerCase() === 'rnewman1229')
+  }));
+  return users;
+}
+
+export function createDevVerifiedSession(email, overrides = {}) {
+  const normalized = normalizeEmail(email);
+  if (!normalized || !normalized.includes('@')) {
+    return { ok: false, code: 'INVALID_EMAIL', message: 'Enter a valid email.' };
+  }
+  const store = readStore();
+  let user = store.users.find((item) => item.email === normalized);
+  if (!user) {
+    user = {
+      id: `usr_${randomToken(8)}`,
+      email: normalized,
+      emailVerifiedAt: nowIso(),
+      displayName: overrides.displayName || normalized.split('@')[0],
+      handle: overrides.handle || null,
+      status: 'ACTIVE',
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+      lastLoginAt: nowIso(),
+      wallet: { balance: 0, updatedAt: nowIso() }
+    };
+    store.users.push(user);
+  } else {
+    user.emailVerifiedAt = user.emailVerifiedAt || nowIso();
+    user.displayName = overrides.displayName || user.displayName || normalized.split('@')[0];
+    user.handle = overrides.handle || user.handle || null;
+    user.status = 'ACTIVE';
+    user.lastLoginAt = nowIso();
+    user.updatedAt = nowIso();
+    user.wallet = user.wallet || { balance: 0, updatedAt: nowIso() };
+  }
+  writeStore(store);
+  const expiresAt = new Date(Date.now() + SESSION_TTL_MS).toISOString();
+  const token = signSessionPayload({
+    userId: user.id,
+    email: user.email,
+    emailVerifiedAt: user.emailVerifiedAt,
+    displayName: user.displayName || null,
+    handle: user.handle || null,
+    status: user.status || 'ACTIVE',
+    exp: new Date(expiresAt).getTime()
+  });
+  return { ok: true, token, expiresAt, user: buildUserResponse(user) };
 }
