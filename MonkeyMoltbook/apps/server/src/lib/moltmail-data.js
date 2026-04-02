@@ -254,6 +254,17 @@ function getUserById(store, id) {
   return store.users.find((item) => item.id === id);
 }
 
+function getAuthUserByAnyIdentifier(identifier) {
+  const needle = String(identifier || '').trim().toLowerCase();
+  if (!needle) return null;
+  const authUsers = getAllAuthUsers();
+  return authUsers.find((user) => (
+    String(user.id || '').toLowerCase() === needle ||
+    String(user.handle || '').toLowerCase() === needle ||
+    String(user.email || '').toLowerCase() === needle
+  )) || null;
+}
+
 function buildThreadSummary(store, thread, viewerId) {
   const messages = store.messages.filter((m) => m.threadId === thread.id).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
   const last = messages[messages.length - 1] || null;
@@ -373,15 +384,24 @@ export function searchRecipients(req, query) {
 
     const results = candidateDiagnostics
       .filter((user) => user.included)
-      .sort((a, b) => (a.id === systemUser.id ? -1 : b.id === systemUser.id ? 1 : 0))
-      .slice(0, 12)
-      .map((user) => ({
-        id: user.id,
-        displayName: user.displayName || user.email?.split('@')[0] || 'Member',
-        handle: user.handle || user.email?.split('@')[0] || user.id,
-        avatarUrl: null,
-        email: user.email || null
-      }));
+      .map((user) => {
+        const mirroredUser = getUserById(store, user.id);
+        return {
+          id: user.id,
+          displayName: mirroredUser?.displayName || user.displayName || user.email?.split('@')[0] || 'Member',
+          handle: mirroredUser?.handle || user.handle || user.email?.split('@')[0] || user.id,
+          avatarUrl: mirroredUser?.avatarUrl || null,
+          email: user.email || null,
+          category: mirroredUser?.category || null,
+          lastActiveAt: mirroredUser?.updatedAt || null
+        };
+      })
+      .sort((a, b) => {
+        if (a.id === systemUser.id) return -1;
+        if (b.id === systemUser.id) return 1;
+        return (new Date(b.lastActiveAt || 0).getTime() || 0) - (new Date(a.lastActiveAt || 0).getTime() || 0);
+      })
+      .slice(0, 12);
 
     if (req.query?.debug === '1') {
       return { ok: true, results, debug: debugPayload };
@@ -496,21 +516,34 @@ export function createThread(req, body) {
 
   return withStore((store) => {
     ensureSystemUser(store);
-    const sender = getUserById(store, gate.user.id);
-    const recipient = getUserById(store, recipientUserId);
+    const authRecipient = getAuthUserByAnyIdentifier(recipientUserId);
+    if (!authRecipient) return { ok: false, status: 404, code: 'RECIPIENT_NOT_FOUND', message: 'Recipient not found.' };
+    syncVerifiedUser(authRecipient);
+
+    const refreshedStore = readStore();
+    ensureSystemUser(refreshedStore);
+    const sender = getUserById(refreshedStore, gate.user.id);
+    const recipient = getUserById(refreshedStore, authRecipient.id);
     if (!recipient) return { ok: false, status: 404, code: 'RECIPIENT_NOT_FOUND', message: 'Recipient not found.' };
-    const existingByClientMessageId = findMessageByClientMessageId(store, gate.user.id, clientMessageId);
+
+    const existingByClientMessageId = findMessageByClientMessageId(refreshedStore, gate.user.id, clientMessageId);
     if (existingByClientMessageId) {
       return { ok: true, thread: { id: existingByClientMessageId.threadId }, message: { id: existingByClientMessageId.id, clientMessageId }, wallet: { balance: sender?.walletBalance || 0, debited: 0 } };
     }
     if (sender?.status !== 'ACTIVE' || recipient?.status === 'BANNED') return { ok: false, status: 403, code: 'USER_RESTRICTED', message: 'This message cannot be sent right now.' };
-    if (!checkRateLimit(store, req, gate.user.id, 'thread_create', 4, 60000)) {
-      logAudit(store, 'RATE_LIMIT_HIT', { actorUserId: gate.user.id, entityType: 'thread_create', entityId: recipientUserId });
+    if (!checkRateLimit(refreshedStore, req, gate.user.id, 'thread_create', 4, 60000)) {
+      logAudit(refreshedStore, 'RATE_LIMIT_HIT', { actorUserId: gate.user.id, entityType: 'thread_create', entityId: recipientUserId });
+      store.users = refreshedStore.users;
+      store.threads = refreshedStore.threads;
+      store.messages = refreshedStore.messages;
+      store.audit = refreshedStore.audit;
+      store.delivery = refreshedStore.delivery;
+      store.rateLimits = refreshedStore.rateLimits;
       return { ok: false, status: 429, code: 'RATE_LIMITED', message: 'Please wait before sending another message.' };
     }
-    const duplicateThread = store.threads.find((thread) => thread.participantIds?.length === 2 && thread.participantIds.includes(sender.id) && thread.participantIds.includes(recipient.id));
-    if (duplicateThread && hasRecentDuplicate(store, duplicateThread.id, sender.id, bodyText, 30000, clientMessageId)) {
-      const existingMessage = clientMessageId ? findMessageByClientMessageId(store, gate.user.id, clientMessageId) : null;
+    const duplicateThread = refreshedStore.threads.find((thread) => thread.participantIds?.length === 2 && thread.participantIds.includes(sender.id) && thread.participantIds.includes(recipient.id));
+    if (duplicateThread && hasRecentDuplicate(refreshedStore, duplicateThread.id, sender.id, bodyText, 30000, clientMessageId)) {
+      const existingMessage = clientMessageId ? findMessageByClientMessageId(refreshedStore, gate.user.id, clientMessageId) : null;
       if (existingMessage) return { ok: true, thread: { id: duplicateThread.id }, message: { id: existingMessage.id, clientMessageId }, wallet: { balance: sender.walletBalance, debited: 0 } };
       return { ok: false, status: 409, code: 'DUPLICATE_MESSAGE', message: 'That message was already sent recently.' };
     }
@@ -531,26 +564,32 @@ export function createThread(req, body) {
     };
     const message = { id: randomId('msg'), threadId: thread.id, senderUserId: sender.id, bodyText, createdAt, clientMessageId: clientMessageId || null, sticker, attachment, replyToMessageId, reactions: [] };
     const delivery = { id: randomId('del'), messageId: message.id, recipientUserId: recipient.id, channel: 'EMAIL', status: 'QUEUED', attemptCount: 0, createdAt, updatedAt: createdAt };
-    store.threads.unshift(thread);
-    store.messages.push(message);
-    store.delivery.push(delivery);
+    refreshedStore.threads.unshift(thread);
+    refreshedStore.messages.push(message);
+    refreshedStore.delivery.push(delivery);
     if (recipient.id === SYSTEM_USER_ID) {
       const autoReplyAt = nowIso();
       const autoReply = { id: randomId('msg'), threadId: thread.id, senderUserId: SYSTEM_USER_ID, bodyText: 'Got it — MoltMail is working.', createdAt: autoReplyAt };
       thread.lastMessageAt = autoReply.createdAt;
       thread.updatedAt = autoReply.createdAt;
-      store.messages.push(autoReply);
+      refreshedStore.messages.push(autoReply);
     }
     if (recipient.id === SYSTEM_USER_ID) {
       const autoReplyAt = nowIso();
       const autoReply = { id: randomId('msg'), threadId: thread.id, senderUserId: SYSTEM_USER_ID, bodyText: 'Welcome to MoltMail. This thread is live and ready.', createdAt: autoReplyAt };
       thread.lastMessageAt = autoReply.createdAt;
       thread.updatedAt = autoReply.createdAt;
-      store.messages.push(autoReply);
+      refreshedStore.messages.push(autoReply);
     }
-    logAudit(store, 'MESSAGE_SENT', { actorUserId: sender.id, entityType: 'thread', entityId: thread.id, threadId: thread.id, messageId: message.id });
-    logAudit(store, 'CREDIT_DEBITED', { actorUserId: sender.id, entityType: 'message', entityId: message.id, metadataJson: { debited: SEND_COST } });
-    logAudit(store, 'MESSAGE_DELIVERY_QUEUED', { actorUserId: sender.id, entityType: 'delivery', entityId: delivery.id, threadId: thread.id, messageId: message.id });
+    logAudit(refreshedStore, 'MESSAGE_SENT', { actorUserId: sender.id, entityType: 'thread', entityId: thread.id, threadId: thread.id, messageId: message.id });
+    logAudit(refreshedStore, 'CREDIT_DEBITED', { actorUserId: sender.id, entityType: 'message', entityId: message.id, metadataJson: { debited: SEND_COST } });
+    logAudit(refreshedStore, 'MESSAGE_DELIVERY_QUEUED', { actorUserId: sender.id, entityType: 'delivery', entityId: delivery.id, threadId: thread.id, messageId: message.id });
+    store.users = refreshedStore.users;
+    store.threads = refreshedStore.threads;
+    store.messages = refreshedStore.messages;
+    store.audit = refreshedStore.audit;
+    store.delivery = refreshedStore.delivery;
+    store.rateLimits = refreshedStore.rateLimits;
     return { ok: true, thread: { id: thread.id }, message: { id: message.id, clientMessageId }, wallet: { balance: sender.walletBalance, debited: SEND_COST } };
   });
 }
