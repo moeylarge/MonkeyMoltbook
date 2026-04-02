@@ -3725,8 +3725,6 @@ function MoltMailPage({ auth, onOpenAuth, onTrackClick }) {
                         {message.reactions?.length ? <div className="moltmail-reactions">{message.reactions.map((reaction) => <button key={reaction.emoji} className={`moltmail-reaction-chip ${reaction.reacted ? 'active' : ''}`} onClick={() => toggleReactionOnMessage(message.id, reaction.emoji)}>{reaction.emoji} {reaction.count}</button>)}</div> : null}
                         <div className="moltmail-bubble-actions">
                           {['❤️','🔥','😂','👍'].map((emoji) => <button key={emoji} className="moltmail-inline-action" onClick={() => toggleReactionOnMessage(message.id, emoji)}>{emoji}</button>)}
-                          <button className="moltmail-inline-action" onClick={() => setReplyTarget(message)}>Reply</button>
-                          <button className="moltmail-inline-action" onClick={() => pinMessageInThread(message.id)}>Pin</button>
                           {isSent && !message.deletedAt ? <button className="moltmail-inline-action" onClick={() => unsendOwnedMessage(message.id)}>Unsend</button> : null}
                         </div>
                       </div>
